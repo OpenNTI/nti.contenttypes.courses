@@ -24,4 +24,4 @@ from hamcrest import has_entry
 from zope.dottedname import resolve as dottedname
 
 def test_import_interfaces():
-	dottedname.resolve('nti.app.products.courses.interfaces')
+	dottedname.resolve('nti.contenttypes.courses.interfaces')

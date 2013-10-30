@@ -7,7 +7,7 @@ entry_points = {
 }
 
 setup(
-    name = 'nti.app.products.courses',
+    name = 'nti.contenttypes.courses',
     version = VERSION,
     author = 'Jason Madden',
     author_email = 'jason@nextthought.com',
@@ -29,7 +29,7 @@ setup(
         ],
 	packages=find_packages('src'),
 	package_dir={'': 'src'},
-	namespace_packages=['nti', 'nti.app', 'nti.app.products'],
+	namespace_packages=['nti', 'nti.contenttypes'],
 	install_requires=[
 		'setuptools',
 		# NOTE: We actually depend on nti.dataserver
