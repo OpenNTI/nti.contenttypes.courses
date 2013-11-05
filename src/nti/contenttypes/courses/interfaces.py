@@ -17,6 +17,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from zope import interface
+
 from zope.site.interfaces import IFolder
 
 ###
@@ -24,10 +26,10 @@ from zope.site.interfaces import IFolder
 #
 # How to determine available courses?
 #  -- Could either enumerate, or we maintain
-#     a Catalog (probably a catalog long term)
+#     a zope.catalog.Catalog (probably a catalog long term)
 #
 # How to tell what a user is enrolled in?
-#  -- We could also use a catalog here,
+#  -- We could also use a zope.catalog.Catalog here,
 #     but enrollment status effects permissioning,
 #     not just of UGD (which previously was handled
 #     implicitly through sharing things with a specific
@@ -73,3 +75,23 @@ class ICourseInstance(IFolder):
 	things like particular sections, which get most of their info from
 	acquisition of this object. Or we may need to keep content here.
 	"""
+
+class IPrincipalEnrollments(interface.Interface):
+	"""
+	Something that can list the enrollments of an individual
+	user.
+
+	In the case that there might be multiple sources of enrollment
+	data managing different parts of the system, such as during
+	transition times, we expect that these will be registered as
+	subscribers providing this interface and requiring an :class:`.IPrincipal`
+	or :class:`.IUser`.`
+
+	This is an evolving interface; currently we expect
+	that specialized versions will be provided tailored to specific consumers.
+	"""
+
+	def iter_enrollments():
+		"""
+		Iterate across enrollment information for the context.
+		"""
