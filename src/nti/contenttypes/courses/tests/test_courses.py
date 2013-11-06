@@ -19,6 +19,7 @@ from hamcrest import assert_that
 from hamcrest import is_
 from hamcrest import has_property
 from hamcrest import has_entry
+from hamcrest import has_entries
 from hamcrest import not_none
 from hamcrest import same_instance
 
@@ -26,12 +27,15 @@ from nti.testing import base
 from nti.testing import matchers
 
 from nti.testing.matchers import verifiably_provides
+from nti.externalization.tests import externalizes
 
 from .. import courses
 from .. import interfaces
 
 
-class TestCourseInstance(base.AbstractTestBase):
+class TestCourseInstance(base.SharedConfiguringTestBase):
+
+	set_up_packages = (__name__,)
 
 	def test_course_implements(self):
 		assert_that( courses.CourseInstance(), verifiably_provides(interfaces.ICourseInstance) )
@@ -49,3 +53,11 @@ class TestCourseInstance(base.AbstractTestBase):
 		assert_that( courses.CourseInstance(), has_property( 'Discussions', not_none() ) )
 		inst = courses.CourseInstance()
 		assert_that( inst.Discussions, is_( same_instance( inst.Discussions )))
+
+	def test_course_externalizes(self):
+
+		inst = courses.CourseInstance()
+		assert_that( inst, externalizes(has_entries('Class', 'CourseInstance',
+													'Discussions', has_entries('Class', 'GeneralBoard',
+																			   'title', ''),
+													'MimeType', 'application/vnd.nextthought.courses.courseinstance')) )

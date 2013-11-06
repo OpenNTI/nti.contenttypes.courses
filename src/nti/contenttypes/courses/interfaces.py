@@ -23,6 +23,7 @@ from zope.site.interfaces import IFolder
 from zope.container.constraints import contains
 from zope.container.constraints import containers
 
+from nti.dataserver.interfaces import IShouldHaveTraversablePath
 from nti.dataserver.contenttypes.forums import interfaces as frm_interfaces
 
 from nti.utils import schema
@@ -72,7 +73,8 @@ class ICourseAdministrativeLevel(IFolder):
 	contains(b'.ICourseInstance', b'.ICourseAdministrativeLevel')
 
 
-class ICourseInstance(IFolder):
+class ICourseInstance(IFolder,
+					  IShouldHaveTraversablePath):
 	"""
 	A concrete instance of a course (typically
 	in progress or opening). This can be annotated,

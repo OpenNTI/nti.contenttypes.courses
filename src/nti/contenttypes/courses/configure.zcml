@@ -8,4 +8,22 @@
 	<include package="zope.security" file="meta.zcml" />
 	<include package="zope.component" />
 
+	<include package="nti.mimetype" />
+
+	<!--
+	To get maximum externalization testing.
+	But note we don't want a hard dependency on this.
+	-->
+	<include package="nti.appserver"
+			 zcml:condition="installed nti.appserver" />
+
+	<!-- Externalization -->
+	<include package="nti.externalization" file="meta.zcml" />
+	<include package="nti.externalization" />
+
+	<ext:registerAutoPackageIO
+		root_interfaces=".interfaces.ICourseInstance"
+		modules=".courses" />
+
+
 </configure>
