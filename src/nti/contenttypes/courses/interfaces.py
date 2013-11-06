@@ -20,6 +20,12 @@ logger = __import__('logging').getLogger(__name__)
 from zope import interface
 
 from zope.site.interfaces import IFolder
+from zope.container.constraints import contains
+from zope.container.constraints import containers
+
+from nti.dataserver.contenttypes.forums import interfaces as frm_interfaces
+
+from nti.utils import schema
 
 ###
 # Notes:
@@ -63,6 +69,8 @@ class ICourseAdministrativeLevel(IFolder):
 	containers or instances of courses.
 	"""
 
+	contains(b'.ICourseInstance', b'.ICourseAdministrativeLevel')
+
 
 class ICourseInstance(IFolder):
 	"""
@@ -71,10 +79,17 @@ class ICourseInstance(IFolder):
 	which may be how things like a gradebook are attached
 	to it.
 
-	Contents are undefined. There may be specialized sub-contents for
-	things like particular sections, which get most of their info from
-	acquisition of this object. Or we may need to keep content here.
+	Contents are generally undefined. There may be specialized
+	sub-contents for things like particular sections, which get most
+	of their info from acquisition of this object. Or we may need to
+	keep (HTML/PDF) content here. As contents are defined, list them
+	here and in the ``contains`` constraint.
 	"""
+
+	containers(ICourseAdministrativeLevel)
+
+	Discussions = schema.Object(frm_interfaces.IBoard,
+								title="The root discussion board for this course.")
 
 class IPrincipalEnrollments(interface.Interface):
 	"""
@@ -84,8 +99,8 @@ class IPrincipalEnrollments(interface.Interface):
 	In the case that there might be multiple sources of enrollment
 	data managing different parts of the system, such as during
 	transition times, we expect that these will be registered as
-	subscribers providing this interface and requiring an :class:`.IPrincipal`
-	or :class:`.IUser`.`
+	subscribers providing this interface and requiring an
+	:class:`.IPrincipal` or :class:`.IUser`.`
 
 	This is an evolving interface; currently we expect
 	that specialized versions will be provided tailored to specific consumers.
