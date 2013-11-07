@@ -44,3 +44,15 @@ class CourseInstance(_CheckObjectOnSetMixin,
 		board.__parent__ = self
 		board.__name__ = 'Discussions'
 		return board
+
+	@property
+	def links(self):
+		return self._make_links()
+
+	def _make_links(self):
+		"""
+		Subclasses can extend this to customize the available links.
+
+		"""
+
+		return ()
