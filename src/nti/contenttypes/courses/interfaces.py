@@ -93,6 +93,35 @@ class ICourseInstance(IFolder,
 	Discussions = schema.Object(frm_interfaces.IBoard,
 								title="The root discussion board for this course.")
 
+class ICourseEnrollmentManager(interface.Interface):
+	"""
+	Something that manages the enrollments in an individual
+	course. This is typically registered as an adapter
+	from :class:`.ICourseInstance`, or some course instances
+	may choose to implement this directly.
+	"""
+
+	def enroll(principal):
+		"""
+		Cause the given principal to be enrolled in this course, raising
+		an appropriate error if that cannot be done.
+
+		If the principal is already enrolled, this has no effect.
+
+		:return: A truth value that is True if some action was taken,
+			and false of no action was taken.
+		"""
+
+	def drop(principal):
+		"""
+		Cause the given principal to no longer be enrolled.
+
+		If the given principal was not enrolled, this has no effect.
+
+		:return: A truth value that is True if some action was taken,
+			and false of no action was taken.
+		"""
+
 class IPrincipalEnrollments(interface.Interface):
 	"""
 	Something that can list the enrollments of an individual

@@ -37,6 +37,11 @@ class CourseInstance(_CheckObjectOnSetMixin,
 	def __init__(self):
 		super(CourseInstance,self).__init__()
 
+	# Whether or not they have contents, they are true
+	def __bool__(self):
+		return True
+	__nonzero__ = __bool__
+
 	@Lazy
 	def Discussions(self):
 		self._p_changed = True
