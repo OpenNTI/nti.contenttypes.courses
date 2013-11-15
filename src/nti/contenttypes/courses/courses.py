@@ -9,7 +9,9 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
+from zope import lifecycleevent
 from zope.cachedescriptors.property import Lazy
+from zope.cachedescriptors.property import readproperty
 
 from nti.dataserver.containers import CaseInsensitiveLastModifiedBTreeFolder
 from nti.dataserver.containers import _CheckObjectOnSetMixin
@@ -38,10 +40,17 @@ class CourseInstance(_CheckObjectOnSetMixin,
 	@Lazy
 	def Discussions(self):
 		self._p_changed = True
+		# Store it inside this folder
+		# so it is traversable
+		# TODO: Title
 		board = GeneralBoard()
-		board.__parent__ = self
-		board.__name__ = 'Discussions'
+		lifecycleevent.created(board)
+		self['Discussions'] = board
 		return board
+
+	@readproperty
+	def instructors(self):
+		return ()
 
 	@property
 	def links(self):

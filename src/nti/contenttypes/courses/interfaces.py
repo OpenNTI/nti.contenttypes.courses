@@ -19,6 +19,8 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
 
+from zope.security.interfaces import IPrincipal
+
 from zope.site.interfaces import IFolder
 from zope.container.constraints import contains
 from zope.container.constraints import containers
@@ -41,7 +43,7 @@ from nti.utils import schema
 #     not just of UGD (which previously was handled
 #     implicitly through sharing things with a specific
 #     DFL) but also of content. That means that
-#     means ACLs and "effective principals" get involved.
+#     ACLs and "effective principals" get involved.
 #     This could still be done with a DFL 'owned' by the
 #     CourseInstance object, but a hierarchy can be extremely
 #     useful (e.g., all students, ou students, ou grad students).
@@ -91,7 +93,31 @@ class ICourseInstance(IFolder,
 	containers(ICourseAdministrativeLevel)
 
 	Discussions = schema.Object(frm_interfaces.IBoard,
-								title="The root discussion board for this course.")
+								title="The root discussion board for this course.",
+								description="Typically, courses will 'contain' their own discussions, "
+								"but this may be a reference to another object.")
+
+	## Reflecting instructors, TAs, and other affiliated
+	## people with a special role in the course.
+	# This could be done in a couple ways. We could define a generic
+	# "role" object, and have a list of roles and their occupants.
+	# This is flexible, but not particularly high on ease-of-use.
+	# Alternately, we could expose each relationship as a named
+	# attribute: not flexible, but easy to use, so that's
+	# what we're going with now
+	# (Internally, the contents of these attributes could
+	# come from a role in the groupfolder of the site manager,
+	# or somewhere else.)
+
+	# The enrolled list of students is not part of this interface,
+	# it is a separate adapter because that information might not
+	# generally be available.
+
+	# These are lower-case attributes because someone might be able to
+	# edit them through-the-web
+	instructors = schema.UniqueIterable(title="The principals that are the intsructors of the course.",
+										description="They get special access rights.",
+										value_type=schema.Object(IPrincipal))
 
 class ICourseEnrollmentManager(interface.Interface):
 	"""
@@ -125,13 +151,27 @@ class ICourseEnrollmentManager(interface.Interface):
 class IPrincipalEnrollments(interface.Interface):
 	"""
 	Something that can list the enrollments of an individual
-	user.
+	user (contrast with :class:`.ICourseEnrollments`).
 
 	In the case that there might be multiple sources of enrollment
 	data managing different parts of the system, such as during
 	transition times, we expect that these will be registered as
 	subscribers providing this interface and requiring an
 	:class:`.IPrincipal` or :class:`.IUser`.`
+
+	This is an evolving interface; currently we expect
+	that specialized versions will be provided tailored to specific consumers.
+	"""
+
+	def iter_enrollments():
+		"""
+		Iterate across enrollment information for the context.
+		"""
+
+class ICourseEnrollments(interface.Interface):
+	"""
+	Something that can list the enrollments of an individual
+	course (contrast with :class:`.IPrincipalEnrollments`).
 
 	This is an evolving interface; currently we expect
 	that specialized versions will be provided tailored to specific consumers.
