@@ -26,6 +26,7 @@ from nti.dataserver.datastructures import PersistentCreatedModDateTrackingObject
 from nti.utils.schema import createDirectFieldProperties
 from nti.utils.schema import createFieldProperties
 from nti.utils.schema import SchemaConfigured
+from nti.utils.schema import AdaptingFieldProperty
 
 @interface.implementer(ICourseOutlineNode)
 class CourseOutlineNode(_CheckObjectOnSetMixin,
@@ -33,6 +34,10 @@ class CourseOutlineNode(_CheckObjectOnSetMixin,
 	createFieldProperties(ITitledDescribedContent)
 	createDirectFieldProperties(ICourseOutlineNode)
 	__external_can_create__ = False
+
+	title = AdaptingFieldProperty(ITitledDescribedContent['title'])
+	description = AdaptingFieldProperty(ITitledDescribedContent['description'])
+
 	def append(self, node):
 		name = unicode(len(self))
 		self[name] = node
@@ -45,6 +50,10 @@ class CourseOutlineCalendarNode(SchemaConfigured,
 	def __init__(self,**kwargs):
 		SchemaConfigured.__init__(self,**kwargs)
 		CourseOutlineNode.__init__(self)
+
+	AvailableBeginning = AdaptingFieldProperty(ICourseOutlineCalendarNode['AvailableBeginning'])
+	AvailableEnding = AdaptingFieldProperty(ICourseOutlineCalendarNode['AvailableEnding'])
+
 
 @interface.implementer(ICourseOutlineContentNode)
 class CourseOutlineContentNode(CourseOutlineCalendarNode):

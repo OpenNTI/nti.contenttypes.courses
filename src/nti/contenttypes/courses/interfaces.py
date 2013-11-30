@@ -114,7 +114,7 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 	calendar dates associated with it.
 	"""
 
-	AvailableBeginning = schema.Datetime(
+	AvailableBeginning = schema.ValidDatetime(
 		title="This node is available, or expected to be entered or active at this time",
 		description="""When present, this specifies the time instant at which
 		this node and its children are to be available or active. If this is absent,
@@ -123,7 +123,7 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 		will be relative to something else (a ``timedelta``) and conversion to absolute
 		timestamp will be done as needed.""",
 		required=False)
-	AvailableEnding = schema.Datetime(
+	AvailableEnding = schema.ValidDatetime(
 		title="This node is completed and no longer available at this time",
 		description="""When present, this specifies the last instance at which
 		this node is expected to be available and active.
