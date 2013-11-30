@@ -22,8 +22,9 @@
 	<include package="nti.externalization" />
 
 	<ext:registerAutoPackageIO
-		root_interfaces=".interfaces.ICourseInstance"
-		modules=".courses" />
+		root_interfaces=".interfaces.ICourseInstance
+						 .interfaces.ICourseOutlineNode"
+		modules=".courses .outlines" />
 
 
 </configure>

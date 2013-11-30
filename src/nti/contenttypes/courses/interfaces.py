@@ -22,13 +22,22 @@ from zope import interface
 from zope.security.interfaces import IPrincipal
 
 from zope.site.interfaces import IFolder
+
+from zope.container.interfaces import IOrderedContainer
+from zope.container.interfaces import IContainerNamesContainer
+
 from zope.container.constraints import contains
 from zope.container.constraints import containers
 
 from nti.dataserver.interfaces import IShouldHaveTraversablePath
+from nti.dataserver.interfaces import ITitledDescribedContent
+from nti.dataserver.interfaces import ILastModified
+
 from nti.dataserver.contenttypes.forums import interfaces as frm_interfaces
 
 from nti.utils import schema
+from nti.ntiids.schema import ValidNTIID
+
 
 ###
 # Notes:
@@ -72,11 +81,89 @@ class ICourseAdministrativeLevel(IFolder):
 	containers or instances of courses.
 	"""
 
-	contains(b'.ICourseInstance', b'.ICourseAdministrativeLevel')
+	contains(str('.ICourseInstance'),
+			 str('.ICourseAdministrativeLevel'))
 
+class _ICourseOutlineNodeContainer(interface.Interface):
+	"""
+	Internal container for outline nodes.
+	"""
+
+
+class ICourseOutlineNode(ITitledDescribedContent,
+						 IOrderedContainer,
+						 IContainerNamesContainer,
+						 _ICourseOutlineNodeContainer):
+	"""
+	A part of the course outline. Children are the sub-nodes of this
+	entity, and are (typically) named numerically.
+
+	.. note:: This is only partially modeled.
+	"""
+
+	containers(str('._ICourseOutlineNodeContainer'))
+	contains(str('.ICourseOutlineNode'))
+	__parent__.required = False
+
+	def append(node):
+		"A synonym for __setitem__ that automatically handles naming."
+
+class ICourseOutlineCalendarNode(ICourseOutlineNode):
+	"""
+	A part of the course outline that may have specific
+	calendar dates associated with it.
+	"""
+
+	AvailableBeginning = schema.Datetime(
+		title="This node is available, or expected to be entered or active at this time",
+		description="""When present, this specifies the time instant at which
+		this node and its children are to be available or active. If this is absent,
+		it is always available or active. While this is represented here as an actual
+		concrete timestamp, it is expected that in many cases the source representation
+		will be relative to something else (a ``timedelta``) and conversion to absolute
+		timestamp will be done as needed.""",
+		required=False)
+	AvailableEnding = schema.Datetime(
+		title="This node is completed and no longer available at this time",
+		description="""When present, this specifies the last instance at which
+		this node is expected to be available and active.
+		As with ``available_for_submission_beginning``,
+		this will typically be relative and converted.""",
+		required=False )
+
+class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
+	"""
+	A part of a course outline that refers to
+	a content unit.
+	"""
+
+	ContentNTIID =  ValidNTIID(title="The NTIID of the content this node uses")
+
+
+class ICourseOutline(ICourseOutlineNode,
+					 ILastModified):
+	"""
+	The schedule or syllabus of the course, defined
+	in a recursive tree-like structure.
+
+	.. note:: The nodes are only partially modeled.
+	"""
+
+	# NOTE: We are currently hanging these off of the
+	# course instance. That may not be the best place for two reasons:
+	# First, we may want to provide access to these before
+	# enrollment (as part of the course catalog), and ACLs might
+	# prevent simple access to children of a course to non-enrolled
+	# principals. That's surmountable though.
+	# Second, we may be dynamically generating or filtering the
+	# syllabus/outline based on the active principal, and unless
+	# extreme care is taken with the URL structure, we could
+	# run into caching issues (see the MD5 hacks for forums).
+	containers(str('.ICourseInstance'))
 
 class ICourseInstance(IFolder,
-					  IShouldHaveTraversablePath):
+					  IShouldHaveTraversablePath,
+					  _ICourseOutlineNodeContainer):
 	"""
 	A concrete instance of a course (typically
 	in progress or opening). This can be annotated,
@@ -91,14 +178,19 @@ class ICourseInstance(IFolder,
 	"""
 
 	containers(ICourseAdministrativeLevel)
+	__parent__.required = False
 
 	Discussions = schema.Object(frm_interfaces.IBoard,
 								title="The root discussion board for this course.",
 								description="Typically, courses will 'contain' their own discussions, "
 								"but this may be a reference to another object.")
 
+	Outline = schema.Object(ICourseOutline,
+							title="The course outline or syllabus, if there is one.",
+							required=False)
+
 	## Reflecting instructors, TAs, and other affiliated
-	## people with a special role in the course.
+	## people with a special role in the course:
 	# This could be done in a couple ways. We could define a generic
 	# "role" object, and have a list of roles and their occupants.
 	# This is flexible, but not particularly high on ease-of-use.

@@ -19,6 +19,8 @@ from nti.dataserver.containers import _CheckObjectOnSetMixin
 from nti.dataserver.contenttypes.forums.board import GeneralBoard
 
 from . import interfaces
+from .outlines import CourseOutline
+from nti.utils.schema import createDirectFieldProperties
 
 @interface.implementer(interfaces.ICourseAdministrativeLevel)
 class CourseAdministrativeLevel(_CheckObjectOnSetMixin,
@@ -28,6 +30,8 @@ class CourseAdministrativeLevel(_CheckObjectOnSetMixin,
 @interface.implementer(interfaces.ICourseInstance)
 class CourseInstance(_CheckObjectOnSetMixin,
 					 CaseInsensitiveLastModifiedBTreeFolder):
+
+	createDirectFieldProperties(interfaces.ICourseInstance)
 
 	def __init__(self):
 		super(CourseInstance,self).__init__()
@@ -47,6 +51,15 @@ class CourseInstance(_CheckObjectOnSetMixin,
 		lifecycleevent.created(board)
 		self['Discussions'] = board
 		return board
+
+	@Lazy
+	def Outline(self):
+		# As per Discussions
+		self._p_changed = True
+		outline = CourseOutline()
+		lifecycleevent.created(outline)
+		self['Outline'] = outline
+		return outline
 
 	@readproperty
 	def instructors(self):
