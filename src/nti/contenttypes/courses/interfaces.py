@@ -211,6 +211,29 @@ class ICourseInstance(IFolder,
 										description="They get special access rights.",
 										value_type=schema.Object(IPrincipal))
 
+from pyramid.traversal import lineage as _lineage
+def is_instructed_by_name(context, username):
+	"""
+	Checks if the context is within something instructed
+	by the given principal id. The context will be searched
+	for an ICourseInstance.
+	"""
+
+	course = None
+	for x in _lineage(context):
+		course = ICourseInstance(x, None)
+		if course is not None:
+			break
+
+	if course is None:
+		return False
+
+	# XXX: FIXME: What's a good ACL way of representing this?
+	# In the meantime, this is probably cheaper than
+	# using the IPrincipalAdministrativeRoleCatalog.
+	return any((username == instructor.id for instructor in course.instructors))
+
+
 class ICourseEnrollmentManager(interface.Interface):
 	"""
 	Something that manages the enrollments in an individual
