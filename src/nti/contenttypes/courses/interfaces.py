@@ -273,3 +273,9 @@ class ICourseEnrollments(interface.Interface):
 		"""
 		Iterate across enrollment information for the context.
 		"""
+
+	def count_enrollments():
+		"""
+		Return the number of students enrolled in the context.
+		This may be more efficient than iterating all enrollments.
+		"""
