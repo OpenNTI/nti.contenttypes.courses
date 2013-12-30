@@ -217,7 +217,13 @@ def is_instructed_by_name(context, username):
 	Checks if the context is within something instructed
 	by the given principal id. The context will be searched
 	for an ICourseInstance.
+
+	If either the context or username is missing, returns
+	a false value.
 	"""
+
+	if username is None or context is None:
+		return None
 
 	course = None
 	for x in _lineage(context):
