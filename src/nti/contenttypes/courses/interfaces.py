@@ -110,8 +110,11 @@ class ICourseOutlineNode(ITitledDescribedContent,
 
 class ICourseOutlineCalendarNode(ICourseOutlineNode):
 	"""
-	A part of the course outline that may have specific
-	calendar dates associated with it.
+	A part of the course outline that may have specific calendar dates
+	associated with it. Because they still have titles and
+	descriptions but carry no other information, they may be used as
+	markers of some kind, such as a 'placeholder' for content that
+	isn't ready yet, or a grouping structure.
 	"""
 
 	AvailableBeginning = schema.ValidDatetime(
