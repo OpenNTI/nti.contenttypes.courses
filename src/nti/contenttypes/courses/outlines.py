@@ -46,6 +46,15 @@ class CourseOutlineNode(Contained, OrderedDict):
 	title = AdaptingFieldProperty(ITitledDescribedContent['title'])
 	description = AdaptingFieldProperty(ITitledDescribedContent['description'])
 
+	# XXX This class used to be persistent. Although there were
+	# never any references explicitly stored to them, because it
+	# was persistent and is a Container, the intid utility grabbed
+	# the children when IObjectAdded fired. Now that we're not
+	# persistent, those instances in the intid BTree cannot be
+	# correctly read. So we define a broken object replacement
+	# that our DB class factory will use instead.
+	_v_nti_pseudo_broken_replacement_name = str('CourseOutlineNode_BROKEN')
+
 	def append(self, node):
 		name = unicode(len(self))
 		self[name] = node
