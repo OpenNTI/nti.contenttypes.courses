@@ -9,7 +9,7 @@ for local policy containment (including things like default
 preferences). The expected contents of each type of object
 are explained on the object itself.
 
-$Id$
+.. $Id$
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
@@ -104,7 +104,9 @@ class ICourseOutlineNode(ITitledDescribedContent,
 	containers(str('._ICourseOutlineNodeContainer'))
 	contains(str('.ICourseOutlineNode'))
 	__parent__.required = False
-	src = schema.ValidTextLine( required=False )
+	
+	src = schema.ValidTextLine(title="json file to populate the node overview",
+							   required=False)
 
 	def append(node):
 		"A synonym for __setitem__ that automatically handles naming."
@@ -127,6 +129,7 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 		will be relative to something else (a ``timedelta``) and conversion to absolute
 		timestamp will be done as needed.""",
 		required=False)
+	
 	AvailableEnding = schema.ValidDatetime(
 		title="This node is completed and no longer available at this time",
 		description="""When present, this specifies the last instance at which
@@ -216,6 +219,7 @@ class ICourseInstance(IFolder,
 										value_type=schema.Object(IPrincipal))
 
 from pyramid.traversal import lineage as _lineage
+
 def is_instructed_by_name(context, username):
 	"""
 	Checks if the context is within something instructed
