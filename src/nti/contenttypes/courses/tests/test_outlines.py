@@ -63,12 +63,13 @@ class TestCourseOutline(base.SharedConfiguringTestBase):
 		outline = inst.Outline
 		node = outlines.CourseOutlineNode()
 		outline.append(node)
-		node2 = outlines.CourseOutlineContentNode(ContentNTIID='tag:nextthought.com,2011-10:OU-HTML-CLC3403_LawAndJustice.lec:01_LESSON',
-												  AvailableBeginning=datetime.now() )
+		outline.src = 'src/is/this'
+		node2 = outlines.CourseOutlineContentNode(	ContentNTIID='tag:nextthought.com,2011-10:OU-HTML-CLC3403_LawAndJustice.lec:01_LESSON',
+												 	AvailableBeginning=datetime.now() )
 		outline.append(node2)
-
 
 		assert_that( inst, externalizes(has_entries('Class', 'CourseInstance',
 													'Outline', has_entries( #'Links', has_item(has_entry('rel', 'Contents')), # A higher level will provide access to contents
-																		   'MimeType', 'application/vnd.nextthought.courses.courseoutline'),
+																			'src', 'src/is/this',
+																		   	'MimeType', 'application/vnd.nextthought.courses.courseoutline'),
 													'MimeType', 'application/vnd.nextthought.courses.courseinstance')) )

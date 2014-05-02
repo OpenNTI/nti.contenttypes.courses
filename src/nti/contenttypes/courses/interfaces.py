@@ -104,6 +104,7 @@ class ICourseOutlineNode(ITitledDescribedContent,
 	containers(str('._ICourseOutlineNodeContainer'))
 	contains(str('.ICourseOutlineNode'))
 	__parent__.required = False
+	src = schema.ValidTextLine( required=False )
 
 	def append(node):
 		"A synonym for __setitem__ that automatically handles naming."
