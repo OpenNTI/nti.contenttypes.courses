@@ -240,6 +240,10 @@ def is_instructed_by_name(context, username):
 
 	If either the context or username is missing, returns
 	a false value.
+
+	This is semi-deprecated; switch to using explicit permissions
+	granted to roles such as the :const:`RID_INSTRUCTOR` role
+	and :func:`zope.security.management.checkPermission`.
 	"""
 
 	if username is None or context is None:
@@ -254,9 +258,6 @@ def is_instructed_by_name(context, username):
 	if course is None:
 		return False
 
-	# XXX: FIXME: What's a good ACL way of representing this?
-	# In the meantime, this is probably cheaper than
-	# using the IPrincipalAdministrativeRoleCatalog.
 	return any((username == instructor.id for instructor in course.instructors))
 
 
