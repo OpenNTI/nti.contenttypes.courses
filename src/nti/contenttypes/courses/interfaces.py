@@ -38,6 +38,11 @@ from nti.dataserver.contenttypes.forums import interfaces as frm_interfaces
 from nti.utils import schema
 from nti.ntiids.schema import ValidNTIID
 
+# Permissions defined for courses here should also be
+# registered in ZCML:
+# from zope.security.permission import Permission
+# ACT_XXX = Permission('nti.actions.XXX')
+
 
 ###
 # Notes:
@@ -104,7 +109,7 @@ class ICourseOutlineNode(ITitledDescribedContent,
 	containers(str('._ICourseOutlineNodeContainer'))
 	contains(str('.ICourseOutlineNode'))
 	__parent__.required = False
-	
+
 	src = schema.ValidTextLine(title="json file to populate the node overview",
 							   required=False)
 
@@ -129,7 +134,7 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 		will be relative to something else (a ``timedelta``) and conversion to absolute
 		timestamp will be done as needed.""",
 		required=False)
-	
+
 	AvailableEnding = schema.ValidDatetime(
 		title="This node is completed and no longer available at this time",
 		description="""When present, this specifies the last instance at which
