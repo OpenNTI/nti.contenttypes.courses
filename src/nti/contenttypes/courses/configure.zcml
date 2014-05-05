@@ -12,7 +12,8 @@
 	<include package="nti.mimetype" />
 
 	<!--
-	To get maximum externalization testing.
+	To get maximum externalization testing, let the appserver
+	register all its decorators.
 	But note we don't want a hard dependency on this.
 	-->
 	<include package="nti.appserver"
@@ -48,5 +49,7 @@
 		title="A course teaching assistant"
 		description="This role may have fewer permissions than an
 					 instructor" />
+
+	<adapter factory=".principalrole.CourseInstancePrincipalRoleMap" />
 
 </configure>

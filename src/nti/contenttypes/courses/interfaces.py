@@ -43,6 +43,13 @@ from nti.ntiids.schema import ValidNTIID
 # from zope.security.permission import Permission
 # ACT_XXX = Permission('nti.actions.XXX')
 
+# Roles defined and used by this package
+
+#: The ID of a role for instructors
+RID_INSTRUCTOR = "nti.roles.course_instructor"
+
+#: The ID of a role for teaching assistants
+RID_TA = "nti.roles.course_ta"
 
 ###
 # Notes:
