@@ -48,25 +48,26 @@ class CourseInstancePrincipalRoleMap(object):
 
 	@property
 	def __role_meth(self):
-		return {RID_TA: self._principals_for_ta,
-				RID_INSTRUCTOR: self._principals_for_instructor}
+		# Order might matter. Query instructors first
+		return ((RID_INSTRUCTOR, self._principals_for_instructor),
+				(RID_TA, self._principals_for_ta))
+
 
 	def getPrincipalsForRole(self, role_id):
-		role_meth = self.__role_meth
+		role_meth = dict(self.__role_meth)
 		if role_id not in role_meth:
 			return []
 
 		return [(x.id, Allow) for x in role_meth[role_id]()]
 
 	def getRolesForPrincipal(self, principal_id):
-		for rid, meth in self.__role_meth.items():
+		for rid, meth in self.__role_meth:
 			if principal_id in [x.id for x in meth()]:
 				return [(rid, Allow)]
 		return []
 
 	def getSetting(self, role_id, principal_id, default=Unset):
-		role_meth = self.__role_meth
-		if role_id not in role_meth:
+		if role_id not in self._SUPPORTED_ROLES:
 			return default
 
 		for rid, setting in self.getRolesForPrincipal(principal_id):
@@ -77,6 +78,6 @@ class CourseInstancePrincipalRoleMap(object):
 
 	def getPrincipalsAndRoles(self):
 		result = []
-		for rid, meth in self.__role_meth.items():
+		for rid, meth in self.__role_meth:
 			result.extend( ((rid, x.id, Allow) for x in meth()))
 		return result
