@@ -17,13 +17,13 @@ logger = __import__('logging').getLogger(__name__)
 from zope import interface
 from zope import component
 
-from .interfaces import ICourseInstance
-from .interfaces import RID_TA
-from .interfaces import RID_INSTRUCTOR
-
-from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import Unset
+from zope.securitypolicy.interfaces import IPrincipalRoleMap
+
+from .interfaces import RID_TA
+from .interfaces import RID_INSTRUCTOR
+from .interfaces import ICourseInstance
 
 @interface.implementer(IPrincipalRoleMap)
 @component.adapter(ICourseInstance)

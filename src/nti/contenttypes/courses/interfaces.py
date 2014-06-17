@@ -35,8 +35,12 @@ from nti.dataserver.interfaces import ILastModified
 
 from nti.dataserver.contenttypes.forums import interfaces as frm_interfaces
 
-from nti.utils import schema
 from nti.ntiids.schema import ValidNTIID
+
+from nti.schema.field import Object
+from nti.schema.field import ValidDatetime
+from nti.schema.field import ValidTextLine
+from nti.schema.field import UniqueIterable
 
 # Permissions defined for courses here should also be
 # registered in ZCML:
@@ -101,7 +105,6 @@ class _ICourseOutlineNodeContainer(interface.Interface):
 	Internal container for outline nodes.
 	"""
 
-
 class ICourseOutlineNode(ITitledDescribedContent,
 						 IOrderedContainer,
 						 IContainerNamesContainer,
@@ -117,8 +120,8 @@ class ICourseOutlineNode(ITitledDescribedContent,
 	contains(str('.ICourseOutlineNode'))
 	__parent__.required = False
 
-	src = schema.ValidTextLine(title="json file to populate the node overview",
-							   required=False)
+	src = ValidTextLine(title="json file to populate the node overview",
+						required=False)
 
 	def append(node):
 		"A synonym for __setitem__ that automatically handles naming."
@@ -132,7 +135,7 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 	isn't ready yet, or a grouping structure.
 	"""
 
-	AvailableBeginning = schema.ValidDatetime(
+	AvailableBeginning = ValidDatetime(
 		title="This node is available, or expected to be entered or active at this time",
 		description="""When present, this specifies the time instant at which
 		this node and its children are to be available or active. If this is absent,
@@ -142,7 +145,7 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 		timestamp will be done as needed.""",
 		required=False)
 
-	AvailableEnding = schema.ValidDatetime(
+	AvailableEnding = ValidDatetime(
 		title="This node is completed and no longer available at this time",
 		description="""When present, this specifies the last instance at which
 		this node is expected to be available and active.
@@ -199,14 +202,14 @@ class ICourseInstance(IFolder,
 	containers(ICourseAdministrativeLevel)
 	__parent__.required = False
 
-	Discussions = schema.Object(frm_interfaces.IBoard,
-								title="The root discussion board for this course.",
-								description="Typically, courses will 'contain' their own discussions, "
-								"but this may be a reference to another object.")
+	Discussions = Object(frm_interfaces.IBoard,
+						 title="The root discussion board for this course.",
+						 description="Typically, courses will 'contain' their own discussions, "
+						 "but this may be a reference to another object.")
 
-	Outline = schema.Object(ICourseOutline,
-							title="The course outline or syllabus, if there is one.",
-							required=False)
+	Outline = Object(ICourseOutline,
+					 title="The course outline or syllabus, if there is one.",
+					 required=False)
 
 	## Reflecting instructors, TAs, and other affiliated
 	## people with a special role in the course:
@@ -226,9 +229,9 @@ class ICourseInstance(IFolder,
 
 	# These are lower-case attributes because someone might be able to
 	# edit them through-the-web
-	instructors = schema.UniqueIterable(title="The principals that are the intsructors of the course.",
-										description="They get special access rights.",
-										value_type=schema.Object(IPrincipal))
+	instructors = UniqueIterable(title="The principals that are the intsructors of the course.",
+								 description="They get special access rights.",
+								 value_type=Object(IPrincipal))
 
 from pyramid.traversal import lineage as _lineage
 
@@ -259,7 +262,6 @@ def is_instructed_by_name(context, username):
 		return False
 
 	return any((username == instructor.id for instructor in course.instructors))
-
 
 class ICourseEnrollmentManager(interface.Interface):
 	"""

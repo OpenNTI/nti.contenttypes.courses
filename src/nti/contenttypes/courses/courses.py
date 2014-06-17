@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-$Id$
+.. $Id$
 """
 from __future__ import print_function, unicode_literals, absolute_import, division
 __docformat__ = "restructuredtext en"
@@ -18,9 +18,10 @@ from nti.dataserver.containers import _CheckObjectOnSetMixin
 
 from nti.dataserver.contenttypes.forums.board import GeneralBoard
 
+from nti.schema.fieldproperty import createDirectFieldProperties
+
 from . import interfaces
 from .outlines import CourseOutline
-from nti.utils.schema import createDirectFieldProperties
 
 @interface.implementer(interfaces.ICourseAdministrativeLevel)
 class CourseAdministrativeLevel(_CheckObjectOnSetMixin,
@@ -74,5 +75,4 @@ class CourseInstance(_CheckObjectOnSetMixin,
 		Subclasses can extend this to customize the available links.
 
 		"""
-
 		return ()

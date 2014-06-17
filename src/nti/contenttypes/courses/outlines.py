@@ -32,10 +32,10 @@ from zope.container.contained import Contained, setitem, uncontained
 
 from nti.dataserver.datastructures import CreatedModDateTrackingObject
 
-from nti.utils.schema import createDirectFieldProperties
-from nti.utils.schema import createFieldProperties
-from nti.utils.schema import SchemaConfigured
-from nti.utils.schema import AdaptingFieldProperty
+from nti.schema.field import SchemaConfigured
+from nti.schema.fieldproperty import AdaptingFieldProperty
+from nti.schema.fieldproperty import createFieldProperties
+from nti.schema.fieldproperty import createDirectFieldProperties
 
 @interface.implementer(ICourseOutlineNode)
 class CourseOutlineNode(Contained, OrderedDict):
