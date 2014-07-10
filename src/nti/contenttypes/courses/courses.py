@@ -13,8 +13,9 @@ from zope import lifecycleevent
 from zope.cachedescriptors.property import Lazy
 from zope.cachedescriptors.property import readproperty
 
-from nti.dataserver.containers import CaseInsensitiveLastModifiedBTreeFolder
-from nti.dataserver.containers import _CheckObjectOnSetMixin
+#from nti.contentlibrary.bundle import PersistentContentPackageBundle
+
+from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeFolder
 
 from nti.dataserver.contenttypes.forums.board import GeneralBoard
 
@@ -24,13 +25,13 @@ from . import interfaces
 from .outlines import CourseOutline
 
 @interface.implementer(interfaces.ICourseAdministrativeLevel)
-class CourseAdministrativeLevel(_CheckObjectOnSetMixin,
-								CaseInsensitiveLastModifiedBTreeFolder):
+class CourseAdministrativeLevel(CaseInsensitiveCheckingLastModifiedBTreeFolder):
+
 	pass
 
 @interface.implementer(interfaces.ICourseInstance)
-class CourseInstance(_CheckObjectOnSetMixin,
-					 CaseInsensitiveLastModifiedBTreeFolder):
+class CourseInstance(#PersistentContentPackageBundle,
+					 CaseInsensitiveCheckingLastModifiedBTreeFolder):
 
 	createDirectFieldProperties(interfaces.ICourseInstance)
 

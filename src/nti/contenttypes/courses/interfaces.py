@@ -29,6 +29,8 @@ from zope.container.interfaces import IContainerNamesContainer
 from zope.container.constraints import contains
 from zope.container.constraints import containers
 
+from nti.contentlibrary.interfaces import IContentPackageBundle
+
 from nti.dataserver.interfaces import IShouldHaveTraversablePath
 from nti.dataserver.interfaces import ITitledDescribedContent
 from nti.dataserver.interfaces import ILastModified
@@ -184,6 +186,7 @@ class ICourseOutline(ICourseOutlineNode,
 	containers(str('.ICourseInstance'))
 
 class ICourseInstance(IFolder,
+					  #IContentPackageBundle,
 					  IShouldHaveTraversablePath,
 					  _ICourseOutlineNodeContainer):
 	"""
@@ -198,6 +201,11 @@ class ICourseInstance(IFolder,
 	keep (HTML/PDF) content here. As contents are defined, list them
 	here and in the ``contains`` constraint.
 	"""
+
+	# JAM: TODO: Add comments on thought process leading to why
+	# this is-a CPB rather than being have-a. Short anwser:
+	# is-a keeps these out of the main bundle library and thus dealing
+	# with visibility issues. It also simiplifies the initial implementation.
 
 	containers(ICourseAdministrativeLevel)
 	__parent__.required = False
