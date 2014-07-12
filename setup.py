@@ -5,12 +5,7 @@ VERSION = '0.0.0'
 
 entry_points = {
     "z3c.autoinclude.plugin": [
-		#'target = nti.dataserver.contenttypes',
-		# NOTE: We cannot be auto-included by the dataserver
-		# content types because we ourself include
-		# nti.appserver for testing. This leads to configuration
-		# conflicts due to the cycle.
-		'target = nti.app',
+		'target = nti.dataserver.contenttypes',
 	],
 }
 

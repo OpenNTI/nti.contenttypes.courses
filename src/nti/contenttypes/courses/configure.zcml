@@ -12,14 +12,6 @@
 
 	<include package="nti.mimetype" />
 
-	<!--
-	To get maximum externalization testing, let the appserver
-	register all its decorators.
-	But note we don't want a hard dependency on this.
-	-->
-	<include package="nti.appserver"
-			 zcml:condition="installed nti.appserver" />
-
 	<!-- Externalization -->
 	<include package="nti.externalization" file="meta.zcml" />
 	<include package="nti.externalization" />
@@ -52,5 +44,17 @@
 					 instructor" />
 
 	<adapter factory=".principalrole.CourseInstancePrincipalRoleMap" />
+
+	<!--
+		To get maximum externalization testing, let the dataserver
+		register all its decorators.
+		But note we don't want a hard (circular) dependency on this
+		if we can avoid it because we are a plugin to it.
+	-->
+	<configure zcml:condition="have testmode">
+		<include package="nti.dataserver.contenttypes.forums"
+				 zcml:condition="installed nti.dataserver.contenttypes.forums" />
+	</configure>
+
 
 </configure>
