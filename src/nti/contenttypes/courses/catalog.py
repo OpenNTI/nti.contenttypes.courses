@@ -217,7 +217,7 @@ class CourseCatalogFolder(CheckingLastModifiedBTreeFolder):
 		def _recur(folder):
 			course = ICourseInstance(folder, None)
 			if course:
-				entry = ICourseCatalogEntry(course)
+				entry = ICourseCatalogEntry(course, None)
 				if entry:
 					entries.append(entry)
 			try:

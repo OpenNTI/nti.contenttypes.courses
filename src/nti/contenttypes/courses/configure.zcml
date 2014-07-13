@@ -97,6 +97,22 @@
 	<adapter factory=".sharing._CourseInstanceSharingScopePrincipal"
 			 for=".interfaces.ICourseInstanceSharingScope" />
 
+	<!-- vendor info -->
+	<adapter factory=".vendorinfo.CourseInstanceVendorInfo" />
+
+	<!-- Synchronizing external things into objects -->
+	<adapter factory="._synchronize._GenericFolderSynchronizer"
+			 for=".catalog.CourseCatalogFolder
+				  nti.contentlibrary.interfaces.IDelimitedHierarchyBucket" />
+	<adapter factory="._synchronize._GenericFolderSynchronizer"
+			 for=".interfaces.ICourseAdministrativeLevel
+				  nti.contentlibrary.interfaces.IDelimitedHierarchyBucket" />
+
+	<adapter factory="._synchronize._ContentCourseSynchronizer" />
+	<adapter factory="._synchronize._CourseSubInstancesSynchronizer" />
+	<adapter factory="._synchronize._MissingCourseSubInstancesSynchronizer" />
+	<adapter factory="._synchronize._ContentCourseSubInstanceSynchronizer" />
+
 	<!--
 		To get maximum externalization testing, let the dataserver
 		register all its decorators.

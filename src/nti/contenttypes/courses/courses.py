@@ -15,9 +15,8 @@ from zope import lifecycleevent
 from zope.cachedescriptors.property import Lazy
 from zope.cachedescriptors.property import readproperty
 
-from nti.contentlibrary.bundle import PersistentContentPackageBundle
-
 from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeFolder
+from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
 from nti.schema.fieldproperty import createDirectFieldProperties
 
@@ -28,7 +27,10 @@ from .forum import CourseInstanceBoard
 
 @interface.implementer(interfaces.ICourseAdministrativeLevel)
 class CourseAdministrativeLevel(CaseInsensitiveCheckingLastModifiedBTreeFolder):
+	pass
 
+@interface.implementer(interfaces.ICourseSubInstances)
+class CourseSubInstances(CaseInsensitiveCheckingLastModifiedBTreeContainer):
 	pass
 
 @interface.implementer(interfaces.ICourseInstance)
@@ -80,6 +82,15 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		self['SharingScopes'] = scopes
 		return scopes
 
+	@Lazy
+	def SubInstances(self):
+		# As per Discussions
+		self._p_changed = True
+		folder = CourseSubInstances()
+		lifecycleevent.created(folder)
+		self['SubInstances'] = folder
+		return folder
+
 	@readproperty
 	def instructors(self):
 		return ()
@@ -96,6 +107,8 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		return ()
 
 from .interfaces import IContentCourseInstance
+from .interfaces import IContentCourseSubInstance
+from Acquisition import aq_acquire
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
 
 @interface.implementer(IContentCourseInstance)
@@ -118,3 +131,27 @@ class ContentCourseInstance(DisplayableContentMixin,
 
 		if self.ContentPackageBundle and self.root != self.ContentPackageBundle.root:
 			return self.ContentPackageBundle.PlatformPresentationResources
+
+
+@interface.implementer(IContentCourseSubInstance)
+class ContentCourseSubInstance(ContentCourseInstance):
+
+	def __getattr__(self, name):
+		if name.startswith('_'):
+			# TODO: would really like to use the actual
+			# acquisition policy
+			raise AttributeError(name)
+		return aq_acquire(self.__parent__, name)
+
+	@property
+	def ContentPackageBundle(self):
+		"""
+		Our content package bundle is always acquired
+		"""
+		try:
+			return aq_acquire(self.__parent__, 'ContentPackageBundle')
+		except AttributeError:
+			return None
+
+
+	# The original impetus says that they all get separate forums

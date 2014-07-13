@@ -23,6 +23,7 @@ logger = __import__('logging').getLogger(__name__)
 from . import MessageFactory as _
 
 from zope import interface
+from zope.interface.common.mapping import IEnumerableMapping
 
 from zope.security.interfaces import IPrincipal
 
@@ -263,6 +264,15 @@ class ICourseInstanceBoard(ICommunityBoard):
 # Course instances
 ###
 
+class ICourseSubInstances(IContainer):
+	"""
+	A container for the subinstances (sections) of a course.
+	"""
+
+	contains(str('.ICourseSubInstance'))
+	containers(str('.ICourseInstance'))
+	__parent__.required = False
+
 class ICourseInstance(IFolder,
 					  IShouldHaveTraversablePath,
 					  _ICourseOutlineNodeContainer):
@@ -281,9 +291,11 @@ class ICourseInstance(IFolder,
 	Instances may be adaptable to :class:`.IDisplayableContent`.
 	"""
 
-	containers(ICourseAdministrativeLevel)
+	containers(ICourseAdministrativeLevel,
+			   ICourseSubInstances)
 	__parent__.required = False
 
+	# TODO: May need to apply restrictions to which ones of these externalize?
 	SharingScopes = Object(ICourseInstanceSharingScopes,
 						   title="The sharing scopes for this instance",
 						   description="Each course has one or more sharing scopes. "
@@ -297,6 +309,10 @@ class ICourseInstance(IFolder,
 	Outline = Object(ICourseOutline,
 					 title="The course outline or syllabus, if there is one.",
 					 required=False)
+
+	SubInstances = Object(ICourseSubInstances,
+						  title="The sub-instances of this course, if any")
+	SubInstances.setTaggedValue('_ext_excluded_out', True)
 
 	## Reflecting instructors, TAs, and other affiliated
 	## people with a special role in the course:
@@ -353,11 +369,28 @@ class IContentCourseInstance(ICourseInstance):
 	root = Object(IEnumerableDelimitedHierarchyBucket,
 				  title="The on-disk bucket containing descriptions for this object",
 				  default=None,
-				  required=True)
+				  required=False)
 	root.setTaggedValue('_ext_excluded_out', True)
 
 class IContentCourseSubInstance(ICourseSubInstance,IContentCourseInstance):
 	pass
+
+
+class ICourseInstanceVendorInfo(IEnumerableMapping,
+								ILastModified,
+								IContained):
+	"""
+	Arbitrary course vendor-specific information associated with a
+	course instance. Courses should be adaptable to their vendor
+	info.
+
+	This is simply a dictionary and this module does not define
+	the structure of it. However, it is recommended that the top-level
+	keys be the vendor names and within them be the actual vendor specific
+	information.
+	"""
+
+ICourseInstanceVenderInfo = ICourseInstanceVendorInfo # both spellings are acceptable
 
 from zope.location import LocationIterator
 
