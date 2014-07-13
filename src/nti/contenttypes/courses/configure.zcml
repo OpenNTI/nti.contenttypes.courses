@@ -18,8 +18,20 @@
 
 	<ext:registerAutoPackageIO
 		root_interfaces=".interfaces.ICourseInstance
-						 .interfaces.ICourseOutlineNode"
-		modules=".courses .outlines" />
+						 .interfaces.ICourseOutlineNode
+						 .interfaces.ICourseCatalogEntry
+						 .interfaces.ICourseCatalogInstructorInfo"
+		modules=".courses .outlines .catalog .sharing" />
+
+	<!-- Externalize the CourseInstanceSharingScope like the 'community'
+	it appears to be. -->
+	<adapter factory="nti.dataserver.users.users_external._EntitySummaryExternalObject"
+			 for=".interfaces.ICourseInstanceSharingScope"
+			 name="summary" />
+	<adapter factory="nti.dataserver.users.users_external._EntityExternalObject"
+			 for=".interfaces.ICourseInstanceSharingScope" />
+
+
 
 	<!-- Roles and permissions -->
 	<include package="zope.securitypolicy" file="meta.zcml" />
@@ -44,6 +56,46 @@
 					 instructor" />
 
 	<adapter factory=".principalrole.CourseInstancePrincipalRoleMap" />
+
+	<!--
+		We provide one global catalog,
+		but every site that registers its own courses
+		will also register its own catalog.
+		Right now, these do *not* support a hierarchy.
+	-->
+	<utility factory=".catalog.GlobalCourseCatalog"
+			 provides=".interfaces.IGlobalCourseCatalog" />
+
+	<!-- Enrollment -->
+	<adapter factory=".enrollment.DefaultCourseEnrollmentManager" />
+	<adapter factory=".enrollment.DefaultCourseEnrollmentManager"
+			 for=".interfaces.ICourseInstance
+				  pyramid.interfaces.IRequest" />
+	<adapter factory=".enrollment.DefaultCourseInstanceEnrollmentStorageFactory" />
+	<adapter factory=".enrollment.DefaultCourseCatalogEnrollmentStorageFactory" />
+
+	<adapter factory=".enrollment.DefaultCourseEnrollments" />
+	<!-- anything that can become a Principal... -->
+	<subscriber factory=".enrollment.DefaultPrincipalEnrollments"
+				provides=".interfaces.IPrincipalEnrollments"
+				for="*" />
+
+	<!-- managing the scope as you enroll/drop/modify -->
+	<subscriber handler=".sharing.on_enroll_record_scope_membership" />
+	<subscriber handler=".sharing.on_drop_exit_scope_membership" />
+	<subscriber handler=".sharing.on_modified_update_scope_membership" />
+
+	<!-- Weak references -->
+	<adapter factory="nti.intid.wref.ArbitraryOrderableWeakRef"
+			 provides="nti.wref.interfaces.IWeakRef"
+			 for=".interfaces.ICourseInstanceEnrollmentRecord" />
+	<!-- These are a type of Entity, but they have no global
+	name, so we have to be careful to override the weak ref -->
+	<adapter factory=".sharing._CourseInstanceSharingScopeWeakRef"
+			 provides="nti.wref.interfaces.IWeakRef"
+			 for=".interfaces.ICourseInstanceSharingScope" />
+	<adapter factory=".sharing._CourseInstanceSharingScopePrincipal"
+			 for=".interfaces.ICourseInstanceSharingScope" />
 
 	<!--
 		To get maximum externalization testing, let the dataserver

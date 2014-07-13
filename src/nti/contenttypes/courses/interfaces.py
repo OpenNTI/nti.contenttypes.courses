@@ -17,6 +17,11 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+# disable: too many ancestors, missing 'self''
+#pylint: disable=I0011,R0901,E0213
+
+from . import MessageFactory as _
+
 from zope import interface
 
 from zope.security.interfaces import IPrincipal
@@ -25,15 +30,22 @@ from zope.site.interfaces import IFolder
 
 from zope.container.interfaces import IOrderedContainer
 from zope.container.interfaces import IContainerNamesContainer
+from zope.container.interfaces import IContentContainer
+from zope.container.interfaces import IContained
+from zope.container.interfaces import IContainer
 
 from zope.container.constraints import contains
 from zope.container.constraints import containers
 
 from nti.contentlibrary.interfaces import IContentPackageBundle
+from nti.contentlibrary.interfaces import IDisplayableContent
+from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
 from nti.dataserver.interfaces import IShouldHaveTraversablePath
 from nti.dataserver.interfaces import ITitledDescribedContent
 from nti.dataserver.interfaces import ILastModified
+from nti.dataserver.interfaces import ICommunity
+from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
 
 from nti.dataserver.contenttypes.forums import interfaces as frm_interfaces
 
@@ -43,6 +55,10 @@ from nti.schema.field import Object
 from nti.schema.field import ValidDatetime
 from nti.schema.field import ValidTextLine
 from nti.schema.field import UniqueIterable
+from nti.schema.field import Timedelta
+from nti.schema.field import ListOrTuple
+from nti.schema.field import Choice
+
 
 # Permissions defined for courses here should also be
 # registered in ZCML:
@@ -101,6 +117,10 @@ class ICourseAdministrativeLevel(IFolder):
 
 	contains(str('.ICourseInstance'),
 			 str('.ICourseAdministrativeLevel'))
+
+###
+# Outlines
+###
 
 class _ICourseOutlineNodeContainer(interface.Interface):
 	"""
@@ -163,7 +183,6 @@ class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 
 	ContentNTIID =  ValidNTIID(title="The NTIID of the content this node uses")
 
-
 class ICourseOutline(ICourseOutlineNode,
 					 ILastModified):
 	"""
@@ -185,8 +204,66 @@ class ICourseOutline(ICourseOutlineNode,
 	# run into caching issues (see the MD5 hacks for forums).
 	containers(str('.ICourseInstance'))
 
+###
+# Sharing
+###
+
+# Despite the notes at the top of this file about group-folders,
+# we still stick to a fairly basic Community-derived
+# object for sharing purposes. This is largely for compatibility
+# and will change.
+
+class ICourseInstanceSharingScope(ICommunity,
+								  IUseNTIIDAsExternalUsername):
+	"""
+	A sharing scope within an instance.
+	"""
+
+	containers(str('.ICourseInstanceSharingScopes'))
+	__parent__.required = False
+
+class ICourseInstanceSharingScopes(IContainer):
+	"""
+	A container of sharing scopes for the course.
+
+	See the documentation for :class:`ICourseInstanceEnrollmentRecord`
+	for the expected keys in this scope.
+	"""
+
+	contains(ICourseInstanceSharingScope)
+	containers(str('.ICourseInstance'))
+	__parent__.required = False
+
+	def getAllScopesImpliedbyScope(scope_name):
+		"""
+		Return all the :class:`ICourseInstanceSharingScope`s
+		implied by the given scope name, including the scope
+		itself, creating them if necessary.
+		"""
+
+###
+# Discussions
+###
+
+from nti.dataserver.contenttypes.forums.interfaces import ICommunityBoard
+
+class ICourseInstanceBoard(ICommunityBoard):
+	"""
+	Specialization of boards for courses.
+
+	Note that courses are not required to contain
+	this type of board in their Discussions property
+	(for BWC, mostly), but this is required to be
+	contained by a course.
+	"""
+	containers(str('.ICourseInstance'))
+
+
+###
+# Course instances
+###
+
 class ICourseInstance(IFolder,
-					  #IContentPackageBundle,
 					  IShouldHaveTraversablePath,
 					  _ICourseOutlineNodeContainer):
 	"""
@@ -200,15 +277,17 @@ class ICourseInstance(IFolder,
 	of their info from acquisition of this object. Or we may need to
 	keep (HTML/PDF) content here. As contents are defined, list them
 	here and in the ``contains`` constraint.
-	"""
 
-	# JAM: TODO: Add comments on thought process leading to why
-	# this is-a CPB rather than being have-a. Short anwser:
-	# is-a keeps these out of the main bundle library and thus dealing
-	# with visibility issues. It also simiplifies the initial implementation.
+	Instances may be adaptable to :class:`.IDisplayableContent`.
+	"""
 
 	containers(ICourseAdministrativeLevel)
 	__parent__.required = False
+
+	SharingScopes = Object(ICourseInstanceSharingScopes,
+						   title="The sharing scopes for this instance",
+						   description="Each course has one or more sharing scopes. "
+						   "See :class:`ICourseInstanceEnrollmentRecord` for details.")
 
 	Discussions = Object(frm_interfaces.IBoard,
 						 title="The root discussion board for this course.",
@@ -241,7 +320,46 @@ class ICourseInstance(IFolder,
 								 description="They get special access rights.",
 								 value_type=Object(IPrincipal))
 
-from pyramid.traversal import lineage as _lineage
+class ICourseSubInstance(ICourseInstance):
+	"""
+	A portion or section of a course instance that lives within a
+	containing course instance. The containing course instance will
+	provide any properties not specifically provided by this object
+	(e.g., it will acquire them through its parents).
+	"""
+	interface.taggedValue('__external_class_name__', 'CourseInstance')
+
+
+class IContentCourseInstance(ICourseInstance):
+	"""
+	A type of course instance closely associated with
+	content.
+	"""
+
+	# JAM: Although it might seem convenient to make
+	# a CourseInstance is-a ContentBundle,
+	# that muddies inheritance substantially and requires
+	# all kinds of weird configuration rules because we don't
+	# want to inherit what the content bundle has, such as
+	# discussions. In addition, we want to have the possibility
+	# that the same content bundle is used both inside and outside
+	# of a course context (though the initial implementation )
+
+	ContentPackageBundle = Object(IContentPackageBundle,
+								  title="The content package associated with this course.",
+								  description="Not externalized, that is done on the catalog entry derived from this")
+	ContentPackageBundle.setTaggedValue('_ext_excluded_out', True)
+
+	root = Object(IEnumerableDelimitedHierarchyBucket,
+				  title="The on-disk bucket containing descriptions for this object",
+				  default=None,
+				  required=True)
+	root.setTaggedValue('_ext_excluded_out', True)
+
+class IContentCourseSubInstance(ICourseSubInstance,IContentCourseInstance):
+	pass
+
+from zope.location import LocationIterator
 
 def is_instructed_by_name(context, username):
 	"""
@@ -261,7 +379,7 @@ def is_instructed_by_name(context, username):
 		return None
 
 	course = None
-	for x in _lineage(context):
+	for x in LocationIterator(context):
 		course = ICourseInstance(x, None)
 		if course is not None:
 			break
@@ -271,20 +389,214 @@ def is_instructed_by_name(context, username):
 
 	return any((username == instructor.id for instructor in course.instructors))
 
+###
+# Catalog
+###
+
+class ICourseCatalog(interface.Interface):
+	"""
+	Something that manages the set of courses available in the system
+	and provides ways to query for courses and find out information
+	about them.
+
+	Implementations that live in sites are expected to be able
+	to query up the tree for additional course catalog entries.
+	"""
+
+	def isEmpty():
+		"""
+		return if this catalog is empty
+		"""
+
+	def iterCatalogEntries():
+		"""
+		Iterate across the installed catalog entries.
+		"""
+
+
+class IWritableCourseCatalog(ICourseCatalog,IContentContainer):
+	"""
+	A type of course catalog that is expected to behave like
+	a container and be writable.
+	"""
+
+	contains(b'.ICourseCatalogEntry')
+
+	def addCatalogEntry(entry, event=True):
+		"""
+		Adds an entry to this catalog.
+
+		:keyword bool event: If true (the default), we broadcast
+			the object added event.
+		"""
+
+	def removeCatalogEntry(entry, event=True):
+		"""
+		Remove an entry from this catalog.
+
+		:keyword bool event: If true (the default), we broadcast
+			the object removed event.
+		"""
+
+
+class IGlobalCourseCatalog(IWritableCourseCatalog):
+	"""
+	A course catalog intended to be registered at the global
+	level as the root (or within z3c.baseregistry components
+	that are not persistent.)
+	"""
+
+class ICourseCatalogInstructorInfo(interface.Interface):
+	"""
+	Information about a course instructor.
+
+	.. note:: Almost all of this could/should
+		come from a user profile. That way the user
+		can be in charge of it. Pictures would come from
+		the user's avatar URL.
+	"""
+
+	Name = ValidTextLine(title="The instructor's name")
+	Title = ValidTextLine(title="The instructor's title of address such as Dr.",
+							required=False)
+	JobTitle = ValidTextLine(title="The instructor's academic job title")
+	Suffix = ValidTextLine(title="The instructor's suffix such as PhD or Jr",
+							 required=False)
+
+class ICourseCatalogEntry(IDisplayableContent,
+						  IShouldHaveTraversablePath):
+	"""
+	An entry in the course catalog containing metadata
+	and presentation data about the course.
+
+	Much of this is poorly modeled and a conglomeration of things
+	found in several previous places.
+
+	In general, these objects should be adaptable to their
+	corresponding :class:`.ICourseInstance`, and the
+	course instance should be adaptable back to its corresponding
+	entry.
+	"""
+
+	containers(ICourseCatalog)
+	__parent__.required = False
+
+	# Used to have Title/Description, now the lower case versions.
+	# The T/D should be aliased in implementations.
+
+	ProviderUniqueID = ValidTextLine(title="The unique id assigned by the provider")
+	ProviderDepartmentTitle = ValidTextLine(title="The string assigned to the provider's department offering the course")
+
+	Instructors = ListOrTuple(title="The instuctors. Order might matter",
+									 value_type=Object(ICourseCatalogInstructorInfo) )
+
+	### Things related to the availability of the course
+	StartDate = ValidDatetime(title="The date on which the course begins",
+						 description="Currently optional; a missing value means the course already started")
+	Duration = Timedelta(title="The length of the course",
+						 description="Currently optional, may be None")
+	EndDate = ValidDatetime(title="The date on which the course ends",
+					   description="Currently optional; a missing value means the course has no defined end date.")
+
+
+
+###
+# Enrollments
+###
+
+# Now we list the scopes and create a vocabulary
+# for them. In the future, we can use a vocabularyregistry
+# to have these be site-specific.
+
+
+#: The "root" enrollment or sharing scope; everyone enrolled or administrating
+#: is a member of this scope.
+#: sharing scopes are conceptually arranged in a strict hierarchy, and
+#: every enrollment record is within one specific scope. Because
+#: scope objects do not actually nest (are non-transitive), it is implied that
+#: a member of a nested scope will actually also be members of
+#: the parent scopes.
+ES_PUBLIC = "Public"
+
+#: This scope extends the public scope with people taking the course
+#: to earn academic credit. They have probably paid money.
+ES_CREDIT = "ForCredit"
+
+#: This scope extends the ForCredit scope to be specific to people who
+#: are engaged in a degree-seeking program.
+ES_CREDIT_DEGREE = "ForCreditDegree"
+
+#: This scope extends the ForCredit scope to be specific to people who
+#: are taking the course for credit, but are not engaged in
+#: seeking a degree.
+ES_CREDIT_NONDEGREE = "ForCreditNonDegree"
+
+
+from zope.schema.vocabulary import SimpleTerm
+from zope.schema.vocabulary import SimpleVocabulary
+
+class ScopeTerm(SimpleTerm):
+
+	def __init__(self, value, title=None, implies=(), implied_by=()):
+		SimpleTerm.__init__(self, value, title=title)
+		self.implies = implies
+		self.implied_by = implied_by
+
+
+ENROLLMENT_SCOPE_VOCABULARY = SimpleVocabulary(
+	[ScopeTerm(ES_PUBLIC,
+			   title=_('Public'),
+			   implied_by=(ES_CREDIT, ES_CREDIT_DEGREE, ES_CREDIT_NONDEGREE)),
+	 ScopeTerm(ES_CREDIT,
+				title=_('For Credit'),
+				implies=(ES_PUBLIC,),
+				implied_by=(ES_CREDIT_DEGREE, ES_CREDIT_NONDEGREE)),
+	 ScopeTerm(ES_CREDIT_DEGREE,
+				title=_('For Credit (Degree)'),
+				implies=(ES_CREDIT, ES_PUBLIC),
+				implied_by=()),
+	 ScopeTerm(ES_CREDIT_NONDEGREE,
+				title=_('For Credit (Non-degree)'),
+				implies=(ES_CREDIT, ES_PUBLIC),
+				implied_by=())])
+
+class ICourseInstanceEnrollmentRecord(ILastModified,
+									  IContained):
+	"""
+	A record of enrollment in a particular course instance.
+	Expect object added and removed events to be fired when
+	people are enrolled and when people ar dropped as these
+	objects are created and destroyed.
+	"""
+
+	CourseInstance = Object(ICourseInstance,
+							required=False)
+
+	Principal = Object(interface.Interface,
+					   title="The principal this record is for",
+					   required=False)
+
+	Scope = Choice(title="The name of the enrollment scope",
+				   vocabulary=ENROLLMENT_SCOPE_VOCABULARY,
+				   default=ES_PUBLIC)
+
 class ICourseEnrollmentManager(interface.Interface):
 	"""
 	Something that manages the enrollments in an individual
-	course. This is typically registered as an adapter
+	course. This is typically available as an adapter
 	from :class:`.ICourseInstance`, or some course instances
 	may choose to implement this directly.
 	"""
 
-	def enroll(principal):
+	def enroll(principal, scope=ES_PUBLIC):
 		"""
 		Cause the given principal to be enrolled in this course, raising
 		an appropriate error if that cannot be done.
 
-		If the principal is already enrolled, this has no effect.
+		If the principal is already enrolled, this has no effect,
+		regardless of scope.
+
+		:keyword scope: One of the items from the :data:`.ENROLLMENT_SCOPE_VOCABULARY`
 
 		:return: A truth value that is True if some action was taken,
 			and false of no action was taken.

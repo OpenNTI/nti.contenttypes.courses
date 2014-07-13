@@ -8,21 +8,23 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from . import MessageFactory as _
+
 from zope import interface
 from zope import lifecycleevent
 from zope.cachedescriptors.property import Lazy
 from zope.cachedescriptors.property import readproperty
 
-#from nti.contentlibrary.bundle import PersistentContentPackageBundle
+from nti.contentlibrary.bundle import PersistentContentPackageBundle
 
 from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeFolder
-
-from nti.dataserver.contenttypes.forums.board import GeneralBoard
 
 from nti.schema.fieldproperty import createDirectFieldProperties
 
 from . import interfaces
 from .outlines import CourseOutline
+from .sharing import CourseInstanceSharingScopes
+from .forum import CourseInstanceBoard
 
 @interface.implementer(interfaces.ICourseAdministrativeLevel)
 class CourseAdministrativeLevel(CaseInsensitiveCheckingLastModifiedBTreeFolder):
@@ -30,8 +32,7 @@ class CourseAdministrativeLevel(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 	pass
 
 @interface.implementer(interfaces.ICourseInstance)
-class CourseInstance(#PersistentContentPackageBundle,
-					 CaseInsensitiveCheckingLastModifiedBTreeFolder):
+class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 
 	createDirectFieldProperties(interfaces.ICourseInstance)
 
@@ -49,7 +50,14 @@ class CourseInstance(#PersistentContentPackageBundle,
 		# Store it inside this folder
 		# so it is traversable
 		# TODO: Title
-		board = GeneralBoard()
+		# Course instance boards are a type-of
+		# community board, and community boards
+		# must be created by a community. We choose
+		# the public scope.
+		public_scope, = self.SharingScopes.getAllScopesImpliedbyScope('Public')
+		board = CourseInstanceBoard()
+		board.creator = public_scope
+		board.title = _('Discussions')
 		lifecycleevent.created(board)
 		self['Discussions'] = board
 		return board
@@ -62,6 +70,15 @@ class CourseInstance(#PersistentContentPackageBundle,
 		lifecycleevent.created(outline)
 		self['Outline'] = outline
 		return outline
+
+	@Lazy
+	def SharingScopes(self):
+		# As per Discussions
+		self._p_changed = True
+		scopes = CourseInstanceSharingScopes()
+		lifecycleevent.created(scopes)
+		self['SharingScopes'] = scopes
+		return scopes
 
 	@readproperty
 	def instructors(self):
@@ -77,3 +94,27 @@ class CourseInstance(#PersistentContentPackageBundle,
 
 		"""
 		return ()
+
+from .interfaces import IContentCourseInstance
+from nti.contentlibrary.presentationresource import DisplayableContentMixin
+
+@interface.implementer(IContentCourseInstance)
+class ContentCourseInstance(DisplayableContentMixin,
+							CourseInstance):
+
+	createDirectFieldProperties(IContentCourseInstance)
+
+	@property
+	def PlatformPresentationResources(self):
+		"""
+		If we do not have our own presentation resources,
+		and our root is different than our bundle's,
+		we return the bundle's resources.
+		"""
+
+		ours = super(ContentCourseInstance,self).PlatformPresentationResources
+		if ours:
+			return ours
+
+		if self.ContentPackageBundle and self.root != self.ContentPackageBundle.root:
+			return self.ContentPackageBundle.PlatformPresentationResources

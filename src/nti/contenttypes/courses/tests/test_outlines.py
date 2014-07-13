@@ -36,7 +36,9 @@ from .. import interfaces
 
 from datetime import datetime
 
-class TestCourseOutline(base.SharedConfiguringTestBase):
+from . import CourseLayerTest
+
+class TestCourseOutline(CourseLayerTest):
 
 	set_up_packages = (__name__,)
 

@@ -29,13 +29,14 @@ from nti.testing import matchers
 from nti.testing.matchers import verifiably_provides
 from nti.externalization.tests import externalizes
 
+
 from .. import courses
 from .. import interfaces
 
+from . import CourseLayerTest
 
-class TestCourseInstance(base.SharedConfiguringTestBase):
+class TestCourseInstance(CourseLayerTest):
 
-	set_up_packages = (__name__,)
 
 	def test_course_implements(self):
 		assert_that( courses.CourseInstance(), verifiably_provides(interfaces.ICourseInstance) )
@@ -54,10 +55,26 @@ class TestCourseInstance(base.SharedConfiguringTestBase):
 		inst = courses.CourseInstance()
 		assert_that( inst.Discussions, is_( same_instance( inst.Discussions )))
 
+
 	def test_course_externalizes(self):
 
 		inst = courses.CourseInstance()
-		assert_that( inst, externalizes(has_entries('Class', 'CourseInstance',
-													'Discussions', has_entries('Class', 'GeneralBoard',
-																			   'title', ''),
-													'MimeType', 'application/vnd.nextthought.courses.courseinstance')) )
+		getattr(inst, 'Discussions' ) # this creates the Public scope
+		ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345'
+		inst.SharingScopes['Public'].to_external_ntiid_oid = lambda: ntiid
+
+		assert_that( unicode(inst.SharingScopes['Public']),
+					 is_(ntiid))
+		assert_that( inst,
+					 externalizes(has_entries('Class', 'CourseInstance',
+											  'Discussions', has_entries('Class', 'CourseInstanceBoard',
+																		 'MimeType', 'application/vnd.nextthought.courses.courseinstanceboard',
+																		 'title', 'Discussions',
+																		 'Creator', ntiid,
+																	 ),
+											  'MimeType', 'application/vnd.nextthought.courses.courseinstance',
+											  'SharingScopes', has_entries('Class', 'CourseInstanceSharingScopes',
+																		   'Public', has_entries('Creator', 'system',
+																								 'NTIID', ntiid,
+																								 'ID', ntiid,
+																								 'Username', ntiid)))) )
