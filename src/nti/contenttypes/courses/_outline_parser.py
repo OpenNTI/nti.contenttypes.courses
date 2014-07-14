@@ -95,14 +95,12 @@ def fill_outline_from_node(outline, course_element): #pylint:disable=I0011,R0912
 
 
 
-			# Now, if our node is supposed to have the NTIID, expose it
-			# (this is only for efficiency; if it isn't supposed to have the
-			# NTIID it won't be in the interface and wouldn't be externalized)
-			if hasattr(lesson_node, 'ContentNTIID'):
+			# Now, if our node is supposed to have the NTIID, expose it.
+			# Even if it doesn't (and won't be in the schema and won't be
+			# externalized) go ahead and put it there for convenience.
+			# See the ICourseOutlineCalendarNode for information.
+			if topic_ntiid:
 				lesson_node.ContentNTIID = topic_ntiid
-			else:
-				# Quick hack to make this available for use elsewhere
-				lesson_node._v_ContentNTIID = topic_ntiid
 
 			lesson_node.src = _attr_val(lesson, str( 'src' ) )
 

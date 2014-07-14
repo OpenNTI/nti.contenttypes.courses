@@ -158,6 +158,11 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 	isn't ready yet, or a grouping structure.
 	"""
 
+	ContentNTIID = interface.Attribute('ContentNTIID',
+									   "A non-schema place (so not externalized) that can store"
+									   "a placeholder content-ntiid, if it is known.")
+	ContentNTIID.setTaggedValue('_ext_excluded_out', True)
+
 	AvailableBeginning = ValidDatetime(
 		title="This node is available, or expected to be entered or active at this time",
 		description="""When present, this specifies the time instant at which
