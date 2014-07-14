@@ -1,0 +1,144 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Event listeners.
+
+.. $Id$
+"""
+
+from __future__ import print_function, unicode_literals, absolute_import, division
+__docformat__ = "restructuredtext en"
+
+logger = __import__('logging').getLogger(__name__)
+
+from zope import component
+
+from nti.contentlibrary.interfaces import IContentPackageLibrary
+from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
+from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
+from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
+
+from .catalog import CourseCatalogFolder
+from .interfaces import IPersistentCourseCatalog
+
+from zope.component.hooks import site
+
+COURSE_CATALOG_NAME = 'Courses'
+
+from zope.interface.interfaces import IRegistered
+from zope.interface.interfaces import IUnregistered
+
+
+### XXX: This is very similar to nti.contentlibrary.subscribers
+
+
+from nti.site.localutility import install_utility
+from nti.site.localutility import uninstall_utility_on_unregistration
+
+
+@component.adapter(IPersistentContentPackageLibrary, IRegistered)
+def install_site_course_catalog(local_library, _=None):
+	"""
+	When a new local site, representing a site (host) policy
+	is added, install a site-local course-catalog and associated utilities
+	into it. The catalog is sync'd after this is done.
+
+	If you need to perform work, such as registering your own
+	utility in the local site that uses the local catalog, listen for the component
+	registration event, :class:`zope.interface.interfaces.IRegistered`,
+	which is an ObjectEvent, whose object will be an
+	:class:`nti.contenttypes.courses.interfaces.IPersistentCourseCatalog`.
+
+	Although this function is ordinarily called as an event listener
+	for a :class:`.IRegistered` event for a
+	:class:`.IPersistentContentPackageLibrary`, it can also be called
+	manually, passing in just a site manager. In that case, if there
+	is no local course catalog, and one can now be found, it will be
+	created; if a local catalog already exists, nothing will be done.
+
+	:returns: The site local catalog, if one was found or installed.
+	"""
+
+	# We take either a local library, which will be in the context
+	# of a site manager, or the site manager itself, which
+	# is directly adaptable to IComponentLookup
+	# (zope.component.hooks tries to adapt context to IComponentLookup,
+	# and zope.site.site contains a SiteManagerAdapter that walks
+	# up the parent tree)
+	local_site_manager = component.getSiteManager(local_library)
+
+	if _ is None and COURSE_CATALOG_NAME in local_site_manager:
+		cat = local_site_manager[COURSE_CATALOG_NAME]
+		logger.debug("Nothing to do for site %s, catalog already present %s",
+					 local_site_manager, cat)
+		return cat
+
+	local_site = local_site_manager.__parent__
+	assert bool(local_site.__name__), "sites must be named"
+
+	catalog = CourseCatalogFolder()
+
+	with site(local_site):
+		# install and sync in this site so the right utilities and event
+		# listeners are found
+		# Before we install (which fires a registration event that things might
+		# be listening for) set up the dependent utilities
+		install_utility(catalog,
+						COURSE_CATALOG_NAME,
+						IPersistentCourseCatalog,
+						local_site_manager)
+
+		if not IPersistentContentPackageLibrary.providedBy(local_library):
+			# because we cold have been handed the site
+			local_library = local_site_manager.getUtility(IContentPackageLibrary)
+		sync_catalog_when_library_synched(local_library, None)
+		return catalog
+
+@component.adapter(IPersistentContentPackageLibrary, IUnregistered)
+def uninstall_site_course_catalog(library, event):
+	uninstall_utility_on_unregistration(COURSE_CATALOG_NAME,
+										IPersistentCourseCatalog,
+										event)
+
+### Sync-related subscribers
+
+from ._synchronize import IObjectEntrySynchronizer
+
+@component.adapter(IPersistentContentPackageLibrary, IContentPackageLibraryDidSyncEvent)
+def sync_catalog_when_library_synched(library, event):
+	"""
+	When a persistent content library is synchronized
+	with the disk contents, whether or not anything actually changed,
+	we also synchronize the corresponding course catalog. (Because they could
+	change independently and in unknown ways)
+	"""
+
+	# Find the local site manager
+	site_manager = component.getSiteManager(library)
+	if library.__parent__ is not site_manager:
+		logger.warn("Expected to find persistent library in its own site; refusing to sync")
+		return
+
+	catalog = site_manager.get(COURSE_CATALOG_NAME)
+	if catalog is None:
+		logger.info("Installing and synchronizing course catalog for %s", site_manager)
+		# which in turn will call back to us
+		install_site_course_catalog(library)
+		return
+
+	enumeration = IDelimitedHierarchyContentPackageEnumeration(library)
+
+	enumeration_root = enumeration.root
+
+	courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
+	if courses_bucket is None:
+		logger.info("Not synchronizing: no directory named %s in %s for catalog %s",
+					catalog.__name__, getattr(enumeration_root, 'absolute_path', enumeration_root),
+					catalog)
+		return
+
+	logger.info( "Synchronizing course catalog %s in site %s from directory %s",
+				 catalog, site_manager.__parent__.__name__,
+				 getattr(courses_bucket, 'absolute_path', courses_bucket) )
+	component.getMultiAdapter( (catalog, courses_bucket),
+							   IObjectEntrySynchronizer).synchronize(catalog, courses_bucket)
