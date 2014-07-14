@@ -37,11 +37,15 @@ from .courses import ContentCourseInstance
 from .courses import ContentCourseSubInstance
 from .courses import CourseAdministrativeLevel
 
+from ._outline_parser import fill_outline_from_key
+
 from nti.contentlibrary.bundle import PersistentContentPackageBundle
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 
 VENDOR_INFO_NAME = 'vendor_info.json'
+COURSE_OUTLINE_NAME = 'course_outline.xml'
+INSTRUCTOR_INFO_NAME = 'instructor_info.json'
 SECTION_FOLDER_NAME = 'Sections'
 
 @interface.implementer(IObjectEntrySynchronizer)
@@ -130,6 +134,7 @@ class _ContentCourseSynchronizer(object):
 		bundle_modified = course.ContentPackageBundle.lastModified
 
 		self.update_vendor_info(course, bucket)
+		self.update_outline(course, bucket, try_legacy_content_bundle=True)
 
 		sections_bucket = bucket.getChildNamed(SECTION_FOLDER_NAME)
 		sync = component.getMultiAdapter( (course.SubInstances, sections_bucket) )
@@ -147,6 +152,35 @@ class _ContentCourseSynchronizer(object):
 			vendor_info.lastModified = vendor_json_key.lastModified
 			vendor_info.createdTime = vendor_json_key.createdTime
 
+	@classmethod
+	def update_outline(cls, course, bucket, try_legacy_content_bundle=False):
+		outline_xml_key = bucket.getChildNamed(COURSE_OUTLINE_NAME)
+		outline_xml_node = None
+		if not outline_xml_key and try_legacy_content_bundle:
+			# Only want to do this for root courses
+			if course.ContentPackageBundle:
+				# Just take the first one. That should be all there
+				# is in legacy cases
+				for package in course.ContentPackageBundle.ContentPackages:
+					outline_xml_key = package.index
+					outline_xml_node = 'course'
+					break
+
+		# We actually want to delete anything it has
+		# in case it's a subinstance so the parent can come through
+		# again
+		if not outline_xml_key:
+			try:
+				del course.Outline
+			except AttributeError:
+				pass
+		else:
+			try:
+				course.prepare_own_outline()
+			except AttributeError:
+				pass
+			fill_outline_from_key(course.Outline, outline_xml_key, xml_parent_name=outline_xml_node)
+
 @component.adapter(ICourseSubInstances, IDelimitedHierarchyBucket)
 class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
 
@@ -155,8 +189,15 @@ class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
 	#: and we do not recurse into folders
 	_ADMIN_LEVEL_FACTORY = None
 
-	# TODO: What should we count on to distinguish sub-instances?
-	_COURSE_KEY_NAME = 'instructor_info.json'
+	_COURSE_KEY_NAME = None
+
+	def _get_factory_for(self, bucket):
+		# We only support one level, and they must all
+		# be courses if they have one of the known
+		# files in it
+		for possible_key in (INSTRUCTOR_INFO_NAME, COURSE_OUTLINE_NAME, VENDOR_INFO_NAME):
+			if bucket.getChildNamed(possible_key):
+				return self._COURSE_INSTANCE_FACTORY
 
 @interface.implementer(IObjectEntrySynchronizer)
 @component.adapter(ICourseSubInstances, interface.Interface)
@@ -177,6 +218,7 @@ class _ContentCourseSubInstanceSynchronizer(object):
 
 	def synchronize(self, subcourse, bucket):
 		_ContentCourseSynchronizer.update_vendor_info(subcourse, bucket)
+		_ContentCourseSynchronizer.update_outline(subcourse, bucket)
 
 def synchronize_catalog_from_root(catalog_folder, root):
 	"""

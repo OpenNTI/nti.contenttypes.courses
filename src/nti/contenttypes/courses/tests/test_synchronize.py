@@ -17,7 +17,7 @@ logger = __import__('logging').getLogger(__name__)
 import unittest
 from hamcrest import assert_that
 from hamcrest import is_
-from hamcrest import has_key
+from hamcrest import has_length
 from hamcrest import has_entry
 
 from nti.testing import base
@@ -62,6 +62,9 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		spring = folder['Spring2014']
 		gateway = spring['Gateway']
 
+		assert_that( gateway.Outline, has_length(6) )
+
+
 		assert_that( ICourseInstanceVendorInfo(gateway),
 					 has_entry( 'OU', has_entry('key', 42) ) )
 
@@ -72,6 +75,11 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		assert_that(sec1.ContentPackageBundle,
 					is_(gateway.ContentPackageBundle))
 
+		assert_that(sec1.Outline, is_(gateway.Outline))
+
 		assert_that( sec1,
 					 externalizes( has_entry(
 						 'Class', 'CourseInstance' ) ) )
+
+		sec2 = gateway.SubInstances['02']
+		assert_that( sec2.Outline, has_length(1) )

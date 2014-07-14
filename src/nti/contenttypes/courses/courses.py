@@ -21,7 +21,7 @@ from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeCo
 from nti.schema.fieldproperty import createDirectFieldProperties
 
 from . import interfaces
-from .outlines import CourseOutline
+from .outlines import PersistentCourseOutline
 from .sharing import CourseInstanceSharingScopes
 from .forum import CourseInstanceBoard
 
@@ -64,14 +64,17 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		self['Discussions'] = board
 		return board
 
-	@Lazy
-	def Outline(self):
+	def _make_Outline(self):
+		"""
+		A lazy helper to create this object's Outline.
+		"""
 		# As per Discussions
 		self._p_changed = True
-		outline = CourseOutline()
+		outline = PersistentCourseOutline()
 		lifecycleevent.created(outline)
 		self['Outline'] = outline
 		return outline
+	Outline = Lazy(_make_Outline, str('Outline'))
 
 	@Lazy
 	def SharingScopes(self):
@@ -153,5 +156,29 @@ class ContentCourseSubInstance(ContentCourseInstance):
 		except AttributeError:
 			return None
 
+	def prepare_own_outline(self):
+		self._p_activate()
+		if 'Outline' not in self.__dict__:
+			outline = self._make_Outline()
+			self.__dict__[str('Outline')] = outline
+
+	def _get_Outline(self):
+		self._p_activate()
+		if 'Outline' in self.__dict__:
+			return self.__dict__['Outline']
+		return aq_acquire(self.__parent__, 'Outline')
+
+	def _set_Outline(self, outline):
+		self._p_activate()
+		self._p_changed = True
+		self.__dict__[str('Outline')] = outline
+
+	def _del_Outline(self):
+		self._p_activate()
+		if 'Outline' in self.__dict__:
+			self._p_changed = True
+			del self.__dict__['Outline']
+
+	Outline = property(_get_Outline, _set_Outline, _del_Outline)
 
 	# The original impetus says that they all get separate forums

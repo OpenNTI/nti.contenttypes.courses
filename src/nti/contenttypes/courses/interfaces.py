@@ -204,6 +204,7 @@ class ICourseOutline(ICourseOutlineNode,
 	# extreme care is taken with the URL structure, we could
 	# run into caching issues (see the MD5 hacks for forums).
 	containers(str('.ICourseInstance'))
+	__parent__.required = False
 
 ###
 # Sharing
