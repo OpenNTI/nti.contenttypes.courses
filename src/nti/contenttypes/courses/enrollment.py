@@ -67,6 +67,8 @@ class IDefaultCourseCatalogEnrollmentStorage(IContainer,IContained):
 from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 from persistent.list import PersistentList
 
+# Recall that everything that's keyed by username/principalid must be case-insensitive
+
 @component.adapter(ICourseInstance)
 @interface.implementer(IDefaultCourseInstanceEnrollmentStorage)
 class DefaultCourseInstanceEnrollmentStorage(CaseInsensitiveCheckingLastModifiedBTreeContainer):
@@ -158,14 +160,15 @@ class DefaultCourseEnrollmentManager(object):
 			return False
 
 		record = DefaultCourseInstanceEnrollmentRecord(Principal=principal, Scope=scope)
-		lifecycleevent.created(record)
-		# now install and fire the ObjectAdded event
-		self._inst_enrollment_storage[principal_id] = record
-
 		enrollments = _readCurrent(self._cat_enrollment_storage.enrollments_for_id(principal_id,
 																				   principal))
 
+		lifecycleevent.created(record)
 		enrollments.append(record)
+		# now install and fire the ObjectAdded event, after
+		# it's in the IPrincipalEnrollments; that way
+		# event listeners will see consistent data.
+		self._inst_enrollment_storage[principal_id] = record
 
 		return record
 
@@ -175,15 +178,19 @@ class DefaultCourseEnrollmentManager(object):
 			return False
 
 		record = self._inst_enrollment_storage[principal_id]
-		# reverse the order: remove from the enrollment list
-		# then fire the event
-
+		# again be consistent with the order: remove from the
+		# enrollment list then fire the event
 		enrollments = _readCurrent(self._cat_enrollment_storage.enrollments_for_id(principal_id,
 																				   principal))
 		record_ix = enrollments.index(record)
 		del enrollments[record_ix]
 
-		del self._inst_enrollment_storage[principal_id]
+		try:
+			del self._inst_enrollment_storage[principal_id]
+		except Exception as e:
+			from IPython.core.debugger import Tracer; Tracer()() ## DEBUG ##
+			raise
+
 		return record
 
 @component.adapter(ICourseInstance)
@@ -210,7 +217,11 @@ class DefaultPrincipalEnrollments(object):
 		self.principal = principal
 
 	def iter_enrollments(self):
-		principal_id = IPrincipal(self.principal).id
+		iprincipal = IPrincipal(self.principal, None)
+		if iprincipal is None:
+			return
+
+		principal_id = iprincipal.id
 		catalog = component.queryUtility(ICourseCatalog)
 		while catalog is not None:
 			storage = IDefaultCourseCatalogEnrollmentStorage(catalog)
@@ -274,3 +285,31 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 			return self is not other and (self.__name__, self.__parent__) != (other.__name__, other.__parent__)
 		except AttributeError:
 			return NotImplemented
+
+# Subscribers to keep things in sync when
+# objects are deleted.
+# We may have intid-weak references to these things,
+# so we need to catch them on the IntIdRemoved event
+# for dependable ordering
+
+
+def on_principal_deletion_unenroll(principal, event):
+	pins = component.subscribers( (principal,), IPrincipalEnrollments )
+	for enrollments in pins:
+
+		for record in enrollments.iter_enrollments():
+			course = record.CourseInstance
+			manager = ICourseEnrollmentManager(course)
+			manager.drop(principal)
+
+def on_course_deletion_unenroll(course, event):
+	enrollments = ICourseEnrollments(course)
+	manager = ICourseEnrollmentManager(course)
+	for record in enrollments.iter_enrollments():
+		principal = record.Principal
+		manager.drop(principal)
+
+	# XXX: In the future, depending on how we go with Sections
+	# and having a "master" scope in the  parent section,
+	# this could also require us checking through the parents
+	# if it was a sub-instance that got deleted

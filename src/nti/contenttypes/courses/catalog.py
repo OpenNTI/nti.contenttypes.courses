@@ -47,6 +47,9 @@ from .interfaces import ICourseCatalogInstructorInfo
 @WithRepr
 class GlobalCourseCatalog(CheckingLastModifiedBTreeContainer):
 
+	# NOTE: We happen to inherit Persistent, which we really
+	# don't want.
+
 	lastModified = 0
 	__name__ = 'CourseCatalog'
 
@@ -196,6 +199,11 @@ class CourseCatalogFolder(CheckingLastModifiedBTreeFolder):
 	This folder is intended to be registered as a utility providing
 	:class:`ICourseCatalog`. It cooperates with utilities higher
 	in parent sites.
+
+	.. note:: Although currently the catalog is flattened,
+		in the future the folder structure might mean something
+		(e.g., be incorporated into the workspace structure at the
+		application level).
 	"""
 
 	@LazyOnClass

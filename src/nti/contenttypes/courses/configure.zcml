@@ -78,7 +78,21 @@
 	<!-- anything that can become a Principal... -->
 	<subscriber factory=".enrollment.DefaultPrincipalEnrollments"
 				provides=".interfaces.IPrincipalEnrollments"
-				for="*" />
+				for="zope.interface.Interface" />
+
+	<!-- managing enrollment when things are deleted -->
+	<!-- anything that can get IPrincipalEnrollments -->
+	<subscriber handler=".enrollment.on_principal_deletion_unenroll"
+				for="zope.security.interfaces.IPrincipal
+					 zope.intid.interfaces.IIntIdRemovedEvent" />
+	<subscriber handler=".enrollment.on_principal_deletion_unenroll"
+				for="nti.dataserver.interfaces.IUser
+					 zope.intid.interfaces.IIntIdRemovedEvent" />
+
+	<subscriber handler=".enrollment.on_course_deletion_unenroll"
+				for=".interfaces.ICourseInstance
+					 zope.intid.interfaces.IIntIdRemovedEvent"/>
+
 
 	<!-- managing the scope as you enroll/drop/modify -->
 	<subscriber handler=".sharing.on_enroll_record_scope_membership" />

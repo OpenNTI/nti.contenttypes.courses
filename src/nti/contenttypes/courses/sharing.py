@@ -61,11 +61,6 @@ class CourseInstanceSharingScope(Community):
 		# or intid yet.
 		return unicode(str(self))
 
-	def __iter__(self):
-		# For testing convenience
-		return self.iter_members()
-
-
 	# We want, essentially, identity equality:
 	# nothing is equal to this because nothing can be contained
 	# in the same container as this
@@ -136,9 +131,13 @@ class CourseInstanceSharingScopes(CheckingLastModifiedBTreeContainer):
 ###
 
 from .interfaces import ICourseInstanceEnrollmentRecord
-from zope.lifecycleevent import IObjectAddedEvent
-from zope.lifecycleevent import IObjectRemovedEvent
 from zope.lifecycleevent import IObjectModifiedEvent
+# We may have intid-weak references to these things,
+# so we need to catch them on the IntIdRemoved event
+# for dependable ordering
+from zope.intid.interfaces import IIntIdAddedEvent
+from zope.intid.interfaces import IIntIdRemovedEvent
+
 
 def _adjust_scope_membership(record, join, follow):
 	course = record.CourseInstance
@@ -153,7 +152,7 @@ def _adjust_scope_membership(record, join, follow):
 		follow(scope)
 
 
-@component.adapter(ICourseInstanceEnrollmentRecord, IObjectAddedEvent)
+@component.adapter(ICourseInstanceEnrollmentRecord, IIntIdAddedEvent)
 def on_enroll_record_scope_membership(record, event):
 	"""
 	When you enroll in a course, record your membership in the
@@ -164,12 +163,11 @@ def on_enroll_record_scope_membership(record, event):
 							 'follow' )
 
 
-@component.adapter(ICourseInstanceEnrollmentRecord, IObjectRemovedEvent)
+@component.adapter(ICourseInstanceEnrollmentRecord, IIntIdRemovedEvent)
 def on_drop_exit_scope_membership(record, event):
 	"""
 	When you drop a course, leave the scopes you were in.
 	"""
-
 	_adjust_scope_membership( record,
 							  'record_no_longer_dynamic_member',
 							  'stop_following')
