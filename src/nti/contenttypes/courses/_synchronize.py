@@ -184,4 +184,5 @@ def synchronize_catalog_from_root(catalog_folder, root):
 	synchronize the course catalog to match.
 	"""
 
-	component.getMultiAdapter( (catalog_folder, root) ).synchronize(catalog_folder, root)
+	component.getMultiAdapter( (catalog_folder, root),
+							   IObjectEntrySynchronizer).synchronize(catalog_folder, root)

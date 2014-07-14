@@ -32,6 +32,11 @@
 			 for=".interfaces.ICourseInstanceSharingScope" />
 
 
+	<!-- Events -->
+	<subscriber handler=".subscribers.install_site_course_catalog" />
+	<subscriber handler=".subscribers.uninstall_site_course_catalog" />
+	<subscriber handler=".subscribers.sync_catalog_when_library_synched" />
+
 
 	<!-- Roles and permissions -->
 	<include package="zope.securitypolicy" file="meta.zcml" />

@@ -38,6 +38,7 @@ from nti.utils.property import LazyOnClass
 from nti.utils.property import CachedProperty
 
 from .interfaces import IGlobalCourseCatalog
+from .interfaces import IPersistentCourseCatalog
 from .interfaces import ICourseCatalog
 from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseCatalogInstructorInfo
@@ -189,7 +190,7 @@ class CourseCatalogEntry(SchemaConfigured):
 
 		return result
 
-@interface.implementer(ICourseCatalog)
+@interface.implementer(IPersistentCourseCatalog)
 class CourseCatalogFolder(CheckingLastModifiedBTreeFolder):
 	"""
 	A folder whose contents are (recursively) the course instances

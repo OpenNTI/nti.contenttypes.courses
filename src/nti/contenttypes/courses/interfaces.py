@@ -446,6 +446,14 @@ class ICourseCatalog(interface.Interface):
 		Iterate across the installed catalog entries.
 		"""
 
+from persistent.interfaces import IPersistent
+
+class IPersistentCourseCatalog(ICourseCatalog,
+							   IPersistent):
+	"""
+	A locally persistent course catalog; contrast with the global
+	course catalog.
+	"""
 
 class IWritableCourseCatalog(ICourseCatalog,IContentContainer):
 	"""
