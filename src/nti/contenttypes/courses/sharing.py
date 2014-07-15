@@ -111,6 +111,14 @@ class CourseInstanceSharingScopes(CheckingLastModifiedBTreeContainer):
 			raise KeyError("Unsupported scope kind", key)
 		super(CourseInstanceSharingScopes,self).__setitem__(key, value)
 
+	def initScopes(self):
+		"""
+		Make sure we have all the scopes specified by the vocabulary.
+		"""
+		for key in ENROLLMENT_SCOPE_VOCABULARY:
+			key = key.token
+			if key not in self:
+				self[key] = self._create_scope(key)
 
 	def getAllScopesImpliedbyScope(self, scope_name):
 		term = ENROLLMENT_SCOPE_VOCABULARY.getTerm(scope_name)

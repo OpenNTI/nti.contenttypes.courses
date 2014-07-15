@@ -398,6 +398,15 @@ class ICourseInstanceVendorInfo(IEnumerableMapping,
 
 ICourseInstanceVenderInfo = ICourseInstanceVendorInfo # both spellings are acceptable
 
+class INonPublicCourseInstance(interface.Interface):
+	"""
+	A marker interface applied to course instances to designate
+	that they are not \"open\" to the public. Only
+	people enrolled for credit can see the catalog entry and the
+	course itself. This enrollment typically happens in a backend
+	process.
+	"""
+
 from zope.location import LocationIterator
 
 def is_instructed_by_name(context, username):
@@ -511,7 +520,9 @@ class ICourseCatalogInstructorInfo(interface.Interface):
 							 required=False)
 
 class ICourseCatalogEntry(IDisplayableContent,
-						  IShouldHaveTraversablePath):
+						  ILastModified,
+						  IShouldHaveTraversablePath,
+						  IContained):
 	"""
 	An entry in the course catalog containing metadata
 	and presentation data about the course.

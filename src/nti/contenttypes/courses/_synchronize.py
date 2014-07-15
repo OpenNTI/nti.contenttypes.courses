@@ -32,12 +32,14 @@ from .interfaces import ICourseInstance
 from .interfaces import ICourseInstanceVendorInfo
 from .interfaces import ICourseSubInstances
 from .interfaces import IContentCourseSubInstance
+from .interfaces import ICourseCatalogEntry
 
 from .courses import ContentCourseInstance
 from .courses import ContentCourseSubInstance
 from .courses import CourseAdministrativeLevel
 
 from ._outline_parser import fill_outline_from_key
+from ._catalog_entry_parser import fill_entry_from_legacy_key
 
 from nti.contentlibrary.bundle import PersistentContentPackageBundle
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
@@ -46,6 +48,7 @@ from nti.contentlibrary.bundle import BUNDLE_META_NAME
 VENDOR_INFO_NAME = 'vendor_info.json'
 COURSE_OUTLINE_NAME = 'course_outline.xml'
 INSTRUCTOR_INFO_NAME = 'instructor_info.json'
+CATALOG_INFO_NAME = 'course_info.json'
 SECTION_FOLDER_NAME = 'Sections'
 
 @interface.implementer(IObjectEntrySynchronizer)
@@ -135,6 +138,9 @@ class _ContentCourseSynchronizer(object):
 
 		self.update_vendor_info(course, bucket)
 		self.update_outline(course, bucket, try_legacy_content_bundle=True)
+		self.update_catalog_entry(course, bucket, try_legacy_content_bundle=True)
+
+		course.SharingScopes.initScopes()
 
 		sections_bucket = bucket.getChildNamed(SECTION_FOLDER_NAME)
 		sync = component.getMultiAdapter( (course.SubInstances, sections_bucket) )
@@ -181,6 +187,23 @@ class _ContentCourseSynchronizer(object):
 				pass
 			fill_outline_from_key(course.Outline, outline_xml_key, xml_parent_name=outline_xml_node)
 
+	@classmethod
+	def update_catalog_entry(cls, course, bucket, try_legacy_content_bundle=False):
+		catalog_json_key = bucket.getChildNamed(CATALOG_INFO_NAME)
+		if not catalog_json_key and try_legacy_content_bundle:
+			# Only want to do this for root courses
+			if course.ContentPackageBundle:
+				for package in course.ContentPackageBundle.ContentPackages:
+					if package.does_sibling_entry_exist(CATALOG_INFO_NAME):
+						catalog_json_key = package.make_sibling_key(CATALOG_INFO_NAME)
+						break
+
+		# TODO: Cleaning up?
+		# XXX base_url
+		if catalog_json_key:
+			catalog_entry = ICourseCatalogEntry(course)
+			fill_entry_from_legacy_key(catalog_entry, catalog_json_key)
+
 @component.adapter(ICourseSubInstances, IDelimitedHierarchyBucket)
 class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
 
@@ -217,8 +240,10 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		pass
 
 	def synchronize(self, subcourse, bucket):
+		subcourse.SharingScopes.initScopes()
 		_ContentCourseSynchronizer.update_vendor_info(subcourse, bucket)
 		_ContentCourseSynchronizer.update_outline(subcourse, bucket)
+		_ContentCourseSynchronizer.update_catalog_entry(subcourse, bucket)
 
 def synchronize_catalog_from_root(catalog_folder, root):
 	"""

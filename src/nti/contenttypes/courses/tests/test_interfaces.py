@@ -19,9 +19,11 @@ from hamcrest import assert_that
 from hamcrest import is_
 from hamcrest import has_key
 from hamcrest import has_entry
-
+import unittest
 
 from zope.dottedname import resolve as dottedname
 
-def test_import_interfaces():
-	dottedname.resolve('nti.contenttypes.courses.interfaces')
+class TestImport(unittest.TestCase):
+
+	def test_import_interfaces(self):
+		dottedname.resolve('nti.contenttypes.courses.interfaces')

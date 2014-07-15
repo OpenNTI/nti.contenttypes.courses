@@ -16,7 +16,9 @@ from functools import total_ordering
 from zope import interface
 from zope import component
 
-from nti.contenttypes.courses.interfaces import ICourseInstance
+from .interfaces import ICourseInstance
+
+from nti.contentlibrary.presentationresource import DisplayableContentMixin
 
 from nti.dataserver.links import Link
 from nti.dataserver.authorization import ACT_READ
@@ -36,6 +38,9 @@ from nti.schema.schema import PermissiveSchemaConfigured as SchemaConfigured
 from nti.utils.property import alias
 from nti.utils.property import LazyOnClass
 from nti.utils.property import CachedProperty
+
+from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
+from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
 
 from .interfaces import IGlobalCourseCatalog
 from .interfaces import IPersistentCourseCatalog
@@ -94,7 +99,6 @@ class GlobalCourseCatalog(CheckingLastModifiedBTreeContainer):
 		:keyword bool event: If true (the default), we broadcast
 			the object removed event.
 		"""
-
 		if not event:
 			l = self._BTreeContainer__len
 			try:
@@ -149,17 +153,23 @@ class GlobalCourseCatalog(CheckingLastModifiedBTreeContainer):
 
 @interface.implementer(ICourseCatalogInstructorInfo)
 @WithRepr
-@NoPickle
 class CourseCatalogInstructorInfo(SchemaConfigured):
 	createDirectFieldProperties(ICourseCatalogInstructorInfo)
 
 @interface.implementer(ICourseCatalogEntry)
 @WithRepr
-@NoPickle
 @total_ordering
 @EqHash('ntiid')
-class CourseCatalogEntry(SchemaConfigured):
-	ntiid = None # shut up pylint
+class CourseCatalogEntry(SchemaConfigured,
+						 DisplayableContentMixin,
+						 CreatedAndModifiedTimeMixin):
+	# shut up pylint
+	ntiid = None
+	StartDate = None
+	Duration = None
+
+	_SET_CREATED_MODTIME_ON_INIT = False
+
 	createDirectFieldProperties(ICourseCatalogEntry)
 
 	__name__ = alias('ntiid')
@@ -168,6 +178,10 @@ class CourseCatalogEntry(SchemaConfigured):
 	# legacy compatibility
 	Title = alias('title')
 	Description = alias('description')
+
+	def __init__(self, *args, **kwargs):
+		SchemaConfigured.__init__(self, *args, **kwargs) # not cooperative
+		CreatedAndModifiedTimeMixin.__init__(self)
 
 	def __lt__(self, other):
 		return self.ntiid < other.ntiid
@@ -189,6 +203,46 @@ class CourseCatalogEntry(SchemaConfigured):
 			result.append( Link( instance, rel="CourseInstance" ) )
 
 		return result
+
+	@property
+	def PlatformPresentationResources(self):
+		"""
+		If we do not have a set of presentation assets,
+		we echo the first thing we have that does contain
+		them. This should simplify things for the clients.
+		"""
+		ours = super(CourseCatalogEntry,self).PlatformPresentationResources
+		if ours:
+			return ours
+
+		# Ok, do we have a course, and if so, does it have
+		# a bundle or legacy content package?
+		theirs = None
+		try:
+			course = ICourseInstance(self, None)
+		except LookupError:
+			# typically outside af a transaction
+			course = None
+		if course is None:
+			# we got nothing
+			return
+
+		# Does it have a bundle with resources?
+		try:
+			theirs = course.ContentPackageBundle.PlatformPresentationResources
+		except AttributeError:
+			pass
+
+		if theirs:
+			return theirs
+
+		# Does it have the old legacy property?
+		try:
+			theirs = course.legacy_content_package.PlatformPresentationResources
+		except AttributeError:
+			pass
+
+		return theirs
 
 @interface.implementer(IPersistentCourseCatalog)
 class CourseCatalogFolder(CheckingLastModifiedBTreeFolder):

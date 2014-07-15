@@ -20,8 +20,9 @@
 		root_interfaces=".interfaces.ICourseInstance
 						 .interfaces.ICourseOutlineNode
 						 .interfaces.ICourseCatalogEntry
-						 .interfaces.ICourseCatalogInstructorInfo"
-		modules=".courses .outlines .catalog .sharing" />
+						 .interfaces.ICourseCatalogInstructorInfo
+						 .legacy_catalog.ICourseCreditLegacyInfo"
+		modules=".courses .outlines .catalog .sharing .legacy_catalog" />
 
 	<!-- Externalize the CourseInstanceSharingScope like the 'community'
 	it appears to be. -->
@@ -43,10 +44,10 @@
 	<include package="zope.security" file="meta.zcml" />
 
 	<!--
-	Roles for instructors are defined globally with
-	a set of permissions, and an implementation of IPrincipalRoleMap
-	locally to each course maps the proper people into those roles.
-	Recall that role permission grants are not transitive.
+		Roles for instructors are defined globally with
+		a set of permissions, and an implementation of IPrincipalRoleMap
+		locally to each course maps the proper people into those roles.
+		Recall that role permission grants are not transitive.
 	-->
 
 	<role
@@ -62,6 +63,11 @@
 
 	<adapter factory=".principalrole.CourseInstancePrincipalRoleMap" />
 
+	<adapter factory=".acl.CourseInstanceACLProvider" />
+	<adapter factory=".acl.CourseCatalogEntryACLProvider" />
+
+	<!-- Catalog -->
+
 	<!--
 		We provide one global catalog,
 		but every site that registers its own courses
@@ -70,6 +76,10 @@
 	-->
 	<utility factory=".catalog.GlobalCourseCatalog"
 			 provides=".interfaces.IGlobalCourseCatalog" />
+
+	<!-- By default, courses store their own catalog entries -->
+	<adapter factory=".legacy_catalog.CourseInstanceCatalogLegacyEntryFactory" />
+	<adapter factory=".legacy_catalog.CourseSubInstanceCatalogLegacyEntryFactory" />
 
 	<!-- Enrollment -->
 	<adapter factory=".enrollment.DefaultCourseEnrollmentManager" />
