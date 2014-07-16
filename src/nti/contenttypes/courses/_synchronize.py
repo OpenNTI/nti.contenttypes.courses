@@ -40,6 +40,8 @@ from .courses import CourseAdministrativeLevel
 
 from ._outline_parser import fill_outline_from_key
 from ._catalog_entry_parser import fill_entry_from_legacy_key
+from ._role_parser import fill_roles_from_key
+from ._role_parser import reset_roles_missing_key
 
 from nti.contentlibrary.bundle import PersistentContentPackageBundle
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
@@ -49,6 +51,7 @@ VENDOR_INFO_NAME = 'vendor_info.json'
 COURSE_OUTLINE_NAME = 'course_outline.xml'
 INSTRUCTOR_INFO_NAME = 'instructor_info.json'
 CATALOG_INFO_NAME = 'course_info.json'
+ROLE_INFO_NAME = 'role_info.json'
 SECTION_FOLDER_NAME = 'Sections'
 
 @interface.implementer(IObjectEntrySynchronizer)
@@ -139,6 +142,7 @@ class _ContentCourseSynchronizer(object):
 		self.update_vendor_info(course, bucket)
 		self.update_outline(course, bucket, try_legacy_content_bundle=True)
 		self.update_catalog_entry(course, bucket, try_legacy_content_bundle=True)
+		self.update_instructor_roles(course, bucket)
 
 		course.SharingScopes.initScopes()
 
@@ -204,6 +208,14 @@ class _ContentCourseSynchronizer(object):
 			catalog_entry = ICourseCatalogEntry(course)
 			fill_entry_from_legacy_key(catalog_entry, catalog_json_key)
 
+	@classmethod
+	def update_instructor_roles(cls, course, bucket):
+		role_json_key = bucket.getChildNamed(ROLE_INFO_NAME)
+		if role_json_key:
+			fill_roles_from_key(course, role_json_key)
+		else:
+			reset_roles_missing_key(course)
+
 @component.adapter(ICourseSubInstances, IDelimitedHierarchyBucket)
 class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
 
@@ -218,7 +230,7 @@ class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
 		# We only support one level, and they must all
 		# be courses if they have one of the known
 		# files in it
-		for possible_key in (INSTRUCTOR_INFO_NAME, COURSE_OUTLINE_NAME, VENDOR_INFO_NAME):
+		for possible_key in (ROLE_INFO_NAME, COURSE_OUTLINE_NAME, VENDOR_INFO_NAME):
 			if bucket.getChildNamed(possible_key):
 				return self._COURSE_INSTANCE_FACTORY
 
@@ -244,6 +256,8 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		_ContentCourseSynchronizer.update_vendor_info(subcourse, bucket)
 		_ContentCourseSynchronizer.update_outline(subcourse, bucket)
 		_ContentCourseSynchronizer.update_catalog_entry(subcourse, bucket)
+		_ContentCourseSynchronizer.update_instructor_roles(subcourse, bucket)
+		subcourse.SharingScopes.initScopes()
 
 def synchronize_catalog_from_root(catalog_folder, root):
 	"""

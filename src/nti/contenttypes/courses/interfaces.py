@@ -337,7 +337,12 @@ class ICourseInstance(IFolder,
 	# generally be available.
 
 	# These are lower-case attributes because someone might be able to
-	# edit them through-the-web
+	# edit them through-the-web?
+
+	## XXX: JAM: 20140716: The above description has now been surpassed,
+	# and we are in fact using a structured role model. The use of
+	# this attribute is deprecated. It in fact holds everyone, both
+	# instructors and TAs and others.
 	instructors = UniqueIterable(title="The principals that are the intsructors of the course.",
 								 description="They get special access rights.",
 								 value_type=Object(IPrincipal))

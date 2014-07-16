@@ -38,6 +38,7 @@ from nti.contentlibrary.library import EmptyLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from zope import component
 from persistent.interfaces import IPersistent
+from zope.security.interfaces import IPrincipal
 
 from . import CourseLayerTest
 from nti.externalization.tests import externalizes
@@ -69,6 +70,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 
 		assert_that( gateway.Outline, has_length(6) )
 
+		assert_that( gateway.instructors, is_((IPrincipal('harp4162'),)))
 
 		assert_that( ICourseInstanceVendorInfo(gateway),
 					 has_entry( 'OU', has_entry('key', 42) ) )
