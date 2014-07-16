@@ -346,6 +346,7 @@ class ICourseInstance(IFolder,
 	instructors = UniqueIterable(title="The principals that are the intsructors of the course.",
 								 description="They get special access rights.",
 								 value_type=Object(IPrincipal))
+	instructors.setTaggedValue('_ext_excluded_out', True)
 
 class ICourseSubInstance(ICourseInstance):
 	"""

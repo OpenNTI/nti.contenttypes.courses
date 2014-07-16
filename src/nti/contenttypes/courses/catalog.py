@@ -344,6 +344,14 @@ class CourseCatalogFolder(_AbstractCourseCatalogMixin,
 				entry = ICourseCatalogEntry(course, None)
 				if entry:
 					entries.append(entry)
+					for subinstance in course.SubInstances.values():
+						entry = ICourseCatalogEntry(subinstance, None)
+						if entry:
+							entries.append(entry)
+				# We don't need to go any deeper than two levels
+				# (If we hit the community members in the scope, we
+				# can get infinite recursion)
+				return
 			try:
 				folder_values = folder.values()
 			except AttributeError:

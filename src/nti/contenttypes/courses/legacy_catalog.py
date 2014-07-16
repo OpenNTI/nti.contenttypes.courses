@@ -201,11 +201,13 @@ from .interfaces import ICourseInstance
 
 @component.adapter(ICourseInstance)
 class _CourseInstanceCatalogLegacyEntry(PersistentCourseCatalogLegacyEntry):
-
+	__external_class_name__ = 'CourseCatalogLegacyEntry'
+	__external_can_create__ = False
 	def __conform__(self, iface):
 		return find_interface(self, iface, strict=False)
 
-CourseInstanceCatalogLegacyEntryFactory = an_factory(_CourseInstanceCatalogLegacyEntry)
+CourseInstanceCatalogLegacyEntryFactory = an_factory(_CourseInstanceCatalogLegacyEntry,
+													 key='CourseCatalogEntry')
 
 from .interfaces import ICourseSubInstance
 from zope.container.contained import Contained
@@ -225,7 +227,8 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,Persistent):
 	any value it does not have it inherits from
 	the closest parent.
 	"""
-
+	__external_class_name__ = 'CourseCatalogLegacyEntry'
+	__external_can_create__ = False
 	def __lt__(self, other):
 		return self.ntiid < other.ntiid
 
@@ -249,4 +252,5 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,Persistent):
 	def __conform__(self, iface):
 		return find_interface(self, iface, strict=False)
 
-CourseSubInstanceCatalogLegacyEntryFactory = an_factory(_CourseSubInstanceCatalogLegacyEntry)
+CourseSubInstanceCatalogLegacyEntryFactory = an_factory(_CourseSubInstanceCatalogLegacyEntry,
+														key='CourseCatalogEntry')

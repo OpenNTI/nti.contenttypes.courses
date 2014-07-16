@@ -79,7 +79,7 @@ def install_site_course_catalog(local_library, _=None):
 	catalog = CourseCatalogFolder()
 
 	with site(local_site):
-		# install and sync in this site so the right utilities and event
+		# install in this site so the right utilities and event
 		# listeners are found
 		# Before we install (which fires a registration event that things might
 		# be listening for) set up the dependent utilities
@@ -88,10 +88,15 @@ def install_site_course_catalog(local_library, _=None):
 						IPersistentCourseCatalog,
 						local_site_manager)
 
-		if not IPersistentContentPackageLibrary.providedBy(local_library):
-			# because we cold have been handed the site
-			local_library = local_site_manager.getUtility(IContentPackageLibrary)
-		sync_catalog_when_library_synched(local_library, None)
+		# Note that it is not safe to sync if we got here as the result
+		# of the registration event...that can lead to cycles,
+		# because the library syncs itself on registration. wait for
+		# that event.
+		if _ is None:
+			if not IPersistentContentPackageLibrary.providedBy(local_library):
+				# because we cold have been handed the site
+				local_library = local_site_manager.getUtility(IContentPackageLibrary)
+			sync_catalog_when_library_synched(local_library, None)
 		return catalog
 
 @component.adapter(IPersistentContentPackageLibrary, IUnregistered)
@@ -112,7 +117,6 @@ def sync_catalog_when_library_synched(library, event):
 	we also synchronize the corresponding course catalog. (Because they could
 	change independently and in unknown ways)
 	"""
-
 	# Find the local site manager
 	site_manager = component.getSiteManager(library)
 	if library.__parent__ is not site_manager:
@@ -131,6 +135,7 @@ def sync_catalog_when_library_synched(library, event):
 	enumeration_root = enumeration.root
 
 	courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
+
 	if courses_bucket is None:
 		logger.info("Not synchronizing: no directory named %s in %s for catalog %s",
 					catalog.__name__, getattr(enumeration_root, 'absolute_path', enumeration_root),

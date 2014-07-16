@@ -35,7 +35,7 @@ class CourseSubInstances(CaseInsensitiveCheckingLastModifiedBTreeContainer):
 
 @interface.implementer(interfaces.ICourseInstance)
 class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
-
+	__external_can_create__ = False
 	createDirectFieldProperties(interfaces.ICourseInstance)
 
 	def __init__(self):
@@ -117,7 +117,7 @@ from nti.contentlibrary.presentationresource import DisplayableContentMixin
 @interface.implementer(IContentCourseInstance)
 class ContentCourseInstance(DisplayableContentMixin,
 							CourseInstance):
-
+	__external_class_name__ = 'CourseInstance'
 	createDirectFieldProperties(IContentCourseInstance)
 
 	@property

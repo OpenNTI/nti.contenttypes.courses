@@ -134,7 +134,7 @@ class DefaultCourseEnrollmentManager(object):
 	@Lazy
 	def _catalog(self):
 		try:
-			return component.getNextUtility(self._course, ICourseCatalog)
+			return component.getUtility(ICourseCatalog, context=self._course)
 		except LookupError:
 			# Course must be unanchored and/or in the global site?
 			# we only expect this is in tests (legacy cases use their
@@ -185,13 +185,11 @@ class DefaultCourseEnrollmentManager(object):
 		record_ix = enrollments.index(record)
 		del enrollments[record_ix]
 
-		try:
-			del self._inst_enrollment_storage[principal_id]
-		except Exception as e:
-			from IPython.core.debugger import Tracer; Tracer()() ## DEBUG ##
-			raise
+		del self._inst_enrollment_storage[principal_id]
 
 		return record
+
+from nti.dataserver.interfaces import ILengthEnumerableEntityContainer
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseEnrollments)
@@ -209,6 +207,12 @@ class DefaultCourseEnrollments(object):
 
 	def count_enrollments(self):
 		return len(self._inst_enrollment_storage)
+
+	# Non-interface methods for legacy compatibility
+	def count_legacy_forcredit_enrollments(self):
+		return len(ILengthEnumerableEntityContainer(self.context.SharingScopes['ForCredit']))
+	def count_legacy_open_enrollments(self):
+		return len(ILengthEnumerableEntityContainer(self.context.SharingScopes['Public'])) - self.count_legacy_forcredit_enrollments()
 
 @interface.implementer(IPrincipalEnrollments)
 class DefaultPrincipalEnrollments(object):
@@ -285,6 +289,13 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 			return self is not other and (self.__name__, self.__parent__) != (other.__name__, other.__parent__)
 		except AttributeError:
 			return NotImplemented
+
+	def __conform__(self, iface):
+		if iface.providedBy(self.CourseInstance):
+			return self.CourseInstance
+
+		if iface.providedBy(self.Principal):
+			return self.Principal
 
 # Subscribers to keep things in sync when
 # objects are deleted.

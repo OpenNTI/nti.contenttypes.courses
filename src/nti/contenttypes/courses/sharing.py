@@ -147,7 +147,7 @@ from zope.intid.interfaces import IIntIdAddedEvent
 from zope.intid.interfaces import IIntIdRemovedEvent
 
 
-def _adjust_scope_membership(record, join, follow):
+def _adjust_scope_membership(record, join, follow, ignored_exceptions=()):
 	course = record.CourseInstance
 	principal = record.Principal
 	join = getattr(principal, join)
@@ -156,8 +156,15 @@ def _adjust_scope_membership(record, join, follow):
 
 	relevant_scopes = scopes.getAllScopesImpliedbyScope(record.Scope)
 	for scope in relevant_scopes:
-		join(scope)
-		follow(scope)
+		try:
+			join(scope)
+		except ignored_exceptions:
+			pass
+
+		try:
+			follow(scope)
+		except ignored_exceptions:
+			pass
 
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IIntIdAddedEvent)
@@ -178,7 +185,12 @@ def on_drop_exit_scope_membership(record, event):
 	"""
 	_adjust_scope_membership( record,
 							  'record_no_longer_dynamic_member',
-							  'stop_following')
+							  'stop_following',
+							  # Depending on the order, we may have already
+							  # cleaned this up (e.g, deleting a principal
+							  # fires events twice due to various cleanups)
+							  # So the entity may no longer have an intid -> KeyError
+							  ignored_exceptions=(KeyError,))
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectModifiedEvent)
 def on_modified_update_scope_membership(record, event):
