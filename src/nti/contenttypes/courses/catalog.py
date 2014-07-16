@@ -39,7 +39,6 @@ from nti.utils.property import alias
 from nti.utils.property import LazyOnClass
 from nti.utils.property import CachedProperty
 
-from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
 
 from .interfaces import IGlobalCourseCatalog
@@ -270,7 +269,7 @@ class CourseCatalogFolder(CheckingLastModifiedBTreeFolder):
 
 	@property
 	def _next_catalog(self):
-		 return component.queryNextUtility(self, ICourseCatalog)
+		return component.queryNextUtility(self, ICourseCatalog)
 
 	@CachedProperty
 	def _all_my_entries(self):
