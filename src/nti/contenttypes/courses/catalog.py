@@ -37,7 +37,7 @@ from nti.schema.schema import PermissiveSchemaConfigured as SchemaConfigured
 
 from nti.utils.property import alias
 from nti.utils.property import LazyOnClass
-from nti.utils.property import CachedProperty
+from zope.cachedescriptors.method import cachedIn
 
 from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
 
@@ -47,17 +47,13 @@ from .interfaces import ICourseCatalog
 from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseCatalogInstructorInfo
 
-@interface.implementer(IGlobalCourseCatalog)
-@NoPickle
-@WithRepr
-class GlobalCourseCatalog(CheckingLastModifiedBTreeContainer):
+class _AbstractCourseCatalogMixin(object):
+	"""
+	Defines the interface methods for a generic course
+	catalog, including tree searching.
+	"""
 
-	# NOTE: We happen to inherit Persistent, which we really
-	# don't want.
-
-	lastModified = 0
 	__name__ = 'CourseCatalog'
-
 
 	@LazyOnClass
 	def __acl__( self ):
@@ -65,6 +61,89 @@ class GlobalCourseCatalog(CheckingLastModifiedBTreeContainer):
 		return acl_from_aces(
 			# Everyone logged in has read and search access to the catalog
 			ace_allowing(AUTHENTICATED_GROUP_NAME, ACT_READ, type(self) ) )
+
+	# regardless of length, catalogs are True
+	def __bool__(self):
+		return True
+	__nonzero__ = __bool__
+
+	@property
+	def _next_catalog(self):
+		return component.queryNextUtility(self, ICourseCatalog)
+
+	def _get_all_my_entries(self):
+		"Return all the entries at this level"
+		raise NotImplementedError()
+
+	def isEmpty(self):
+		# TODO: should this be in the hierarchy?
+		return not self._get_all_my_entries()
+
+	def iterCatalogEntries(self):
+		entries = {e.ntiid: e for e in self._get_all_my_entries()}
+
+		parent = self._next_catalog
+		if parent is not None:
+			for e in parent.iterCatalogEntries():
+				if e.ntiid not in entries:
+					entries[e.ntiid] = e
+
+		return list(entries.values())
+
+	def _primary_query_my_entry(self, name):
+		for entry in self._get_all_my_entries:
+			if name == entry.ntiid:
+				return entry
+
+	def _fallback_query_my_entry(self, name):
+		# Ok, is it asking by name, during traversal?
+		# This is a legacy case that shouldn't be hit anymore,
+		# except during tests that are hardcoded.
+
+		for entry in self._get_all_my_entries():
+			if entry.ProviderUniqueID == name:
+				logger.warning("Using legacy ProviderUniqueID to match %s to %s",
+							   name, entry)
+				return entry
+
+	def _query_my_entry(self, name):
+		entry = self._primary_query_my_entry(name)
+ 		if entry is None:
+			entry = self._fallback_query_my_entry(name)
+		return entry
+
+	def getCatalogEntry(self, name):
+		entry = self._query_my_entry(name)
+		if entry is not None:
+			return entry
+
+		parent = self._next_catalog
+		if parent is None:
+			raise KeyError(name)
+
+		return parent.getCatalogEntry(name)
+
+
+
+@interface.implementer(IGlobalCourseCatalog)
+@NoPickle
+@WithRepr
+class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
+						  CheckingLastModifiedBTreeContainer):
+
+	# NOTE: We happen to inherit Persistent, which we really
+	# don't want.
+
+	lastModified = 0
+
+	def _get_all_my_entries(self):
+		return list(self.values())
+
+	def _primary_query_my_entry(self, name):
+		try:
+			return CheckingLastModifiedBTreeContainer.__getitem__(self, name)
+		except KeyError:
+			return None
 
 	def addCatalogEntry(self, entry, event=True):
 		"""
@@ -111,20 +190,13 @@ class GlobalCourseCatalog(CheckingLastModifiedBTreeContainer):
 			if entry.__name__ in self:
 				del self[entry.__name__]
 
-
 	def isEmpty(self):
+		# we can be more efficient than the parent
 		return len(self) == 0
 
 	def clear(self):
 		for i in list(self.iterCatalogEntries()):
 			self.removeCatalogEntry(i, event=False)
-
-	def __bool__(self):
-		return True
-	__nonzero__ = __bool__
-
-	def iterCatalogEntries(self):
-		return iter(self.values())
 
 	def __contains__(self, ix):
 		if CheckingLastModifiedBTreeContainer.__contains__(self, ix):
@@ -135,20 +207,8 @@ class GlobalCourseCatalog(CheckingLastModifiedBTreeContainer):
 		except KeyError:
 			return False
 
+	__getitem__ = _AbstractCourseCatalogMixin.getCatalogEntry
 
-	def __getitem__(self,ix):
-		try:
-			return CheckingLastModifiedBTreeContainer.__getitem__(self, ix)
-		except KeyError:
-			# Ok, is it asking by name, during traversal?
-			# This is a legacy case that shouldn't be hit anymore,
-			# except during tests that are hardcoded.
-			for entry in self.values():
-				if entry.ProviderUniqueID == ix:
-					logger.warning("Using legacy ProviderUniqueID to match %s to %s",
-								   ix, entry)
-					return entry
-			raise KeyError(ix)
 
 @interface.implementer(ICourseCatalogInstructorInfo)
 @WithRepr
@@ -244,7 +304,8 @@ class CourseCatalogEntry(SchemaConfigured,
 		return theirs
 
 @interface.implementer(IPersistentCourseCatalog)
-class CourseCatalogFolder(CheckingLastModifiedBTreeFolder):
+class CourseCatalogFolder(_AbstractCourseCatalogMixin,
+						  CheckingLastModifiedBTreeFolder):
 	"""
 	A folder whose contents are (recursively) the course instances
 	for which we will generate the appropriate course catalog entries
@@ -271,9 +332,10 @@ class CourseCatalogFolder(CheckingLastModifiedBTreeFolder):
 	def _next_catalog(self):
 		return component.queryNextUtility(self, ICourseCatalog)
 
-	@CachedProperty
-	def _all_my_entries(self):
+	@cachedIn('_v_all_my_entries')
+	def _get_all_my_entries(self):
 		# TODO: invalidation?
+		# At least we can do method.invalidate
 		entries = list()
 
 		def _recur(folder):
@@ -290,17 +352,4 @@ class CourseCatalogFolder(CheckingLastModifiedBTreeFolder):
 				for value in folder_values:
 					_recur(value)
 		_recur(self)
-		return entries
-
-	def isEmpty(self):
-		# TODO: should this be in the hierarchy?
-		return not self._all_my_entries
-
-	def iterCatalogEntries(self):
-		entries = list(self._all_my_entries)
-
-		parent = self._next_catalog
-		if parent is not None:
-			entries.extend(parent.iterCatalogEntries())
-
 		return entries

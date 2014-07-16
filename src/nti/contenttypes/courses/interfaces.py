@@ -458,12 +458,26 @@ class ICourseCatalog(interface.Interface):
 
 	def isEmpty():
 		"""
-		return if this catalog is empty
+		Return if this catalog is empty. Does not take the site hierarchy into
+		account.
 		"""
 
 	def iterCatalogEntries():
 		"""
 		Iterate across the installed catalog entries.
+
+		Entries from this site level shadow entries from
+		higher site levels, and entries from this site
+		level are returned first.
+		"""
+
+	def getCatalogEntry(name):
+		"""
+		Retrieve a catalog entry by name. Entries from this
+		site level shadow entries from higher site levels.
+
+		:raises KeyError: If no such named entry can
+			be found.
 		"""
 
 from persistent.interfaces import IPersistent

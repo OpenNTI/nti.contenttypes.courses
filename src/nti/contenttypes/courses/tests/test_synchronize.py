@@ -21,6 +21,7 @@ from hamcrest import has_length
 from hamcrest import has_entry
 from hamcrest import has_properties
 from hamcrest import contains_inanyorder
+from hamcrest import has_property
 
 from nti.testing import base
 from nti.testing.matchers import verifiably_provides
@@ -106,9 +107,21 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		sec2 = gateway.SubInstances['02']
 		assert_that( sec2.Outline, has_length(1) )
 
+		# We should have the catalog functionality now
+
 		cat_entries = list(folder.iterCatalogEntries())
 		assert_that( cat_entries, has_length(3) )
 		assert_that( cat_entries,
 					 contains_inanyorder( ICourseCatalogEntry(gateway),
 										  ICourseCatalogEntry(sec1),
 										  ICourseCatalogEntry(sec2)))
+
+		# The NTIIDs are derived from the path
+		assert_that( cat_entries,
+					 contains_inanyorder(
+						 has_property('ntiid',
+									  'tag:nextthought.com,2011-10:NTI-CourseInfo-Spring2014_Gateway_SubInstances_02'),
+						 has_property('ntiid',
+									  'tag:nextthought.com,2011-10:NTI-CourseInfo-Spring2014_Gateway_SubInstances_01'),
+						 has_property('ntiid',
+									  'tag:nextthought.com,2011-10:NTI-CourseInfo-Spring2014_Gateway')) )

@@ -20,6 +20,7 @@ from zope import component
 
 from .interfaces import ICourseCatalogInstructorInfo
 from .interfaces import ICourseCatalogEntry
+from .interfaces import ICourseCatalog
 
 from nti.schema.field import ValidTextLine
 from nti.schema.field import Int
@@ -156,6 +157,32 @@ class CourseCatalogLegacyEntry(CourseCatalogEntry):
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 from persistent import Persistent
 
+from nti.externalization.externalization import WithRepr
+
+# The objects we're going to be containing we *assume* live somewhere beneath
+# an object that implements course catalog (folder). We automatically derive
+# ntiids from that structure.
+
+from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import make_specific_safe
+
+def _ntiid_from_entry(entry):
+	parents = []
+	o = entry.__parent__
+	while o is not None and not ICourseCatalog.providedBy(o):
+		parents.append(o.__name__)
+		o = getattr(o, '__parent__', None)
+
+	parents.reverse()
+	relative_path = '/'.join(parents)
+	if not relative_path:
+		return None
+
+	ntiid = make_ntiid(provider='NTI',
+					   nttype='CourseInfo',
+					   specific=make_specific_safe(relative_path))
+	return ntiid
+
 class PersistentCourseCatalogLegacyEntry(CourseCatalogLegacyEntry,
 										 PersistentCreatedAndModifiedTimeObject):
 
@@ -164,6 +191,9 @@ class PersistentCourseCatalogLegacyEntry(CourseCatalogLegacyEntry,
 		CourseCatalogLegacyEntry.__init__(self, *args, **kwargs)
 		PersistentCreatedAndModifiedTimeObject.__init__(self)
 
+
+	ntiid = property(_ntiid_from_entry,
+					 lambda s, nv: None)
 
 from zope.annotation.factory import factory as an_factory
 from nti.dataserver.traversal import find_interface
@@ -180,14 +210,27 @@ CourseInstanceCatalogLegacyEntryFactory = an_factory(_CourseInstanceCatalogLegac
 from .interfaces import ICourseSubInstance
 from zope.container.contained import Contained
 
+
+from functools import total_ordering
+from nti.schema.schema import EqHash
+
 @component.adapter(ICourseSubInstance)
 @interface.implementer(ICourseCatalogLegacyEntry)
+@WithRepr
+@total_ordering
+@EqHash('ntiid')
 class _CourseSubInstanceCatalogLegacyEntry(Contained,Persistent):
 	"""
 	The entry for a sub-instance is writable, but
 	any value it does not have it inherits from
 	the closest parent.
 	"""
+
+	def __lt__(self, other):
+		return self.ntiid < other.ntiid
+
+	ntiid = property(_ntiid_from_entry,
+					 lambda s, nv: None)
 
 	@readproperty
 	def _next_instance(self):
