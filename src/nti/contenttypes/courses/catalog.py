@@ -91,7 +91,7 @@ class _AbstractCourseCatalogMixin(object):
 		return list(entries.values())
 
 	def _primary_query_my_entry(self, name):
-		for entry in self._get_all_my_entries:
+		for entry in self._get_all_my_entries():
 			if name == entry.ntiid:
 				return entry
 
@@ -108,7 +108,7 @@ class _AbstractCourseCatalogMixin(object):
 
 	def _query_my_entry(self, name):
 		entry = self._primary_query_my_entry(name)
- 		if entry is None:
+		if entry is None:
 			entry = self._fallback_query_my_entry(name)
 		return entry
 
