@@ -22,7 +22,8 @@ from hamcrest import has_entry
 from hamcrest import has_properties
 from hamcrest import contains_inanyorder
 from hamcrest import has_property
-
+from hamcrest import none
+import datetime
 from nti.testing import base
 from nti.testing.matchers import verifiably_provides
 
@@ -43,6 +44,8 @@ from zope.security.interfaces import IPrincipal
 
 from . import CourseLayerTest
 from nti.externalization.tests import externalizes
+
+from nti.assessment.interfaces import IQAssignmentDateContext
 
 class TestFunctionalSynchronize(CourseLayerTest):
 
@@ -106,6 +109,13 @@ class TestFunctionalSynchronize(CourseLayerTest):
 
 		sec2 = gateway.SubInstances['02']
 		assert_that( sec2.Outline, has_length(1) )
+
+		date_context = IQAssignmentDateContext(sec2)
+		assert_that( date_context, has_property('_mapping',
+												has_entry(
+													"tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.asg:QUIZ1_aristotle",
+													has_entry('available_for_submission_beginning',
+															  datetime.datetime(2014, 1, 22, 6, 0) ) ) ) )
 
 		# We should have the catalog functionality now
 

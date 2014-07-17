@@ -45,6 +45,8 @@ from ._outline_parser import fill_outline_from_key
 from ._catalog_entry_parser import fill_entry_from_legacy_key
 from ._role_parser import fill_roles_from_key
 from ._role_parser import reset_roles_missing_key
+from ._assignment_override_parser import fill_asg_from_key
+from ._assignment_override_parser import reset_asg_missing_key
 
 from nti.contentlibrary.bundle import PersistentContentPackageBundle
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
@@ -55,6 +57,7 @@ COURSE_OUTLINE_NAME = 'course_outline.xml'
 INSTRUCTOR_INFO_NAME = 'instructor_info.json'
 CATALOG_INFO_NAME = 'course_info.json'
 ROLE_INFO_NAME = 'role_info.json'
+ASSIGNMENT_DATES_NAME = 'assignment_date_overrides.json'
 SECTION_FOLDER_NAME = 'Sections'
 
 @interface.implementer(IObjectEntrySynchronizer)
@@ -236,7 +239,8 @@ class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
 		# We only support one level, and they must all
 		# be courses if they have one of the known
 		# files in it
-		for possible_key in (ROLE_INFO_NAME, COURSE_OUTLINE_NAME, VENDOR_INFO_NAME):
+		for possible_key in (ROLE_INFO_NAME, COURSE_OUTLINE_NAME,
+							 VENDOR_INFO_NAME, ASSIGNMENT_DATES_NAME):
 			if bucket.getChildNamed(possible_key):
 				return self._COURSE_INSTANCE_FACTORY
 
@@ -265,7 +269,18 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		_ContentCourseSynchronizer.update_instructor_roles(subcourse, bucket)
 		subcourse.SharingScopes.initScopes()
 		getattr(subcourse, 'Discussions')
+
+		self.update_assignment_dates(subcourse, bucket)
+
 		notify(CourseInstanceAvailableEvent(subcourse))
+
+	def update_assignment_dates(self, subcourse, bucket):
+		key = bucket.getChildNamed(ASSIGNMENT_DATES_NAME)
+		if key is not None:
+			fill_asg_from_key(subcourse, key)
+		else:
+			reset_asg_missing_key(subcourse)
+
 
 def synchronize_catalog_from_root(catalog_folder, root):
 	"""

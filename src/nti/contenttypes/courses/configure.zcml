@@ -142,6 +142,10 @@
 	<adapter factory="._synchronize._MissingCourseSubInstancesSynchronizer" />
 	<adapter factory="._synchronize._ContentCourseSubInstanceSynchronizer" />
 
+	<!-- Assignment date overrides -->
+	<adapter factory=".assignment.EmptyAssignmentDateContext" />
+	<adapter factory=".assignment.CourseSubInstanceAssignmentDateContextFactory" />
+
 	<!--
 		To get maximum externalization testing, let the dataserver
 		register all its decorators.
