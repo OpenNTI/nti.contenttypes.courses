@@ -70,6 +70,8 @@ class TestEnrollment(unittest.TestCase):
 
 from zope.security.interfaces import IPrincipal
 from zope.container.interfaces import IContained
+from zope.location.interfaces import ISublocations
+from ..interfaces import ICourseInstance
 from zope.annotation.interfaces import IAttributeAnnotatable
 from nti.wref.interfaces import IWeakRef
 from nti.dataserver.interfaces import IUser
@@ -154,6 +156,13 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		# again does nothing
 		assert_that( manager.enroll(principal), is_false() )
 		self._check_enrolled(record, principal, course)
+
+		# The record can be adapted to the course and the principal
+		assert_that( ICourseInstance(record), is_(course) )
+		assert_that( IPrincipal(record), is_(principal))
+		# (but not sublocations...earlier there was a bug that adapted
+		# it to the course instance when asked for sublocations)
+		assert_that( ISublocations(record, None), is_(none()) )
 
 		# now, we can drop
 		result = record = manager.drop(principal)

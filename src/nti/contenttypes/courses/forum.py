@@ -13,9 +13,12 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
 
+from . import MessageFactory as _
+
 from .interfaces import ICourseInstanceBoard
 
 from nti.dataserver.contenttypes.forums.board import CommunityBoard
+from nti.dataserver.contenttypes.forums.forum import CommunityForum
 from nti.ntiids.ntiids import TYPE_OID
 from nti.externalization.oids import to_external_ntiid_oid
 from zope.cachedescriptors.property import cachedIn
@@ -34,3 +37,14 @@ class CourseInstanceBoard(CommunityBoard):
 	# by OID
 	NTIID_TYPE = _ntiid_type = TYPE_OID
 	NTIID = cachedIn('_v_ntiid')(to_external_ntiid_oid)
+
+	def createDefaultForum(self):
+		if CommunityForum.__default_name__ in self:
+			return self[CommunityForum.__default_name__]
+
+		forum = CommunityForum()
+		forum.creator = self.creator
+		self[forum.__default_name__] = forum
+		forum.title = _('Forum')
+
+		return forum

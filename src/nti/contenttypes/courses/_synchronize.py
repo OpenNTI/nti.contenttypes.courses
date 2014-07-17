@@ -28,11 +28,14 @@ class IObjectEntrySynchronizer(interface.Interface):
 		Synchronize the object from the bucket.
 		"""
 
+from zope.event import notify
+
 from .interfaces import ICourseInstance
 from .interfaces import ICourseInstanceVendorInfo
 from .interfaces import ICourseSubInstances
 from .interfaces import IContentCourseSubInstance
 from .interfaces import ICourseCatalogEntry
+from .interfaces import CourseInstanceAvailableEvent
 
 from .courses import ContentCourseInstance
 from .courses import ContentCourseSubInstance
@@ -143,12 +146,15 @@ class _ContentCourseSynchronizer(object):
 		self.update_outline(course, bucket, try_legacy_content_bundle=True)
 		self.update_catalog_entry(course, bucket, try_legacy_content_bundle=True)
 		self.update_instructor_roles(course, bucket)
-
 		course.SharingScopes.initScopes()
+		getattr(course, 'Discussions')
+
+		notify(CourseInstanceAvailableEvent(course))
 
 		sections_bucket = bucket.getChildNamed(SECTION_FOLDER_NAME)
 		sync = component.getMultiAdapter( (course.SubInstances, sections_bucket) )
 		sync.synchronize( course.SubInstances, sections_bucket )
+
 
 	@classmethod
 	def update_vendor_info(cls, course, bucket):
@@ -258,6 +264,8 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		_ContentCourseSynchronizer.update_catalog_entry(subcourse, bucket)
 		_ContentCourseSynchronizer.update_instructor_roles(subcourse, bucket)
 		subcourse.SharingScopes.initScopes()
+		getattr(subcourse, 'Discussions')
+		notify(CourseInstanceAvailableEvent(subcourse))
 
 def synchronize_catalog_from_root(catalog_folder, root):
 	"""

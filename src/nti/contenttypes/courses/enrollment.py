@@ -234,7 +234,7 @@ class DefaultPrincipalEnrollments(object):
 				for i in storage.enrollments_for_id(principal_id, self.principal):
 					yield i
 
-
+from nti.dataserver.interfaces import IUser
 
 @interface.implementer(ICourseInstanceEnrollmentRecord)
 class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
@@ -292,10 +292,13 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 			return NotImplemented
 
 	def __conform__(self, iface):
-		if iface.providedBy(self.CourseInstance):
+		if ICourseInstance.isOrExtends(iface):
 			return self.CourseInstance
 
-		if iface.providedBy(self.Principal):
+		if IPrincipal.isOrExtends(iface):
+			return self.Principal
+
+		if IUser.isOrExtends(iface):
 			return self.Principal
 
 # Subscribers to keep things in sync when

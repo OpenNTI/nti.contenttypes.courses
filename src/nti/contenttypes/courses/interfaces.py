@@ -729,3 +729,20 @@ class ICourseEnrollments(interface.Interface):
 		Return the number of students enrolled in the context.
 		This may be more efficient than iterating all enrollments.
 		"""
+
+
+from zope.interface.interfaces import IObjectEvent
+from zope.interface.interfaces import ObjectEvent
+
+class ICourseInstanceAvailableEvent(IObjectEvent):
+	"""
+	An event that is sent, usually during startup or synchronization,
+	to notify that a course instance has been setup by this package.
+	This is a hook for additional packages to perform any setup they
+	need to do, such as synchronizing database state with course
+	content state.
+	"""
+
+@interface.implementer(ICourseInstanceAvailableEvent)
+class CourseInstanceAvailableEvent(ObjectEvent):
+	pass

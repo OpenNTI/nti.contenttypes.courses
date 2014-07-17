@@ -62,6 +62,7 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		board.title = _('Discussions')
 		lifecycleevent.created(board)
 		self['Discussions'] = board
+		board.createDefaultForum()
 		return board
 
 	def _make_Outline(self):
