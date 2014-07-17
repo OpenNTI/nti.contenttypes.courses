@@ -47,6 +47,54 @@ from .interfaces import ICourseCatalog
 from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseCatalogInstructorInfo
 
+from persistent.interfaces import IPersistent
+
+####
+# Our persistent sites are a mix of persistent and non-persistent
+# bases, with many of them having multiple bases. For example
+# (using the notation: name (bases,) [type]):
+#
+#	platform.ou.edu (GlobalSiteManager) [global]
+#   Dataserver (GlobalSiteManager) [persistent]
+#   site-platform.ou.edu (Dataserver, platform.ou.edu) [persistent]
+#   janux.ou.edu (platform.ou.edu) [global]
+#   site-janux.ou.edu (janux.ou.edu, site-platform.ou.edu) [persistent]
+#
+# This gives site-janux.ou.edu this (correct) resolution order:
+#
+#  site-janux.ou.edu, janux.ou.edu, site-platform.ou.edu, dataserver, GSM
+#
+# However, queryNextUtility only looks in the *first* base to find
+# a next utility. Therefore, when site-janux.ou.edu asks for a next utility,
+# instead of getting something persistent from site-platform.ou.edu,
+# it instead gets the global non-persistent version from platform.ou.edu.
+#
+# We don't generally want to change the resolution order, but we do need
+# to tweak it here for getting next utilities so that we consider
+# persistent things first. Note that this breaks down if we have
+# utilities registered both persistently and non-persistently at the same level
+_marker = object()
+def _queryNextCatalog(context):
+	try:
+		sm = component.getSiteManager(context)
+	except LookupError:
+		return None
+
+	# These are returned starting from the GlobalSiteManager
+	# and working down the resolution chain
+	all_utilities = sm.getAllUtilitiesRegisteredFor(ICourseCatalog)
+	try:
+		me = all_utilities.index(context)
+	except ValueError:
+		# Not in it. That means our site manager is the global site manager,
+		# and we hit the global catalog
+		assert sm == component.getGlobalSiteManager()
+		return all_utilities[0]
+
+	next_ = me - 1
+	if next_ >= 0:
+		return all_utilities[next_]
+
 class _AbstractCourseCatalogMixin(object):
 	"""
 	Defines the interface methods for a generic course
@@ -69,7 +117,7 @@ class _AbstractCourseCatalogMixin(object):
 
 	@property
 	def _next_catalog(self):
-		return component.queryNextUtility(self, ICourseCatalog)
+		return _queryNextCatalog(self)
 
 	def _get_all_my_entries(self):
 		"Return all the entries at this level"
@@ -152,17 +200,18 @@ class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
 		:keyword bool event: If true (the default), we broadcast
 			the object added event.
 		"""
-		if not entry.__name__:
+		key = entry.ntiid or entry.__name__
+		if not key:
 			raise ValueError(entry)
-		if entry.__name__ in self:
+		if CheckingLastModifiedBTreeContainer.__contains__(self, key):
 			if entry.__parent__ is self:
 				return
 			raise ValueError("Adding duplicate entry %s", entry)
 
 		if event:
-			self[entry.__name__] = entry
+			self[key] = entry
 		else:
-			self._setitemf(entry.__name__, entry)
+			self._setitemf(key, entry)
 			entry.__parent__ = self
 
 		self.lastModified = max( self.lastModified, entry.lastModified )
@@ -177,18 +226,19 @@ class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
 		:keyword bool event: If true (the default), we broadcast
 			the object removed event.
 		"""
+		key = entry.ntiid or entry.__name__
 		if not event:
 			l = self._BTreeContainer__len
 			try:
-				entry = self._SampleContainer__data[entry.__name__]
-				del self._SampleContainer__data[entry.__name__]
+				entry = self._SampleContainer__data[key]
+				del self._SampleContainer__data[key]
 				l.change(-1)
 				entry.__parent__ = None
 			except KeyError:
 				pass
 		else:
-			if entry.__name__ in self:
-				del self[entry.__name__]
+			if CheckingLastModifiedBTreeContainer.__contains__(self, key):
+				del self[key]
 
 	def isEmpty(self):
 		# we can be more efficient than the parent
@@ -320,17 +370,6 @@ class CourseCatalogFolder(_AbstractCourseCatalogMixin,
 		(e.g., be incorporated into the workspace structure at the
 		application level).
 	"""
-
-	@LazyOnClass
-	def __acl__( self ):
-		# Got to be here after the components are registered
-		return acl_from_aces(
-			# Everyone logged in has read and search access to the catalog
-			ace_allowing(AUTHENTICATED_GROUP_NAME, ACT_READ, type(self) ) )
-
-	@property
-	def _next_catalog(self):
-		return component.queryNextUtility(self, ICourseCatalog)
 
 	@cachedIn('_v_all_my_entries')
 	def _get_all_my_entries(self):

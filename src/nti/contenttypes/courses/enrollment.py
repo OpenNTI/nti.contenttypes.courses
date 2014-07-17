@@ -226,13 +226,14 @@ class DefaultPrincipalEnrollments(object):
 			return
 
 		principal_id = iprincipal.id
-		catalog = component.queryUtility(ICourseCatalog)
-		while catalog is not None:
+		# See comments in catalog.py about queryNextUtility
+		catalogs = reversed(component.getAllUtilitiesRegisteredFor(ICourseCatalog))
+		for catalog in catalogs:
 			storage = IDefaultCourseCatalogEnrollmentStorage(catalog)
 			if principal_id in storage:
 				for i in storage.enrollments_for_id(principal_id, self.principal):
 					yield i
-			catalog = component.queryNextUtility(catalog, ICourseCatalog)
+
 
 
 @interface.implementer(ICourseInstanceEnrollmentRecord)
