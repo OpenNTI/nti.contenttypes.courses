@@ -51,6 +51,7 @@ from ._assignment_override_parser import reset_asg_missing_key
 from nti.contentlibrary.bundle import PersistentContentPackageBundle
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
+from nti.contentlibrary.dublincore import read_dublincore_from_named_key
 
 VENDOR_INFO_NAME = 'vendor_info.json'
 COURSE_OUTLINE_NAME = 'course_outline.xml'
@@ -142,7 +143,11 @@ class _ContentCourseSynchronizer(object):
 			bundle.lastModified = 0
 			bundle.createdTime = 0
 
-		sync_bundle_from_json_key(bundle_json_key, course.ContentPackageBundle)
+		# The catalog entry gets the default DublinCore metadata file name,
+		# in this bucket, since it really describes the data.
+		# The content bundle, on the other hand, gets a custom file
+		sync_bundle_from_json_key(bundle_json_key, course.ContentPackageBundle,
+								  dc_meta_name='bundle_dc_metadata.xml')
 		bundle_modified = course.ContentPackageBundle.lastModified
 
 		self.update_vendor_info(course, bucket)
@@ -216,6 +221,9 @@ class _ContentCourseSynchronizer(object):
 		if catalog_json_key:
 			catalog_entry = ICourseCatalogEntry(course)
 			fill_entry_from_legacy_key(catalog_entry, catalog_json_key)
+			# The catalog entry gets the default dublincore info
+			# file; for the bundle, we use a different name
+			read_dublincore_from_named_key(catalog_entry, bucket)
 
 	@classmethod
 	def update_instructor_roles(cls, course, bucket):

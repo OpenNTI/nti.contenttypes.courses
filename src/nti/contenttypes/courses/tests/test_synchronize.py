@@ -81,7 +81,8 @@ class TestFunctionalSynchronize(CourseLayerTest):
 
 		assert_that( ICourseCatalogEntry(gateway),
 					 has_properties( 'ProviderUniqueID', 'CLC 3403',
-									 'Title', 'Law and Justice') )
+									 'Title', 'Law and Justice',
+									 'creators', ('Jason',)) )
 		assert_that( ICourseInstance(ICourseCatalogEntry(gateway)),
 					 is_(gateway) )
 
@@ -100,7 +101,8 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		# partially overridden course info
 		assert_that( ICourseCatalogEntry(sec1),
 					 has_properties( 'ProviderUniqueID', 'CLC 3403-01',
-									 'Title', 'Law and Justice') )
+									 'Title', 'Law and Justice',
+									 'creators', ('Steve',)) )
 
 
 		assert_that( sec1,

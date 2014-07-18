@@ -146,6 +146,17 @@
 	<adapter factory=".assignment.EmptyAssignmentDateContext" />
 	<adapter factory=".assignment.CourseSubInstanceAssignmentDateContextFactory" />
 
+	<!-- dublincore annotations -->
+	<include package="zope.dublincore" />
+	<adapter factory="nti.contentlibrary.dublincore.DisplayableContentZopeDublinCoreAdapter"
+			 for=".interfaces.ICourseCatalogEntry"
+			 provides="zope.dublincore.interfaces.IWriteZopeDublinCore" />
+	<class class=".catalog.CourseCatalogEntry">
+		<implements interface="zope.annotation.interfaces.IAttributeAnnotatable" />
+	</class>
+	<class class=".legacy_catalog._CourseSubInstanceCatalogLegacyEntry">
+		<implements interface="zope.annotation.interfaces.IAttributeAnnotatable" />
+	</class>
 	<!--
 		To get maximum externalization testing, let the dataserver
 		register all its decorators.
