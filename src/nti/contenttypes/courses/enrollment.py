@@ -34,6 +34,7 @@ from .interfaces import ICourseEnrollmentManager
 from .interfaces import ICourseEnrollments
 from .interfaces import ICourseInstance
 from .interfaces import ICourseCatalog
+from .interfaces import IGlobalCourseCatalog
 from .interfaces import ES_PUBLIC
 from .interfaces import IPrincipalEnrollments
 
@@ -102,6 +103,29 @@ class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedB
 
 DefaultCourseCatalogEnrollmentStorageFactory = an_factory(DefaultCourseCatalogEnrollmentStorage,
 														  'CourseCatalogEnrollmentStorage')
+
+class GlobalCourseCatalogEnrollmentStorage(DefaultCourseCatalogEnrollmentStorage):
+	pass
+
+@component.adapter(IGlobalCourseCatalog)
+@interface.implementer(IDefaultCourseCatalogEnrollmentStorage)
+def global_course_catalog_enrollment_storage(catalog):
+	"""
+	Global course catalogs are not persisted in the database,
+	so we have to find somewhere else to put them.
+
+	When we are called, our current site should be a persistent
+	site in the database, so we store things there.
+	"""
+
+	site_manager = component.getSiteManager()
+	try:
+		return site_manager['default']['GlobalCourseCatalogEnrollmentStorage']
+	except KeyError:
+		storage = GlobalCourseCatalogEnrollmentStorage()
+		site_manager['default']['GlobalCourseCatalogEnrollmentStorage'] = storage
+		return storage
+
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseEnrollmentManager)
@@ -228,10 +252,23 @@ class DefaultPrincipalEnrollments(object):
 		principal_id = iprincipal.id
 		# See comments in catalog.py about queryNextUtility
 		catalogs = reversed(component.getAllUtilitiesRegisteredFor(ICourseCatalog))
+		seen_cats = list()
+		seen_records = list()
+
 		for catalog in catalogs:
+			# Protect against accidentally hitting the same catalog
+			# or record multiple times. This can occur (only during tests)
+			# if the component registry is manually dorked with
+			if catalog in seen_cats:
+				continue
+			seen_cats.append(catalog)
 			storage = IDefaultCourseCatalogEnrollmentStorage(catalog)
 			if principal_id in storage:
 				for i in storage.enrollments_for_id(principal_id, self.principal):
+					if i in seen_records:
+						continue
+					seen_records.append(i)
+
 					yield i
 
 from nti.dataserver.interfaces import IUser

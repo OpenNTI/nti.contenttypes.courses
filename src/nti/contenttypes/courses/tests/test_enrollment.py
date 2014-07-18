@@ -105,22 +105,6 @@ class MockPrincipal(SharingSourceMixin, Persistent):
 
 class TestFunctionalEnrollment(CourseLayerTest):
 
-	old_gcc = None
-
-	def setUp(self):
-		CourseLayerTest.setUp(self)
-		# If we are using the global course catalog, we wind up
-		# storing persistent annotations in it across transactions,
-		# and in fact associating it with a connection (because it is persistent)
-		# which doesn't work. So we swap in a new one each time
-		self.old_gcc = component.getUtility(interfaces.ICourseCatalog)
-		component.getGlobalSiteManager().registerUtility(catalog.GlobalCourseCatalog(),
-														 interfaces.ICourseCatalog)
-	def tearDown(self):
-		component.getGlobalSiteManager().registerUtility(self.old_gcc,
-														 interfaces.ICourseCatalog)
-
-
 	principal = None
 	course = None
 	def _shared_setup(self):
