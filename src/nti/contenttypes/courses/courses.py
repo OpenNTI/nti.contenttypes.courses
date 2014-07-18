@@ -110,6 +110,7 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		"""
 		return ()
 
+
 from .interfaces import IContentCourseInstance
 from .interfaces import IContentCourseSubInstance
 from Acquisition import aq_acquire

@@ -157,6 +157,14 @@
 	<class class=".legacy_catalog._CourseSubInstanceCatalogLegacyEntry">
 		<implements interface="zope.annotation.interfaces.IAttributeAnnotatable" />
 	</class>
+
+	<!-- traversal -->
+	<adapter factory=".traversal.CourseCatalogEntryTraverser"
+			 for=".interfaces.ICourseInstance *"
+			 name="CourseCatalogEntry" />
+	<adapter factory="nti.dataserver.traversal.ContainerAdapterTraversable"
+			 for=".interfaces.ICourseInstance" />
+
 	<!--
 		To get maximum externalization testing, let the dataserver
 		register all its decorators.
