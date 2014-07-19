@@ -147,15 +147,22 @@ from zope.intid.interfaces import IIntIdAddedEvent
 from zope.intid.interfaces import IIntIdRemovedEvent
 
 
-def _adjust_scope_membership(record, join, follow, ignored_exceptions=()):
+def _adjust_scope_membership(record, join, follow,
+							 ignored_exceptions=(),
+							 currently_in=(),
+							 relevant_scopes=None):
 	course = record.CourseInstance
 	principal = record.Principal
 	join = getattr(principal, join)
 	follow = getattr(principal, follow)
 	scopes = course.SharingScopes
 
-	relevant_scopes = scopes.getAllScopesImpliedbyScope(record.Scope)
+	if relevant_scopes is None:
+		relevant_scopes = scopes.getAllScopesImpliedbyScope(record.Scope)
 	for scope in relevant_scopes:
+		if scope in currently_in:
+			continue
+
 		try:
 			join(scope)
 		except ignored_exceptions:
@@ -198,5 +205,35 @@ def on_modified_update_scope_membership(record, event):
 	When your enrollment record is modified, update the scopes
 	you should be in.
 	"""
+	# It would be nice if we could guarantee that
+	# the event had its descriptions attribute filled out
+	# so we could be sure it was the Scope that got modified,
+	# but we can't
 
-	raise NotImplementedError()
+	# Try hard to avoid firing events for scopes we don't actually
+	# need to exit or add
+	principal = record.Principal
+	sharing_scopes = record.CourseInstance.SharingScopes
+	scopes_i_should_be_in = list(sharing_scopes.getAllScopesImpliedbyScope(record.Scope))
+	currently_in = []
+	drop_from = []
+	for scope in sharing_scopes.values():
+		if principal in scope:
+			if scope in scopes_i_should_be_in:
+				# A keeper!
+				currently_in.append(scope)
+			else:
+				drop_from.append(scope)
+
+	# First, the drops
+	_adjust_scope_membership( record,
+							  'record_no_longer_dynamic_member',
+							  'stop_following',
+							  relevant_scopes=drop_from)
+
+	# Now any adds
+	_adjust_scope_membership( record,
+							  'record_dynamic_membership',
+							  'follow',
+							  currently_in=currently_in,
+							  relevant_scopes=scopes_i_should_be_in)

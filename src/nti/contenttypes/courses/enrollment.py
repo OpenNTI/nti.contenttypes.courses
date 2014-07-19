@@ -232,6 +232,10 @@ class DefaultCourseEnrollments(object):
 	def count_enrollments(self):
 		return len(self._inst_enrollment_storage)
 
+	def get_enrollment_for_principal(self, principal):
+		principal_id = IPrincipal(principal).id
+		return self._inst_enrollment_storage.get(principal_id)
+
 	# Non-interface methods for legacy compatibility
 	def count_legacy_forcredit_enrollments(self):
 		return len(ILengthEnumerableEntityContainer(self.context.SharingScopes['ForCredit']))

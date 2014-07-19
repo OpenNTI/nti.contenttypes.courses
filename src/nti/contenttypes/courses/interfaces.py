@@ -730,6 +730,14 @@ class ICourseEnrollments(interface.Interface):
 		This may be more efficient than iterating all enrollments.
 		"""
 
+	def get_enrollment_for_principal(principal):
+		"""
+		Given the same kind of principal that was enrolled
+		with the course enrollment manager, return
+		the enrollment record for that principal.
+
+		If the principal is not enrolled, return None.
+		"""
 
 from zope.interface.interfaces import IObjectEvent
 from zope.interface.interfaces import ObjectEvent

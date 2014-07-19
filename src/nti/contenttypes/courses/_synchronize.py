@@ -170,6 +170,8 @@ class _ContentCourseSynchronizer(object):
 		vendor_info = ICourseInstanceVendorInfo(course)
 		if not vendor_json_key:
 			vendor_info.clear()
+			vendor_info.lastModified = 0
+			vendor_info.createdTime = 0
 		elif vendor_json_key.lastModified > vendor_info.lastModified:
 			vendor_info.clear()
 			vendor_info.update(vendor_json_key.readContentsAsJson())
