@@ -106,8 +106,13 @@ class CourseInstanceSharingScopes(CheckingLastModifiedBTreeContainer):
 	Container for a course's sharing scopes.
 	"""
 
+	def _vocabulary(self):
+		# Could/should also use the vocabulary registry
+		# and dispatch to adapters based on context
+		return ENROLLMENT_SCOPE_VOCABULARY
+
 	def __setitem__(self, key, value):
-		if key not in ENROLLMENT_SCOPE_VOCABULARY:
+		if key not in self._vocabulary():
 			raise KeyError("Unsupported scope kind", key)
 		super(CourseInstanceSharingScopes,self).__setitem__(key, value)
 
@@ -115,21 +120,24 @@ class CourseInstanceSharingScopes(CheckingLastModifiedBTreeContainer):
 		"""
 		Make sure we have all the scopes specified by the vocabulary.
 		"""
-		for key in ENROLLMENT_SCOPE_VOCABULARY:
+		for key in self._vocabulary():
 			key = key.token
 			if key not in self:
 				self[key] = self._create_scope(key)
 
 	def getAllScopesImpliedbyScope(self, scope_name):
+		self.initScopes()
+		# work with the global superset of terms, but only
+		# return things in our local vocabulary
 		term = ENROLLMENT_SCOPE_VOCABULARY.getTerm(scope_name)
 		names = (scope_name,) + term.implies
 
 		for name in names:
 			try:
 				scope = self[name]
+				yield scope
 			except KeyError:
-				scope = self[name] = self._create_scope(name)
-			yield scope
+				pass
 
 	def _create_scope(self, name):
 		return CourseInstanceSharingScope(name)

@@ -81,10 +81,13 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 	def SharingScopes(self):
 		# As per Discussions
 		self._p_changed = True
-		scopes = CourseInstanceSharingScopes()
+		scopes = self._make_sharing_scopes()
 		lifecycleevent.created(scopes)
 		self['SharingScopes'] = scopes
 		return scopes
+
+	def _make_sharing_scopes(self):
+		return CourseInstanceSharingScopes()
 
 	@Lazy
 	def SubInstances(self):
