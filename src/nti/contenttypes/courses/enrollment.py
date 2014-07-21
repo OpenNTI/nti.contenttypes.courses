@@ -36,11 +36,13 @@ from .interfaces import ICourseInstance
 from .interfaces import ICourseCatalog
 from .interfaces import IGlobalCourseCatalog
 from .interfaces import ES_PUBLIC
+from .interfaces import ES_CREDIT
 from .interfaces import IPrincipalEnrollments
 
 from nti.contentlibrary.bundle import _readCurrent
 from nti.utils.property import alias
 from nti.utils.property import Lazy
+from zope.cachedescriptors.method import cachedIn
 
 from nti.schema.fieldproperty import FieldProperty
 
@@ -124,6 +126,12 @@ def global_course_catalog_enrollment_storage(catalog):
 	except KeyError:
 		storage = GlobalCourseCatalogEnrollmentStorage()
 		site_manager['default']['GlobalCourseCatalogEnrollmentStorage'] = storage
+		# This could be reachable from a few different databases
+		# (because records which are children live with their
+		# principal's database), so give it a home
+		jar = IConnection(storage, None)
+		if jar is not None:
+			jar.add(storage)
 		return storage
 
 
@@ -189,6 +197,10 @@ class DefaultCourseEnrollmentManager(object):
 
 		lifecycleevent.created(record)
 		enrollments.append(record)
+		try:
+			enrollments._p_jar.add(record)
+		except AttributeError:
+			pass
 		# now install and fire the ObjectAdded event, after
 		# it's in the IPrincipalEnrollments; that way
 		# event listeners will see consistent data.
@@ -238,9 +250,17 @@ class DefaultCourseEnrollments(object):
 
 	# Non-interface methods for legacy compatibility
 	def count_legacy_forcredit_enrollments(self):
-		return len(ILengthEnumerableEntityContainer(self.context.SharingScopes['ForCredit']))
+		return len(ILengthEnumerableEntityContainer(self.context.SharingScopes[ES_CREDIT]))
+
+	@cachedIn('_v_count_open_enrollments')
 	def count_legacy_open_enrollments(self):
-		return len(ILengthEnumerableEntityContainer(self.context.SharingScopes['Public'])) - self.count_legacy_forcredit_enrollments()
+		# XXX: Inefficient but accurate
+		i = 0
+		for x in self.iter_enrollments():
+			if x.Scope == ES_PUBLIC:
+				i += 1
+		return i
+
 
 @interface.implementer(IPrincipalEnrollments)
 class DefaultPrincipalEnrollments(object):

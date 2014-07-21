@@ -17,7 +17,10 @@ from zope.securitypolicy.role import checkRole
 from zope.securitypolicy.securitymap import PersistentSecurityMap
 
 from .interfaces import RID_INSTRUCTOR
+from .interfaces import RID_TA
 from zope.security.interfaces import IPrincipal
+
+from nti.dataserver.users import User
 
 def _fill_roles_from_json(course, manager, json):
 	"""
@@ -81,9 +84,27 @@ def fill_roles_from_key(course, key):
 	role_manager.lastModified = key.lastModified
 
 	# For BWC, we update the instructor list too
-	course.instructors = tuple([IPrincipal(x[0])
-								for x in
-								role_manager.getPrincipalsForRole(RID_INSTRUCTOR)
-								if x[1] is Allow])
+	course.instructor = ()
+
+	# For any of these that exist as users, we need to make sure they
+	# are in the appropriate sharing scopes too...
+	# NOTE: We only take care of addition, we do not handle removal,
+	# (that could be done with some extra work)
+
+	for role_id, pid, setting in role_manager.getPrincipalsAndRoles():
+		if setting is not Allow or role_id not in (RID_INSTRUCTOR, RID_TA):
+			continue
+
+		try:
+			user = User.get_user(pid)
+		except LookupError:
+			user = None
+
+		if user is None:
+			continue
+		course.instructors += (IPrincipal(user),)
+
+		for scope in course.SharingScopes.values():
+			user.record_dynamic_membership(scope)
 
 	return role_manager
