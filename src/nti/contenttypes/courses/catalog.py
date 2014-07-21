@@ -36,6 +36,7 @@ from nti.schema.fieldproperty import createDirectFieldProperties
 from nti.schema.schema import PermissiveSchemaConfigured as SchemaConfigured
 
 from nti.utils.property import alias
+from nti.utils.property import readproperty
 from nti.utils.property import LazyOnClass
 from zope.cachedescriptors.method import cachedIn
 
@@ -352,6 +353,19 @@ class CourseCatalogEntry(SchemaConfigured,
 			pass
 
 		return theirs
+
+	@readproperty
+	def InstructorsSignature(self):
+		sig_lines = []
+		for inst in self.Instructors:
+			sig_lines.append( inst.Name )
+			sig_lines.append( inst.JobTitle )
+
+			sig_lines.append( "" )
+		del sig_lines[-1] # always at least one instructor. take off the last trailing line
+		signature = '\n\n'.join( sig_lines )
+		return signature
+
 
 @interface.implementer(IPersistentCourseCatalog)
 class CourseCatalogFolder(_AbstractCourseCatalogMixin,

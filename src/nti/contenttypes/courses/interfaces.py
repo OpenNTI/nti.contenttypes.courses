@@ -55,6 +55,7 @@ from nti.ntiids.schema import ValidNTIID
 from nti.schema.field import Object
 from nti.schema.field import ValidDatetime
 from nti.schema.field import ValidTextLine
+from nti.schema.field import ValidText
 from nti.schema.field import UniqueIterable
 from nti.schema.field import Timedelta
 from nti.schema.field import ListOrTuple
@@ -567,6 +568,11 @@ class ICourseCatalogEntry(IDisplayableContent,
 
 	Instructors = ListOrTuple(title="The instuctors. Order might matter",
 									 value_type=Object(ICourseCatalogInstructorInfo) )
+
+	InstructorsSignature = ValidText(title="The sign-off or closing signature of the instructors",
+									 description="As used in an email. If this is not specifically provided, "
+									 "one can be derived from the names and titles of the instructors.")
+	InstructorsSignature.setTaggedValue('_ext_excluded_out', True)
 
 	### Things related to the availability of the course
 	StartDate = ValidDatetime(title="The date on which the course begins",

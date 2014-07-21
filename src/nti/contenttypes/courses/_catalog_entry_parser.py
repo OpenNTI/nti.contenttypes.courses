@@ -56,8 +56,8 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 					   ('ProviderUniqueID', 'id'),
 					   ('ProviderDepartmentTitle', 'school'),
 					   ('ntiid', 'ntiid'),
-					   ('Term', 'term') # XXX: non-interface
-					   ):
+					   ('Term', 'term'), # XXX: non-interface
+					   ('InstructorsSignature', 'InstructorsSignature')):
 		val = info_json_dict.get(key)
 		__traceback_info__ = field, key, val
 		if val:
@@ -65,7 +65,6 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		else:
 			# XXX: Does deleting fieldproperties do the right thing?
 			_quiet_delattr(catalog_entry, str(field))
-
 
 	if 'startDate' in info_json_dict:
 		catalog_entry.StartDate = isodate.parse_datetime(info_json_dict['startDate'])
