@@ -93,12 +93,15 @@ class _CourseInstanceSharingScopeWeakRef(ArbitraryOrderableWeakRef):
 
 # Similarly for acting as principals
 from nti.dataserver.authorization import _CommunityGroup
+from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
+@interface.implementer(IUseNTIIDAsExternalUsername)
 class _CourseInstanceSharingScopePrincipal(_CommunityGroup):
 
 	def __init__(self, context):
 		_CommunityGroup.__init__(self, context)
 		# Overwrite id, which defaults to username, with ntiid
 		self.id = context.NTIID
+		self.NTIID = self.id # also externalize this way
 
 @interface.implementer(ICourseInstanceSharingScopes)
 class CourseInstanceSharingScopes(CheckingLastModifiedBTreeContainer):

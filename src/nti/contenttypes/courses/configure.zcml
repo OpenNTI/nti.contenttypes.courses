@@ -125,7 +125,8 @@
 			 provides="nti.wref.interfaces.IWeakRef"
 			 for=".interfaces.ICourseInstanceSharingScope" />
 	<adapter factory=".sharing._CourseInstanceSharingScopePrincipal"
-			 for=".interfaces.ICourseInstanceSharingScope" />
+			 for=".interfaces.ICourseInstanceSharingScope"
+			 provides="zope.security.interfaces.IPrincipal" />
 
 	<!-- vendor info -->
 	<adapter factory=".vendorinfo.CourseInstanceVendorInfo" />
