@@ -145,6 +145,28 @@ class CourseInstanceSharingScopes(CheckingLastModifiedBTreeContainer):
 	def _create_scope(self, name):
 		return CourseInstanceSharingScope(name)
 
+class CourseSubInstanceSharingScopes(CourseInstanceSharingScopes):
+	"""
+	The scopes created for a section/sub-instance, which
+	handles the implication of joining the parent course scopes.
+	"""
+
+	def getAllScopesImpliedbyScope(self, scope_name):
+		# All of my scopes...
+		for i in CourseInstanceSharingScopes.getAllScopesImpliedbyScope(self, scope_name):
+			yield i
+
+		# Plus all of the scopes of my parent course instance
+		try:
+			# me/subinstance/subinstances/course
+			parent_course = self.__parent__.__parent__.__parent__
+		except AttributeError:
+			pass
+		else:
+			if parent_course is not None:
+				for i in parent_course.SharingScopes.getAllScopesImpliedbyScope(scope_name):
+					yield i
+
 ###
 # Event handling to get sharing correct.
 ###

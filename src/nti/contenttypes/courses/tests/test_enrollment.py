@@ -24,11 +24,13 @@ from hamcrest import is_in
 from hamcrest import is_not
 from hamcrest import has_length
 from hamcrest import contains
+from hamcrest import has_item
 from hamcrest import has_property
 from hamcrest import calling
 from hamcrest import raises
 from hamcrest import not_none
 from hamcrest import none
+from hamcrest import same_instance
 
 from zope.schema.interfaces import ConstraintNotSatisfied
 
@@ -121,15 +123,13 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		course = courses.CourseInstance()
 		admin['course'] = course
 
+		course.SubInstances['section1'] = courses.ContentCourseSubInstance()
+
 		self.principal  = principal
 		self.course = course
 
-	@WithMockDSTrans
-	def test_add_drop(self):
-		self._shared_setup()
-
-		principal = self.principal
-		course = self.course
+	def _do_test_add_drop(self, principal, course,
+						  extra_enroll_test=lambda: None):
 
 		manager = interfaces.ICourseEnrollmentManager(course)
 		assert_that( manager, is_(enrollment.DefaultCourseEnrollmentManager) )
@@ -148,6 +148,8 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		# it to the course instance when asked for sublocations)
 		assert_that( ISublocations(record, None), is_(none()) )
 
+		extra_enroll_test()
+
 		# now, we can drop
 		result = record = manager.drop(principal)
 		assert_that( result, is_(enrollment.DefaultCourseInstanceEnrollmentRecord ))
@@ -155,7 +157,34 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		assert_that( manager.drop(principal), is_false() )
 		self._check_not_enrolled(principal, course)
 
-	def _check_enrolled(self, record, principal, course):
+	@WithMockDSTrans
+	def test_add_drop(self):
+		self._shared_setup()
+		self._do_test_add_drop(self.principal, self.course)
+
+	@WithMockDSTrans
+	def test_add_drop_section(self):
+		self._shared_setup()
+		def extra_enroll_test():
+			# When we are enrolled, we are also a member of the parent's
+			# sharing scopes
+			principal = self.principal
+			public_scope = self.course.SharingScopes['Public']
+			assert_that( public_scope,
+						 is_not( same_instance(self.course.SubInstances['section1'].SharingScopes['Public'])))
+			assert_that( principal, is_in(public_scope) )
+			assert_that( public_scope, is_in(principal.dynamic_memberships))
+
+			assert_that( _dynamic_memberships_that_participate_in_security(principal, as_principals=False),
+						 has_item(public_scope))
+			assert_that( _dynamic_memberships_that_participate_in_security(principal),
+						 has_item(has_property('id', public_scope.NTIID)) )
+
+		self._do_test_add_drop(self.principal, self.course.SubInstances['section1'],
+							   extra_enroll_test=extra_enroll_test)
+
+	@classmethod
+	def _check_enrolled(cls, record, principal, course):
 		# This is backed up by the two query utilities...
 
 		assert_that( record.Principal, is_(principal))
@@ -173,13 +202,13 @@ class TestFunctionalEnrollment(CourseLayerTest):
 
 		# ... plus the scope memberships
 		public_scope = course.SharingScopes['Public']
-		assert_that( principal, is_in(public_scope) )
-		assert_that( public_scope, is_in(principal.dynamic_memberships))
 
-		assert_that( _dynamic_memberships_that_participate_in_security(principal, as_principals=False),
-					 contains(public_scope))
-		assert_that( _dynamic_memberships_that_participate_in_security(principal),
-					 contains(has_property('id', public_scope.NTIID)) )
+		assert_that( principal, is_in(public_scope) )
+		assert_that( public_scope, is_in(list(principal.dynamic_memberships)))
+		assert_that( list(_dynamic_memberships_that_participate_in_security(principal, as_principals=False)),
+					 has_item(public_scope))
+		assert_that( list(_dynamic_memberships_that_participate_in_security(principal)),
+					 has_item(has_property('id', public_scope.NTIID)) )
 
 	def _check_not_enrolled(self, principal, course):
 		cin = interfaces.ICourseEnrollments(course)
@@ -195,7 +224,7 @@ class TestFunctionalEnrollment(CourseLayerTest):
 
 		# ...dropped from scope memberships
 		public_scope = course.SharingScopes['Public']
-		assert_that( public_scope, is_not( is_in(principal.dynamic_memberships)))
+		assert_that( public_scope, is_not( is_in(list(principal.dynamic_memberships))))
 		assert_that( principal, is_not(is_in(public_scope) ))
 
 

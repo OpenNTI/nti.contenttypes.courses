@@ -23,6 +23,7 @@ from nti.schema.fieldproperty import createDirectFieldProperties
 from . import interfaces
 from .outlines import PersistentCourseOutline
 from .sharing import CourseInstanceSharingScopes
+from .sharing import CourseSubInstanceSharingScopes
 from .forum import CourseInstanceBoard
 
 @interface.implementer(interfaces.ICourseAdministrativeLevel)
@@ -56,7 +57,10 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		# community board, and community boards
 		# must be created by a community. We choose
 		# the public scope.
-		public_scope, = self.SharingScopes.getAllScopesImpliedbyScope('Public')
+		scopes = self.SharingScopes
+		scopes.initScopes()
+		public_scope = scopes[interfaces.ES_PUBLIC]
+
 		board = CourseInstanceBoard()
 		board.creator = public_scope
 		board.title = _('Discussions')
@@ -150,6 +154,9 @@ class ContentCourseSubInstance(ContentCourseInstance):
 			# acquisition policy
 			raise AttributeError(name)
 		return aq_acquire(self.__parent__, name)
+
+	def _make_sharing_scopes(self):
+		return CourseSubInstanceSharingScopes()
 
 	@property
 	def ContentPackageBundle(self):
