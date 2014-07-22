@@ -302,11 +302,13 @@ class ICourseInstance(IFolder,
 			   ICourseSubInstances)
 	__parent__.required = False
 
-	# TODO: May need to apply restrictions to which ones of these externalize?
 	SharingScopes = Object(ICourseInstanceSharingScopes,
 						   title="The sharing scopes for this instance",
 						   description="Each course has one or more sharing scopes. "
 						   "See :class:`ICourseInstanceEnrollmentRecord` for details.")
+	# SharingScopes are externalized via a decorator to take into account
+	# membership
+	SharingScopes.setTaggedValue('_ext_excluded_out', True)
 
 	Discussions = Object(frm_interfaces.IBoard,
 						 title="The root discussion board for this course.",
@@ -355,6 +357,14 @@ class ICourseSubInstance(ICourseInstance):
 	containing course instance. The containing course instance will
 	provide any properties not specifically provided by this object
 	(e.g., it will acquire them through its parents).
+
+	When externalized, this object gains the following properties:
+
+	* ``ParentSharingScopes`` is a sharing scopes object having
+		all the scopes from the parent course the current user is a
+		member of.
+	* ``ParentDiscussions`` is a pointer to the discussion board
+		of the parent course.
 	"""
 	interface.taggedValue('__external_class_name__', 'CourseInstance')
 
