@@ -119,6 +119,7 @@ class ICourseAdministrativeLevel(IFolder):
 
 	contains(str('.ICourseInstance'),
 			 str('.ICourseAdministrativeLevel'))
+	__setitem__.__doc__ = None
 
 ###
 # Outlines
@@ -143,6 +144,7 @@ class ICourseOutlineNode(ITitledDescribedContent,
 	containers(str('._ICourseOutlineNodeContainer'))
 	contains(str('.ICourseOutlineNode'))
 	__parent__.required = False
+	__setitem__.__doc__ = None
 
 	src = ValidTextLine(title="json file to populate the node overview",
 						required=False)
@@ -212,6 +214,7 @@ class ICourseOutline(ICourseOutlineNode,
 	containers(str('.ICourseInstance'))
 	__parent__.required = False
 
+
 ###
 # Sharing
 ###
@@ -230,6 +233,7 @@ class ICourseInstanceSharingScope(ICommunity,
 	containers(str('.ICourseInstanceSharingScopes'))
 	__parent__.required = False
 
+
 class ICourseInstanceSharingScopes(IContainer):
 	"""
 	A container of sharing scopes for the course.
@@ -241,12 +245,13 @@ class ICourseInstanceSharingScopes(IContainer):
 	contains(ICourseInstanceSharingScope)
 	containers(str('.ICourseInstance'))
 	__parent__.required = False
+	__setitem__.__doc__ = None
 
 	def getAllScopesImpliedbyScope(scope_name):
 		"""
-		Return all the :class:`ICourseInstanceSharingScope`s
-		implied by the given scope name, including the scope
-		itself, creating them if necessary.
+		Return all the :class:`ICourseInstanceSharingScope` objects
+		implied by the given scope name, including the scope itself,
+		creating them if necessary.
 		"""
 
 ###
@@ -279,6 +284,7 @@ class ICourseSubInstances(IContainer):
 	contains(str('.ICourseSubInstance'))
 	containers(str('.ICourseInstance'))
 	__parent__.required = False
+	__setitem__.__doc__ = None
 
 class ICourseInstance(IFolder,
 					  IShouldHaveTraversablePath,
@@ -301,6 +307,7 @@ class ICourseInstance(IFolder,
 	containers(ICourseAdministrativeLevel,
 			   ICourseSubInstances)
 	__parent__.required = False
+
 
 	SharingScopes = Object(ICourseInstanceSharingScopes,
 						   title="The sharing scopes for this instance",
@@ -508,6 +515,7 @@ class IWritableCourseCatalog(ICourseCatalog,IContentContainer):
 	"""
 
 	contains(b'.ICourseCatalogEntry')
+	__setitem__.__doc__ = None
 
 	def addCatalogEntry(entry, event=True):
 		"""
