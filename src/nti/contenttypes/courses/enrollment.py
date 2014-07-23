@@ -12,6 +12,7 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
+from zope.interface import ro
 from zope import component
 from zope import lifecycleevent
 from zope.annotation.factory import factory as an_factory
@@ -133,6 +134,16 @@ def global_course_catalog_enrollment_storage(catalog):
 		if jar is not None:
 			jar.add(storage)
 		return storage
+
+def _global_course_catalog_storage(site_manager):
+	"""
+	Returns a storage if it exists in the given site manager, otherwise
+	returns nothing.
+	"""
+	try:
+		return site_manager['default']['GlobalCourseCatalogEnrollmentStorage']
+	except (KeyError, TypeError):
+		return None
 
 
 @component.adapter(ICourseInstance)
@@ -276,17 +287,38 @@ class DefaultPrincipalEnrollments(object):
 		principal_id = iprincipal.id
 		# See comments in catalog.py about queryNextUtility
 		catalogs = reversed(component.getAllUtilitiesRegisteredFor(ICourseCatalog))
-		seen_cats = list()
-		seen_records = list()
+		seen_cats = []
+		seen_storages = []
+		seen_records = []
 
 		for catalog in catalogs:
 			# Protect against accidentally hitting the same catalog
 			# or record multiple times. This can occur (only during tests)
-			# if the component registry is manually dorked with
+			# if the component registry is manually dorked with. The same storage,
+			# however, may be seen multiple times as we walk back up the resolution tree
 			if catalog in seen_cats:
 				continue
 			seen_cats.append(catalog)
 			storage = IDefaultCourseCatalogEnrollmentStorage(catalog)
+			if storage in seen_storages:
+				continue
+			seen_storages.append(storage)
+
+		# Now, during migration, we may have put things in a global storage
+		# that is not our current global storage. One example:
+		# we migrate with the current site platform.ou.edu, but query with the
+		# current site janux.ou.edu. Therefore we need to walk up the chain of these
+		# guys too. This is not the most elegant approach, but it does work.
+		for site_manager in ro.ro(component.getSiteManager()):
+			storage = _global_course_catalog_storage(site_manager)
+			if storage in seen_storages:
+				continue
+			seen_storages.append(storage)
+
+		for storage in seen_storages:
+			if storage is None:
+				continue
+
 			if principal_id in storage:
 				for i in storage.enrollments_for_id(principal_id, self.principal):
 					if i in seen_records:
