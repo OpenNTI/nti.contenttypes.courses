@@ -57,6 +57,9 @@ pieces of any existing content to form its outline.
 			 installed in the site library; they **MUST NOT** be
 			 installed in the global library.
 
+.. note:: The content packages have specific ACL requirements. See
+		  :ref:`bundle_meta_info.json` for details.
+
 A course has a :dfn:`course outline` or *syllabus* which consists of
 titles (and availability information) of *units* and *lessons*, each
 of which points (via NTIID) to a particular piece of the content
@@ -208,6 +211,8 @@ This section will describe each file that may have meaning within a
 course directory. Full information is available in the source for
 :mod:`nti.contenttypes.courses._synchronize`.
 
+.. _bundle_meta_info.json
+
 ``bundle_meta_info.json`` (required)
 ------------------------------------
 
@@ -217,21 +222,34 @@ course instance. This file is a standard bundle file as defined by
 :mod:`nti.contentlibrary.bundle`::
 
 	{
-	"ntiid": "tag:nextthought.com,2011-10:NTI-Bundle-ABundle",
-	"ContentPackages": ["tag:nextthought.com,2011-10:USSC-HTML-Cohen.cohen_v._california."],
-	"title": "A Title"
+	    "ntiid": "tag:nextthought.com,2011-10:NTI-Bundle-ABundle",
+	    "ContentPackages": ["tag:nextthought.com,2011-10:USSC-HTML-Cohen.cohen_v._california."],
+	    "title": "A Title"
 	}
 
 .. note:: The NTIID, while currently required, will be ignored and/or
 		  overwritten by an automatically generated ID in the future.
 		  No client or server component should rely on this value.
 
-.. warning:: Recall that current UIs can only handle a single content
-			 package being defined here.
-
 .. note:: In the future, we expect to be able to reference existing
 		  content package bundles instead of defining new one for each
 		  course.
+
+.. warning:: Recall that current UIs can only handle a single content
+			 package being defined here.
+
+.. caution:: If the content packages need to be permissioned to not be
+			 publically visible without being enrolled in the course,
+			 the ACL file **MUST** exist, but **MUST NOT** contain a
+			 default-deny entry. Instead, it can contain an entry for
+			 nextthought.com; a default-deny entry is added
+			 automatically. Users enrolled in the course will be
+			 automatically added to the groups that can access the content.
+
+.. danger:: The packages referenced by a course **MUST NOT** change
+			after the course is installed and has users enrolled.
+			Doing so will result in stale permissions. (This is a
+			limitation that can be fixed given time.)
 
 ``bundle_dc_metadata.xml`` (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
