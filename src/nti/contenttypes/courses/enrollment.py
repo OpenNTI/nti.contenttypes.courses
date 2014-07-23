@@ -172,7 +172,12 @@ class DefaultCourseEnrollmentManager(object):
 
 	@Lazy
 	def _inst_enrollment_storage(self):
-		return _readCurrent(IDefaultCourseInstanceEnrollmentStorage(self._course))
+		storage = IDefaultCourseInstanceEnrollmentStorage(self._course)
+		if storage._p_jar is None:
+			jar = IConnection(storage, None)
+			if jar is not None:
+				jar.add(storage)
+		return _readCurrent(storage)
 
 	@Lazy
 	def _catalog(self):
