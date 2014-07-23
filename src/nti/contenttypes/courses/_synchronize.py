@@ -14,6 +14,7 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
 from zope import component
+from zope import lifecycleevent
 
 from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
@@ -52,6 +53,8 @@ from nti.contentlibrary.bundle import PersistentContentPackageBundle
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.dublincore import read_dublincore_from_named_key
+
+from nti.dataserver.users.interfaces import IFriendlyNamed
 
 VENDOR_INFO_NAME = 'vendor_info.json'
 COURSE_OUTLINE_NAME = 'course_outline.xml'
@@ -150,12 +153,7 @@ class _ContentCourseSynchronizer(object):
 								  dc_meta_name='bundle_dc_metadata.xml')
 		bundle_modified = course.ContentPackageBundle.lastModified
 
-		course.SharingScopes.initScopes()
-		self.update_vendor_info(course, bucket)
-		self.update_outline(course, bucket, try_legacy_content_bundle=True)
-		self.update_catalog_entry(course, bucket, try_legacy_content_bundle=True)
-		self.update_instructor_roles(course, bucket)
-		getattr(course, 'Discussions')
+		self.update_common_info(course, bucket)
 
 		notify(CourseInstanceAvailableEvent(course))
 
@@ -163,6 +161,39 @@ class _ContentCourseSynchronizer(object):
 		sync = component.getMultiAdapter( (course.SubInstances, sections_bucket) )
 		sync.synchronize( course.SubInstances, sections_bucket )
 
+
+	@classmethod
+	def update_common_info(cls, course, bucket):
+		course.SharingScopes.initScopes()
+		cls.update_vendor_info(course, bucket)
+		cls.update_outline(course, bucket, try_legacy_content_bundle=True)
+		cls.update_catalog_entry(course, bucket, try_legacy_content_bundle=True)
+		cls.update_instructor_roles(course, bucket)
+		getattr(course, 'Discussions')
+
+		cls.update_sharing_scopes_friendly_names(course)
+
+	@classmethod
+	def update_sharing_scopes_friendly_names(cls, course):
+		cce = ICourseCatalogEntry(course)
+
+		for scope in course.SharingScopes.values():
+			friendly_scope = IFriendlyNamed(scope)
+			if cce.ProviderUniqueID:
+				alias = cce.ProviderUniqueID + ' - ' + scope.__name__
+			else:
+				alias = friendly_scope.alias
+
+			if cce.title:
+				realname = cce.title + ' - ' + scope.__name__
+			else:
+				realname = friendly_scope.realname
+
+			if (realname, alias) != (friendly_scope.realname, friendly_scope.alias):
+				friendly_scope.realname = realname
+				friendly_scope.alias = alias
+				lifecycleevent.modified(friendly_scope)
+				lifecycleevent.modified(scope)
 
 	@classmethod
 	def update_vendor_info(cls, course, bucket):
@@ -272,13 +303,7 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		pass
 
 	def synchronize(self, subcourse, bucket):
-		subcourse.SharingScopes.initScopes()
-		_ContentCourseSynchronizer.update_vendor_info(subcourse, bucket)
-		_ContentCourseSynchronizer.update_outline(subcourse, bucket)
-		_ContentCourseSynchronizer.update_catalog_entry(subcourse, bucket)
-		_ContentCourseSynchronizer.update_instructor_roles(subcourse, bucket)
-		getattr(subcourse, 'Discussions')
-
+		_ContentCourseSynchronizer.update_common_info(subcourse, bucket)
 		self.update_assignment_dates(subcourse, bucket)
 
 		notify(CourseInstanceAvailableEvent(subcourse))

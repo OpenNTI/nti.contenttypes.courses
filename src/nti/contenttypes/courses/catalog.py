@@ -48,8 +48,6 @@ from .interfaces import ICourseCatalog
 from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseCatalogInstructorInfo
 
-from persistent.interfaces import IPersistent
-
 ####
 # Our persistent sites are a mix of persistent and non-persistent
 # bases, with many of them having multiple bases. For example
