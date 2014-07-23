@@ -206,22 +206,54 @@ def _adjust_scope_membership(record, join, follow,
 		except ignored_exceptions:
 			pass
 
+from nti.dataserver.interfaces import IMutableGroupMember
+from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
+from nti.dataserver.authorization import role_for_providers_content
+from nti.ntiids import ntiids
+
+def _content_roles_for_course_instance(course):
+	"""
+	Returns the content roles for all the content packages
+	in the course, if there are any.
+	"""
+	bundle = getattr(course, 'ContentPackageBundle', None)
+	packs = getattr(bundle, 'ContentPackages', ())
+	roles = []
+	for pack in packs:
+		ntiid = pack.ntiid
+		ntiid = ntiids.get_parts(ntiid)
+		provider = ntiid.provider
+		specific = ntiid.specific
+
+		roles.append(role_for_providers_content(provider, specific))
+
+	return roles
+
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IIntIdAddedEvent)
 def on_enroll_record_scope_membership(record, event):
 	"""
 	When you enroll in a course, record your membership in the
-	proper scopes.
+	proper scopes, including content access.
 	"""
 	_adjust_scope_membership(record,
 							 'record_dynamic_membership',
 							 'follow' )
 
+	# Add the content roles
+	membership = component.getAdapter( record.Principal, IMutableGroupMember, CONTENT_ROLE_PREFIX)
+	groups = list(membership.groups)
+	groups.extend(_content_roles_for_course_instance(record.CourseInstance))
+	membership.setGroups(groups)
+
+
+
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IIntIdRemovedEvent)
 def on_drop_exit_scope_membership(record, event):
 	"""
-	When you drop a course, leave the scopes you were in.
+	When you drop a course, leave the scopes you were in, including
+	content access.
 	"""
 	_adjust_scope_membership( record,
 							  'record_no_longer_dynamic_member',
@@ -231,6 +263,13 @@ def on_drop_exit_scope_membership(record, event):
 							  # fires events twice due to various cleanups)
 							  # So the entity may no longer have an intid -> KeyError
 							  ignored_exceptions=(KeyError,))
+
+	# Remove the content roles
+	membership = component.getAdapter( record.Principal, IMutableGroupMember, CONTENT_ROLE_PREFIX)
+	groups = set(membership.groups)
+	groups = groups - set(_content_roles_for_course_instance(record.CourseInstance))
+	membership.setGroups(groups)
+
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectModifiedEvent)
 def on_modified_update_scope_membership(record, event):

@@ -21,8 +21,11 @@ from hamcrest import contains_inanyorder
 from hamcrest import has_property
 from hamcrest import is_in
 from hamcrest import is_not
+from hamcrest import same_instance
+from hamcrest import contains
 
 from nti.testing.matchers import validly_provides
+from nti.testing.matchers import is_empty
 
 from .. import sharing
 from .. import interfaces
@@ -51,6 +54,7 @@ class TestSharing(unittest.TestCase):
 
 
 from zope import interface
+from zope import component
 from zope.security.interfaces import IPrincipal
 from zope.container.interfaces import IContained
 from zope.annotation.interfaces import IAttributeAnnotatable
@@ -58,6 +62,10 @@ from nti.wref.interfaces import IWeakRef
 from nti.dataserver.interfaces import IUser
 
 from nti.dataserver.sharing import SharingSourceMixin
+from nti.dataserver import interfaces as nti_interfaces
+from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
+from nti.dataserver.authorization import role_for_providers_content
+from nti.ntiids import ntiids
 from persistent import Persistent
 import functools
 
@@ -92,6 +100,14 @@ class MockPrincipal(SharingSourceMixin, Persistent):
 			return True
 		return False
 
+class MockContentPackage(object):
+	ntiid = "tag:nextthought.com,2011-10:USSC-HTML-Cohen.cohen_v._california."
+
+class MockContentPackageBundle(object):
+
+	@property
+	def ContentPackages(self):
+		return (MockContentPackage(),)
 
 class TestFunctionalSharing(CourseLayerTest):
 
@@ -108,12 +124,39 @@ class TestFunctionalSharing(CourseLayerTest):
 
 		admin = courses.CourseAdministrativeLevel()
 		self.ds.root['admin'] = admin
-		course = courses.CourseInstance()
+		course = courses.ContentCourseInstance()
 		admin['course'] = course
 		course.SharingScopes.initScopes()
+		bundle = MockContentPackageBundle()
+		# bypass field validation
+		course.__dict__[str('ContentPackageBundle')] = bundle
+		assert_that( course.ContentPackageBundle, is_( same_instance(bundle)))
 
 		self.principal  = principal
 		self.course = course
+
+	@WithMockDSTrans
+	def test_content_roles(self):
+		self._shared_setup()
+
+		provider = ntiids.get_provider(MockContentPackage.ntiid)
+		specific = ntiids.get_specific(MockContentPackage.ntiid)
+		role = role_for_providers_content(provider, specific)
+
+		principal = self.principal
+		member = component.getAdapter( principal, nti_interfaces.IMutableGroupMember, CONTENT_ROLE_PREFIX )
+		assert_that( list(member.groups), is_empty() )
+
+		course = self.course
+
+		manager = interfaces.ICourseEnrollmentManager(course)
+		record = manager.enroll(principal, scope=ES_CREDIT_DEGREE)
+
+		assert_that( list(member.groups), contains(role))
+
+		manager.drop(principal)
+
+		assert_that( list(member.groups), is_empty() )
 
 	@WithMockDSTrans
 	def test_change_scope(self):
