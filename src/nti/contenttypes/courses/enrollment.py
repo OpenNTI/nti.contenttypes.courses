@@ -234,8 +234,26 @@ class DefaultCourseEnrollmentManager(object):
 		# enrollment list then fire the event
 		enrollments = _readCurrent(self._cat_enrollment_storage.enrollments_for_id(principal_id,
 																				   principal))
-		record_ix = enrollments.index(record)
-		del enrollments[record_ix]
+		try:
+			record_ix = enrollments.index(record)
+			del enrollments[record_ix]
+		except ValueError:
+			# Snap, the enrollment is missing from the course catalog storage of the
+			# principal, but we have it in the course instance storage.
+			# This is probably that migration problem, so look up the tree to see
+			# if we can find the record.
+			# FIXME: Unittests for this code path
+			for site_manager in ro.ro(component.getSiteManager()):
+				storage = _global_course_catalog_storage(site_manager)
+				if principal_id in storage:
+					_readCurrent(storage)
+					enrollments = _readCurrent(storage.enrollments_for_id(principal_id, principal))
+					try:
+						record_ix = enrollments.index(record)
+						del enrollments[record_ix]
+						break
+					except ValueError:
+						pass
 
 		del self._inst_enrollment_storage[principal_id]
 
