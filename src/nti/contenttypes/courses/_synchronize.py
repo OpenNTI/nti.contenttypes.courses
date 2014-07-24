@@ -153,7 +153,7 @@ class _ContentCourseSynchronizer(object):
 								  dc_meta_name='bundle_dc_metadata.xml')
 		bundle_modified = course.ContentPackageBundle.lastModified
 
-		self.update_common_info(course, bucket)
+		self.update_common_info(course, bucket, try_legacy_content_bundle=True)
 
 		notify(CourseInstanceAvailableEvent(course))
 
@@ -163,11 +163,11 @@ class _ContentCourseSynchronizer(object):
 
 
 	@classmethod
-	def update_common_info(cls, course, bucket):
+	def update_common_info(cls, course, bucket, try_legacy_content_bundle=False):
 		course.SharingScopes.initScopes()
 		cls.update_vendor_info(course, bucket)
-		cls.update_outline(course, bucket, try_legacy_content_bundle=True)
-		cls.update_catalog_entry(course, bucket, try_legacy_content_bundle=True)
+		cls.update_outline(course, bucket, try_legacy_content_bundle=try_legacy_content_bundle)
+		cls.update_catalog_entry(course, bucket, try_legacy_content_bundle=try_legacy_content_bundle)
 		cls.update_instructor_roles(course, bucket)
 		getattr(course, 'Discussions')
 
