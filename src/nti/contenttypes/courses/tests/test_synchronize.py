@@ -14,22 +14,25 @@ logger = __import__('logging').getLogger(__name__)
 #disable: accessing protected members, too many methods
 #pylint: disable=W0212,R0904
 
-import unittest
+
 from hamcrest import assert_that
 from hamcrest import is_
+from hamcrest import is_not
+from hamcrest import same_instance
 from hamcrest import has_length
 from hamcrest import has_entry
 from hamcrest import has_properties
 from hamcrest import contains_inanyorder
 from hamcrest import has_property
-from hamcrest import none
+
 import datetime
-from nti.testing import base
+
 from nti.testing.matchers import verifiably_provides
 
 import os.path
 
 from .. import catalog
+from .. import legacy_catalog
 from .._synchronize import synchronize_catalog_from_root
 from ..interfaces import ICourseInstanceVendorInfo
 from ..interfaces import ICourseCatalogEntry
@@ -40,21 +43,20 @@ from nti.contentlibrary.library import EmptyLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from zope import component
 from persistent.interfaces import IPersistent
-from zope.security.interfaces import IPrincipal
 
 from . import CourseLayerTest
 from nti.externalization.tests import externalizes
 
 from nti.assessment.interfaces import IQAssignmentDateContext
 
-from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
-from nti.dataserver.users import User
+
 
 class TestFunctionalSynchronize(CourseLayerTest):
 
 	def setUp(self):
 		self.library = EmptyLibrary()
 		component.getGlobalSiteManager().registerUtility(self.library, IContentPackageLibrary)
+		self.library.syncContentPackages()
 
 	def tearDown(self):
 		component.getGlobalSiteManager().unregisterUtility(self.library, IContentPackageLibrary)
@@ -103,7 +105,19 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		assert_that(sec1.Outline, is_(gateway.Outline))
 
 		# partially overridden course info
-		assert_that( ICourseCatalogEntry(sec1),
+		sec1_cat = ICourseCatalogEntry(sec1)
+		assert_that( sec1_cat,
+					 has_property( 'root',
+								   is_(bucket.getChildNamed('Spring2014')
+									   .getChildNamed('Gateway')
+									   .getChildNamed('Sections')
+									   .getChildNamed('01')
+									   .getChildNamed('course_info.json'))))
+		assert_that( sec1_cat,
+					 is_not(same_instance(ICourseCatalogEntry(gateway))))
+		assert_that( sec1_cat,
+					 is_(legacy_catalog._CourseSubInstanceCatalogLegacyEntry))
+		assert_that( sec1_cat,
 					 has_properties( 'ProviderUniqueID', 'CLC 3403-01',
 									 'Title', 'Law and Justice',
 									 'creators', ('Steve',)) )
