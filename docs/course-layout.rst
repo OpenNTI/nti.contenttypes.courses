@@ -211,7 +211,7 @@ This section will describe each file that may have meaning within a
 course directory. Full information is available in the source for
 :mod:`nti.contenttypes.courses._synchronize`.
 
-.. _bundle_meta_info.json
+.. _bundle_meta_info.json:
 
 ``bundle_meta_info.json`` (required)
 ------------------------------------
@@ -281,7 +281,7 @@ enrolled in it through some other means.
 
 Other possible keys:
 
-.. list-table:: course_info.json keys
+.. list-table::
 	:header-rows: 1
 
 	* - Key
@@ -290,7 +290,7 @@ Other possible keys:
 	  - Notes
 	* - id
 	  - ProviderUniqueID
-	  - "CLC 3403"
+	  - CLC 3403
 	  - Should match the directory name.
 	* - InstructorsSignature
 	  - InstractuorsSignature
@@ -387,6 +387,25 @@ anything about which assignments are available).
 	         {"available_for_submission_beginning": "2014-01-22T06:00:00Z"}
    }
 
+.. note:: Given that currently content packages are where assignments
+		  are defined, and that there is one content package per
+		  course, and that content packages are not reused across
+		  courses yet, this is actually only implemented for course
+		  sections. The primary course uses the dates from the content
+		  package.
+
+``presentation-assets/`` (optional)
+-----------------------------------
+
+If present, this directory is a standard presentation assets directory
+containing convention-based images for different platforms. This will
+be returned as the ``PlatformPresentationResources`` value on the
+catalog entry.
+
+.. note:: For legacy migration convenience, if this directory is not
+		  present, it will be searched for within the content packages
+		  of the course.
+
 
 Course Sections
 ===============
@@ -436,6 +455,10 @@ vendor_info.json
 	section-by-section basis.
 
 assignment_date_overrides.json
-	The information in these files is **never** inherited. Vendor
+	The information in these files is **never** inherited. Assignment
 	information must be set on a course-by-course or
 	section-by-section basis.
+
+presentation-assets/
+	This directory of assets is used for this course section. It
+	may contain images of this section's instructors, for example.
