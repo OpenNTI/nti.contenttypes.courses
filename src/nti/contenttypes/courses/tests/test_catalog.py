@@ -22,11 +22,16 @@ from hamcrest import has_entry
 
 from nti.testing import base
 from nti.testing.matchers import validly_provides
+from nti.testing.matchers import verifiably_provides
 
 from ..catalog import GlobalCourseCatalog
 from ..catalog import CourseCatalogFolder
+from ..catalog import CourseCatalogEntry
+from ..legacy_catalog import _CourseSubInstanceCatalogLegacyEntry
 from ..interfaces import IGlobalCourseCatalog
 from ..interfaces import ICourseCatalog
+from ..interfaces import ICourseCatalogEntry
+from zope.location.interfaces import ILocation
 
 class TestCatalog(unittest.TestCase):
 
@@ -37,3 +42,12 @@ class TestCatalog(unittest.TestCase):
 	def test_catalog_implements(self):
 		assert_that(CourseCatalogFolder(),
 					validly_provides(ICourseCatalog))
+
+	def test_entry_implements(self):
+		assert_that(CourseCatalogEntry(),
+					verifiably_provides(ICourseCatalogEntry))
+		assert_that(CourseCatalogEntry(),
+					validly_provides(ILocation))
+
+		assert_that(_CourseSubInstanceCatalogLegacyEntry(),
+					validly_provides(ILocation))

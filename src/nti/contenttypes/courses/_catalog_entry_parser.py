@@ -168,7 +168,8 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/'):
 
 	json = key.readContentsAsJson()
 	fill_entry_from_legacy_json(catalog_entry, json, base_href=base_href)
-	catalog_entry.root = key
+	catalog_entry.root = key.__parent__
+	catalog_entry.key = key
 	catalog_entry.lastModified = key.lastModified
 
 	return catalog_entry

@@ -20,9 +20,14 @@
 		root_interfaces=".interfaces.ICourseInstance
 						 .interfaces.ICourseOutlineNode
 						 .interfaces.ICourseCatalogEntry
-						 .interfaces.ICourseCatalogInstructorInfo
-						 .legacy_catalog.ICourseCreditLegacyInfo"
-		modules=".courses .outlines .catalog .sharing .legacy_catalog" />
+						 .interfaces.ICourseCatalogInstructorInfo"
+		modules=".courses .outlines .catalog .sharing" />
+	<ext:registerAutoPackageIO
+		root_interfaces=".legacy_catalog.ICourseCatalogLegacyEntry
+						 .legacy_catalog.ICourseCreditLegacyInfo
+						 .legacy_catalog.ICourseCatalogInstructorLegacyInfo"
+		modules=".legacy_catalog"
+		iobase=".legacy_catalog._LegacyCatalogAutoPackageSearchingScopedInterfaceObjectIO"/>
 
 	<!-- Externalize the CourseInstanceSharingScope like the 'community'
 	it appears to be. -->

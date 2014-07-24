@@ -24,6 +24,9 @@ from hamcrest import has_entry
 from hamcrest import has_properties
 from hamcrest import contains_inanyorder
 from hamcrest import has_property
+from hamcrest import contains
+from hamcrest import contains_string
+from hamcrest import has_key
 
 import datetime
 
@@ -94,6 +97,9 @@ class TestFunctionalSynchronize(CourseLayerTest):
 
 		assert_that( ICourseCatalogEntry(gateway),
 					 verifiably_provides(IPersistent))
+		# Ensure we're not proxied
+		assert_that( type(ICourseCatalogEntry(gateway)),
+					 is_(same_instance(legacy_catalog._CourseInstanceCatalogLegacyEntry)) )
 
 		sec1 = gateway.SubInstances['01']
 		assert_that( ICourseInstanceVendorInfo(sec1),
@@ -107,7 +113,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		# partially overridden course info
 		sec1_cat = ICourseCatalogEntry(sec1)
 		assert_that( sec1_cat,
-					 has_property( 'root',
+					 has_property( 'key',
 								   is_(bucket.getChildNamed('Spring2014')
 									   .getChildNamed('Gateway')
 									   .getChildNamed('Sections')
@@ -121,11 +127,22 @@ class TestFunctionalSynchronize(CourseLayerTest):
 					 has_properties( 'ProviderUniqueID', 'CLC 3403-01',
 									 'Title', 'Law and Justice',
 									 'creators', ('Steve',)) )
-
+		assert_that( sec1_cat,
+					 has_property('PlatformPresentationResources',
+								  contains( has_property('root',
+														 has_property('absolute_path',
+																	  contains_string('Sections/01'))))))
 
 		assert_that( sec1,
 					 externalizes( has_entry(
 						 'Class', 'CourseInstance' ) ) )
+
+		from nti.externalization.externalization import to_external_object
+
+
+		to_external_object(sec1_cat)
+		assert_that( sec1_cat,
+					 externalizes( has_key('PlatformPresentationResources')))
 
 		sec2 = gateway.SubInstances['02']
 		assert_that( sec2.Outline, has_length(1) )

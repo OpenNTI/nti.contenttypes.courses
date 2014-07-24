@@ -118,10 +118,12 @@ class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
 @interface.implementer(ICourseCreditLegacyInfo)
 class CourseCreditLegacyInfo(SchemaConfigured):
 	createDirectFieldProperties(ICourseCreditLegacyInfo)
+	__external_can_create__ = False
 
 @interface.implementer(ICourseCatalogInstructorLegacyInfo)
 class CourseCatalogInstructorLegacyInfo(CourseCatalogInstructorInfo):
 	defaultphoto = None
+	__external_can_create__ = False
 	createDirectFieldProperties(ICourseCatalogInstructorLegacyInfo)
 
 from nti.utils.property import readproperty
@@ -129,6 +131,7 @@ import datetime
 
 @interface.implementer(ICourseCatalogLegacyEntry)
 class CourseCatalogLegacyEntry(CourseCatalogEntry):
+	__external_can_create__ = False
 	createDirectFieldProperties(ICourseCatalogLegacyEntry)
 
 	#: For legacy catalog entries created from a content package,
@@ -203,6 +206,13 @@ from .interfaces import ICourseInstance
 class _CourseInstanceCatalogLegacyEntry(PersistentCourseCatalogLegacyEntry):
 	__external_class_name__ = 'CourseCatalogLegacyEntry'
 	__external_can_create__ = False
+
+	# Because we're used in an annotation, the parent's attempt
+	# to alias ntiid to __name__ gets basically ignored: the return
+	# value from the annotation factory is always proxied to have
+	# a name equal to the key
+	__name__ = None
+
 	def __conform__(self, iface):
 		return find_interface(self, iface, strict=False)
 
@@ -216,12 +226,17 @@ from zope.container.contained import Contained
 from functools import total_ordering
 from nti.schema.schema import EqHash
 
+from nti.contentlibrary.presentationresource import DisplayableContentMixin
+
+
 @component.adapter(ICourseSubInstance)
 @interface.implementer(ICourseCatalogLegacyEntry)
 @WithRepr
 @total_ordering
 @EqHash('ntiid')
-class _CourseSubInstanceCatalogLegacyEntry(Contained,Persistent):
+class _CourseSubInstanceCatalogLegacyEntry(Contained,
+										   DisplayableContentMixin,
+										   Persistent):
 	"""
 	The entry for a sub-instance is writable, but
 	any value it does not have it inherits from
@@ -234,6 +249,13 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,Persistent):
 
 	ntiid = property(_ntiid_from_entry,
 					 lambda s, nv: None)
+
+	@property
+	def PlatformPresentationResources(self):
+		ours = super(_CourseSubInstanceCatalogLegacyEntry,self).PlatformPresentationResources
+		if ours:
+			return ours
+		return self._next_entry.PlatformPresentationResources
 
 	@readproperty
 	def _next_instance(self):
@@ -254,3 +276,17 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,Persistent):
 
 CourseSubInstanceCatalogLegacyEntryFactory = an_factory(_CourseSubInstanceCatalogLegacyEntry,
 														key='CourseCatalogEntry')
+
+
+# For externalization of the interfaces defined in this module,
+# which does not fit the traditional pattern
+
+from nti.externalization.autopackage import AutoPackageSearchingScopedInterfaceObjectIO
+
+from zope.dottedname import resolve as dottedname
+
+class _LegacyCatalogAutoPackageSearchingScopedInterfaceObjectIO(object):
+
+	@classmethod
+	def _ap_find_package_interface_module(cls):
+		return dottedname.resolve('nti.contenttypes.courses.legacy_catalog')

@@ -251,12 +251,15 @@ class _ContentCourseSynchronizer(object):
 
 		# TODO: Cleaning up?
 		# XXX base_url
+		catalog_entry = ICourseCatalogEntry(course)
 		if catalog_json_key:
-			catalog_entry = ICourseCatalogEntry(course)
 			fill_entry_from_legacy_key(catalog_entry, catalog_json_key)
 			# The catalog entry gets the default dublincore info
 			# file; for the bundle, we use a different name
 			read_dublincore_from_named_key(catalog_entry, bucket)
+
+		if not getattr(catalog_entry, 'root', None):
+			catalog_entry.root = bucket
 
 	@classmethod
 	def update_instructor_roles(cls, course, bucket):
