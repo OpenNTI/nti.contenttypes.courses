@@ -48,6 +48,7 @@ from ._role_parser import fill_roles_from_key
 from ._role_parser import reset_roles_missing_key
 from ._assignment_override_parser import fill_asg_from_key
 from ._assignment_override_parser import reset_asg_missing_key
+from .legacy_catalog import _ntiid_from_entry
 
 from nti.contentlibrary.bundle import PersistentContentPackageBundle
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
@@ -138,20 +139,26 @@ class _ContentCourseSynchronizer(object):
 		if not IDelimitedHierarchyKey.providedBy(bundle_json_key): # pragma: no cover
 			raise ValueError("No bundle defined for course", course, bucket)
 
-		bundle_modified = 0
+		created_bundle = False
 		if course.ContentPackageBundle is None:
 			bundle = PersistentContentPackageBundle()
 			bundle.root = bucket
 			course.ContentPackageBundle = bundle
 			bundle.lastModified = 0
 			bundle.createdTime = 0
+			bundle.__parent__ = course
+			bundle.ntiid = _ntiid_from_entry(bundle, 'Bundle:CourseBundle')
+			lifecycleevent.created(bundle)
+			created_bundle = True
 
 		# The catalog entry gets the default DublinCore metadata file name,
 		# in this bucket, since it really describes the data.
 		# The content bundle, on the other hand, gets a custom file
 		sync_bundle_from_json_key(bundle_json_key, course.ContentPackageBundle,
-								  dc_meta_name='bundle_dc_metadata.xml')
-		bundle_modified = course.ContentPackageBundle.lastModified
+								  dc_meta_name='bundle_dc_metadata.xml',
+								  excluded_keys=('ntiid',))
+		if created_bundle:
+			lifecycleevent.added(bundle)
 
 		self.update_common_info(course, bucket, try_legacy_content_bundle=True)
 

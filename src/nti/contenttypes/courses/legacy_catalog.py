@@ -169,7 +169,7 @@ from nti.externalization.externalization import WithRepr
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import make_specific_safe
 
-def _ntiid_from_entry(entry):
+def _ntiid_from_entry(entry, nttype='CourseInfo'):
 	parents = []
 	o = entry.__parent__
 	while o is not None and not ICourseCatalog.providedBy(o):
@@ -182,7 +182,7 @@ def _ntiid_from_entry(entry):
 		return None
 
 	ntiid = make_ntiid(provider='NTI',
-					   nttype='CourseInfo',
+					   nttype=nttype,
 					   specific=make_specific_safe(relative_path))
 	return ntiid
 

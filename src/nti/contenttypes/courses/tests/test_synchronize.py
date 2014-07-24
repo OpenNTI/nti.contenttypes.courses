@@ -83,6 +83,18 @@ class TestFunctionalSynchronize(CourseLayerTest):
 
 		assert_that( gateway.Outline, has_length(6) )
 
+		assert_that( gateway.ContentPackageBundle.__parent__,
+					 is_(gateway))
+
+		# The bundle's NTIID is derived from the path
+		assert_that( gateway.ContentPackageBundle,
+					 has_property('ntiid', 'tag:nextthought.com,2011-10:NTI-Bundle:CourseBundle-Spring2014_Gateway'))
+		# The name is currently an alias of the NTIID; that's not
+		# exactly what we want, but unless/until it's an issue, we'll
+		# ignore that.
+		assert_that( gateway.ContentPackageBundle,
+					 has_property('__name__', gateway.ContentPackageBundle.ntiid) )
+
 		#assert_that( gateway.instructors, is_((IPrincipal('harp4162'),)))
 
 		assert_that( ICourseInstanceVendorInfo(gateway),
