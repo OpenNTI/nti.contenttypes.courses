@@ -245,7 +245,7 @@ class DefaultCourseEnrollmentManager(object):
 			# FIXME: Unittests for this code path
 			for site_manager in ro.ro(component.getSiteManager()):
 				storage = _global_course_catalog_storage(site_manager)
-				if principal_id in storage:
+				if storage is not None and principal_id in storage:
 					_readCurrent(storage)
 					enrollments = _readCurrent(storage.enrollments_for_id(principal_id, principal))
 					try:
