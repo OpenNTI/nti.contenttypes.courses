@@ -308,6 +308,11 @@ Other possible keys:
 	  - Preview
 	  - true
 	  - An optional field that can be used to force a course to appear as a preview course, even if its start date has passed.
+	* - is_non_public
+	  - Internal ACL; not in CCE
+	  - true
+	  - If provided and ``true``, then only people already enrolled in the course have access to view the CCE.
+
 
 ``dc_metadata.xml`` (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
