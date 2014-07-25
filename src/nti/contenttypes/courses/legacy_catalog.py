@@ -129,6 +129,11 @@ class CourseCatalogInstructorLegacyInfo(CourseCatalogInstructorInfo):
 from nti.utils.property import readproperty
 import datetime
 
+def _derive_preview(self):
+	if self.StartDate is not None:
+		return self.StartDate > datetime.datetime.utcnow()
+
+
 @interface.implementer(ICourseCatalogLegacyEntry)
 class CourseCatalogLegacyEntry(CourseCatalogEntry):
 	__external_can_create__ = False
@@ -154,12 +159,9 @@ class CourseCatalogLegacyEntry(CourseCatalogEntry):
 		If a preview hasn't been specifically set, we derive it
 		if possible.
 		"""
-		if self.StartDate is not None:
-			return self.StartDate > datetime.datetime.utcnow()
+		return _derive_preview(self)
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
-from persistent import Persistent
-
 from nti.externalization.externalization import WithRepr
 
 # The objects we're going to be containing we *assume* live somewhere beneath
@@ -263,10 +265,30 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 		return self._next_entry.PlatformPresentationResources
 
 	@readproperty
+	def Preview(self):
+		# Our preview status can be explicitly set; if it's not set
+		# (only circumstance we'd get called), and we explicitly have
+		# a start date, then we want to use that; otherwise we want to
+		# inherit as normal
+		self._p_activate()
+
+		if 'StartDate' in self.__dict__: # whether or not its None
+			return _derive_preview(self)
+
+		# We don't have it, try to acquire it
+		return getattr(self._next_entry, 'Preview', None)
+
+	@readproperty
 	def _next_instance(self):
 		# recall our parent is the ICourseSubInstance, we want to walk
 		# up from there.
-		return find_interface(self.__parent__.__parent__, ICourseInstance, strict=False)
+		try:
+			pp = self.__parent__.__parent__
+		except AttributeError:
+			# no parent
+			return None
+		else:
+			return find_interface(pp, ICourseInstance, strict=False)
 
 	@readproperty
 	def _next_entry(self):

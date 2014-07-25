@@ -17,7 +17,7 @@ logger = __import__('logging').getLogger(__name__)
 import unittest
 from hamcrest import assert_that
 from hamcrest import is_
-from hamcrest import has_key
+from hamcrest import none
 from hamcrest import has_entry
 from hamcrest import has_property
 
@@ -25,10 +25,13 @@ from nti.testing import base
 from nti.testing.matchers import validly_provides
 from nti.testing.matchers import verifiably_provides
 
+import isodate
+
 from ..catalog import GlobalCourseCatalog
 from ..catalog import CourseCatalogFolder
 from ..catalog import CourseCatalogEntry
 from ..legacy_catalog import _CourseSubInstanceCatalogLegacyEntry
+from ..legacy_catalog import CourseCatalogLegacyEntry
 from ..interfaces import IGlobalCourseCatalog
 from ..interfaces import ICourseCatalog
 from ..interfaces import ICourseCatalogEntry
@@ -75,3 +78,29 @@ class TestCatalog(unittest.TestCase):
 		# but they don't propagate down
 		assert_that( lcce, has_property('lastModified', 0 ))
 		assert_that( lcce, has_property('createdTime', 0 ))
+
+	def test_preview(self):
+		cce = CourseCatalogLegacyEntry()
+		assert_that( cce, has_property('Preview', is_(none())))
+
+		lcce = _CourseSubInstanceCatalogLegacyEntry()
+		assert_that( lcce, has_property('Preview', is_(none())))
+
+		lcce._next_entry = cce
+		assert_that( lcce, has_property('Preview', is_(none())))
+
+		cce.Preview = True
+
+		assert_that( lcce, has_property('Preview', is_(True)))
+
+		lcce.StartDate = isodate.parse_datetime('2001-01-01T00:00')
+		assert_that( lcce, has_property('Preview', is_(False)))
+
+		lcce.Preview = True
+		assert_that( lcce, has_property('Preview', is_(True)))
+
+		del lcce.Preview
+		assert_that( lcce, has_property('Preview', is_(False)))
+
+		del lcce.StartDate
+		assert_that( lcce, has_property('Preview', is_(True)))

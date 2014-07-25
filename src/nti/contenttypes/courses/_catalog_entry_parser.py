@@ -165,7 +165,7 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/'):
 
 	if key.lastModified <= catalog_entry.lastModified:
 		return catalog_entry
-
+	__traceback_info__ = catalog_entry, key
 	json = key.readContentsAsJson()
 	fill_entry_from_legacy_json(catalog_entry, json, base_href=base_href)
 	catalog_entry.root = key.__parent__
