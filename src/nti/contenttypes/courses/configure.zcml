@@ -12,6 +12,19 @@
 	<include package="zope.securitypolicy" /> <!-- for the annotation-based role maps -->
 	<include package="nti.mimetype" />
 
+	<include package="zope.generations" />
+	<include package="zope.generations" file="subscriber.zcml" />
+
+	<!-- Database creation and migration -->
+	<!--
+		This one depends on the structures set up by nti.dataserver, but
+		should run before, e.g., nti.app.products.courseware, hence
+		the funky name
+	-->
+	<utility factory=".generations.install._CoursesSchemaManager"
+			 name="nti.dataserver-AAA.contenttypes.courses"
+			 provides="zope.generations.interfaces.IInstallableSchemaManager" />
+
 	<!-- Externalization -->
 	<include package="nti.externalization" file="meta.zcml" />
 	<include package="nti.externalization" />
