@@ -37,9 +37,9 @@ class CourseInstanceSharingScope(Community):
 	A non-global sharing scope for a course instance.
 	"""
 
-	# does the UI need this?
-	#__external_class_name__ = 'Community'
-	#mime_type = mimeType = 'application/vnd.nextthought.community'
+	# does the UI need this? (Yes, at least the ipad does)
+	__external_class_name__ = 'Community'
+	mime_type = mimeType = 'application/vnd.nextthought.community'
 	__external_can_create__ = False
 
 

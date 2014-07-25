@@ -114,6 +114,8 @@ class TestCourseInstance(CourseLayerTest):
 		assert_that( result, has_entry( 'SharingScopes',
 										has_entries('Class', 'CourseInstanceSharingScopes',
 													'Public', has_entries('Creator', 'system',
+																		  'Class', 'Community', # Really CourseInstanceSharingScope
+																		  'MimeType', 'application/vnd.nextthought.community',
 																		  'NTIID', ntiid2,
 																		  'ID', ntiid2,
 																		  'Username', ntiid2))) )
