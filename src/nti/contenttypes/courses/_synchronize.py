@@ -36,6 +36,7 @@ from .interfaces import ICourseInstanceVendorInfo
 from .interfaces import ICourseSubInstances
 from .interfaces import IContentCourseSubInstance
 from .interfaces import ICourseCatalogEntry
+from .interfaces import INonPublicCourseInstance
 from .interfaces import CourseInstanceAvailableEvent
 
 from .courses import ContentCourseInstance
@@ -268,6 +269,11 @@ class _ContentCourseSynchronizer(object):
 		if not getattr(catalog_entry, 'root', None):
 			catalog_entry.root = bucket
 
+		if INonPublicCourseInstance.providedBy(catalog_entry):
+			interface.alsoProvides(course, INonPublicCourseInstance)
+		elif INonPublicCourseInstance.providedBy(course):
+			interface.noLongerProvides(course, INonPublicCourseInstance)
+
 	@classmethod
 	def update_instructor_roles(cls, course, bucket):
 		role_json_key = bucket.getChildNamed(ROLE_INFO_NAME)
@@ -291,7 +297,8 @@ class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
 		# be courses if they have one of the known
 		# files in it
 		for possible_key in (ROLE_INFO_NAME, COURSE_OUTLINE_NAME,
-							 VENDOR_INFO_NAME, ASSIGNMENT_DATES_NAME):
+							 VENDOR_INFO_NAME, ASSIGNMENT_DATES_NAME,
+							 CATALOG_INFO_NAME):
 			if bucket.getChildNamed(possible_key):
 				return self._COURSE_INSTANCE_FACTORY
 

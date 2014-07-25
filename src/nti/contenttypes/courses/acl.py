@@ -52,6 +52,12 @@ class CourseInstanceACLProvider(object):
 	def __init__(self, context):
 		self.context = context
 
+
+	@property
+	def __parent__(self):
+		# See comments in nti.dataserver.authorization_acl:has_permission
+		return self.context.__parent__
+
 	@Lazy
 	def __acl__(self):
 		course = self.context
@@ -76,30 +82,30 @@ from nti.dataserver.traversal import find_interface
 class CourseCatalogEntryACLProvider(object):
 	"""
 	Provides the ACL for course catalog entries.
-
-	If the ACL is in the context of a non-public
-	course instance, then no ACL opinion is offered (we simply
-	inherit (if we have a course in our lineage; for BWC, if we do not,
-	we lock it down hard)). Otherwise, even if you're not enrolled
-	in the course, we allow all authenticated users to view the
-	catalog.
 	"""
 
 	def __init__(self, context):
 		self.context = context
+
+	@property
+	def __parent__(self):
+		# See comments in nti.dataserver.authorization_acl:has_permission
+		return self.context.__parent__
 
 	@Lazy
 	def __acl__(self):
 		cce = self.context
 		non_public = find_interface(cce, INonPublicCourseInstance, strict=False)
 		if non_public:
+			# Although it might be be nice to inherit from the non-public
+			# course in our lineage, we actually need to be a bit stricter
+			# than that...the course cannot forbid creation or do a deny-all
+			# (?)
 			course_in_lineage = find_interface(cce, ICourseInstance, strict=False)
-			if course_in_lineage is not None:
-				# Inherit
-				return ()
-			# Ok, we must be non-public ourself. This is the legacy case.
-			# Do we have a course instance?
-			course = ICourseInstance(cce, None)
+
+			# Do we have a course instance? If it's not in our lineage its the legacy
+			# case
+			course = course_in_lineage or ICourseInstance(cce, None)
 			if course is not None:
 				acl = IACLProvider(course).__acl__
 				acl.append(

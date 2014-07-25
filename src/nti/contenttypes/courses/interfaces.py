@@ -429,6 +429,9 @@ class INonPublicCourseInstance(interface.Interface):
 	course itself. This enrollment typically happens in a backend
 	process.
 	"""
+# Don't try to consider this when determining most-derived
+# interfaces.
+INonPublicCourseInstance.setTaggedValue('_ext_is_marker_interface', True)
 
 from zope.location import LocationIterator
 
