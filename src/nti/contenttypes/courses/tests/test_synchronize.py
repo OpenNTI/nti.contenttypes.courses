@@ -151,7 +151,6 @@ class TestFunctionalSynchronize(CourseLayerTest):
 
 		from nti.externalization.externalization import to_external_object
 
-
 		to_external_object(sec1_cat)
 		assert_that( sec1_cat,
 					 externalizes( has_key('PlatformPresentationResources')))

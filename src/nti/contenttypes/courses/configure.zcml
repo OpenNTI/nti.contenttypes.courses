@@ -36,8 +36,10 @@
 			 name="summary" />
 	<adapter factory="nti.dataserver.users.users_external._EntityExternalObject"
 			 for=".interfaces.ICourseInstanceSharingScope" />
-	<subscriber handler=".decorators._SharingScopesAndDiscussionDecorator" />
-
+	<subscriber factory=".decorators._SharingScopesAndDiscussionDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator" />
+	<subscriber factory=".decorators._LegacyCCEFieldDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator" />
 
 	<!-- Events -->
 	<subscriber handler=".subscribers.install_site_course_catalog" />

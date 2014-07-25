@@ -392,9 +392,8 @@ class IContentCourseInstance(ICourseInstance):
 	# of a course context (though the initial implementation )
 
 	ContentPackageBundle = Object(IContentPackageBundle,
-								  title="The content package associated with this course.",
-								  description="Not externalized, that is done on the catalog entry derived from this")
-	ContentPackageBundle.setTaggedValue('_ext_excluded_out', True)
+								  title="The content package associated with this course.")
+
 
 	root = Object(IEnumerableDelimitedHierarchyBucket,
 				  title="The on-disk bucket containing descriptions for this object",
