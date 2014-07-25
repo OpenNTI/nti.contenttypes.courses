@@ -236,14 +236,19 @@ from nti.contentlibrary.presentationresource import DisplayableContentMixin
 @EqHash('ntiid')
 class _CourseSubInstanceCatalogLegacyEntry(Contained,
 										   DisplayableContentMixin,
-										   Persistent):
+										   PersistentCreatedAndModifiedTimeObject):
 	"""
 	The entry for a sub-instance is writable, but
 	any value it does not have it inherits from
 	the closest parent.
+
+	We always maintain our own created and modification dates, though.
 	"""
 	__external_class_name__ = 'CourseCatalogLegacyEntry'
 	__external_can_create__ = False
+
+	_SET_CREATED_MODTIME_ON_INIT = False # default to 0
+
 	def __lt__(self, other):
 		return self.ntiid < other.ntiid
 
@@ -270,6 +275,7 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 	def __getattr__(self, key):
 		# We don't have it. Does our parent?
 		return getattr(self._next_entry, key)
+
 
 	def __conform__(self, iface):
 		return find_interface(self, iface, strict=False)

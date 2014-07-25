@@ -19,6 +19,7 @@ from hamcrest import assert_that
 from hamcrest import is_
 from hamcrest import has_key
 from hamcrest import has_entry
+from hamcrest import has_property
 
 from nti.testing import base
 from nti.testing.matchers import validly_provides
@@ -51,3 +52,26 @@ class TestCatalog(unittest.TestCase):
 
 		assert_that(_CourseSubInstanceCatalogLegacyEntry(),
 					validly_provides(ILocation))
+
+
+	def test_entry_timestamps(self):
+		cce = CourseCatalogEntry()
+		assert_that( cce, has_property('lastModified', 0 ))
+		assert_that( cce, has_property('createdTime', 0 ))
+
+		lcce = _CourseSubInstanceCatalogLegacyEntry()
+		assert_that( lcce, has_property('lastModified', 0 ))
+		assert_that( lcce, has_property('createdTime', 0 ))
+
+		lcce._next_entry = cce
+		assert_that( lcce, has_property('lastModified', 0 ))
+		assert_that( lcce, has_property('createdTime', 0 ))
+
+		cce.lastModified = cce.createdTime = 42
+
+		assert_that( cce, has_property('lastModified', 42 ))
+		assert_that( cce, has_property('createdTime', 42 ))
+
+		# but they don't propagate down
+		assert_that( lcce, has_property('lastModified', 0 ))
+		assert_that( lcce, has_property('createdTime', 0 ))
