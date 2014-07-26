@@ -107,13 +107,19 @@ def fill_roles_from_key(course, key):
 		except LookupError:
 			pass
 		else:
-			course.instructors += (IPrincipal(user),)
-			for scope in course.SharingScopes.values():
-				user.record_dynamic_membership(scope)
+			if user is not None:
+				course.instructors += (IPrincipal(user),)
+				for scope in course.SharingScopes.values():
+					user.record_dynamic_membership(scope)
+			else:
+				logger.warn("Principal %s not found", pid)
 
 	for orig_instructor in orig_instructors:
 		if orig_instructor not in course.instructors:
 			user = IUser(orig_instructor)
+			if user is None:
+				logger.warn("Instructor %s not found", orig_instructor)
+				continue
 			for scope in course.SharingScopes.values():
 				user.record_no_longer_dynamic_member(scope)
 
