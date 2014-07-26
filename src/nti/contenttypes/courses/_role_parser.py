@@ -19,6 +19,7 @@ from zope.securitypolicy.securitymap import PersistentSecurityMap
 from .interfaces import RID_INSTRUCTOR
 from .interfaces import RID_TA
 from zope.security.interfaces import IPrincipal
+from nti.dataserver.interfaces import IUser
 
 from nti.dataserver.users import User
 
@@ -83,8 +84,14 @@ def fill_roles_from_key(course, key):
 	_fill_roles_from_json(course, role_manager, json)
 	role_manager.lastModified = key.lastModified
 
-	# For BWC, we update the instructor list too
-	course.instructor = ()
+	# We must update the instructor list too, it's still used internally
+	# in a few places...plus it's how we know who to remove from the scopes
+
+	# Any instructors that were present but aren't present
+	# anymore need to lose access to the sharing scopes
+	orig_instructors = course.instructors
+
+	course.instructors = ()
 
 	# For any of these that exist as users, we need to make sure they
 	# are in the appropriate sharing scopes too...
@@ -98,13 +105,16 @@ def fill_roles_from_key(course, key):
 		try:
 			user = User.get_user(pid)
 		except LookupError:
-			user = None
+			pass
+		else:
+			course.instructors += (IPrincipal(user),)
+			for scope in course.SharingScopes.values():
+				user.record_dynamic_membership(scope)
 
-		if user is None:
-			continue
-		course.instructors += (IPrincipal(user),)
-
-		for scope in course.SharingScopes.values():
-			user.record_dynamic_membership(scope)
+	for orig_instructor in orig_instructors:
+		if orig_instructor not in course.instructors:
+			user = IUser(orig_instructor)
+			for scope in course.SharingScopes.values():
+				user.record_no_longer_dynamic_member(scope)
 
 	return role_manager

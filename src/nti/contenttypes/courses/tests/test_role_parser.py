@@ -17,30 +17,21 @@ logger = __import__('logging').getLogger(__name__)
 
 from hamcrest import assert_that
 from hamcrest import is_
-from hamcrest import has_property
-from hamcrest import has_entry
-from hamcrest import has_entries
-from hamcrest import not_none
-from hamcrest import same_instance
-
-from nti.testing import base
-from nti.testing import matchers
-
-from nti.testing.matchers import verifiably_provides
-from nti.externalization.tests import externalizes
+from hamcrest import is_in
+from hamcrest import is_not
+from hamcrest import contains_inanyorder
 
 
 from .. import courses
-from .. import interfaces
 
 from . import CourseLayerTest
 
 import os.path
-from nti.testing.matchers import verifiably_provides
+from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
+from nti.dataserver.users import User
 
 from .._role_parser import fill_roles_from_key
-from ..legacy_catalog import PersistentCourseCatalogLegacyEntry as CourseCatalogLegacyEntry
-from ..legacy_catalog import ICourseCatalogLegacyEntry
+
 
 from nti.contentlibrary.filesystem import FilesystemKey
 from zope.securitypolicy.interfaces import Allow, Deny
@@ -49,7 +40,14 @@ from zope.security.interfaces import IPrincipal
 class TestRoleParser(CourseLayerTest):
 
 
+	@WithMockDSTrans
 	def test_parse(self):
+		unames = ('jmadden', 'steve.johnson@nextthought.com', 'harp4162', 'orig_instructor')
+		users = {}
+		for uname in unames:
+			u = User.create_user(dataserver=self.ds, username=uname)
+			users[uname] = u
+
 		path = os.path.join( os.path.dirname(__file__),
 							 'TestSynchronizeWithSubInstances',
 							 'Spring2014',
@@ -59,6 +57,12 @@ class TestRoleParser(CourseLayerTest):
 		key.absolute_path = path
 
 		inst = courses.CourseInstance()
+		self.ds.dataserver_folder._p_jar.add(inst)
+		inst.SharingScopes.initScopes()
+
+		for scope in inst.SharingScopes.values():
+			users['orig_instructor'].record_dynamic_membership(scope)
+		inst.instructors = (IPrincipal(users['orig_instructor']),)
 
 		roles = fill_roles_from_key( inst, key )
 
@@ -72,4 +76,9 @@ class TestRoleParser(CourseLayerTest):
 		assert_that( roles.getSetting('nti.roles.course_instructor', 'harp4162'),
 					 is_(Allow))
 
-		#assert_that( inst.instructors, is_((IPrincipal('harp4162'),)))
+		assert_that( inst.instructors, contains_inanyorder(IPrincipal(users['jmadden']),
+														   IPrincipal(users['harp4162']) ) )
+
+		for scope in inst.SharingScopes.values():
+			assert_that( users['harp4162'], is_in(scope) )
+			assert_that( users['orig_instructor'], is_not(is_in(scope)))
