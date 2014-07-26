@@ -104,22 +104,21 @@ def fill_roles_from_key(course, key):
 
 		try:
 			user = User.get_user(pid)
-		except LookupError:
+			course.instructors += (IPrincipal(user),)
+		except (LookupError,TypeError):
+			# lookuperror if we're not in a ds context,
+			# TypeError if no named user was found and none was returned
+			# and the adaptation failed
 			pass
 		else:
-			if user is not None:
-				course.instructors += (IPrincipal(user),)
-				for scope in course.SharingScopes.values():
-					user.record_dynamic_membership(scope)
-			else:
-				logger.warn("Principal %s not found", pid)
+			for scope in course.SharingScopes.values():
+				user.record_dynamic_membership(scope)
 
 	for orig_instructor in orig_instructors:
 		if orig_instructor not in course.instructors:
 			user = IUser(orig_instructor)
-			if user is None:
-				logger.warn("Instructor %s not found", orig_instructor)
-				continue
+			# by definition here we have an IPrincipal that *came* from an IUser
+			# and has a hard reference to it, and so can become an IUser again
 			for scope in course.SharingScopes.values():
 				user.record_no_longer_dynamic_member(scope)
 
