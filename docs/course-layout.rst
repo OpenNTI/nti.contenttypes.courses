@@ -371,7 +371,7 @@ documentation for what keys might be used.
 		"OU": {
             {"IMS": {"sourcedid": 12345, "source": SMS}},
             "CRN": "ABCD",
-            "term_code": 10
+            "Term": 10
 		}
 	}
 
