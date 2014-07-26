@@ -296,6 +296,11 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 
 	def __getattr__(self, key):
 		# We don't have it. Does our parent?
+		if key.startswith('_'):
+			# TODO: would really like to use the actual
+			# acquisition policy
+			raise AttributeError(key)
+
 		return getattr(self._next_entry, key)
 
 
