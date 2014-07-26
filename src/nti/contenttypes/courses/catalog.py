@@ -48,51 +48,10 @@ from .interfaces import ICourseCatalog
 from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseCatalogInstructorInfo
 
-####
-# Our persistent sites are a mix of persistent and non-persistent
-# bases, with many of them having multiple bases. For example
-# (using the notation: name (bases,) [type]):
-#
-#	platform.ou.edu (GlobalSiteManager) [global]
-#   Dataserver (GlobalSiteManager) [persistent]
-#   site-platform.ou.edu (Dataserver, platform.ou.edu) [persistent]
-#   janux.ou.edu (platform.ou.edu) [global]
-#   site-janux.ou.edu (janux.ou.edu, site-platform.ou.edu) [persistent]
-#
-# This gives site-janux.ou.edu this (correct) resolution order:
-#
-#  site-janux.ou.edu, janux.ou.edu, site-platform.ou.edu, dataserver, GSM
-#
-# However, queryNextUtility only looks in the *first* base to find
-# a next utility. Therefore, when site-janux.ou.edu asks for a next utility,
-# instead of getting something persistent from site-platform.ou.edu,
-# it instead gets the global non-persistent version from platform.ou.edu.
-#
-# We don't generally want to change the resolution order, but we do need
-# to tweak it here for getting next utilities so that we consider
-# persistent things first. Note that this breaks down if we have
-# utilities registered both persistently and non-persistently at the same level
-_marker = object()
+from nti.site.localutility import queryNextUtility
+
 def _queryNextCatalog(context):
-	try:
-		sm = component.getSiteManager(context)
-	except LookupError:
-		return None
-
-	# These are returned starting from the GlobalSiteManager
-	# and working down the resolution chain
-	all_utilities = sm.getAllUtilitiesRegisteredFor(ICourseCatalog)
-	try:
-		me = all_utilities.index(context)
-	except ValueError:
-		# Not in it. That means our site manager is the global site manager,
-		# and we hit the global catalog
-		assert sm == component.getGlobalSiteManager()
-		return all_utilities[0]
-
-	next_ = me - 1
-	if next_ >= 0:
-		return all_utilities[next_]
+	return queryNextUtility(context,ICourseCatalog)
 
 class _AbstractCourseCatalogMixin(object):
 	"""
