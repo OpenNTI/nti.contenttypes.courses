@@ -25,6 +25,7 @@ from .interfaces import ICourseCatalogEntry
 
 from nti.externalization.externalization import to_external_object
 from nti.externalization.singleton import SingletonDecorator
+from nti.externalization.oids import to_external_ntiid_oid
 
 # XXX: JAM: Don't like this dependency here. Refactor for zope.security interaction
 # support
@@ -105,6 +106,7 @@ class _LegacyCCEFieldDecorator(object):
 		if not result.get('LegacyPurchasableIcon') or not result.get('LegacyPurchasableThumbnail'):
 			if not checked:
 				course, package = self._course_package(context)
+				checked = True
 
 			if package is not None:
 				# Copied wholesale from legacy code
@@ -128,3 +130,16 @@ class _LegacyCCEFieldDecorator(object):
 
 				result['LegacyPurchasableThumbnail'] = thumbnail
 				result['LegacyPurchasableIcon'] = icon
+
+		if 'CourseNTIID' not in result:
+			if not checked:
+				course, package = self._course_package(context)
+				checked = True
+			if course is not None:
+				# courses themselves do not typically actually
+				# have an identifiable NTIID and rely on the OID
+				# (this might change with auto-creation of the catalogs now)
+				try:
+					result['CourseNTIID'] = course.ntiid
+				except AttributeError:
+					result['CourseNTIID'] = to_external_ntiid_oid(course)

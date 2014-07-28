@@ -264,11 +264,10 @@ class CourseCatalogEntry(SchemaConfigured,
 		If we are adaptable to a :class:`.ICourseInstance`, we
 		produce a link to that.
 		"""
-		result = []
+		result = ()
 		instance = ICourseInstance(self, None)
-		if instance:
-			result.append( Link( instance, rel="CourseInstance" ) )
-
+		if instance is not None:
+			result = [Link( instance, rel="CourseInstance" )]
 		return result
 
 	@property

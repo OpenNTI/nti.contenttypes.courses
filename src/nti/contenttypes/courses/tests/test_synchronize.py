@@ -18,6 +18,7 @@ logger = __import__('logging').getLogger(__name__)
 from hamcrest import assert_that
 from hamcrest import is_
 from hamcrest import is_not
+from hamcrest import none
 from hamcrest import same_instance
 from hamcrest import has_length
 from hamcrest import has_entry
@@ -145,15 +146,18 @@ class TestFunctionalSynchronize(CourseLayerTest):
 														 has_property('absolute_path',
 																	  contains_string('Sections/01'))))))
 
+		assert_that( sec1_cat, has_property( 'links',
+											 contains(has_property('target', sec1))))
+
 		assert_that( sec1,
 					 externalizes( has_entry(
 						 'Class', 'CourseInstance' ) ) )
 
-		from nti.externalization.externalization import to_external_object
-
-		to_external_object(sec1_cat)
 		assert_that( sec1_cat,
 					 externalizes( has_key('PlatformPresentationResources')))
+		assert_that( sec1_cat,
+					 # there, but not meaningful yet
+					 externalizes( has_entry('CourseNTIID', none() ) ) )
 
 		sec2 = gateway.SubInstances['02']
 		assert_that( sec2.Outline, has_length(1) )

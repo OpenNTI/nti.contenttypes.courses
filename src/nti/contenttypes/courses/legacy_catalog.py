@@ -229,7 +229,7 @@ from functools import total_ordering
 from nti.schema.schema import EqHash
 
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
-
+from nti.dataserver.links import Link
 
 @component.adapter(ICourseSubInstance)
 @interface.implementer(ICourseCatalogLegacyEntry)
@@ -256,6 +256,20 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 
 	ntiid = property(_ntiid_from_entry,
 					 lambda s, nv: None)
+
+	@property
+	def links(self):
+		"""
+		If we are adaptable to a :class:`.ICourseInstance`, we
+		produce a link to that.
+		"""
+		# Note we're not inheriting from self._next_entry here
+		result = ()
+		instance = ICourseInstance(self, None)
+		if instance is not None:
+			result = [Link( instance, rel="CourseInstance" )]
+		return result
+
 
 	@property
 	def PlatformPresentationResources(self):
