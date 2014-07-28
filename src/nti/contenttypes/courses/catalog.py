@@ -14,7 +14,6 @@ logger = __import__('logging').getLogger(__name__)
 from functools import total_ordering
 
 from zope import interface
-from zope import component
 
 from .interfaces import ICourseInstance
 
@@ -185,6 +184,7 @@ class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
 			the object removed event.
 		"""
 		key = entry.ntiid or entry.__name__
+		__traceback_info__ = key, entry
 		if not event:
 			l = self._BTreeContainer__len
 			try:
