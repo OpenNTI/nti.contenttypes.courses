@@ -107,6 +107,11 @@
 	<adapter factory=".enrollment.DefaultCourseEnrollmentManager"
 			 for=".interfaces.ICourseInstance
 				  pyramid.interfaces.IRequest" />
+	<adapter factory=".enrollment.EnrollmentMappedCourseEnrollmentManager" />
+	<adapter factory=".enrollment.EnrollmentMappedCourseEnrollmentManager"
+			 for=".interfaces.IEnrollmentMappedCourseInstance
+				  pyramid.interfaces.IRequest" />
+
 	<adapter factory=".enrollment.DefaultCourseInstanceEnrollmentStorageFactory" />
 	<adapter factory=".enrollment.DefaultCourseCatalogEnrollmentStorageFactory" />
 	<adapter factory=".enrollment.global_course_catalog_enrollment_storage" />

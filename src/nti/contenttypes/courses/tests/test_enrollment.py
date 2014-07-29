@@ -74,6 +74,8 @@ from zope.security.interfaces import IPrincipal
 from zope.container.interfaces import IContained
 from zope.location.interfaces import ISublocations
 from ..interfaces import ICourseInstance
+from ..interfaces import IEnrollmentMappedCourseInstance
+from ..interfaces import ICourseInstanceVendorInfo
 from zope.annotation.interfaces import IAttributeAnnotatable
 from nti.wref.interfaces import IWeakRef
 from nti.dataserver.interfaces import IUser
@@ -111,6 +113,7 @@ class TestFunctionalEnrollment(CourseLayerTest):
 
 	principal = None
 	course = None
+	section = None
 	def _shared_setup(self):
 		principal = MockPrincipal()
 		self.ds.root[principal.id] = principal
@@ -125,26 +128,31 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		course = courses.CourseInstance()
 		admin['course'] = course
 
-		course.SubInstances['section1'] = courses.ContentCourseSubInstance()
+		self.section = course.SubInstances['section1'] = courses.ContentCourseSubInstance()
 
 		self.principal  = principal
 		self.course = course
 
 	def _do_test_add_drop(self, principal, course,
+						  enroll_scope='Public',
+						  actually_enrolled_in_course=None,
 						  extra_enroll_test=lambda: None):
+		if actually_enrolled_in_course is None:
+			actually_enrolled_in_course = course
 
 		manager = interfaces.ICourseEnrollmentManager(course)
 		assert_that( manager, is_(enrollment.DefaultCourseEnrollmentManager) )
 
-		result = record = manager.enroll(principal)
+		result = record = manager.enroll(principal, scope=enroll_scope)
 		assert_that( result, is_(enrollment.DefaultCourseInstanceEnrollmentRecord ))
 
 		# again does nothing
-		assert_that( manager.enroll(principal), is_false() )
-		self._check_enrolled(record, principal, course)
+		assert_that( manager.enroll(principal, scope=enroll_scope), is_false() )
+		self._check_enrolled(record, principal, actually_enrolled_in_course)
 
 		# The record can be adapted to the course and the principal
-		assert_that( ICourseInstance(record), is_(course) )
+		assert_that( record.Scope, is_(enroll_scope))
+		assert_that( ICourseInstance(record), is_(actually_enrolled_in_course) )
 		assert_that( IPrincipal(record), is_(principal))
 		# (but not sublocations...earlier there was a bug that adapted
 		# it to the course instance when asked for sublocations)
@@ -152,7 +160,9 @@ class TestFunctionalEnrollment(CourseLayerTest):
 
 		extra_enroll_test()
 
-		# now, we can drop
+		# now, we can drop, using the manager for the course we really
+		# enrolled in
+		manager = interfaces.ICourseEnrollmentManager(record.CourseInstance)
 		eventtesting.clearEvents()
 		result = record = manager.drop(principal)
 		assert_that( result, is_(enrollment.DefaultCourseInstanceEnrollmentRecord ))
@@ -176,6 +186,22 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		evts = eventtesting.getEvents()
 		assert_that( evts, is_empty() )
 		self._check_not_enrolled(principal, course)
+
+	@WithMockDSTrans
+	def test_enrollment_map(self):
+		# When you try to for-credit-non-degree enroll in course, you
+		# get thrown into section
+		self._shared_setup()
+		vendor_info = ICourseInstanceVendorInfo(self.course)
+		vendor_info.setdefault('NTI', dict()).setdefault('EnrollmentMap',{})
+		vendor_info['NTI']['EnrollmentMap']['ForCreditNonDegree'] = 'section1'
+		interface.alsoProvides(self.course, IEnrollmentMappedCourseInstance)
+
+
+		self._do_test_add_drop(self.principal, self.course,
+							   enroll_scope='ForCreditNonDegree',
+							   actually_enrolled_in_course=self.section
+							   )
 
 	@WithMockDSTrans
 	def test_add_drop(self):

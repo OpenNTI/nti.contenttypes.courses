@@ -41,6 +41,7 @@ from .._synchronize import synchronize_catalog_from_root
 from ..interfaces import ICourseInstanceVendorInfo
 from ..interfaces import ICourseCatalogEntry
 from ..interfaces import ICourseInstance
+from ..interfaces import IEnrollmentMappedCourseInstance
 
 from nti.contentlibrary import filesystem
 from nti.contentlibrary.library import EmptyLibrary
@@ -81,6 +82,8 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		# Now check that we get the structure we expect
 		spring = folder['Spring2014']
 		gateway = spring['Gateway']
+
+		assert_that( gateway, verifiably_provides(IEnrollmentMappedCourseInstance) )
 
 		assert_that( gateway.Outline, has_length(6) )
 

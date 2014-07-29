@@ -405,6 +405,20 @@ class IContentCourseSubInstance(ICourseSubInstance,IContentCourseInstance):
 	pass
 
 
+class IEnrollmentMappedCourseInstance(ICourseInstance):
+	"""
+	A type of course instance that has its enrollment scopes specially
+	mapped.
+
+	We expect to find vendor info like this::
+
+	    NTI: {
+	        EnrollmentMap: {
+	            scope_name: section_name,
+	        }
+	    }
+	"""
+
 class ICourseInstanceVendorInfo(IEnumerableMapping,
 								ILastModified,
 								IContained):

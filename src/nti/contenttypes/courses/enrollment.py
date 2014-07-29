@@ -18,6 +18,8 @@ from zope import lifecycleevent
 from zope.annotation.factory import factory as an_factory
 from ZODB.interfaces import IConnection
 
+from nti.externalization.persistence import NoPickle
+
 from nti.wref.interfaces import IWeakRef
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
@@ -38,12 +40,15 @@ from .interfaces import ICourseCatalog
 from .interfaces import IGlobalCourseCatalog
 from .interfaces import ES_PUBLIC
 from .interfaces import ES_CREDIT
+from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
 from .interfaces import IPrincipalEnrollments
 
 from nti.contentlibrary.bundle import _readCurrent
 from nti.utils.property import alias
 from nti.utils.property import Lazy
+from nti.utils.property import CachedProperty
 from zope.cachedescriptors.method import cachedIn
+
 
 from nti.schema.fieldproperty import FieldProperty
 
@@ -337,10 +342,61 @@ class DefaultCourseEnrollmentManager(object):
 
 		return record
 
+from .interfaces import ICourseInstanceVendorInfo
+from .interfaces import IEnrollmentMappedCourseInstance
+
+def check_enrollment_mapped(course):
+	"""
+	Returns a true value if the course is supposed to be enrollment mapped,
+	and passes the tests. Raises an error if it is supposed to be enrollment
+	mapped, but fails the tests.
+	"""
+	vendor_info = ICourseInstanceVendorInfo(course)
+	if 'NTI' in vendor_info and 'EnrollmentMap' in vendor_info['NTI']:
+		result = False
+		for scope, sec_name in vendor_info['NTI']['EnrollmentMap'].items():
+			result = True
+			if scope not in ENROLLMENT_SCOPE_VOCABULARY:
+				raise KeyError("Unknown scope", scope)
+			if sec_name not in course.SubInstances:
+				raise KeyError("Unknown section", sec_name)
+		return result
+
+
+@component.adapter(IEnrollmentMappedCourseInstance)
+@interface.implementer(ICourseEnrollmentManager)
+class EnrollmentMappedCourseEnrollmentManager(DefaultCourseEnrollmentManager):
+	"""
+	Handles mapping to an actual course enrollment manager
+	for particular scopes.
+	"""
+
+
+	def enroll(self, principal, scope=ES_PUBLIC):
+		vendor_info = ICourseInstanceVendorInfo(self.context)
+		section_name = vendor_info['NTI']['EnrollmentMap'].get(scope)
+		if section_name:
+			# fail loudly rather than silently enroll in the wrong place
+			section = self.context.SubInstances[section_name]
+			manager = (component.getMultiAdapter( (section, self.request), ICourseEnrollmentManager)
+					   if self.request is not None
+					   else ICourseEnrollmentManager(section))
+			return manager.enroll(principal, scope=scope)
+
+		return super(EnrollmentMappedCourseEnrollmentManager,self).enroll(principal,scope=scope)
+
+
+
+	# Dropping does nothing special: we never get here if we
+	# didn't actually wind up enrolling in this course instance itself
+	# to start with.
+
+
 from nti.dataserver.interfaces import ILengthEnumerableEntityContainer
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseEnrollments)
+@NoPickle
 class DefaultCourseEnrollments(object):
 
 	def __init__(self, context):
@@ -378,12 +434,20 @@ class DefaultCourseEnrollments(object):
 
 
 @interface.implementer(IPrincipalEnrollments)
+@NoPickle
 class DefaultPrincipalEnrollments(object):
 
 	def __init__(self, principal):
 		self.principal = principal
 
+	@CachedProperty
+	def _all_enrollments(self):
+		return list(self._query_enrollments())
+
 	def iter_enrollments(self):
+		return iter(self._all_enrollments)
+
+	def _query_enrollments(self):
 		iprincipal = IPrincipal(self.principal, None)
 		if iprincipal is None:
 			return

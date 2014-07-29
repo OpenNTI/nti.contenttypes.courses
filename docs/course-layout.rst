@@ -367,13 +367,40 @@ documentation for what keys might be used.
 
 ::
 
-	{
-		"OU": {
+    {
+        "OU": {
             {"IMS": {"sourcedid": 12345, "source": SMS}},
             "CRN": "ABCD",
             "Term": 10
-		}
-	}
+        },
+        "NTI": {
+            "EnrollmentMap": {
+                "ForCreditNonDegree": "section-name"
+            }
+        }
+    }
+
+Known NTI keys are documented here:
+
+EnrollmentMap
+	A dictionary mapping enrollment scopes to the name of a section
+	that should handle that scope. Any attempts to enroll in this
+	course with that scope will instead be directed to this named
+	section of this course.
+
+	Only valid at the main course level, and only intended to solve
+	the use case of directing certain for-credit enrollments in a
+	public course to a specific section that holds all types of
+	for-credit enrollments. Typically the target section will be
+	marked as ``non_public``, while the course itself will be public.
+
+	This is validated at sync time, and the name of the scope and
+	the name of the section must both be valid and exist.
+
+	.. danger:: This mapping **SHOULD NOT** change after enrollment has
+				 started. No attempt is made to adjust enrollments in
+				 that case.
+
 
 ``assignment_date_overrides.json`` (optional)
 ---------------------------------------------

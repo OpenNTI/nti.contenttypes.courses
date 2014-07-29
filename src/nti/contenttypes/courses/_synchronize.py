@@ -38,10 +38,13 @@ from .interfaces import IContentCourseSubInstance
 from .interfaces import ICourseCatalogEntry
 from .interfaces import INonPublicCourseInstance
 from .interfaces import CourseInstanceAvailableEvent
+from .interfaces import IEnrollmentMappedCourseInstance
 
 from .courses import ContentCourseInstance
 from .courses import ContentCourseSubInstance
 from .courses import CourseAdministrativeLevel
+
+from .enrollment import check_enrollment_mapped
 
 from ._outline_parser import fill_outline_from_key
 from ._catalog_entry_parser import fill_entry_from_legacy_key
@@ -134,6 +137,7 @@ class _ContentCourseSynchronizer(object):
 	def synchronize(self, course, bucket):
 		# TODO: Need to be setting NTIIDs based on the
 		# bucket path for these guys
+		__traceback_info__ = course, bucket
 
 		# First, synchronize the bundle
 		bundle_json_key = bucket.getChildNamed(BUNDLE_META_NAME)
@@ -169,6 +173,11 @@ class _ContentCourseSynchronizer(object):
 		sync = component.getMultiAdapter( (course.SubInstances, sections_bucket) )
 		sync.synchronize( course.SubInstances, sections_bucket )
 
+		# After we've loaded all the sections, check to see if we should map enrollment
+		if check_enrollment_mapped(course):
+			interface.alsoProvides(course, IEnrollmentMappedCourseInstance)
+		else:
+			interface.noLongerProvides(course, IEnrollmentMappedCourseInstance)
 
 	@classmethod
 	def update_common_info(cls, course, bucket, try_legacy_content_bundle=False):
@@ -320,6 +329,7 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		pass
 
 	def synchronize(self, subcourse, bucket):
+		__traceback_info__ = subcourse, bucket
 		_ContentCourseSynchronizer.update_common_info(subcourse, bucket)
 		self.update_assignment_dates(subcourse, bucket)
 

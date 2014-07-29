@@ -1,1 +1,10 @@
-{"OU": {"key": 42}}
+{
+	"OU": {
+		"key": 42
+	},
+	"NTI": {
+		"EnrollmentMap": {
+			"ForCreditNonDegree": "02"
+		}
+	}
+}
