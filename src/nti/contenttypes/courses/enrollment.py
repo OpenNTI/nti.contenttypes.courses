@@ -61,7 +61,7 @@ class IDefaultCourseCatalogEnrollmentStorage(IContainer,IContained):
 
 	def enrollments_for_id(principalid, principal):
 		"""
-		Return the persistent list to hold weak references for
+		Return the list/set-like object to hold record references for
 		the principal.
 
 		:param principal: If this has a non-None `_p_jar`, the enrollment
@@ -69,7 +69,10 @@ class IDefaultCourseCatalogEnrollmentStorage(IContainer,IContained):
 		"""
 
 from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
-from persistent.list import PersistentList
+from persistent import Persistent
+import BTrees
+from zope.keyreference.interfaces import IKeyReference
+from zope.keyreference.interfaces import NotYet
 
 # Recall that everything that's keyed by username/principalid must be case-insensitive
 
@@ -82,9 +85,59 @@ DefaultCourseInstanceEnrollmentStorageFactory = an_factory(DefaultCourseInstance
 														   'CourseInstanceEnrollmentStorage')
 
 @interface.implementer(IContained)
-class CourseEnrollmentList(PersistentList):
+class CourseEnrollmentList(Persistent):
+	"""
+	A set-like object that contains :class:`ICourseInstanceEnrollmentRecord`
+	objects.
+
+	Internally, for conflict resolution and efficiency, this is implemented
+	as holding IKeyRefererence objects (not weak references---we are a valid
+	path to the record). Iterating over this object resolves these references.
+	"""
 	__name__ = None
 	__parent__ = None
+
+	def __init__(self):
+		self._set_data = BTrees.OOBTree.TreeSet()
+
+	@Lazy
+	def _set_data(self): #pylint:disable=I0011,E0202
+		# We used to be a subclass of PersistentList, which
+		# stores its contents in a value called `data`, which is-a
+		# list object directly holding references to the CourseEnrollmentRecord
+		data_list = self.data # AttributeError if somehow this migration already happened
+		del self.data
+		# We migrate these at runtime right now because there are likely to be
+		# few of them, and they are likely to be written in many of the scenarios
+		# that they are read
+		data = BTrees.OOBTree.TreeSet([IKeyReference(x) for x in data_list])
+		self._p_changed = True
+		return data
+
+	def __iter__(self):
+		return (x() for x in self._set_data)
+
+	def __contains__(self, record):
+		return IKeyReference(record) in self._set_data
+
+	def add(self, record):
+		ref = None
+		try:
+			ref = IKeyReference(record)
+		except NotYet:
+			# The record MUST be in a connection at this time
+			# so we can get an IKeyReference to it
+			IConnection(self).add(record) # may raise TypeError/AttributeError
+			ref = IKeyReference(record)
+
+		return self._set_data.add(ref)
+
+	def remove(self, record):
+		"""
+		Remove the record if it exists, raise KeyError if not.
+		"""
+		self._set_data.remove(IKeyReference(record))
+
 
 @component.adapter(ICourseCatalog)
 @interface.implementer(IDefaultCourseCatalogEnrollmentStorage)
@@ -94,11 +147,12 @@ class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedB
 
 	def enrollments_for_id(self, principalid, principal):
 		try:
-			return _readCurrent(self[principalid])
+			return self[principalid]
 		except KeyError:
 			result = CourseEnrollmentList()
 			jar = IConnection(principal, None)
 			if jar is not None:
+				# store with the principal, not with us
 				jar.add(result)
 
 			self[principalid] = result
@@ -238,11 +292,7 @@ class DefaultCourseEnrollmentManager(object):
 																	  principal)
 
 		lifecycleevent.created(record)
-		enrollments.append(record)
-		try:
-			enrollments._p_jar.add(record)
-		except AttributeError:
-			pass
+		enrollments.add(record)
 		# now install and fire the ObjectAdded event, after
 		# it's in the IPrincipalEnrollments; that way
 		# event listeners will see consistent data.
@@ -263,9 +313,8 @@ class DefaultCourseEnrollmentManager(object):
 		enrollments = self._cat_enrollment_storage.enrollments_for_id(principal_id,
 																	  principal)
 		try:
-			record_ix = enrollments.index(record)
-			del enrollments[record_ix]
-		except ValueError:
+			enrollments.remove(record)
+		except KeyError:
 			# Snap, the enrollment is missing from the course catalog storage of the
 			# principal, but we have it in the course instance storage.
 			# This is probably that migration problem, so look up the tree to see
@@ -279,10 +328,9 @@ class DefaultCourseEnrollmentManager(object):
 					_readCurrent(storage)
 					enrollments = _readCurrent(storage.enrollments_for_id(principal_id, principal))
 					try:
-						record_ix = enrollments.index(record)
-						del enrollments[record_ix]
+						enrollments.remove(record)
 						break
-					except ValueError:
+					except KeyError:
 						pass
 
 		del self._inst_enrollment_storage[principal_id]
