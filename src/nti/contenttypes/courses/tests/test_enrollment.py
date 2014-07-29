@@ -77,6 +77,8 @@ from ..interfaces import ICourseInstance
 from zope.annotation.interfaces import IAttributeAnnotatable
 from nti.wref.interfaces import IWeakRef
 from nti.dataserver.interfaces import IUser
+from zope.component import eventtesting
+from zope.lifecycleevent import IObjectRemovedEvent
 
 from nti.dataserver.sharing import SharingSourceMixin
 from persistent import Persistent
@@ -151,10 +153,28 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		extra_enroll_test()
 
 		# now, we can drop
+		eventtesting.clearEvents()
 		result = record = manager.drop(principal)
 		assert_that( result, is_(enrollment.DefaultCourseInstanceEnrollmentRecord ))
+
+		evts = eventtesting.getEvents()
+		# It all starts with the object-removed event:
+		# [<zope.lifecycleevent.ObjectRemovedEvent object at 0x105f62f10>,
+		#    <nti.intid.interfaces.IntIdRemovedEvent object at 0x105fa8610>,
+		#    <zope.intid.interfaces.IntIdRemovedEvent object at 0x1058dbf50>,
+		#    <nti.dataserver.interfaces.StopDynamicMembershipEvent object at 0x1055ca390>,
+		#    <nti.dataserver.interfaces.StopFollowingEvent object at 0x105483590>,
+		#    <zc.intid.utility.RemovedEvent object at 0x105813cd0>,
+		#   <zope.container.contained.ContainerModifiedEvent object at 0x1052244d0>]
+		assert_that( evts[0], validly_provides(IObjectRemovedEvent) )
+		assert_that( evts[0], has_property('object', is_(enrollment.DefaultCourseInstanceEnrollmentRecord)))
+
+
 		# again does nothing
+		eventtesting.clearEvents()
 		assert_that( manager.drop(principal), is_false() )
+		evts = eventtesting.getEvents()
+		assert_that( evts, is_empty() )
 		self._check_not_enrolled(principal, course)
 
 	@WithMockDSTrans
