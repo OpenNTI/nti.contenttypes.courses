@@ -161,6 +161,17 @@ class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedB
 				jar.add(result)
 
 			self[principalid] = result
+			# result.__parent__ is self; but depending
+			# on where we are and when we got created, our
+			# self.__parent__ (the course catalog, typically, through which we are reachable)
+			# may be a different db, which could yield InvalidObjectReference
+			# if we're not specifically set to a place. Since we know
+			# we are writing here, now is a good time to pick one.
+			if self._p_jar is None:
+				jar = IConnection(self, jar)
+				if jar is not None:
+					jar.add(self)
+
 			return result
 
 DefaultCourseCatalogEnrollmentStorageFactory = an_factory(DefaultCourseCatalogEnrollmentStorage,
@@ -250,13 +261,7 @@ class DefaultCourseEnrollmentManager(object):
 
 	@Lazy
 	def _inst_enrollment_storage(self):
-		storage = IDefaultCourseInstanceEnrollmentStorage(self._course)
-		if storage._p_jar is None:
-			jar = IConnection(storage, None)
-			if jar is not None:
-				jar.add(storage)
-		return storage
-
+		return IDefaultCourseInstanceEnrollmentStorage(self._course)
 
 	@Lazy
 	def _catalog(self):
