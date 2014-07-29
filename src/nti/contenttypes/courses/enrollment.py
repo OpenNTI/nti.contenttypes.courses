@@ -270,7 +270,12 @@ class DefaultCourseEnrollments(object):
 
 	@Lazy
 	def _inst_enrollment_storage(self):
-		return IDefaultCourseInstanceEnrollmentStorage(self.context)
+		storage = IDefaultCourseInstanceEnrollmentStorage(self._course)
+		if storage._p_jar is None:
+			jar = IConnection(storage, None)
+			if jar is not None:
+				jar.add(storage)
+		return _readCurrent(storage)
 
 	def iter_enrollments(self):
 		return self._inst_enrollment_storage.values()
