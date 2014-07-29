@@ -185,13 +185,19 @@ class DefaultCourseEnrollmentManager(object):
 
 
 	@Lazy
+	def _inst_enrollment_storage_rc(self):
+		storage = self._inst_enrollment_storage
+		return _readCurrent(storage)
+
+	@Lazy
 	def _inst_enrollment_storage(self):
 		storage = IDefaultCourseInstanceEnrollmentStorage(self._course)
 		if storage._p_jar is None:
 			jar = IConnection(storage, None)
 			if jar is not None:
 				jar.add(storage)
-		return _readCurrent(storage)
+		return storage
+
 
 	@Lazy
 	def _catalog(self):
@@ -218,7 +224,13 @@ class DefaultCourseEnrollmentManager(object):
 
 	def enroll(self, principal, scope=ES_PUBLIC):
 		principal_id = IPrincipal(principal).id
-		if principal_id in self._inst_enrollment_storage: # readCurrent of this
+		if principal_id in self._inst_enrollment_storage:
+			# DO NOT readCurrent of this, until we determine that we won't actually
+			# change it; if we are going to change it, then the normal conflict
+			# error comes into play. only if we do not change it then do we need
+			# to assert that we read the current value (and aren't concurrently)
+			# dropping---but dropping must always readCurrent
+			_readCurrent(self._inst_enrollment_storage)
 			return False
 
 		record = DefaultCourseInstanceEnrollmentRecord(Principal=principal, Scope=scope)
@@ -240,7 +252,9 @@ class DefaultCourseEnrollmentManager(object):
 
 	def drop(self, principal):
 		principal_id = IPrincipal(principal).id
-		if principal_id not in self._inst_enrollment_storage: # readCurrent of this
+		if principal_id not in self._inst_enrollment_storage_rc:
+			# Note that we always begin with a readCurrent of this,
+			# to protect concurrent enroll/drop
 			return False
 
 		record = self._inst_enrollment_storage[principal_id]
