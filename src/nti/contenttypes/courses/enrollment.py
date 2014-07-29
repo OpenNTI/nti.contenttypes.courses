@@ -270,12 +270,10 @@ class DefaultCourseEnrollments(object):
 
 	@Lazy
 	def _inst_enrollment_storage(self):
-		storage = IDefaultCourseInstanceEnrollmentStorage(self.context)
-		if storage._p_jar is None:
-			jar = IConnection(storage, None)
-			if jar is not None:
-				jar.add(storage)
-		return _readCurrent(storage)
+		# This is a READ ONLY interface, modifications go
+		# through the enrollment manager. Therefore we MUST NOT
+		# attempt to readCurrent or add to connections
+		return IDefaultCourseInstanceEnrollmentStorage(self.context)
 
 	def iter_enrollments(self):
 		return self._inst_enrollment_storage.values()
