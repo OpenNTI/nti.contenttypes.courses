@@ -166,9 +166,23 @@ class DefaultCourseEnrollmentManager(object):
 
 	_course = alias('context')
 
-	# all of these accesses do _readCurrent, because we are
-	# modifying a set of related objects based on the contents
-	# of one of them
+	###
+	# Use of readCurrent:
+	#
+	# Although we are modifying a set of related data structures,
+	# based off the reading of one of them, we are always doing so in
+	# a specific order starting with one particular datastructure;
+	# moreover, we are always actually modifying all of them if we
+	# modify any of them.
+	#
+	# Therefore, so long as we readCurrent on the *first* datastructure,
+	# we shouldn't need to readCurrent any anything else (because we will
+	# actually be making modifications to the remaining objects).
+	#
+	# The first datastructure is always the _inst_enrollment_storage
+	# object.
+	###
+
 
 	@Lazy
 	def _inst_enrollment_storage(self):
@@ -191,10 +205,10 @@ class DefaultCourseEnrollmentManager(object):
 
 	@Lazy
 	def _cat_enrollment_storage(self):
-		return _readCurrent(IDefaultCourseCatalogEnrollmentStorage(self._catalog))
+		return IDefaultCourseCatalogEnrollmentStorage(self._catalog)
 
 	###
-	# NOTE: The enroll/drop methods DO NOT set up any of the scope
+	# NOTE: The enroll/drop methods DO NOT set up any of the scope/sharing
 	# information; that's left to ObjectEvent subscribers. That may
 	# seem like action at a distance, but the rationale is that we
 	# want to, in addition to the Added and Removed events fired here,
@@ -204,12 +218,12 @@ class DefaultCourseEnrollmentManager(object):
 
 	def enroll(self, principal, scope=ES_PUBLIC):
 		principal_id = IPrincipal(principal).id
-		if principal_id in self._inst_enrollment_storage:
+		if principal_id in self._inst_enrollment_storage: # readCurrent of this
 			return False
 
 		record = DefaultCourseInstanceEnrollmentRecord(Principal=principal, Scope=scope)
-		enrollments = _readCurrent(self._cat_enrollment_storage.enrollments_for_id(principal_id,
-																				   principal))
+		enrollments = self._cat_enrollment_storage.enrollments_for_id(principal_id,
+																	  principal)
 
 		lifecycleevent.created(record)
 		enrollments.append(record)
@@ -226,14 +240,14 @@ class DefaultCourseEnrollmentManager(object):
 
 	def drop(self, principal):
 		principal_id = IPrincipal(principal).id
-		if principal_id not in self._inst_enrollment_storage:
+		if principal_id not in self._inst_enrollment_storage: # readCurrent of this
 			return False
 
 		record = self._inst_enrollment_storage[principal_id]
 		# again be consistent with the order: remove from the
 		# enrollment list then fire the event
-		enrollments = _readCurrent(self._cat_enrollment_storage.enrollments_for_id(principal_id,
-																				   principal))
+		enrollments = self._cat_enrollment_storage.enrollments_for_id(principal_id,
+																	  principal)
 		try:
 			record_ix = enrollments.index(record)
 			del enrollments[record_ix]
@@ -246,6 +260,8 @@ class DefaultCourseEnrollmentManager(object):
 			for site_manager in ro.ro(component.getSiteManager()):
 				storage = _global_course_catalog_storage(site_manager)
 				if storage is not None and principal_id in storage:
+					# we do readCurrent of this because we're walking up an
+					# unrelated tree
 					_readCurrent(storage)
 					enrollments = _readCurrent(storage.enrollments_for_id(principal_id, principal))
 					try:
