@@ -84,6 +84,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		gateway = spring['Gateway']
 
 		assert_that( gateway, verifiably_provides(IEnrollmentMappedCourseInstance) )
+		assert_that( gateway, externalizes() )
 
 		assert_that( gateway.Outline, has_length(6) )
 

@@ -418,6 +418,11 @@ class IEnrollmentMappedCourseInstance(ICourseInstance):
 	        }
 	    }
 	"""
+# Don't try to consider this when determining most-derived
+# interfaces. (This one does need to be a kind-of ICourseInstance because
+# we want to register enrollment managers for it.)
+IEnrollmentMappedCourseInstance.setTaggedValue('_ext_is_marker_interface', True)
+
 
 class ICourseInstanceVendorInfo(IEnumerableMapping,
 								ILastModified,
