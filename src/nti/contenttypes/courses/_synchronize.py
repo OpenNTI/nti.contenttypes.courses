@@ -108,6 +108,7 @@ class _GenericFolderSynchronizer(object):
 		# Create anything the folder is missing if we
 		# have a factory for it
 		for bucket_child_name in child_buckets:
+			__traceback_info__ = folder, bucket, bucket_child_name
 			if bucket_child_name not in folder:
 				# NOTE: We don't handle the case of a bucket
 				# changing the type it should be
@@ -118,6 +119,7 @@ class _GenericFolderSynchronizer(object):
 				new_child_object = factory()
 				new_child_object.root = child_bucket
 				# Fire the added event
+				__traceback_info__ = folder, child_bucket, new_child_object
 				folder[bucket_child_name] = new_child_object
 
 		# Synchronize everything

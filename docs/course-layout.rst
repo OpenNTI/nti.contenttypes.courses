@@ -136,9 +136,9 @@ Courses Directory
 Inside the course directory are :dfn:`administrative levels` or
 *organizational directories*. These are simply directories, nested to
 any depth, that are used for organizing and namespacing the course
-instances. A good practice is to use at least one level of
-organizational directories to contain courses, named after the
-academic term of the course::
+instances; *at least one level is required*. A good practice is to use
+at least one level of organizational directories to contain courses,
+named after the academic term of the course::
 
 	platform.ou.edu/
 	    Courses/
