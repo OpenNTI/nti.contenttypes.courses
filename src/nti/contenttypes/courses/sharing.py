@@ -109,6 +109,8 @@ class CourseInstanceSharingScopes(CheckingLastModifiedBTreeContainer):
 	Container for a course's sharing scopes.
 	"""
 
+	__external_can_create__ = False
+
 	def _vocabulary(self):
 		# Could/should also use the vocabulary registry
 		# and dispatch to adapters based on context
@@ -150,6 +152,9 @@ class CourseSubInstanceSharingScopes(CourseInstanceSharingScopes):
 	The scopes created for a section/sub-instance, which
 	handles the implication of joining the parent course scopes.
 	"""
+
+	__external_class_name__ = 'CourseInstanceSharingScopes'
+	__external_can_create__ = False
 
 	def getAllScopesImpliedbyScope(self, scope_name):
 		# All of my scopes...

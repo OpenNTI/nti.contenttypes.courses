@@ -44,25 +44,31 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 			# conflated, yes, but simpler
 			parent = context.__parent__.__parent__
 			if parent is not None:
-				self._do_decorate_external(parent, result)
-				result['ParentSharingScopes'] = result['SharingScopes']
+				parent_result = {}
+				self._do_decorate_external(parent, parent_result)
+				result['ParentLegacyScopes'] = parent_result.get('LegacyScopes')
+				result['ParentSharingScopes'] = parent_result['SharingScopes']
 				result['ParentDiscussions'] = to_external_object(parent.Discussions,
 																 request=self.request)
 
 		scopes = context.SharingScopes
-		ext_scopes = LocatedExternalDict()
-		ext_scopes.__parent__ = scopes.__parent__
-		ext_scopes.__name__ = scopes.__name__
+		if self._is_authenticated:
+			ext_scopes = LocatedExternalDict()
+			ext_scopes.__parent__ = scopes.__parent__
+			ext_scopes.__name__ = scopes.__name__
 
-		ext_scopes[CLASS] = 'CourseInstanceSharingScopes'
+			ext_scopes[CLASS] = 'CourseInstanceSharingScopes'
 
-		user = self.remoteUser
+			user = self.remoteUser
 
-		for name, scope in scopes.items():
-			if user in IEntityContainer(scope):
-				ext_scopes[name] = to_external_object(scope, request=self.request)
+			for name, scope in scopes.items():
+				if user in IEntityContainer(scope):
+					ext_scopes[name] = to_external_object(scope, request=self.request)
 
-		result['SharingScopes'] = ext_scopes
+			result['SharingScopes'] = ext_scopes
+
+		else:
+			result['SharingScopes'] = to_external_object(scopes)
 
 		# Legacy
 		if 'LegacyScopes' not in result:

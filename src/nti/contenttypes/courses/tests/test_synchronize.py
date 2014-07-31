@@ -22,6 +22,7 @@ from hamcrest import none
 from hamcrest import same_instance
 from hamcrest import has_length
 from hamcrest import has_entry
+from hamcrest import has_entries
 from hamcrest import has_properties
 from hamcrest import contains_inanyorder
 from hamcrest import has_property
@@ -54,8 +55,6 @@ from nti.externalization.tests import externalizes
 
 from nti.assessment.interfaces import IQAssignmentDateContext
 
-
-
 class TestFunctionalSynchronize(CourseLayerTest):
 
 	def setUp(self):
@@ -67,6 +66,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		component.getGlobalSiteManager().unregisterUtility(self.library, IContentPackageLibrary)
 
 	def test_synchronize_with_sub_instances(self):
+
 		#User.create_user(self.ds, username='harp4162')
 		root_name ='TestSynchronizeWithSubInstances'
 		absolute_path = os.path.join( os.path.dirname( __file__ ),
@@ -153,9 +153,22 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		assert_that( sec1_cat, has_property( 'links',
 											 contains(has_property('target', sec1))))
 
+		sec1.SharingScopes['Public']._v_ntiid = 'section1-public'
+		sec1.SharingScopes['ForCredit']._v_ntiid = 'section1-forcredit'
 		assert_that( sec1,
-					 externalizes( has_entry(
+					 externalizes( has_entries(
 						 'Class', 'CourseInstance' ) ) )
+
+		from nti.externalization.externalization import to_external_object
+		sec1_ext = to_external_object(sec1)
+		from ..decorators import _SharingScopesAndDiscussionDecorator
+		dec = _SharingScopesAndDiscussionDecorator(sec1, None)
+		dec._is_authenticated = False
+		dec._do_decorate_external(sec1, sec1_ext)
+		assert_that( sec1_ext,
+					 has_entries(
+						 'LegacyScopes', has_entries('public', sec1.SharingScopes['Public'].NTIID,
+													 'restricted', sec1.SharingScopes['ForCredit'].NTIID)) )
 
 		assert_that( sec1_cat,
 					 externalizes( has_key('PlatformPresentationResources')))
