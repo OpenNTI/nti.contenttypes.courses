@@ -86,8 +86,24 @@ from zope.keyreference.interfaces import NotYet
 class DefaultCourseInstanceEnrollmentStorage(CaseInsensitiveCheckingLastModifiedBTreeContainer):
 	pass
 
-DefaultCourseInstanceEnrollmentStorageFactory = an_factory(DefaultCourseInstanceEnrollmentStorage,
+_DefaultCourseInstanceEnrollmentStorageFactory = an_factory(DefaultCourseInstanceEnrollmentStorage,
 														   'CourseInstanceEnrollmentStorage')
+
+
+@component.adapter(ICourseInstance)
+@interface.implementer(IDefaultCourseInstanceEnrollmentStorage)
+def DefaultCourseInstanceEnrollmentStorageFactory(course):
+	result = _DefaultCourseInstanceEnrollmentStorageFactory(course)
+	if result._p_jar is None:
+		# XXX despite the write-time code below that attempts to determine
+		# a certain connection for this object, we sometimes still get
+		# invalid obj ref; it's not clear where we're still reachable from
+		# (the intid catalog?)
+		try:
+			IConnection(course).add(result)
+		except (TypeError,AttributeError):
+			pass
+	return result
 
 @interface.implementer(IContained)
 class CourseEnrollmentList(Persistent):
