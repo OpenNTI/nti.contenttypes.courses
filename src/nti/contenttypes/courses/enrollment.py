@@ -152,7 +152,9 @@ class CourseEnrollmentList(Persistent):
 			ref = IKeyReference(record)
 
 		return self._set_data.add(ref)
-
+	
+	append = add # alias BWC
+	
 	def remove(self, record):
 		"""
 		Remove the record if it exists, raise KeyError if not.
