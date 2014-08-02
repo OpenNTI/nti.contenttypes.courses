@@ -114,7 +114,10 @@ class CourseEnrollmentList(Persistent):
 	Internally, for conflict resolution and efficiency, this is implemented
 	as holding IKeyRefererence objects (not weak references---we are a valid
 	path to the record). Iterating over this object resolves these references.
+
+	This object should never be directly referenced outside of this module.
 	"""
+
 	__name__ = None
 	__parent__ = None
 
@@ -152,9 +155,7 @@ class CourseEnrollmentList(Persistent):
 			ref = IKeyReference(record)
 
 		return self._set_data.add(ref)
-	
-	append = add # alias BWC
-	
+
 	def remove(self, record):
 		"""
 		Remove the record if it exists, raise KeyError if not.
@@ -416,6 +417,8 @@ class EnrollmentMappedCourseEnrollmentManager(DefaultCourseEnrollmentManager):
 
 
 from nti.dataserver.interfaces import ILengthEnumerableEntityContainer
+from nti.dataserver.interfaces import IEntityContainer
+from nti.dataserver.interfaces import IEntity
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseEnrollments)
@@ -443,17 +446,32 @@ class DefaultCourseEnrollments(object):
 		return self._inst_enrollment_storage.get(principal_id)
 
 	# Non-interface methods for legacy compatibility
+
+	def _count_in_scope_without_instructors(self, scope_name):
+		scope = self.context.SharingScopes[scope_name]
+		len_scope = len(ILengthEnumerableEntityContainer(scope))
+
+		container = IEntityContainer(scope)
+
+		for instructor in self.context.instructors:
+			instructor_entity = IEntity(instructor)
+			if instructor_entity in container:
+				len_scope -= 1
+		return len_scope
+
+	# If we really wanted to, we could cache these persistently on the
+	# enrollment storage object.
+
+	@cachedIn('_v_count_credit_enrollments')
 	def count_legacy_forcredit_enrollments(self):
-		return len(ILengthEnumerableEntityContainer(self.context.SharingScopes[ES_CREDIT]))
+		return self._count_in_scope_without_instructors(ES_CREDIT)
 
 	@cachedIn('_v_count_open_enrollments')
 	def count_legacy_open_enrollments(self):
-		# XXX: Inefficient but accurate
-		i = 0
-		for x in self.iter_enrollments():
-			if x.Scope == ES_PUBLIC:
-				i += 1
-		return i
+		credit_count = self.count_legacy_forcredit_enrollments()
+		public_count = self._count_in_scope_without_instructors(ES_PUBLIC)
+
+		return public_count - credit_count
 
 
 @interface.implementer(IPrincipalEnrollments)
