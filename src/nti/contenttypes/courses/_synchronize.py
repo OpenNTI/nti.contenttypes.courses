@@ -39,6 +39,9 @@ from .interfaces import ICourseCatalogEntry
 from .interfaces import INonPublicCourseInstance
 from .interfaces import CourseInstanceAvailableEvent
 from .interfaces import IEnrollmentMappedCourseInstance
+from .interfaces import ES_CREDIT
+
+from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
 from .courses import ContentCourseInstance
 from .courses import ContentCourseSubInstance
@@ -184,6 +187,18 @@ class _ContentCourseSynchronizer(object):
 	@classmethod
 	def update_common_info(cls, course, bucket, try_legacy_content_bundle=False):
 		course.SharingScopes.initScopes()
+		if ES_CREDIT in course.SharingScopes:
+			# Make sure the credit scope, which is usually the smaller
+			# scope, is set to expand and send notices.
+			# TODO: We could do better with this by having the vocabulary
+			# terms know what scopes should be like this and/or have a file
+			# TODO: Because the scopes are now communities and have shoring storage
+			# of their own, we don't really need to broadcast this out to each individual
+			# stream storage, we just want an on-the-socket notification.
+			try:
+				ISharingTargetEntityIterable(course.SharingScopes[ES_CREDIT])
+			except:
+				interface.alsoProvides(course.SharingScopes[ES_CREDIT], ISharingTargetEntityIterable)
 		cls.update_vendor_info(course, bucket)
 		cls.update_outline(course, bucket, try_legacy_content_bundle=try_legacy_content_bundle)
 		cls.update_catalog_entry(course, bucket, try_legacy_content_bundle=try_legacy_content_bundle)

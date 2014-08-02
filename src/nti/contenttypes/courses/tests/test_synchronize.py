@@ -43,6 +43,7 @@ from ..interfaces import ICourseInstanceVendorInfo
 from ..interfaces import ICourseCatalogEntry
 from ..interfaces import ICourseInstance
 from ..interfaces import IEnrollmentMappedCourseInstance
+from ..interfaces import ES_CREDIT
 
 from nti.contentlibrary import filesystem
 from nti.contentlibrary.library import EmptyLibrary
@@ -54,6 +55,7 @@ from . import CourseLayerTest
 from nti.externalization.tests import externalizes
 
 from nti.assessment.interfaces import IQAssignmentDateContext
+from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
 class TestFunctionalSynchronize(CourseLayerTest):
 
@@ -126,6 +128,9 @@ class TestFunctionalSynchronize(CourseLayerTest):
 					is_(gateway.ContentPackageBundle))
 
 		assert_that(sec1.Outline, is_(gateway.Outline))
+
+		for o in sec1.SharingScopes[ES_CREDIT], gateway.SharingScopes[ES_CREDIT]:
+			assert_that(o, verifiably_provides(ISharingTargetEntityIterable))
 
 		# partially overridden course info
 		sec1_cat = ICourseCatalogEntry(sec1)

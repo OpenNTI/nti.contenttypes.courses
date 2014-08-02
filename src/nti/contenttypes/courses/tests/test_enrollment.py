@@ -86,6 +86,8 @@ from nti.dataserver.sharing import SharingSourceMixin
 from persistent import Persistent
 import functools
 from nti.dataserver.authentication import _dynamic_memberships_that_participate_in_security
+from nti.dataserver.interfaces import ISharingTargetEntityIterable
+from ..interfaces import ES_CREDIT
 
 @functools.total_ordering
 @interface.implementer(IPrincipal, IWeakRef, IContained, IAttributeAnnotatable)
@@ -197,6 +199,10 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		vendor_info['NTI']['EnrollmentMap']['ForCreditNonDegree'] = 'section1'
 		interface.alsoProvides(self.course, IEnrollmentMappedCourseInstance)
 
+		def extra_enroll_test():
+			credit_scope = self.section.SharingScopes[ES_CREDIT]
+			assert_that( list(ISharingTargetEntityIterable(credit_scope)),
+						 is_([self.principal]))
 
 		self._do_test_add_drop(self.principal, self.course,
 							   enroll_scope='ForCreditNonDegree',
