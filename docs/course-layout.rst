@@ -402,27 +402,46 @@ EnrollmentMap
 				 that case.
 
 
-``assignment_date_overrides.json`` (optional)
+``assignment_policies.json`` (optional)
 ---------------------------------------------
 
-This optional file changes the dates at which assignments are
-available and/or no longer available. It maps from the NTIID of an
-assignment to a dictionary giving the beginning and ending dates of
-availability. The information in this file replaces the data for the
-assignments specified within this course, (but does not change
-anything about which assignments are available).
+This optional file is used to determine policy changes for
+assignments, including the dates at which assignments are available
+and/or no longer available. It maps from the NTIID of an assignment to
+a dictionary giving the beginning and ending dates of availability as
+well as automatic grading information. The information in this file
+replaces the data for the assignments specified within this course,
+(but does not change anything about which assignments are available).
 
 ::
 
    {
-         "tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.asg:QUIZ1_aristotle":
-	         {"available_for_submission_beginning": "2014-01-22T06:00:00Z"}
+    "tag:nextthought.com,2011-10:OU-NAQ-CS1300_Power_and_Elegance_of_Computational_Thinking.naq.asg.assignment:3.3_Exercise_Sound": {
+        "Title": "Exercise: Learning to Make Sound",
+        "auto_grade": {
+            "total_points": 20
+        },
+        "available_for_submission_beginning": "2014-01-13T06:00:00Z",
+        "available_for_submission_ending":    "2014-03-03T05:59:00Z"
+    },
    }
+
+The automatic grading information is being defined on an as-needed
+basis. At this writing, the only supported value is ``total_points``,
+which defines a value to which all the equally-weighted questions will
+be normalized. (This value will be reflected in the ``Grade`` object's
+``AutoGradeMax`` property.) It can be defined individually for each
+assignment; tool support lets you easily normalize all assignments the same.
+
+This file is meant to be automatically generated and then
+human-edited, but merged with additional automatic generated content:
+
+.. command-output:: nti_extract_assessments -h
 
 .. note:: Given that currently content packages are where assignments
 		  are defined, and that there is one content package per
 		  course, and that content packages are not reused across
-		  courses yet, this is actually only implemented for course
+		  courses yet, changing dates is only implemented for course
 		  sections. The primary course uses the dates from the content
 		  package.
 

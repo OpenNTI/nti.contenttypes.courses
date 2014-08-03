@@ -170,9 +170,10 @@
 	<adapter factory="._synchronize._MissingCourseSubInstancesSynchronizer" />
 	<adapter factory="._synchronize._ContentCourseSubInstanceSynchronizer" />
 
-	<!-- Assignment date overrides -->
+	<!-- Assignment date overrides and policies -->
 	<adapter factory=".assignment.EmptyAssignmentDateContext" />
 	<adapter factory=".assignment.CourseSubInstanceAssignmentDateContextFactory" />
+	<adapter factory=".assignment.CourseInstanceAssignmentPoliciesFactory" />
 
 	<!-- dublincore annotations -->
 	<include package="zope.dublincore" />

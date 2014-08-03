@@ -55,6 +55,7 @@ from . import CourseLayerTest
 from nti.externalization.tests import externalizes
 
 from nti.assessment.interfaces import IQAssignmentDateContext
+from nti.assessment.interfaces import IQAssignmentPolicies
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
 class TestFunctionalSynchronize(CourseLayerTest):
@@ -190,6 +191,15 @@ class TestFunctionalSynchronize(CourseLayerTest):
 													"tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.asg:QUIZ1_aristotle",
 													has_entry('available_for_submission_beginning',
 															  datetime.datetime(2014, 1, 22, 6, 0) ) ) ) )
+
+		policies = IQAssignmentPolicies(sec2)
+		assert_that( policies, has_property('_mapping',
+											has_entry(
+												"tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.asg:QUIZ1_aristotle",
+												is_( {'auto_grade': {'total_points': 20}} ) ) ) )
+		assert_that( policies.getPolicyForAssignment("tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.asg:QUIZ1_aristotle"),
+					 is_( {'auto_grade': {'total_points': 20}} ) )
+
 
 		# We should have the catalog functionality now
 

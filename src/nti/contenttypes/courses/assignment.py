@@ -17,6 +17,7 @@ from zope import component
 from .interfaces import ICourseInstance
 from .interfaces import ICourseSubInstance
 from nti.assessment.interfaces import IQAssignmentDateContext
+from nti.assessment.interfaces import IQAssignmentPolicies
 
 from zope.container.contained import Contained
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
@@ -41,6 +42,12 @@ class EmptyAssignmentDateContext(object):
 
 	def of(self, asg):
 		return asg
+
+	def clear(self):
+		pass
+
+	def __setitem__(self, key, valu):
+		pass
 
 @NoPickle
 class _Dates(object):
@@ -83,3 +90,34 @@ class MappingAssignmentDateContext(Contained,
 
 
 CourseSubInstanceAssignmentDateContextFactory = an_factory(MappingAssignmentDateContext)
+
+
+@interface.implementer(IQAssignmentPolicies)
+@component.adapter(ICourseInstance)
+class MappingAssignmentPolicies(Contained,
+								PersistentCreatedAndModifiedTimeObject):
+	"""
+	A persistent mapping of assignment ids to policy information,
+	that is uninterpreted by this module.
+	"""
+
+	_SET_CREATED_MODTIME_ON_INIT = False
+
+	def __init__(self):
+		PersistentCreatedAndModifiedTimeObject.__init__(self)
+		self._mapping = PersistentMapping()
+
+	def clear(self):
+		self._mapping.clear()
+
+	def __setitem__(self, key, value):
+		self._mapping[key] = value
+
+	def getPolicyForAssignment(self, key):
+		return self._mapping.get(key, {})
+
+	def __bool__(self):
+		return bool(self._mapping)
+	__nonzero__ = __bool__
+
+CourseInstanceAssignmentPoliciesFactory = an_factory(MappingAssignmentPolicies)

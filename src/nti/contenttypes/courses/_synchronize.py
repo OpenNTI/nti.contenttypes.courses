@@ -69,7 +69,7 @@ COURSE_OUTLINE_NAME = 'course_outline.xml'
 INSTRUCTOR_INFO_NAME = 'instructor_info.json'
 CATALOG_INFO_NAME = 'course_info.json'
 ROLE_INFO_NAME = 'role_info.json'
-ASSIGNMENT_DATES_NAME = 'assignment_date_overrides.json'
+ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
 SECTION_FOLDER_NAME = 'Sections'
 
 @interface.implementer(IObjectEntrySynchronizer)
@@ -197,12 +197,13 @@ class _ContentCourseSynchronizer(object):
 			# stream storage, we just want an on-the-socket notification.
 			try:
 				ISharingTargetEntityIterable(course.SharingScopes[ES_CREDIT])
-			except:
+			except TypeError:
 				interface.alsoProvides(course.SharingScopes[ES_CREDIT], ISharingTargetEntityIterable)
 		cls.update_vendor_info(course, bucket)
 		cls.update_outline(course, bucket, try_legacy_content_bundle=try_legacy_content_bundle)
 		cls.update_catalog_entry(course, bucket, try_legacy_content_bundle=try_legacy_content_bundle)
 		cls.update_instructor_roles(course, bucket)
+		cls.update_assignment_dates(course, bucket)
 		getattr(course, 'Discussions')
 
 		cls.update_sharing_scopes_friendly_names(course)
@@ -308,6 +309,15 @@ class _ContentCourseSynchronizer(object):
 		else:
 			reset_roles_missing_key(course)
 
+	@classmethod
+	def update_assignment_dates(cls, subcourse, bucket):
+		key = bucket.getChildNamed(ASSIGNMENT_DATES_NAME)
+		if key is not None:
+			fill_asg_from_key(subcourse, key)
+		else:
+			reset_asg_missing_key(subcourse)
+
+
 @component.adapter(ICourseSubInstances, IDelimitedHierarchyBucket)
 class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
 
@@ -348,16 +358,9 @@ class _ContentCourseSubInstanceSynchronizer(object):
 	def synchronize(self, subcourse, bucket):
 		__traceback_info__ = subcourse, bucket
 		_ContentCourseSynchronizer.update_common_info(subcourse, bucket)
-		self.update_assignment_dates(subcourse, bucket)
 
 		notify(CourseInstanceAvailableEvent(subcourse))
 
-	def update_assignment_dates(self, subcourse, bucket):
-		key = bucket.getChildNamed(ASSIGNMENT_DATES_NAME)
-		if key is not None:
-			fill_asg_from_key(subcourse, key)
-		else:
-			reset_asg_missing_key(subcourse)
 
 
 def synchronize_catalog_from_root(catalog_folder, root):
