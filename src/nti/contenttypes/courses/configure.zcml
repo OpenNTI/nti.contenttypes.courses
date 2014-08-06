@@ -97,7 +97,12 @@
 	-->
 	<utility factory=".catalog.GlobalCourseCatalog"
 			 provides=".interfaces.IGlobalCourseCatalog" />
-
+	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
+				for=".interfaces.ICourseInstance
+					 .interfaces.ICourseInstanceAvailableEvent" />
+	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
+				for=".interfaces.ICourseInstance
+					 zope.lifecycleevent.IObjectRemovedEvent" />
 	<!-- By default, courses store their own catalog entries -->
 	<adapter factory=".legacy_catalog.CourseInstanceCatalogLegacyEntryFactory" />
 	<adapter factory=".legacy_catalog.CourseSubInstanceCatalogLegacyEntryFactory" />

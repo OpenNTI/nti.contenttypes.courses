@@ -33,6 +33,7 @@ from hamcrest import has_key
 import datetime
 
 from nti.testing.matchers import verifiably_provides
+from nti.testing.matchers import is_empty
 
 import os.path
 
@@ -219,3 +220,31 @@ class TestFunctionalSynchronize(CourseLayerTest):
 									  'tag:nextthought.com,2011-10:NTI-CourseInfo-Spring2014_Gateway_SubInstances_01'),
 						 has_property('ntiid',
 									  'tag:nextthought.com,2011-10:NTI-CourseInfo-Spring2014_Gateway')) )
+
+	def test_synchronize_clears_caches(self):
+		#User.create_user(self.ds, username='harp4162')
+		root_name ='TestSynchronizeWithSubInstances'
+		absolute_path = os.path.join( os.path.dirname( __file__ ),
+									  root_name )
+		bucket = filesystem.FilesystemBucket(name=root_name)
+		bucket.absolute_path = absolute_path
+
+		folder = catalog.CourseCatalogFolder()
+
+
+		assert_that( list(folder.iterCatalogEntries()),
+					 is_empty() )
+
+		synchronize_catalog_from_root(folder, bucket)
+
+
+		assert_that( list(folder.iterCatalogEntries()),
+					 has_length(3) )
+
+
+		# Now delete the course
+		del folder['Spring2014']['Gateway']
+
+		# and the entries are gone
+		assert_that( list(folder.iterCatalogEntries()),
+					 is_empty() )

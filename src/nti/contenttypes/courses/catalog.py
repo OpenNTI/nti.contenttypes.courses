@@ -343,8 +343,6 @@ class CourseCatalogFolder(_AbstractCourseCatalogMixin,
 
 	@cachedIn('_v_all_my_entries')
 	def _get_all_my_entries(self):
-		# TODO: invalidation?
-		# At least we can do method.invalidate
 		entries = list()
 
 		def _recur(folder):
@@ -370,3 +368,28 @@ class CourseCatalogFolder(_AbstractCourseCatalogMixin,
 					_recur(value)
 		_recur(self)
 		return entries
+
+from nti.dataserver.traversal import find_interface
+
+def _clear_catalog_cache_when_course_updated(course, event):
+	"""
+	Because course instances can be any level of folders deep under a
+	CourseCatalogFolder, when they change (are added or removed), the
+	CCF may not itself be changed and included in the transaction.
+	This in turn means that it may not be invalidated/ghosted, so if
+	its state was already loaded and non-ghost, and its contents
+	cached (because it had been iterated), that cached object may
+	still be used by some processes.
+
+	This subscriber watches for any course change event and clears the catalog
+	cache.
+	"""
+
+	# We don't use a component.adapter decorator because we need to handle
+	# at least CourseInstanceAvailable events as well as Deleted events.
+
+	catalog = find_interface(course, IPersistentCourseCatalog, strict=False)
+	try:
+		catalog._get_all_my_entries.invalidate(catalog)
+	except AttributeError: # pragma: no cover
+		pass
