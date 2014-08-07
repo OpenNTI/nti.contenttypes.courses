@@ -33,6 +33,7 @@ from zope.container.constraints import contains
 from zope.security.interfaces import IPrincipal
 
 from .interfaces import ICourseInstanceEnrollmentRecord
+from .interfaces import ICourseInstanceEnrollmentRecordContainer
 from .interfaces import ICourseEnrollmentManager
 from .interfaces import ICourseEnrollments
 from .interfaces import ICourseInstance
@@ -52,7 +53,7 @@ from zope.cachedescriptors.method import cachedIn
 
 from nti.schema.fieldproperty import FieldProperty
 
-class IDefaultCourseInstanceEnrollmentStorage(IContainer,IContained):
+class IDefaultCourseInstanceEnrollmentStorage(ICourseInstanceEnrollmentRecordContainer,IContained):
 	"""
 	Maps from principal ids to their enrollment record.
 	"""
@@ -61,7 +62,8 @@ class IDefaultCourseInstanceEnrollmentStorage(IContainer,IContained):
 class IDefaultCourseCatalogEnrollmentStorage(IContainer,IContained):
 	"""
 	Maps from principal IDs to a persistent list of their
-	enrollments.
+	enrollments. Intended to be installed on the course catalog that
+	contains the courses referenced.
 	"""
 
 	def enrollments_for_id(principalid, principal):
@@ -630,3 +632,40 @@ def on_course_deletion_unenroll(course, event):
 	# and having a "master" scope in the  parent section,
 	# this could also require us checking through the parents
 	# if it was a sub-instance that got deleted
+
+###
+# Moving enrollments
+###
+
+from zope.copypastemove.interfaces import IObjectMover
+
+def migrate_enrollments_from_course_to_course(source, dest):
+	"""
+	Move all the enrollments from the ``source`` course to the ``dest``
+	course. Sharing will be updated, but no emails will be sent.
+
+	This is safe to run repeatedly. The destination course does not
+	have to be empty of enrollments. However, if a principal from the
+	source is enrolled in the destination course already,
+	*nothing will be changed*: this implies that his record was either
+	already moved and he re-enrolled in the source course, or he already
+	independently enrolled in the destination course.
+	"""
+
+	# All we need to do is use IObjectMover to transport the
+	# EnrollmentRecord objects; they find their course from
+	# where they are located, and the Storage object is a simple
+	# IContainer. The sharing listeners take care of the rest.
+
+	source_enrollments = IDefaultCourseInstanceEnrollmentStorage(source)
+	dest_enrollments = IDefaultCourseInstanceEnrollmentStorage(dest)
+
+	for source_prin_id in list(source_enrollments): # copy, we're mutating
+		if source_prin_id in dest_enrollments:
+			logger.debug("Ignoring dup enrollment for %s", source_prin_id)
+			continue
+
+		source_enrollment = source_enrollments[source_prin_id]
+		mover = IObjectMover(source_enrollment)
+
+		mover.moveTo(dest_enrollments)

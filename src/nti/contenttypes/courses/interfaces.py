@@ -683,6 +683,13 @@ ENROLLMENT_SCOPE_VOCABULARY = SimpleVocabulary(
 				implies=(ES_CREDIT, ES_PUBLIC),
 				implied_by=())])
 
+class ICourseInstanceEnrollmentRecordContainer(IContainer):
+	"""
+	The primary home of the enrollment records for a course.
+
+	This should have the course in its lineage.
+	"""
+
 class ICourseInstanceEnrollmentRecord(ILastModified,
 									  IContained):
 	"""
@@ -692,7 +699,14 @@ class ICourseInstanceEnrollmentRecord(ILastModified,
 	objects are created and destroyed.
 	"""
 
+	containers(ICourseInstanceEnrollmentRecordContainer)
+	__parent__.required = False
+
 	CourseInstance = Object(ICourseInstance,
+							title="The course instance",
+							description="This should also be in the lineage of this object. "
+							"This is to allow ObjectMovedEvents to be able to find both the current "
+							"and previous course, given the current and previous parents",
 							required=False)
 
 	Principal = Object(interface.Interface,

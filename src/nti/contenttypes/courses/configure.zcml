@@ -145,8 +145,9 @@
 	<subscriber handler=".sharing.on_enroll_record_scope_membership" />
 	<subscriber handler=".sharing.on_drop_exit_scope_membership" />
 	<subscriber handler=".sharing.on_modified_update_scope_membership" />
+	<subscriber handler=".sharing.on_moved_between_courses_update_scope_membership" />
 
-	<!-- Weak references -->
+	<!-- weak references -->
 	<adapter factory="nti.intid.wref.ArbitraryOrderableWeakRef"
 			 provides="nti.wref.interfaces.IWeakRef"
 			 for=".interfaces.ICourseInstanceEnrollmentRecord" />

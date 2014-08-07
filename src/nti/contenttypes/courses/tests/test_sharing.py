@@ -23,6 +23,7 @@ from hamcrest import is_in
 from hamcrest import is_not
 from hamcrest import same_instance
 from hamcrest import contains
+from hamcrest import has_length
 
 from nti.testing.matchers import validly_provides
 from nti.testing.matchers import is_empty
@@ -55,11 +56,13 @@ class TestSharing(unittest.TestCase):
 
 from zope import interface
 from zope import component
+from zope.copypastemove import IObjectMover
 from zope.security.interfaces import IPrincipal
 from zope.container.interfaces import IContained
 from zope.annotation.interfaces import IAttributeAnnotatable
 from nti.wref.interfaces import IWeakRef
 from nti.dataserver.interfaces import IUser
+from zope.component import eventtesting
 
 from nti.dataserver.sharing import SharingSourceMixin
 from nti.dataserver import interfaces as nti_interfaces
@@ -113,6 +116,8 @@ class TestFunctionalSharing(CourseLayerTest):
 
 	principal = None
 	course = None
+	course2 = None
+
 	def _shared_setup(self):
 		principal = MockPrincipal()
 		self.ds.root[principal.id] = principal
@@ -124,16 +129,21 @@ class TestFunctionalSharing(CourseLayerTest):
 
 		admin = courses.CourseAdministrativeLevel()
 		self.ds.root['admin'] = admin
-		course = courses.ContentCourseInstance()
-		admin['course'] = course
-		course.SharingScopes.initScopes()
-		bundle = MockContentPackageBundle()
-		# bypass field validation
-		course.__dict__[str('ContentPackageBundle')] = bundle
-		assert_that( course.ContentPackageBundle, is_( same_instance(bundle)))
+
+		for name in 'course', 'course2':
+
+			course = courses.ContentCourseInstance()
+			admin[name] = course
+			course.SharingScopes.initScopes()
+
+			bundle = MockContentPackageBundle()
+			# bypass field validation
+			course.__dict__[str('ContentPackageBundle')] = bundle
+			assert_that( course.ContentPackageBundle, is_( same_instance(bundle)))
 
 		self.principal  = principal
-		self.course = course
+		self.course = admin['course']
+		self.course2 = admin['course2']
 
 	@WithMockDSTrans
 	def test_content_roles(self):
@@ -193,3 +203,75 @@ class TestFunctionalSharing(CourseLayerTest):
 		assert_that( principal, is_not(is_in(credit) ))
 		assert_that( principal, is_not(is_in(degree) ))
 		assert_that( principal, is_not(is_in(ndgree)))
+
+	@WithMockDSTrans
+	def test_change_scope_through_move(self):
+		self._shared_setup()
+
+		principal = self.principal
+		orig_course = self.course
+
+		manager = interfaces.ICourseEnrollmentManager(orig_course)
+		record = manager.enroll(principal, scope=ES_CREDIT_DEGREE)
+
+		public = orig_course.SharingScopes[ES_PUBLIC]
+		credit = orig_course.SharingScopes[ES_CREDIT]
+		degree = orig_course.SharingScopes[ES_CREDIT_DEGREE]
+		ndgree = orig_course.SharingScopes[ES_CREDIT_NONDEGREE]
+
+		assert_that( principal, is_in(public) )
+		assert_that( principal, is_in(credit) )
+		assert_that( principal, is_in(degree) )
+		assert_that( principal, is_not(is_in(ndgree)) )
+
+		new_course = self.course2
+		from ..enrollment import IDefaultCourseInstanceEnrollmentStorage
+
+		mover = IObjectMover(record)
+
+		eventtesting.clearEvents()
+
+		mover.moveTo(IDefaultCourseInstanceEnrollmentStorage(new_course))
+
+		# So he left everything from the old course:
+
+		assert_that( principal, is_not(is_in(public) ))
+		assert_that( principal, is_not(is_in(credit) ))
+		assert_that( principal, is_not(is_in(degree) ))
+		assert_that( principal, is_not(is_in(ndgree)))
+
+		# ...and is in the things from the new course
+
+		public = new_course.SharingScopes[ES_PUBLIC]
+		credit = new_course.SharingScopes[ES_CREDIT]
+		degree = new_course.SharingScopes[ES_CREDIT_DEGREE]
+		ndgree = new_course.SharingScopes[ES_CREDIT_NONDEGREE]
+
+		assert_that( principal, is_in(public) )
+		assert_that( principal, is_in(credit) )
+		assert_that( principal, is_in(degree) )
+		assert_that( principal, is_not(is_in(ndgree)) )
+
+		# Only the desired events fired
+
+		# [<zope.lifecycleevent.ObjectMovedEvent object at 0x1039fbc50>,
+		#  <nti.dataserver.interfaces.StopDynamicMembershipEvent object at 0x1039fb8d0>,
+		#   <nti.dataserver.interfaces.StopFollowingEvent object at 0x103a1b690>,
+		#  <nti.dataserver.interfaces.StopDynamicMembershipEvent object at 0x103a1bd10>,
+		#  <nti.dataserver.interfaces.StopFollowingEvent object at 0x103a1b590>,
+		#  <nti.dataserver.interfaces.StopDynamicMembershipEvent object at 0x103a1bb90>,
+		#  <nti.dataserver.interfaces.StopFollowingEvent object at 0x1049c69d0>,
+		#  <nti.dataserver.interfaces.StartDynamicMembershipEvent object at 0x1044d1050>,
+		# <nti.dataserver.interfaces.EntityFollowingEvent object at 0x1039fb950>,
+		# <nti.dataserver.interfaces.FollowerAddedEvent object at 0x1049d2990>,
+		# <nti.dataserver.interfaces.StartDynamicMembershipEvent object at 0x1021df710>,
+		# <nti.dataserver.interfaces.EntityFollowingEvent object at 0x103673990>,
+		# <nti.dataserver.interfaces.FollowerAddedEvent object at 0x103673950>,
+		# <nti.dataserver.interfaces.StartDynamicMembershipEvent object at 0x103673910>,
+		# <nti.dataserver.interfaces.EntityFollowingEvent object at 0x103673b90>,
+		# <nti.dataserver.interfaces.FollowerAddedEvent object at 0x103673c10>,
+		# <zope.container.contained.ContainerModifiedEvent object at 0x1039fb9d0>,
+		# <zope.container.contained.ContainerModifiedEvent object at 0x1039fba50>]
+		evts = eventtesting.getEvents()
+		# XXX Not a good test
+		assert_that( evts, has_length(18))

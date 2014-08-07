@@ -88,6 +88,10 @@ import functools
 from nti.dataserver.authentication import _dynamic_memberships_that_participate_in_security
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
 from ..interfaces import ES_CREDIT
+from ..interfaces import ES_CREDIT_NONDEGREE
+from ..interfaces import ES_CREDIT_DEGREE
+from ..interfaces import ES_PUBLIC
+from ..interfaces import ICourseEnrollments
 
 @functools.total_ordering
 @interface.implementer(IPrincipal, IWeakRef, IContained, IAttributeAnnotatable)
@@ -110,12 +114,23 @@ class MockPrincipal(SharingSourceMixin, Persistent):
 			return True
 		return False
 
+class MockContentPackage(object):
+	ntiid = "tag:nextthought.com,2011-10:USSC-HTML-Cohen.cohen_v._california."
+
+class MockContentPackageBundle(object):
+
+	@property
+	def ContentPackages(self):
+		return (MockContentPackage(),)
+
 
 class TestFunctionalEnrollment(CourseLayerTest):
 
 	principal = None
 	course = None
 	section = None
+	course2 = None
+
 	def _shared_setup(self):
 		principal = MockPrincipal()
 		self.ds.root[principal.id] = principal
@@ -127,13 +142,24 @@ class TestFunctionalEnrollment(CourseLayerTest):
 
 		admin = courses.CourseAdministrativeLevel()
 		self.ds.root['admin'] = admin
-		course = courses.CourseInstance()
-		admin['course'] = course
+		for name in 'course', 'course2':
 
-		self.section = course.SubInstances['section1'] = courses.ContentCourseSubInstance()
+			course = courses.ContentCourseInstance()
+			admin[name] = course
+			course.SharingScopes.initScopes()
+
+			bundle = MockContentPackageBundle()
+			# bypass field validation
+			course.__dict__[str('ContentPackageBundle')] = bundle
+			assert_that( course.ContentPackageBundle, is_( same_instance(bundle)))
 
 		self.principal  = principal
-		self.course = course
+		self.course = admin['course']
+		self.course2 = admin['course2']
+
+		course = self.course
+		self.section = course.SubInstances['section1'] = courses.ContentCourseSubInstance()
+
 
 	def _do_test_add_drop(self, principal, course,
 						  enroll_scope='Public',
@@ -329,3 +355,94 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		# including un-parenting the record
 		assert_that( record, has_property('__parent__', none() ))
 		assert_that( record, has_property('_ds_intid', none() ))
+
+
+	@WithMockDSTrans
+	def test_migrate_enrolments(self):
+		self._shared_setup()
+
+		principal = self.principal
+		orig_course = self.course
+
+		manager = interfaces.ICourseEnrollmentManager(orig_course)
+		record = manager.enroll(principal, scope=ES_CREDIT_DEGREE)
+
+		public = orig_course.SharingScopes[ES_PUBLIC]
+		credit = orig_course.SharingScopes[ES_CREDIT]
+		degree = orig_course.SharingScopes[ES_CREDIT_DEGREE]
+		ndgree = orig_course.SharingScopes[ES_CREDIT_NONDEGREE]
+
+		assert_that( principal, is_in(public) )
+		assert_that( principal, is_in(credit) )
+		assert_that( principal, is_in(degree) )
+		assert_that( principal, is_not(is_in(ndgree)) )
+
+		new_course = self.course2
+		from ..enrollment import migrate_enrollments_from_course_to_course
+		eventtesting.clearEvents()
+
+		migrate_enrollments_from_course_to_course(orig_course, new_course)
+
+		# So he left everything from the old course:
+
+		assert_that( principal, is_not(is_in(public) ))
+		assert_that( principal, is_not(is_in(credit) ))
+		assert_that( principal, is_not(is_in(degree) ))
+		assert_that( principal, is_not(is_in(ndgree)))
+
+		# ...and is in the things from the new course
+
+		public = new_course.SharingScopes[ES_PUBLIC]
+		credit = new_course.SharingScopes[ES_CREDIT]
+		degree = new_course.SharingScopes[ES_CREDIT_DEGREE]
+		ndgree = new_course.SharingScopes[ES_CREDIT_NONDEGREE]
+
+		assert_that( principal, is_in(public) )
+		assert_that( principal, is_in(credit) )
+		assert_that( principal, is_in(degree) )
+		assert_that( principal, is_not(is_in(ndgree)) )
+
+		# Only the desired events fired
+
+		# [<zope.lifecycleevent.ObjectMovedEvent object at 0x1039fbc50>,
+		#  <nti.dataserver.interfaces.StopDynamicMembershipEvent object at 0x1039fb8d0>,
+		#   <nti.dataserver.interfaces.StopFollowingEvent object at 0x103a1b690>,
+		#  <nti.dataserver.interfaces.StopDynamicMembershipEvent object at 0x103a1bd10>,
+		#  <nti.dataserver.interfaces.StopFollowingEvent object at 0x103a1b590>,
+		#  <nti.dataserver.interfaces.StopDynamicMembershipEvent object at 0x103a1bb90>,
+		#  <nti.dataserver.interfaces.StopFollowingEvent object at 0x1049c69d0>,
+		#  <nti.dataserver.interfaces.StartDynamicMembershipEvent object at 0x1044d1050>,
+		# <nti.dataserver.interfaces.EntityFollowingEvent object at 0x1039fb950>,
+		# <nti.dataserver.interfaces.FollowerAddedEvent object at 0x1049d2990>,
+		# <nti.dataserver.interfaces.StartDynamicMembershipEvent object at 0x1021df710>,
+		# <nti.dataserver.interfaces.EntityFollowingEvent object at 0x103673990>,
+		# <nti.dataserver.interfaces.FollowerAddedEvent object at 0x103673950>,
+		# <nti.dataserver.interfaces.StartDynamicMembershipEvent object at 0x103673910>,
+		# <nti.dataserver.interfaces.EntityFollowingEvent object at 0x103673b90>,
+		# <nti.dataserver.interfaces.FollowerAddedEvent object at 0x103673c10>,
+		# <zope.container.contained.ContainerModifiedEvent object at 0x1039fb9d0>,
+		# <zope.container.contained.ContainerModifiedEvent object at 0x1039fba50>]
+		evts = eventtesting.getEvents()
+		# XXX Not a good test
+		assert_that( evts, has_length(18))
+
+		assert_that(ICourseEnrollments(orig_course).count_enrollments(),
+					is_(0))
+		assert_that(ICourseEnrollments(new_course).count_enrollments(),
+					is_(1))
+
+		# If we enroll in the original course again:
+		record2 = manager.enroll(principal, scope=ES_CREDIT_DEGREE)
+		assert_that( record2, is_not(same_instance(record)))
+		eventtesting.clearEvents()
+
+		# trying to migrate does nothing
+		migrate_enrollments_from_course_to_course(orig_course, new_course)
+
+		evts = eventtesting.getEvents()
+		assert_that( evts, has_length(0))
+
+		assert_that(ICourseEnrollments(orig_course).count_enrollments(),
+					is_(1))
+		assert_that(ICourseEnrollments(new_course).count_enrollments(),
+					is_(1))

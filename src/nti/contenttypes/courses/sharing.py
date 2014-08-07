@@ -178,6 +178,7 @@ class CourseSubInstanceSharingScopes(CourseInstanceSharingScopes):
 
 from .interfaces import ICourseInstanceEnrollmentRecord
 from zope.lifecycleevent import IObjectModifiedEvent
+from zope.lifecycleevent import IObjectMovedEvent
 # We may have intid-weak references to these things,
 # so we need to catch them on the IntIdRemoved event
 # for dependable ordering
@@ -185,11 +186,12 @@ from zope.intid.interfaces import IIntIdAddedEvent
 from zope.intid.interfaces import IIntIdRemovedEvent
 
 
-def _adjust_scope_membership(record, join, follow,
+def _adjust_scope_membership(record, course,
+							 join, follow,
 							 ignored_exceptions=(),
 							 currently_in=(),
 							 relevant_scopes=None):
-	course = record.CourseInstance
+	course = course or record.CourseInstance
 	principal = record.Principal
 	join = getattr(principal, join)
 	follow = getattr(principal, follow)
@@ -236,31 +238,31 @@ def _content_roles_for_course_instance(course):
 
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IIntIdAddedEvent)
-def on_enroll_record_scope_membership(record, event):
+def on_enroll_record_scope_membership(record, event, course=None):
 	"""
 	When you enroll in a course, record your membership in the
 	proper scopes, including content access.
 	"""
-	_adjust_scope_membership(record,
+	_adjust_scope_membership(record, course,
 							 'record_dynamic_membership',
 							 'follow' )
 
 	# Add the content roles
 	membership = component.getAdapter( record.Principal, IMutableGroupMember, CONTENT_ROLE_PREFIX)
 	groups = list(membership.groups)
-	groups.extend(_content_roles_for_course_instance(record.CourseInstance))
+	groups.extend(_content_roles_for_course_instance(course or record.CourseInstance))
 	membership.setGroups(groups)
 
 
 
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IIntIdRemovedEvent)
-def on_drop_exit_scope_membership(record, event):
+def on_drop_exit_scope_membership(record, event, course=None):
 	"""
 	When you drop a course, leave the scopes you were in, including
 	content access.
 	"""
-	_adjust_scope_membership( record,
+	_adjust_scope_membership( record, course,
 							  'record_no_longer_dynamic_member',
 							  'stop_following',
 							  # Depending on the order, we may have already
@@ -272,7 +274,7 @@ def on_drop_exit_scope_membership(record, event):
 	# Remove the content roles
 	membership = component.getAdapter( record.Principal, IMutableGroupMember, CONTENT_ROLE_PREFIX)
 	groups = set(membership.groups)
-	groups = groups - set(_content_roles_for_course_instance(record.CourseInstance))
+	groups = groups - set(_content_roles_for_course_instance(course or record.CourseInstance))
 	membership.setGroups(groups)
 
 
@@ -303,14 +305,39 @@ def on_modified_update_scope_membership(record, event):
 				drop_from.append(scope)
 
 	# First, the drops
-	_adjust_scope_membership( record,
+	_adjust_scope_membership( record, None,
 							  'record_no_longer_dynamic_member',
 							  'stop_following',
 							  relevant_scopes=drop_from)
 
 	# Now any adds
-	_adjust_scope_membership( record,
+	_adjust_scope_membership( record, None,
 							  'record_dynamic_membership',
 							  'follow',
 							  currently_in=currently_in,
 							  relevant_scopes=scopes_i_should_be_in)
+
+from nti.dataserver.traversal import find_interface
+from .interfaces import ICourseInstance
+
+@component.adapter(ICourseInstanceEnrollmentRecord, IObjectMovedEvent)
+def on_moved_between_courses_update_scope_membership(record, event):
+	"""
+	We rely on the CourseInstance being in the lineage of the record
+	so that we can find the instance that was \"dropped\" by traversing
+	through the old parents.
+	"""
+
+	# This gets called when we are added or removed, because those
+	# are both kinds of Moved events. But we only want this for a true
+	# move
+	if event.oldParent is None or event.newParent is None:
+		return
+
+	old_course = find_interface(event.oldParent, ICourseInstance)
+	new_course = find_interface(event.newParent, ICourseInstance)
+
+	assert new_course is record.CourseInstance
+
+	on_drop_exit_scope_membership(record, event, old_course)
+	on_enroll_record_scope_membership(record, event, new_course)
