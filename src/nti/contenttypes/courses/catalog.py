@@ -159,11 +159,11 @@ class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
 		"""
 		key = entry.ntiid or entry.__name__
 		if not key:
-			raise ValueError(entry)
+			raise ValueError("The entry has no NTIID or name", entry)
 		if CheckingLastModifiedBTreeContainer.__contains__(self, key):
 			if entry.__parent__ is self:
 				return
-			raise ValueError("Adding duplicate entry %s", entry)
+			raise ValueError("Adding duplicate entry", entry)
 
 		if event:
 			self[key] = entry
@@ -184,6 +184,9 @@ class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
 			the object removed event.
 		"""
 		key = entry.ntiid or entry.__name__
+		if not key:
+			raise ValueError("The entry has no NTIID or name", entry)
+
 		__traceback_info__ = key, entry
 		if not event:
 			l = self._BTreeContainer__len
