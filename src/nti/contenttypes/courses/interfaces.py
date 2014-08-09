@@ -259,8 +259,10 @@ class ICourseInstanceSharingScopes(IContainer):
 ###
 
 from nti.dataserver.contenttypes.forums.interfaces import ICommunityBoard
+from nti.dataserver.contenttypes.forums.interfaces import IUseOIDForNTIID
 
-class ICourseInstanceBoard(ICommunityBoard):
+class ICourseInstanceBoard(IUseOIDForNTIID,
+						   ICommunityBoard):
 	"""
 	Specialization of boards for courses.
 

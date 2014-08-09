@@ -30,7 +30,10 @@ class CourseInstanceBoard(CommunityBoard):
 	The board for a course.
 	"""
 
-	mime_type = mimeType = 'application/vnd.nextthought.courses.courseinstanceboard'
+	# The iPad isn't ready to have this appear externally as something different
+	#mime_type = mimeType = 'application/vnd.nextthought.courses.courseinstanceboard'
+
+	__external_class_name__ = 'CommunityBoard'
 
 	# Override things related to ntiids.
 	# These don't have global names, so they must be referenced
