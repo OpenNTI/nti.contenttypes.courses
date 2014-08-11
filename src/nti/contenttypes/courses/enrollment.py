@@ -650,6 +650,9 @@ def migrate_enrollments_from_course_to_course(source, dest):
 	*nothing will be changed*: this implies that his record was either
 	already moved and he re-enrolled in the source course, or he already
 	independently enrolled in the destination course.
+
+	:return: A value that can be used like a boolean to say if
+		any enrollments migrated.
 	"""
 
 	# All we need to do is use IObjectMover to transport the
@@ -660,6 +663,7 @@ def migrate_enrollments_from_course_to_course(source, dest):
 	source_enrollments = IDefaultCourseInstanceEnrollmentStorage(source)
 	dest_enrollments = IDefaultCourseInstanceEnrollmentStorage(dest)
 
+	count = 0
 	for source_prin_id in list(source_enrollments): # copy, we're mutating
 		if source_prin_id in dest_enrollments:
 			logger.debug("Ignoring dup enrollment for %s", source_prin_id)
@@ -669,3 +673,6 @@ def migrate_enrollments_from_course_to_course(source, dest):
 		mover = IObjectMover(source_enrollment)
 
 		mover.moveTo(dest_enrollments)
+		count += 1
+
+	return count
