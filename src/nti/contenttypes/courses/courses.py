@@ -73,10 +73,6 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		"""
 		A lazy helper to create this object's Outline.
 		"""
-		self._p_activate()
-		if 'Outline' in self:
-			del self['Outline'] 
-
 		# As per Discussions
 		self._p_changed = True
 		outline = PersistentCourseOutline()
