@@ -151,7 +151,10 @@ def fill_outline_from_key(outline, key, xml_parent_name=None):
 
 	node = key.readContentsAsETree()
 	if xml_parent_name:
-		node = next(node.iterchildren(tag=xml_parent_name))
+		try:
+			node = next(node.iterchildren(tag=xml_parent_name))
+		except StopIteration:
+			raise ValueError("No outline child in key", key, xml_parent_name)
 	fill_outline_from_node( outline, node )
 
 	outline.lastModified = key.lastModified

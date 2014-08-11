@@ -90,3 +90,22 @@ class TestOutlineParser(CourseLayerTest):
 
 		fill_outline_from_key(outline, key)
 		assert_that( outline, has_length(6) )
+
+	def test_parse_empty(self):
+		class Key(object):
+			lastModified = 99999999
+			def readContentsAsETree(self):
+				return self
+			def iterchildren(self, tag=''):
+				return iter(())
+
+		outline = CourseOutline()
+		key = Key()
+		try:
+			fill_outline_from_key(outline, key, xml_parent_name='foo')
+			assert False
+		except ValueError as e:
+			assert_that( e.args,
+						 is_(('No outline child in key',
+							  key,
+							  'foo')))
