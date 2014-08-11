@@ -14,6 +14,7 @@ logger = __import__('logging').getLogger(__name__)
 #disable: accessing protected members, too many methods
 #pylint: disable=W0212,R0904
 
+from zope import interface
 
 from hamcrest import assert_that
 from hamcrest import is_
@@ -45,6 +46,7 @@ from ..interfaces import ICourseCatalogEntry
 from ..interfaces import ICourseInstance
 from ..interfaces import IEnrollmentMappedCourseInstance
 from ..interfaces import ES_CREDIT
+from ..interfaces import INonPublicCourseInstance
 
 from nti.contentlibrary import filesystem
 from nti.contentlibrary.library import EmptyLibrary
@@ -59,6 +61,15 @@ from nti.assessment.interfaces import IQAssignmentDateContext
 from nti.assessment.interfaces import IQAssignmentPolicies
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
+
+from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
+from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
+from nti.dataserver.authorization import ACT_READ
+from nti.dataserver.authorization import ACT_CREATE
+
+from nti.dataserver.tests.test_authorization_acl import permits
+from nti.dataserver.tests.test_authorization_acl import denies
+
 class TestFunctionalSynchronize(CourseLayerTest):
 
 	def setUp(self):
@@ -66,12 +77,6 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		component.getGlobalSiteManager().registerUtility(self.library, IContentPackageLibrary)
 		self.library.syncContentPackages()
 
-	def tearDown(self):
-		component.getGlobalSiteManager().unregisterUtility(self.library, IContentPackageLibrary)
-
-	def test_synchronize_with_sub_instances(self):
-
-		#User.create_user(self.ds, username='harp4162')
 		root_name ='TestSynchronizeWithSubInstances'
 		absolute_path = os.path.join( os.path.dirname( __file__ ),
 									  root_name )
@@ -80,6 +85,15 @@ class TestFunctionalSynchronize(CourseLayerTest):
 
 		folder = catalog.CourseCatalogFolder()
 
+		self.folder = folder
+		self.bucket = bucket
+
+	def tearDown(self):
+		component.getGlobalSiteManager().unregisterUtility(self.library, IContentPackageLibrary)
+
+	def test_synchronize_with_sub_instances(self):
+		bucket = self.bucket
+		folder = self.folder
 
 		synchronize_catalog_from_root(folder, bucket)
 
@@ -223,14 +237,8 @@ class TestFunctionalSynchronize(CourseLayerTest):
 
 	def test_synchronize_clears_caches(self):
 		#User.create_user(self.ds, username='harp4162')
-		root_name ='TestSynchronizeWithSubInstances'
-		absolute_path = os.path.join( os.path.dirname( __file__ ),
-									  root_name )
-		bucket = filesystem.FilesystemBucket(name=root_name)
-		bucket.absolute_path = absolute_path
-
-		folder = catalog.CourseCatalogFolder()
-
+		bucket = self.bucket
+		folder = self.folder
 
 		assert_that( list(folder.iterCatalogEntries()),
 					 is_empty() )
@@ -248,3 +256,38 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		# and the entries are gone
 		assert_that( list(folder.iterCatalogEntries()),
 					 is_empty() )
+
+	def test_non_public_parent_course_doesnt_hide_child_section(self):
+		bucket = self.bucket
+		folder = self.folder
+
+		synchronize_catalog_from_root(folder, bucket)
+
+		# Now check that we get the structure we expect
+		spring = folder['Spring2014']
+
+		gateway = spring['Gateway']
+
+		interface.alsoProvides(gateway, INonPublicCourseInstance)
+		cat = ICourseCatalogEntry(gateway)
+
+		sec1 = gateway.SubInstances['01']
+		sec1_cat = ICourseCatalogEntry(sec1)
+
+
+		assert_that( sec1_cat, permits(AUTHENTICATED_GROUP_NAME,
+									   ACT_READ))
+		assert_that( sec1_cat, permits(AUTHENTICATED_GROUP_NAME,
+									   ACT_CREATE))
+		# and as joint, just because
+		assert_that( sec1_cat, permits([EVERYONE_GROUP_NAME,AUTHENTICATED_GROUP_NAME],
+									   ACT_READ))
+
+		# But the CCE for the course is not public
+		assert_that( cat, denies(AUTHENTICATED_GROUP_NAME,
+									   ACT_READ))
+		assert_that( cat, denies(AUTHENTICATED_GROUP_NAME,
+									   ACT_CREATE))
+		# and as joint, just because
+		assert_that( cat, denies([EVERYONE_GROUP_NAME,AUTHENTICATED_GROUP_NAME],
+									   ACT_READ))

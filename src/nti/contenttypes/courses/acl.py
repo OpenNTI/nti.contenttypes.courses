@@ -95,7 +95,20 @@ class CourseCatalogEntryACLProvider(object):
 	@Lazy
 	def __acl__(self):
 		cce = self.context
+		# catalog entries can be non-public children of public courses,
+		# or public children of non-public courses.
 		non_public = find_interface(cce, INonPublicCourseInstance, strict=False)
+
+		if non_public:
+			# Ok, was that us, or are we not non-public and our direct parent
+			# is also not non-public?
+			if INonPublicCourseInstance.providedBy(self.context) or INonPublicCourseInstance.providedBy(self.__parent__):
+				non_public = True
+			else:
+				# We don't directly provide it, neither does our parent, so
+				# we actually want to be public and not inherit this.
+				non_public = False
+
 		if non_public:
 			# Although it might be be nice to inherit from the non-public
 			# course in our lineage, we actually need to be a bit stricter
@@ -111,6 +124,12 @@ class CourseCatalogEntryACLProvider(object):
 				acl.append(
 					# Nobody can 'create' (enroll)
 					# Nobody else can view it either
+					ace_denying( IPrincipal(AUTHENTICATED_GROUP_NAME),
+								 (ACT_CREATE, ACT_READ),
+								 CourseCatalogEntryACLProvider ),
+				)
+				acl.append(
+					# use both everyone and authenticated for belt-and-suspenders
 					ace_denying( IPrincipal(EVERYONE_GROUP_NAME),
 								 (ACT_CREATE, ACT_READ),
 								 CourseCatalogEntryACLProvider ),
