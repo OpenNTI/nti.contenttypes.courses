@@ -50,6 +50,8 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		# but for nti.app.products.courseware ACL support
 		# (when these are not children of a course) it's convenient
 		interface.alsoProvides(catalog_entry, INonPublicCourseInstance)
+	elif INonPublicCourseInstance.providedBy(catalog_entry):
+		interface.noLongerProvides(catalog_entry, INonPublicCourseInstance)
 
 	for field, key in (('Description', 'description'),
 					   ('Title', 'title'),

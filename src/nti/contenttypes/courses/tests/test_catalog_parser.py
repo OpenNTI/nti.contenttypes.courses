@@ -33,8 +33,10 @@ import os.path
 from nti.testing.matchers import verifiably_provides
 
 from .._catalog_entry_parser import fill_entry_from_legacy_key
+from .._catalog_entry_parser import fill_entry_from_legacy_json
 from ..legacy_catalog import PersistentCourseCatalogLegacyEntry as CourseCatalogLegacyEntry
 from ..legacy_catalog import ICourseCatalogLegacyEntry
+from ..interfaces import INonPublicCourseInstance
 
 from nti.contentlibrary.filesystem import FilesystemKey
 
@@ -42,7 +44,7 @@ from . import CourseLayerTest
 
 class TestCatalogParser(CourseLayerTest):
 
-	def test_trivial_parse(self):
+	def setUp(self):
 		path = os.path.join( os.path.dirname(__file__),
 							 'TestSynchronizeWithSubInstances',
 							 'Spring2014',
@@ -50,16 +52,46 @@ class TestCatalogParser(CourseLayerTest):
 							 'course_info.json')
 		key = FilesystemKey()
 		key.absolute_path = path
+		self.key = key
 
-		outline = CourseCatalogLegacyEntry()
-		fill_entry_from_legacy_key(outline, key)
+	def test_trivial_parse(self):
+		key = self.key
 
-		assert_that( outline,
+		entry = CourseCatalogLegacyEntry()
+		fill_entry_from_legacy_key(entry, key)
+
+		assert_that( entry,
 					 has_properties( 'ProviderUniqueID', 'CLC 3403',
 									 'Title', 'Law and Justice') )
-		assert_that(outline, verifiably_provides(ICourseCatalogLegacyEntry))
+		assert_that(entry, verifiably_provides(ICourseCatalogLegacyEntry))
 
-		fill_entry_from_legacy_key(outline, key)
-		assert_that( outline,
+		fill_entry_from_legacy_key(entry, key)
+		assert_that( entry,
 					 has_properties( 'ProviderUniqueID', 'CLC 3403',
 									 'Title', 'Law and Justice') )
+
+	def test_toggle_non_public(self):
+		key = self.key
+
+		entry = CourseCatalogLegacyEntry()
+		fill_entry_from_legacy_key(entry, key)
+
+		json = key.readContentsAsJson()
+
+		json['is_non_public'] = True
+		fill_entry_from_legacy_json(entry, json)
+		assert_that( entry, verifiably_provides(INonPublicCourseInstance))
+
+		json['is_non_public'] = False
+		fill_entry_from_legacy_json(entry, json)
+		assert_that( entry, does_not(verifiably_provides(INonPublicCourseInstance)))
+
+		# Back to true
+		json['is_non_public'] = True
+		fill_entry_from_legacy_json(entry, json)
+		assert_that( entry, verifiably_provides(INonPublicCourseInstance))
+
+		# Now simply missing
+		del json['is_non_public']
+		fill_entry_from_legacy_json(entry, json)
+		assert_that( entry, does_not(verifiably_provides(INonPublicCourseInstance)))

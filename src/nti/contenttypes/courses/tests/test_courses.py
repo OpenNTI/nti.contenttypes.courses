@@ -72,8 +72,8 @@ class TestCourseInstance(CourseLayerTest):
 					 is_(ntiid))
 		assert_that( inst,
 					 externalizes(has_entries('Class', 'CourseInstance',
-											  'Discussions', has_entries('Class', 'CourseInstanceBoard',
-																		 'MimeType', 'application/vnd.nextthought.courses.courseinstanceboard',
+											  'Discussions', has_entries('Class', 'CommunityBoard', # Reall course instance board
+																		 'MimeType', 'application/vnd.nextthought.forums.communityboard',
 																		 'title', 'Discussions',
 																		 'Creator', ntiid,
 																	 ),
