@@ -369,7 +369,8 @@ documentation for what keys might be used.
 
     {
         "OU": {
-            {"IMS": {"sourcedid": 12345, "source": SMS}},
+            {"IMS": {"sourcedid": ["A String", "Or a list of strings"]
+					"source":     SMS}},
             "CRN": "ABCD",
             "Term": 10
         },
