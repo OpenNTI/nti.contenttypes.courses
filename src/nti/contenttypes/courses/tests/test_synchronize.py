@@ -102,7 +102,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		gateway = spring['Gateway']
 
 		assert_that( gateway, verifiably_provides(IEnrollmentMappedCourseInstance) )
-		assert_that( gateway, externalizes() )
+		assert_that( gateway, externalizes())
 
 		assert_that( gateway.Outline, has_length(6) )
 
@@ -174,6 +174,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		assert_that( sec1_cat, has_property( 'links',
 											 contains(has_property('target', sec1))))
 
+		gateway.SharingScopes['Public']._v_ntiid = 'gateway-public'
 		sec1.SharingScopes['Public']._v_ntiid = 'section1-public'
 		sec1.SharingScopes['ForCredit']._v_ntiid = 'section1-forcredit'
 		assert_that( sec1,
@@ -181,15 +182,34 @@ class TestFunctionalSynchronize(CourseLayerTest):
 						 'Class', 'CourseInstance' ) ) )
 
 		from nti.externalization.externalization import to_external_object
+		gateway_ext = to_external_object(gateway)
 		sec1_ext = to_external_object(sec1)
 		from ..decorators import _SharingScopesAndDiscussionDecorator
 		dec = _SharingScopesAndDiscussionDecorator(sec1, None)
 		dec._is_authenticated = False
 		dec._do_decorate_external(sec1, sec1_ext)
+		dec._do_decorate_external(gateway, gateway_ext)
+		assert_that( gateway_ext, has_entry('LegacyScopes',
+											has_entries('public', gateway.SharingScopes['Public'].NTIID,
+														'restricted', gateway.SharingScopes['ForCredit'].NTIID)) )
 		assert_that( sec1_ext,
 					 has_entries(
-						 'LegacyScopes', has_entries('public', sec1.SharingScopes['Public'].NTIID,
-													 'restricted', sec1.SharingScopes['ForCredit'].NTIID)) )
+						 'LegacyScopes', has_entries(
+							 # public initially copied from the parent
+							 'public', gateway.SharingScopes['Public'].NTIID,
+							 'restricted', sec1.SharingScopes['ForCredit'].NTIID)) )
+
+		# although if we make the parent non-public, we go back to ourself
+		interface.alsoProvides(gateway, INonPublicCourseInstance)
+		sec1_ext = to_external_object(sec1)
+		dec._do_decorate_external(sec1, sec1_ext)
+		assert_that( sec1_ext,
+					 has_entries(
+						 'LegacyScopes', has_entries(
+							 'public', sec1.SharingScopes['Public'].NTIID,
+							 'restricted', sec1.SharingScopes['ForCredit'].NTIID)) )
+		interface.noLongerProvides(gateway, INonPublicCourseInstance)
+
 
 		assert_that( sec1_cat,
 					 externalizes( has_key('PlatformPresentationResources')))

@@ -16,12 +16,16 @@ from zope import interface
 
 from urlparse import urljoin
 
-
+from nti.dataserver.traversal import find_interface
 from nti.dataserver.interfaces import IEntityContainer
 from nti.externalization.interfaces import IExternalObjectDecorator
+
 from .interfaces import ICourseInstance
 from .interfaces import ICourseSubInstance
 from .interfaces import ICourseCatalogEntry
+from .interfaces import INonPublicCourseInstance
+from .interfaces import ES_PUBLIC
+from .interfaces import ES_CREDIT
 
 from nti.externalization.externalization import to_external_object
 from nti.externalization.singleton import SingletonDecorator
@@ -40,7 +44,8 @@ CLASS = StandardExternalFields.CLASS
 class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 	def _do_decorate_external(self, context, result):
-		if ICourseSubInstance.providedBy(context):
+		is_section = ICourseSubInstance.providedBy(context)
+		if is_section:
 			# conflated, yes, but simpler
 			parent = context.__parent__.__parent__
 			if parent is not None:
@@ -73,12 +78,27 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 		# Legacy
 		if 'LegacyScopes' not in result:
 			ls = result['LegacyScopes'] = {}
-			# You get public and restricted regardless of whether
+			# Historically, you get public and restricted regardless of whether
 			# you were enrolled in them...
-			if 'Public' in scopes:
-				ls['public'] = scopes['Public'].NTIID
-			if 'ForCredit' in scopes:
-				ls['restricted'] = scopes['ForCredit'].NTIID
+			# Because we're talking specifically to legacy clients, we need to give them
+			# something that makes sense in their flat view of the world; therefore,
+			# if we're actually in a subinstance, we want public sharing to be TRULY
+			# public, across everyone that might be enrolled in all sections. The exception
+			# is if the parent course is non-open-enrollable (e.g., closed, or not being used
+			# except for administration---one scenario had two sections that opened at different
+			# dates); in that case, we want to use the parent if we can get it.
+			public = None
+			if (is_section
+				and find_interface(context.__parent__, INonPublicCourseInstance, strict=False) is None
+				and 'public' in result.get('ParentLegacyScopes', ()) ):
+				public = result['ParentLegacyScopes']['public']
+			elif ES_PUBLIC in scopes:
+				public = scopes[ES_PUBLIC].NTIID
+
+			ls['public'] = public
+
+			if ES_CREDIT in scopes:
+				ls['restricted'] = scopes[ES_CREDIT].NTIID
 
 
 @interface.implementer(IExternalObjectDecorator)
