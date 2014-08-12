@@ -259,6 +259,7 @@ class ICourseInstanceSharingScopes(IContainer):
 ###
 
 from nti.dataserver.contenttypes.forums.interfaces import ICommunityBoard
+from nti.dataserver.contenttypes.forums.interfaces import ICommunityForum
 from nti.dataserver.contenttypes.forums.interfaces import IUseOIDForNTIID
 
 class ICourseInstanceBoard(IUseOIDForNTIID,
@@ -273,6 +274,22 @@ class ICourseInstanceBoard(IUseOIDForNTIID,
 	"""
 	containers(str('.ICourseInstance'))
 
+class ICourseInstanceForum(ICommunityForum):
+	"""
+	A forum associated with a course board.
+	"""
+	# we don't put a containers restriction on this,
+	# we expect some legacy implementations that aren't actually
+	# contained in course boards
+
+class ICourseInstanceScopedForum(ICourseInstanceForum):
+	"""
+	A forum associated with a course, intended to be viewable
+	only by a certain enrollment scope within that course.
+	"""
+
+	SharingScopeName = interface.Attribute("an optional field that should match the name of a sharing scope;"
+										   "If not found also check the tagged value on this attribute")
 
 ###
 # Course instances
@@ -815,3 +832,23 @@ class ICourseInstanceAvailableEvent(IObjectEvent):
 @interface.implementer(ICourseInstanceAvailableEvent)
 class CourseInstanceAvailableEvent(ObjectEvent):
 	pass
+
+
+#### Back to discussions
+
+class ICourseInstancePublicScopedForum(ICourseInstanceScopedForum):
+
+	SharingScopeName = ValidTextLine(description="Should be the same as ES_PUBLIC",
+									 required=False,
+									 default=ES_PUBLIC)
+	SharingScopeName.setTaggedValue('value', ES_PUBLIC)
+
+class ICourseInstanceForCreditScopedForum(ICourseInstanceScopedForum):
+	"""
+	A forum intended to be visible to those enrolled for credit.
+	"""
+
+	SharingScopeName = ValidTextLine(description="Should be the same as ES_CREDIT",
+									 required=False,
+									 default=ES_CREDIT)
+	SharingScopeName.setTaggedValue('value', ES_CREDIT)

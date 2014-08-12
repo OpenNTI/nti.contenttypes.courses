@@ -26,6 +26,7 @@ from .interfaces import ICourseCatalogEntry
 from .interfaces import INonPublicCourseInstance
 from .interfaces import ES_PUBLIC
 from .interfaces import ES_CREDIT
+from .interfaces import ICourseInstanceScopedForum
 
 from nti.externalization.externalization import to_external_object
 from nti.externalization.singleton import SingletonDecorator
@@ -169,3 +170,25 @@ class _LegacyCCEFieldDecorator(object):
 					result['CourseNTIID'] = course.ntiid
 				except AttributeError:
 					result['CourseNTIID'] = to_external_ntiid_oid(course)
+
+@interface.implementer(IExternalObjectDecorator)
+@component.adapter(ICourseInstanceScopedForum, interface.Interface)
+class _SharedScopesForumDecorator(AbstractAuthenticatedRequestAwareDecorator):
+	"""
+	Puts the type of forum into the discussion.
+	"""
+
+	def _do_decorate_external(self, context, result):
+		# Allow for native externaliazation, and copy to AutoTags;
+		# this will assist with class evolutaion...AutoTags is visible
+		# before people update their models
+		scope_name = result.get('SharingScopeName')
+		if not scope_name:
+			scope_name = getattr(context, 'SharingScopeName', None)
+		if not scope_name:
+			# ok, is it on the tagged value?
+			scope_name = interface.providedBy(context).get('SharingScopeName').queryTaggedValue('value')
+
+		if scope_name:
+			result.setdefault('AutoTags', []).append('SharingScopeName=' + scope_name)
+			result['SharingScopeName'] = scope_name

@@ -53,6 +53,8 @@
 				provides="nti.externalization.interfaces.IExternalObjectDecorator" />
 	<subscriber factory=".decorators._LegacyCCEFieldDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator" />
+	<subscriber factory=".decorators._SharedScopesForumDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator" />
 
 	<!-- Events -->
 	<subscriber handler=".subscribers.install_site_course_catalog" />
