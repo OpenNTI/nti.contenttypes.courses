@@ -401,6 +401,33 @@ EnrollmentMap
 	.. danger:: This mapping **SHOULD NOT** change after enrollment has
 				 started. No attempt is made to adjust enrollments in
 				 that case.
+AutoForums
+	A dictionary, valid at any level, containing information
+	pertaining to how discussion forums should automatically be
+	created. This is optional, with defaults in code, and valid at all
+	levels. Most of these cannot be usefully changed after forums have
+	been automatically created for the first time.
+
+	* ``HasOpenDiscussions``, ``HasInClassDiscussions``,
+	  ``HasOpenAnnouncements``, ``HasInClassAnnouncements``: All of
+	  these are booleans (defaulting to true) that determine whether
+	  the corresponding forum is automatically created when a course
+	  discussion is added. In the case of discussions, if the value is
+	  false, then no discussion will be put in that forum; if you
+	  change that value after the course is running, future
+	  discussions will stop being put there, even if the forum already
+	  exists.
+
+	* ``OpenDiscussionsDisplayName``,
+	  ``InClassDiscussionsDisplayName``,
+	  ``OpenAnnouncementsDisplayName``,
+	  ``InClassAnnouncementsDisplayName``: All of these are strings
+	  that, if set, will override the default display name for these
+	  items the first time the forum is created; after that, you must
+	  use the API or GUI to change them.
+
+
+
 
 
 ``assignment_policies.json`` (optional)
