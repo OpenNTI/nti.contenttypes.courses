@@ -427,9 +427,6 @@ AutoForums
 	  use the API or GUI to change them.
 
 
-
-
-
 ``assignment_policies.json`` (optional)
 ---------------------------------------------
 
@@ -437,7 +434,7 @@ This optional file is used to determine policy changes for
 assignments, including the dates at which assignments are available
 and/or no longer available. It maps from the NTIID of an assignment to
 a dictionary giving the beginning and ending dates of availability as
-well as automatic grading information. The information in this file
+well as automatic grading and other information. The information in this file
 replaces the data for the assignments specified within this course,
 (but does not change anything about which assignments are available).
 
@@ -461,6 +458,11 @@ be normalized. (This value will be reflected in the ``Grade`` object's
 ``AutoGradeMax`` property.) It can be defined individually for each
 assignment; tool support lets you easily normalize all assignments the same.
 
+The other known key (defined by
+:py:mod:`nti.app.assessment.assignment_filters`) is ``excluded``,
+which, if given, tells whether the assignment should not be visible in
+this course (neither to students nor the instructor).
+
 This file is meant to be automatically generated and then
 human-edited, but merged with additional automatic generated content:
 
@@ -471,7 +473,8 @@ human-edited, but merged with additional automatic generated content:
 		  course, and that content packages are not reused across
 		  courses yet, changing dates is only implemented for course
 		  sections. The primary course uses the dates from the content
-		  package.
+		  package. The primary course can, however, use the other
+		  policy information.
 
 ``presentation-assets/`` (optional)
 -----------------------------------
