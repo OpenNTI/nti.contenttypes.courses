@@ -27,6 +27,27 @@ from nti.externalization.persistence import NoPickle
 
 from zope.annotation.factory import factory as an_factory
 
+@interface.implementer(IQAssignmentDateContext)
+class EmptyAssignmentDateContext(object):
+	"""
+	Used when there is no context to adjust the dates.
+
+	Not registered, but useful for testing.
+	"""
+
+	def __init__(self, context):
+		pass
+
+	def of(self, asg):
+		return asg
+
+	def clear(self):
+		pass
+
+	def __setitem__(self, key, valu):
+		pass
+
+
 @NoPickle
 class _Dates(object):
 
