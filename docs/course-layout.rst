@@ -49,9 +49,15 @@ content packages and bundles may exist and be accessed independently of
 the course; in particular, a course may stitch together various small
 pieces of any existing content to form its outline.
 
-.. warning:: At this writing, no UI supports more than one single
+.. warning:: At this writing, no UI fully supports more than one single
 			 content package per course. That is, the bundle can only
 			 contain one content package.
+
+.. caution:: At this writing, certain portions of the server may not
+			 fully support more than one content package per course or
+			 using the same content package in multiple distinct
+			 courses. That is, the bundle can only contain one content
+			 package.
 
 .. warning:: The content packages used by courses **MUST** be
 			 installed in the site library; they **MUST NOT** be
@@ -222,21 +228,22 @@ course instance. This file is a standard bundle file as defined by
 :mod:`nti.contentlibrary.bundle`::
 
 	{
-	    "ntiid": "tag:nextthought.com,2011-10:NTI-Bundle-ABundle",
 	    "ContentPackages": ["tag:nextthought.com,2011-10:USSC-HTML-Cohen.cohen_v._california."],
 	    "title": "A Title"
 	}
 
-.. note:: The NTIID, while currently required, will be ignored and/or
-		  overwritten by an automatically generated ID in the future.
-		  No client or server component should rely on this value.
+.. note:: Regular (non-course) bundles are required to specify an
+		  NTIID. However, any NTIID, specified here is ignored and
+		  overwritten by an automatically generated ID. No client or
+		  server component should rely on this value, and it's best to
+		  leave it out.
 
 .. note:: In the future, we expect to be able to reference existing
 		  content package bundles instead of defining new one for each
 		  course.
 
-.. warning:: Recall that current UIs can only handle a single content
-			 package being defined here.
+.. warning:: Recall that current UIs can only fully handle a single
+			 content package being defined here.
 
 .. caution:: If the content packages need to be permissioned to not be
 			 publically visible without being enrolled in the course,
@@ -471,10 +478,10 @@ human-edited, but merged with additional automatic generated content:
 .. note:: Given that currently content packages are where assignments
 		  are defined, and that there is one content package per
 		  course, and that content packages are not reused across
-		  courses yet, changing dates is only implemented for course
-		  sections. The primary course uses the dates from the content
-		  package. The primary course can, however, use the other
-		  policy information.
+		  courses yet, changing dates is only recommended for course
+		  sections. The primary course should use the dates from the
+		  content package. The primary course can, however, fully use
+		  the other policy information.
 
 ``presentation-assets/`` (optional)
 -----------------------------------

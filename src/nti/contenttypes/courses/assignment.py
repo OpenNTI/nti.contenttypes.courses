@@ -15,7 +15,7 @@ from zope import interface
 from zope import component
 
 from .interfaces import ICourseInstance
-from .interfaces import ICourseSubInstance
+
 from nti.assessment.interfaces import IQAssignmentDateContext
 from nti.assessment.interfaces import IQAssignmentPolicies
 
@@ -26,28 +26,6 @@ from persistent.mapping import PersistentMapping
 from nti.externalization.persistence import NoPickle
 
 from zope.annotation.factory import factory as an_factory
-
-@interface.implementer(IQAssignmentDateContext)
-@component.adapter(ICourseInstance)
-class EmptyAssignmentDateContext(object):
-	"""
-	Used when there is no context to adjust the dates.
-
-	Initially at least, plain course instances do not
-	adjust dates, only subsections do.
-	"""
-
-	def __init__(self, context):
-		pass
-
-	def of(self, asg):
-		return asg
-
-	def clear(self):
-		pass
-
-	def __setitem__(self, key, valu):
-		pass
 
 @NoPickle
 class _Dates(object):
@@ -63,7 +41,7 @@ class _Dates(object):
 			return getattr(self._asg, name)
 
 @interface.implementer(IQAssignmentDateContext)
-@component.adapter(ICourseSubInstance)
+@component.adapter(ICourseInstance)
 class MappingAssignmentDateContext(Contained,
 								   PersistentCreatedAndModifiedTimeObject):
 	"""

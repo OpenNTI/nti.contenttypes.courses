@@ -179,7 +179,6 @@
 	<adapter factory="._synchronize._ContentCourseSubInstanceSynchronizer" />
 
 	<!-- Assignment date overrides and policies -->
-	<adapter factory=".assignment.EmptyAssignmentDateContext" />
 	<adapter factory=".assignment.CourseSubInstanceAssignmentDateContextFactory" />
 	<adapter factory=".assignment.CourseInstanceAssignmentPoliciesFactory" />
 
