@@ -57,8 +57,9 @@ def fill_asg_from_key(course, key):
 		stored_dates = dict()
 		for k in supported_date_keys:
 			if k in val:
-				__traceback_info__ = key, k, val[k]
-				stored_dates[k] = datetime_from_string(val[k])
+				date_string = val[k]
+				__traceback_info__ = key, k, date_string
+				stored_dates[k] = datetime_from_string(date_string) if date_string else None
 
 		dates[key] = stored_dates
 		# Policies stores it directly, with the exception
