@@ -179,6 +179,12 @@ def _ntiid_from_entry(entry, nttype='CourseInfo'):
 		o = getattr(o, '__parent__', None)
 
 	parents.reverse()
+	if None in parents:
+		# Have seen this in alpha...possibly due to mutating content?
+		logger.warn("Unable to get ntiid for %r, missing parents: %r",
+					entry, parents)
+		return None
+
 	relative_path = '/'.join(parents)
 	if not relative_path:
 		return None

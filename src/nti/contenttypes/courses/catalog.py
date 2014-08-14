@@ -85,7 +85,8 @@ class _AbstractCourseCatalogMixin(object):
 		return not self._get_all_my_entries()
 
 	def iterCatalogEntries(self):
-		entries = {e.ntiid: e for e in self._get_all_my_entries()}
+		entries = {e.ntiid: e for e in self._get_all_my_entries()
+				   if e.ntiid is not None}
 
 		parent = self._next_catalog
 		if parent is not None:
