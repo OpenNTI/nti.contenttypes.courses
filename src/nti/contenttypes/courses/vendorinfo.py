@@ -19,13 +19,13 @@ from zope.annotation.factory import factory as an_factory
 from .interfaces import ICourseInstance
 from .interfaces import ICourseInstanceVendorInfo
 
-from persistent.dict import PersistentDict
+from persistent.mapping import PersistentMapping
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseInstanceVendorInfo)
-class DefaultCourseInstanceVendorInfo(PersistentDict,
+class DefaultCourseInstanceVendorInfo(PersistentMapping,
 									  PersistentCreatedAndModifiedTimeObject):
 	"""
 	The default representation of vendor info. We expect the info
