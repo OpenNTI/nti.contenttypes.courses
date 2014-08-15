@@ -687,7 +687,7 @@ class ScopeTerm(SimpleTerm):
 
 ENROLLMENT_SCOPE_VOCABULARY = SimpleVocabulary(
 	[ScopeTerm(ES_PUBLIC,
-			   title=_('Public'),
+			   title=_('Open'),
 			   implied_by=(ES_CREDIT, ES_CREDIT_DEGREE, ES_CREDIT_NONDEGREE)),
 	 ScopeTerm(ES_CREDIT,
 				title=_('For Credit'),

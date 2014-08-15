@@ -40,6 +40,7 @@ from .interfaces import INonPublicCourseInstance
 from .interfaces import CourseInstanceAvailableEvent
 from .interfaces import IEnrollmentMappedCourseInstance
 from .interfaces import ES_CREDIT
+from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
@@ -216,13 +217,15 @@ class _ContentCourseSynchronizer(object):
 
 		for scope in course.SharingScopes.values():
 			friendly_scope = IFriendlyNamed(scope)
+			friendly_title = ENROLLMENT_SCOPE_VOCABULARY.getTerm(scope.__name__).title
+
 			if cce.ProviderUniqueID:
-				alias = cce.ProviderUniqueID + ' - ' + scope.__name__
+				alias = cce.ProviderUniqueID + ' - ' + friendly_title
 			else:
 				alias = friendly_scope.alias
 
 			if cce.title:
-				realname = cce.title + ' - ' + scope.__name__
+				realname = cce.title + ' - ' + friendly_title
 			else:
 				realname = friendly_scope.realname
 

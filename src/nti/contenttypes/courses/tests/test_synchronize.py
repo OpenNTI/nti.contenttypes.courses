@@ -30,6 +30,7 @@ from hamcrest import has_property
 from hamcrest import contains
 from hamcrest import contains_string
 from hamcrest import has_key
+from hamcrest import has_item
 
 import datetime
 
@@ -179,7 +180,8 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		sec1.SharingScopes['ForCredit']._v_ntiid = 'section1-forcredit'
 		assert_that( sec1,
 					 externalizes( has_entries(
-						 'Class', 'CourseInstance' ) ) )
+						 'Class', 'CourseInstance') ) )
+
 
 		from nti.externalization.externalization import to_external_object
 		gateway_ext = to_external_object(gateway)
@@ -192,6 +194,10 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		assert_that( gateway_ext, has_entry('LegacyScopes',
 											has_entries('public', gateway.SharingScopes['Public'].NTIID,
 														'restricted', gateway.SharingScopes['ForCredit'].NTIID)) )
+		assert_that( gateway_ext, has_entries(
+			'SharingScopes',
+			has_entry( 'Public', has_entry('alias', 'CLC 3403 - Open') ) ) )
+
 		assert_that( sec1_ext,
 					 has_entries(
 						 'LegacyScopes', has_entries(
