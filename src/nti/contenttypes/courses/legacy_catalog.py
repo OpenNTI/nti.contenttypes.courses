@@ -194,6 +194,8 @@ def _ntiid_from_entry(entry, nttype='CourseInfo'):
 					   specific=make_specific_safe(relative_path))
 	return ntiid
 
+from nti.utils.property import CachedProperty
+
 class PersistentCourseCatalogLegacyEntry(CourseCatalogLegacyEntry,
 										 PersistentCreatedAndModifiedTimeObject):
 
@@ -202,8 +204,11 @@ class PersistentCourseCatalogLegacyEntry(CourseCatalogLegacyEntry,
 		CourseCatalogLegacyEntry.__init__(self, *args, **kwargs)
 		PersistentCreatedAndModifiedTimeObject.__init__(self)
 
+	@CachedProperty('__parent__')
+	def _cached_ntiid(self):
+		return _ntiid_from_entry(self)
 
-	ntiid = property(_ntiid_from_entry,
+	ntiid = property(lambda s: s._cached_ntiid,
 					 lambda s, nv: None)
 
 from zope.annotation.factory import factory as an_factory

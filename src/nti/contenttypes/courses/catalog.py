@@ -84,17 +84,26 @@ class _AbstractCourseCatalogMixin(object):
 		# TODO: should this be in the hierarchy?
 		return not self._get_all_my_entries()
 
+	# TODO: A protocol for caching _get_all_my_entries
+	# and handling queries in a cached way, plus caching
+	# the iterator
+
 	def iterCatalogEntries(self):
-		entries = {e.ntiid: e for e in self._get_all_my_entries()
-				   if e.ntiid is not None}
+		seen = set()
+		for entry in self._get_all_my_entries():
+			ntiid = entry.ntiid
+			if ntiid is None or ntiid in seen:
+				continue
+			seen.add(ntiid)
+			yield entry
 
 		parent = self._next_catalog
 		if parent is not None:
 			for e in parent.iterCatalogEntries():
-				if e.ntiid not in entries:
-					entries[e.ntiid] = e
-
-		return list(entries.values())
+				ntiid = e.ntiid
+				if ntiid not in seen:
+					seen.add(ntiid)
+					yield e
 
 	def _primary_query_my_entry(self, name):
 		for entry in self._get_all_my_entries():
