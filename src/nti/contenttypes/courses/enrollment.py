@@ -546,12 +546,24 @@ class DefaultPrincipalEnrollments(object):
 				continue
 
 			if principal_id in storage:
-				for i in storage.enrollments_for_id(principal_id, self.principal):
-					if i in seen_records:
+				for record in storage[principal_id]:
+					if record in seen_records:
 						continue
-					seen_records.append(i)
+					seen_records.append(record)
 
-					yield i
+					# If the course instance is gone, don't pretend to be enrolled
+					# because most things depend on getting the course from the
+					# enrollment. This is a database consistency problem,
+					# only seen in alpha...being cleaned up as encountered,
+					# so eventually this code can be removed
+					try:
+						ICourseInstance(record)
+					except TypeError:
+						logger.warn("Course for enrollment %r of user %s in storage %s missing. "
+									"Database consistency issue.",
+									record, principal_id, storage)
+					else:
+						yield record
 
 from nti.dataserver.interfaces import IUser
 
