@@ -408,7 +408,7 @@ EnrollmentMap
 	.. danger:: This mapping **SHOULD NOT** change after enrollment has
 				 started. No attempt is made to adjust enrollments in
 				 that case.
-AutoForums
+Forums
 	A dictionary, valid at any level, containing information
 	pertaining to how discussion forums should automatically be
 	created. This is optional, with defaults in code, and valid at all
