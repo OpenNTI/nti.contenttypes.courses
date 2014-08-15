@@ -216,7 +216,7 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		self._check_not_enrolled(principal, course)
 
 	@WithMockDSTrans
-	def test_enrollment_map(self):
+	def test_enrollment_map_initial_enrollment(self):
 		# When you try to for-credit-non-degree enroll in course, you
 		# get thrown into section
 		self._shared_setup()
@@ -227,13 +227,49 @@ class TestFunctionalEnrollment(CourseLayerTest):
 
 		def extra_enroll_test():
 			credit_scope = self.section.SharingScopes[ES_CREDIT]
-			assert_that( list(ISharingTargetEntityIterable(credit_scope)),
+			assert_that( list(credit_scope),
 						 is_([self.principal]))
 
 		self._do_test_add_drop(self.principal, self.course,
 							   enroll_scope='ForCreditNonDegree',
-							   actually_enrolled_in_course=self.section
+							   actually_enrolled_in_course=self.section,
+							   extra_enroll_test=extra_enroll_test
 							   )
+
+	@WithMockDSTrans
+	def test_enrollment_map_change_scope(self):
+		# If you initially enroll openly, you can get moved
+		# into a new section by changing your scope
+		self._shared_setup()
+		vendor_info = ICourseInstanceVendorInfo(self.course)
+		vendor_info.setdefault('NTI', dict()).setdefault('EnrollmentMap',{})
+		vendor_info['NTI']['EnrollmentMap']['ForCreditNonDegree'] = 'section1'
+		interface.alsoProvides(self.course, IEnrollmentMappedCourseInstance)
+
+		# First, enroll openly
+		open_manager = interfaces.ICourseEnrollmentManager(self.course)
+		record = open_manager.enroll(self.principal)
+		self._check_enrolled(record, self.principal, self.course)
+
+		# Now modify the scope
+		record.Scope = ES_CREDIT_NONDEGREE
+		lifecycleevent.modified(record)
+
+		# and things have moved
+		assert_that( record.CourseInstance, is_(self.section))
+		credit_scope = self.section.SharingScopes[ES_CREDIT]
+
+
+		assert_that( list(credit_scope),
+					 is_([self.principal]))
+
+		self._check_enrolled(record, self.principal, self.section)
+		self._check_not_enrolled(self.principal, self.course,
+								 # we do have one enrollment still
+								 expect_no_enrollments_for_principal=False,
+								 # and we are actually in this public scope because we're
+								 # in a sub-section
+								 expect_not_in_public_scope=False)
 
 	@WithMockDSTrans
 	def test_add_drop(self):
@@ -288,7 +324,9 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		assert_that( list(_dynamic_memberships_that_participate_in_security(principal)),
 					 has_item(has_property('id', public_scope.NTIID)) )
 
-	def _check_not_enrolled(self, principal, course):
+	def _check_not_enrolled(self, principal, course,
+							expect_no_enrollments_for_principal=True,
+							expect_not_in_public_scope=True):
 		cin = interfaces.ICourseEnrollments(course)
 		assert_that( cin.count_enrollments(), is_(0) )
 		assert_that( list(cin.iter_enrollments()), is_empty() )
@@ -298,12 +336,17 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		pin = pins[0]
 		assert_that(pin, is_(enrollment.DefaultPrincipalEnrollments))
 
-		assert_that( list(pin.iter_enrollments()), is_empty() )
+		if expect_no_enrollments_for_principal:
+			assert_that( list(pin.iter_enrollments()), is_empty() )
 
 		# ...dropped from scope memberships
 		public_scope = course.SharingScopes['Public']
-		assert_that( public_scope, is_not( is_in(list(principal.dynamic_memberships))))
-		assert_that( principal, is_not(is_in(public_scope) ))
+		if expect_not_in_public_scope:
+			assert_that( public_scope, is_not( is_in(list(principal.dynamic_memberships))))
+			assert_that( principal, is_not(is_in(public_scope) ))
+		else:
+			assert_that( public_scope, is_in(list(principal.dynamic_memberships)))
+			assert_that( principal, is_in(public_scope) )
 
 
 	@WithMockDSTrans

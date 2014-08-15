@@ -403,6 +403,15 @@ def check_enrollment_mapped(course):
 				raise KeyError("Unknown section", sec_name)
 		return result
 
+def _find_mapped_course_for_scope(course, scope):
+	vendor_info = ICourseInstanceVendorInfo(course)
+	section_name = vendor_info['NTI']['EnrollmentMap'].get(scope)
+	if section_name:
+		# fail loudly rather than silently enroll in the wrong place
+		section = course.SubInstances[section_name]
+		return section
+	return course
+
 
 @component.adapter(IEnrollmentMappedCourseInstance)
 @interface.implementer(ICourseEnrollmentManager)
@@ -412,25 +421,47 @@ class EnrollmentMappedCourseEnrollmentManager(DefaultCourseEnrollmentManager):
 	for particular scopes.
 	"""
 
-
 	def enroll(self, principal, scope=ES_PUBLIC):
-		vendor_info = ICourseInstanceVendorInfo(self.context)
-		section_name = vendor_info['NTI']['EnrollmentMap'].get(scope)
-		if section_name:
-			# fail loudly rather than silently enroll in the wrong place
-			section = self.context.SubInstances[section_name]
-			manager = (component.getMultiAdapter( (section, self.request), ICourseEnrollmentManager)
+		mapped_course = _find_mapped_course_for_scope(self.context, scope)
+		if mapped_course is not self.context:
+			manager = (component.getMultiAdapter( (mapped_course, self.request),
+												  ICourseEnrollmentManager)
 					   if self.request is not None
-					   else ICourseEnrollmentManager(section))
+					   else ICourseEnrollmentManager(mapped_course))
 			return manager.enroll(principal, scope=scope)
 
 		return super(EnrollmentMappedCourseEnrollmentManager,self).enroll(principal,scope=scope)
 
 
-
 	# Dropping does nothing special: we never get here if we
 	# didn't actually wind up enrolling in this course instance itself
 	# to start with.
+
+from zope.lifecycleevent import IObjectModifiedEvent
+
+@component.adapter(ICourseInstanceEnrollmentRecord, IObjectModifiedEvent)
+def on_modified_potentially_move_courses(record, event):
+	"""
+	If a user moves between scopes in an enrollment-mapped course,
+	we may need to transfer them to a different section too.
+	"""
+
+	course = record.CourseInstance
+	if not IEnrollmentMappedCourseInstance.providedBy(course):
+		return
+
+	mapped_course = _find_mapped_course_for_scope(course, record.Scope)
+	if mapped_course is not course:
+		# ok, we have to move you. This will change sharing; since this
+		# was a modified event that by definition is changing scopes,
+		# the code in sharing.py will also be firing to change the sharing,
+		# and we can't know what order that will happen in, so the code
+		# has to be robust to that.
+		dest_enrollments = IDefaultCourseInstanceEnrollmentStorage(mapped_course)
+
+		mover = IObjectMover(record)
+		mover.moveTo(dest_enrollments)
+
 
 
 from nti.dataserver.interfaces import ILengthEnumerableEntityContainer
