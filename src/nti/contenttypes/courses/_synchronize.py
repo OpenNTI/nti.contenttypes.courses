@@ -106,6 +106,8 @@ class _GenericFolderSynchronizer(object):
 		# filesystem
 		for folder_child_name in list(folder):
 			if folder_child_name not in child_buckets:
+				logger.info("Removing child %s (%r)",
+							folder_child_name, folder[folder_child_name])
 				del folder[folder_child_name]
 
 		# Create anything the folder is missing if we

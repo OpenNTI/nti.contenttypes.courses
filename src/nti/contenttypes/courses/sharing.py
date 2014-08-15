@@ -262,6 +262,10 @@ def on_drop_exit_scope_membership(record, event, course=None):
 	When you drop a course, leave the scopes you were in, including
 	content access.
 	"""
+	# If the course was in the process of being deleted,
+	# the sharing scopes may already have been deleted, which
+	# shouldn't be a problem: the removal listeners for those
+	# events should have cleaned up
 	_adjust_scope_membership( record, course,
 							  'record_no_longer_dynamic_member',
 							  'stop_following',

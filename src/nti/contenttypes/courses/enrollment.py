@@ -68,8 +68,8 @@ class IDefaultCourseCatalogEnrollmentStorage(IContainer,IContained):
 
 	def enrollments_for_id(principalid, principal):
 		"""
-		Return the list/set-like object to hold record references for
-		the principal.
+		Return the mutable list/set-like object to hold record references
+		for the principal.
 
 		:param principal: If this has a non-None `_p_jar`, the enrollment
 			list will be stored in this jar.
@@ -331,18 +331,9 @@ class DefaultCourseEnrollmentManager(object):
 
 		return record
 
-	def drop(self, principal):
-		principal_id = IPrincipal(principal).id
-		if principal_id not in self._inst_enrollment_storage_rc:
-			# Note that we always begin with a readCurrent of this,
-			# to protect concurrent enroll/drop
-			return False
+	def _drop_record_for_principal_id(self, record, principal_id):
+		enrollments = self._cat_enrollment_storage.get(principal_id, ())
 
-		record = self._inst_enrollment_storage[principal_id]
-		# again be consistent with the order: remove from the
-		# enrollment list then fire the event
-		enrollments = self._cat_enrollment_storage.enrollments_for_id(principal_id,
-																	  principal)
 		if record in enrollments:
 			enrollments.remove(record)
 		else:
@@ -357,14 +348,40 @@ class DefaultCourseEnrollmentManager(object):
 					# we do readCurrent of this because we're walking up an
 					# unrelated tree
 					_readCurrent(storage)
-					enrollments = _readCurrent(storage.enrollments_for_id(principal_id, principal))
+					enrollments = _readCurrent(storage.get(principal_id, ()))
 					if record in enrollments:
 						enrollments.remove(record)
 						break
 
+	def drop(self, principal):
+		principal_id = IPrincipal(principal).id
+		if principal_id not in self._inst_enrollment_storage_rc:
+			# Note that we always begin with a readCurrent of this,
+			# to protect concurrent enroll/drop
+			return False
+
+		record = self._inst_enrollment_storage[principal_id]
+		# again be consistent with the order: remove from the
+		# enrollment list then fire the event
+		self._drop_record_for_principal_id(record, principal_id)
+
 		del self._inst_enrollment_storage[principal_id]
 
 		return record
+
+	def drop_all(self):
+		storage = self._inst_enrollment_storage_rc
+		principal_ids = list(storage)
+		# watch the order; see drop
+		records = list()
+		for pid in principal_ids:
+			record = storage[pid]
+			records.append(record)
+			self._drop_record_for_principal_id(record, pid)
+			del storage[pid]
+
+		return records
+
 
 from .interfaces import ICourseInstanceVendorInfo
 from .interfaces import IEnrollmentMappedCourseInstance
@@ -620,16 +637,19 @@ def on_principal_deletion_unenroll(principal, event):
 			manager.drop(principal)
 
 def on_course_deletion_unenroll(course, event):
-	enrollments = ICourseEnrollments(course)
-	manager = ICourseEnrollmentManager(course)
-	for record in enrollments.iter_enrollments():
-		principal = record.Principal
-		manager.drop(principal)
+	__traceback_info__ = course, event
 
+	manager = ICourseEnrollmentManager(course)
+	dropped_records = manager.drop_all()
+	logger.info("Dropped %d enrollment records on deletion of %r",
+				len(dropped_records), course)
+
+	enrollments = ICourseEnrollments(course)
 	if enrollments.count_enrollments():
 		raise ValueError("Failed to delete all enrollment records from course."
 						 " To continue, please restore the course data on disk.",
-						 course)
+						 course,
+						 list(enrollments.iter_enrollments()))
 
 ###
 # Moving enrollments

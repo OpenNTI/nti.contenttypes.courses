@@ -768,6 +768,15 @@ class ICourseEnrollmentManager(interface.Interface):
 			and false of no action was taken.
 		"""
 
+	def drop_all():
+		"""
+		Cause all the enrolled principals to be removed.
+		This can be faster and safer than trying to remove all
+		the records individually manually.
+
+		:return: A list of the enrollment records removed.
+		"""
+
 class IPrincipalEnrollments(interface.Interface):
 	"""
 	Something that can list the enrollments of an individual

@@ -322,6 +322,7 @@ class TestFunctionalEnrollment(CourseLayerTest):
 
 		assert_that( record, has_property('__parent__', not_none() ))
 
+		eventtesting.clearEvents()
 		del course_parent[course.__name__]
 
 		# all the enrollment stuff was cleaned up

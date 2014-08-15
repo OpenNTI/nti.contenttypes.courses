@@ -133,14 +133,14 @@
 	<!-- anything that can get IPrincipalEnrollments -->
 	<subscriber handler=".enrollment.on_principal_deletion_unenroll"
 				for="zope.security.interfaces.IPrincipal
-					 zope.intid.interfaces.IIntIdRemovedEvent" />
+					 nti.intid.interfaces.IIntIdRemovedEvent" />
 	<subscriber handler=".enrollment.on_principal_deletion_unenroll"
 				for="nti.dataserver.interfaces.IUser
-					 zope.intid.interfaces.IIntIdRemovedEvent" />
+					 nti.intid.interfaces.IIntIdRemovedEvent" />
 
 	<subscriber handler=".enrollment.on_course_deletion_unenroll"
 				for=".interfaces.ICourseInstance
-					 zope.intid.interfaces.IIntIdRemovedEvent"/>
+					 nti.intid.interfaces.IIntIdRemovedEvent"/>
 
 
 	<!-- managing the scope as you enroll/drop/modify -->
