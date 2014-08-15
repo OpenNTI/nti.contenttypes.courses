@@ -343,9 +343,9 @@ class DefaultCourseEnrollmentManager(object):
 		# enrollment list then fire the event
 		enrollments = self._cat_enrollment_storage.enrollments_for_id(principal_id,
 																	  principal)
-		try:
+		if record in enrollments:
 			enrollments.remove(record)
-		except KeyError:
+		else:
 			# Snap, the enrollment is missing from the course catalog storage of the
 			# principal, but we have it in the course instance storage.
 			# This is probably that migration problem, so look up the tree to see
@@ -358,11 +358,9 @@ class DefaultCourseEnrollmentManager(object):
 					# unrelated tree
 					_readCurrent(storage)
 					enrollments = _readCurrent(storage.enrollments_for_id(principal_id, principal))
-					try:
+					if record in enrollments:
 						enrollments.remove(record)
 						break
-					except KeyError:
-						pass
 
 		del self._inst_enrollment_storage[principal_id]
 
@@ -628,10 +626,10 @@ def on_course_deletion_unenroll(course, event):
 		principal = record.Principal
 		manager.drop(principal)
 
-	# XXX: In the future, depending on how we go with Sections
-	# and having a "master" scope in the  parent section,
-	# this could also require us checking through the parents
-	# if it was a sub-instance that got deleted
+	if enrollments.count_enrollments():
+		raise ValueError("Failed to delete all enrollment records from course."
+						 " To continue, please restore the course data on disk.",
+						 course)
 
 ###
 # Moving enrollments
