@@ -385,6 +385,12 @@ documentation for what keys might be used.
             "EnrollmentMap": {
                 "ForCreditNonDegree": "section-name"
             }
+        "SharingScopesDisplayInfo": {
+            "Public": {
+                "alias": "From Vendor Info",
+                "realname": "",
+                "avatarURL": "/foo/bar.jpg"
+            }
         }
     }
 
@@ -432,6 +438,17 @@ Forums
 	  that, if set, will override the default display name for these
 	  items the first time the forum is created; after that, you must
 	  use the API or GUI to change them.
+SharingScopesDisplayInfo
+	A dictionary, valid at any level, containing optional information
+	about how the auto-created sharing scopes should be displayed.
+
+	It contains dictionaries named for each sharing scope (e.g.,
+	"Public" and "ForCredit", see
+	:py:mod:`nti.contenttypes.courses.interfaces`). The ``alias`` and
+	``realname`` are strings, which, if present and non-empty, exactly
+	specify those values (replacing completely the automatic
+	generation). Likewise, ``avatarURL`` is a URL or path giving an
+	image to display.
 
 
 ``assignment_policies.json`` (optional)

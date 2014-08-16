@@ -241,6 +241,14 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		assert_that( policies.getPolicyForAssignment("tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.asg:QUIZ1_aristotle"),
 					 is_( {'auto_grade': {'total_points': 20}} ) )
 
+		sec2_ext = to_external_object(sec2)
+		dec._do_decorate_external(sec2, sec2_ext)
+		assert_that(sec2_ext, has_entries(
+			'SharingScopes',
+			has_entry("Public",
+					  has_entries('alias', "From Vendor Info",
+								  "realname", "Law and Justice - Open",
+								  "avatarURL", '/foo/bar.jpg'))))
 
 		# We should have the catalog functionality now
 

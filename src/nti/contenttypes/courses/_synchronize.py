@@ -64,6 +64,7 @@ from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.dublincore import read_dublincore_from_named_key
 
 from nti.dataserver.users.interfaces import IFriendlyNamed
+from nti.dataserver.users.interfaces import IAvatarURL
 
 VENDOR_INFO_NAME = 'vendor_info.json'
 COURSE_OUTLINE_NAME = 'course_outline.xml'
@@ -214,25 +215,52 @@ class _ContentCourseSynchronizer(object):
 	@classmethod
 	def update_sharing_scopes_friendly_names(cls, course):
 		cce = ICourseCatalogEntry(course)
+		sharing_scopes_data = (ICourseInstanceVendorInfo(course)
+							   .get('NTI', {})
+							   .get("SharingScopesDisplayInfo", {}))
 
 		for scope in course.SharingScopes.values():
+			sharing_scope_data = sharing_scopes_data.get(scope.__name__, {})
+
 			friendly_scope = IFriendlyNamed(scope)
 			friendly_title = ENROLLMENT_SCOPE_VOCABULARY.getTerm(scope.__name__).title
 
-			if cce.ProviderUniqueID:
+			if sharing_scope_data.get('alias'):
+				alias = sharing_scope_data['alias']
+			elif cce.ProviderUniqueID:
 				alias = cce.ProviderUniqueID + ' - ' + friendly_title
 			else:
 				alias = friendly_scope.alias
 
-			if cce.title:
+			if sharing_scope_data.get('realname'):
+				realname = sharing_scope_data['realname']
+			elif cce.title:
 				realname = cce.title + ' - ' + friendly_title
 			else:
 				realname = friendly_scope.realname
 
+			modified_scope = False
 			if (realname, alias) != (friendly_scope.realname, friendly_scope.alias):
 				friendly_scope.realname = realname
 				friendly_scope.alias = alias
 				lifecycleevent.modified(friendly_scope)
+				modified_scope = True
+
+			if (sharing_scope_data.get('avatarURL')
+				and sharing_scope_data.get('avatarURL') != getattr(scope, 'avatarURL', '')):
+				interface.alsoProvides(scope, IAvatarURL)
+				scope.avatarURL = sharing_scope_data.get('avatarURL')
+				modified_scope = True
+			else:
+				try:
+					del scope.avatarURL
+				except AttributeError:
+					pass
+				else:
+					modified_scope = True
+				interface.noLongerProvides(scope, IAvatarURL)
+
+			if modified_scope:
 				lifecycleevent.modified(scope)
 
 	@classmethod
