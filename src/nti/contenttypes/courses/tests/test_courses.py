@@ -112,19 +112,21 @@ class TestCourseInstance(CourseLayerTest):
 		_SharingScopesAndDiscussionDecorator(subinst, None)._do_decorate_external(subinst, result)
 
 		assert_that( result, has_entry( 'SharingScopes',
-										has_entries('Class', 'CourseInstanceSharingScopes',
-													'Public', has_entries('Creator', 'system',
-																		  'Class', 'Community', # Really CourseInstanceSharingScope
-																		  'MimeType', 'application/vnd.nextthought.community',
-																		  'NTIID', ntiid2,
-																		  'ID', ntiid2,
-																		  'Username', ntiid2))) )
+										has_entries( 'Class', 'CourseInstanceSharingScopes',
+													 'Items', has_entries(
+														 'Public', has_entries('Creator', 'system',
+																			   'Class', 'Community', # Really CourseInstanceSharingScope
+																			   'MimeType', 'application/vnd.nextthought.community',
+																			   'NTIID', ntiid2,
+																			   'ID', ntiid2,
+																			   'Username', ntiid2))) ) )
 		assert_that( result, has_entry( 'ParentSharingScopes',
 										has_entries('Class', 'CourseInstanceSharingScopes',
-													'Public', has_entries('Creator', 'system',
-																		  'NTIID', ntiid,
-																		  'ID', ntiid,
-																		  'Username', ntiid))) )
+													'Items', has_entry(
+														'Public', has_entries('Creator', 'system',
+																			  'NTIID', ntiid,
+																			  'ID', ntiid,
+																			  'Username', ntiid))) ) )
 
 		assert_that( result, has_entry('ParentDiscussions',
 									   has_entries('Creator', ntiid)))

@@ -112,7 +112,11 @@ def fill_roles_from_key(course, key):
 			pass
 		else:
 			for scope in course.SharingScopes.values():
+				# They're a member...
 				user.record_dynamic_membership(scope)
+				# ...and they follow it to get notifications of things
+				# shared to it
+				user.follow(scope)
 
 	for orig_instructor in orig_instructors:
 		if orig_instructor not in course.instructors:

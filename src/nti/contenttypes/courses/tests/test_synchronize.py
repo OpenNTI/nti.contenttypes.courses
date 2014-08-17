@@ -196,7 +196,9 @@ class TestFunctionalSynchronize(CourseLayerTest):
 														'restricted', gateway.SharingScopes['ForCredit'].NTIID)) )
 		assert_that( gateway_ext, has_entries(
 			'SharingScopes',
-			has_entry( 'Public', has_entry('alias', 'CLC 3403 - Open') ) ) )
+			has_entries('Items', has_entry('Public',
+										   has_entry('alias', 'CLC 3403 - Open') ),
+						'DefaultSharingScopeNTIID', gateway.SharingScopes['Public'].NTIID) ) )
 
 		assert_that( sec1_ext,
 					 has_entries(
@@ -204,6 +206,13 @@ class TestFunctionalSynchronize(CourseLayerTest):
 							 # public initially copied from the parent
 							 'public', gateway.SharingScopes['Public'].NTIID,
 							 'restricted', sec1.SharingScopes['ForCredit'].NTIID)) )
+
+		assert_that( sec1_ext, has_entries(
+			'SharingScopes',
+			has_entries('Items', has_entry('Public',
+										   has_entry('alias', 'CLC 3403-01 - Open') ),
+						'DefaultSharingScopeNTIID', gateway.SharingScopes['Public'].NTIID) ) )
+
 
 		# although if we make the parent non-public, we go back to ourself
 		interface.alsoProvides(gateway, INonPublicCourseInstance)
@@ -245,10 +254,10 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		dec._do_decorate_external(sec2, sec2_ext)
 		assert_that(sec2_ext, has_entries(
 			'SharingScopes',
-			has_entry("Public",
-					  has_entries('alias', "From Vendor Info",
-								  "realname", "Law and Justice - Open",
-								  "avatarURL", '/foo/bar.jpg'))))
+			has_entry('Items', has_entry("Public",
+										 has_entries('alias', "From Vendor Info",
+													 "realname", "Law and Justice - Open",
+													 "avatarURL", '/foo/bar.jpg')))))
 
 		# We should have the catalog functionality now
 

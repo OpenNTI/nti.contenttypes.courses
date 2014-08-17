@@ -58,23 +58,20 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 																 request=self.request)
 
 		scopes = context.SharingScopes
-		if self._is_authenticated:
-			ext_scopes = LocatedExternalDict()
-			ext_scopes.__parent__ = scopes.__parent__
-			ext_scopes.__name__ = scopes.__name__
+		ext_scopes = LocatedExternalDict()
+		ext_scopes.__parent__ = scopes.__parent__
+		ext_scopes.__name__ = scopes.__name__
 
-			ext_scopes[CLASS] = 'CourseInstanceSharingScopes'
+		ext_scopes[CLASS] = 'CourseInstanceSharingScopes'
+		items = ext_scopes['Items'] = {}
 
-			user = self.remoteUser
+		user = self.remoteUser if self._is_authenticated else None
 
-			for name, scope in scopes.items():
-				if user in IEntityContainer(scope):
-					ext_scopes[name] = to_external_object(scope, request=self.request)
+		for name, scope in scopes.items():
+			if user is None or user in IEntityContainer(scope):
+				items[name] = to_external_object(scope, request=self.request)
 
-			result['SharingScopes'] = ext_scopes
-
-		else:
-			result['SharingScopes'] = to_external_object(scopes)
+		result['SharingScopes'] = ext_scopes
 
 		# Legacy
 		if 'LegacyScopes' not in result:
@@ -100,6 +97,13 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 
 			if ES_CREDIT in scopes:
 				ls['restricted'] = scopes[ES_CREDIT].NTIID
+
+		# Point clients to what the should do by default.
+		# For the default if you're not enrolled for credit, match what flat clients do
+		if user is not None and user in IEntityContainer(scopes[ES_CREDIT]):
+			result['SharingScopes']['DefaultSharingScopeNTIID'] = ls.get('restricted')
+		else:
+			result['SharingScopes']['DefaultSharingScopeNTIID'] = ls['public']
 
 
 @interface.implementer(IExternalObjectDecorator)
