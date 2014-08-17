@@ -125,5 +125,6 @@ def fill_roles_from_key(course, key):
 			# and has a hard reference to it, and so can become an IUser again
 			for scope in course.SharingScopes.values():
 				user.record_no_longer_dynamic_member(scope)
+				user.stop_following(scope)
 
 	return role_manager
