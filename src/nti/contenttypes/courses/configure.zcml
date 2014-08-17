@@ -109,6 +109,10 @@
 	<adapter factory=".legacy_catalog.CourseInstanceCatalogLegacyEntryFactory" />
 	<adapter factory=".legacy_catalog.CourseSubInstanceCatalogLegacyEntryFactory" />
 
+	<!-- catalog entries can be resolved by ntiid -->
+	<utility factory=".ntiids._CourseInfoNTIIDResolver"
+			 name="CourseInfo" />
+
 	<!-- Enrollment -->
 	<adapter factory=".enrollment.DefaultCourseEnrollmentManager" />
 	<adapter factory=".enrollment.DefaultCourseEnrollmentManager"

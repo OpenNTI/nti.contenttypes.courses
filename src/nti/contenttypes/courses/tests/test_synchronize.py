@@ -48,6 +48,7 @@ from ..interfaces import ICourseInstance
 from ..interfaces import IEnrollmentMappedCourseInstance
 from ..interfaces import ES_CREDIT
 from ..interfaces import INonPublicCourseInstance
+from ..interfaces import ICourseCatalog
 
 from nti.contentlibrary import filesystem
 from nti.contentlibrary.library import EmptyLibrary
@@ -277,6 +278,20 @@ class TestFunctionalSynchronize(CourseLayerTest):
 									  'tag:nextthought.com,2011-10:NTI-CourseInfo-Spring2014_Gateway_SubInstances_01'),
 						 has_property('ntiid',
 									  'tag:nextthought.com,2011-10:NTI-CourseInfo-Spring2014_Gateway')) )
+
+		# And each entry can be resolved by ntiid...
+		from nti.ntiids import ntiids
+		assert_that( [ntiids.find_object_with_ntiid(x.ntiid) for x in cat_entries],
+					 is_([None,None,None]))
+		# ...but only with the right catalog installed
+		old_cat = component.getUtility(ICourseCatalog)
+		component.provideUtility(folder,ICourseCatalog)
+		try:
+			assert_that( [ntiids.find_object_with_ntiid(x.ntiid) for x in cat_entries],
+						 is_(cat_entries))
+		finally:
+			component.provideUtility(old_cat,ICourseCatalog)
+
 
 	def test_synchronize_clears_caches(self):
 		#User.create_user(self.ds, username='harp4162')
