@@ -98,6 +98,7 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 			if ES_CREDIT in scopes:
 				ls['restricted'] = scopes[ES_CREDIT].NTIID
 
+		ls = result['LegacyScopes']
 		# Point clients to what the should do by default.
 		# For the default if you're not enrolled for credit, match what flat clients do
 		if user is not None and user in IEntityContainer(scopes[ES_CREDIT]):
