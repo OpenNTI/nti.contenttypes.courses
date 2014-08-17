@@ -14,6 +14,7 @@ logger = __import__('logging').getLogger(__name__)
 from functools import total_ordering
 
 from zope import interface
+from zope import component
 
 from .interfaces import ICourseInstance
 
@@ -401,8 +402,34 @@ def _clear_catalog_cache_when_course_updated(course, event):
 	# We don't use a component.adapter decorator because we need to handle
 	# at least CourseInstanceAvailable events as well as Deleted events.
 
-	catalog = find_interface(course, IPersistentCourseCatalog, strict=False)
-	try:
-		catalog._get_all_my_entries.invalidate(catalog)
-	except AttributeError: # pragma: no cover
-		pass
+	# Because the catalogs may be nested to an arbitrary depth and
+	# have other caching, contingent upon what got returned by
+	# superclasses, we want to reset anything we find. Further more,
+	# we can't know what *other* worker instances might have the same
+	# catalog object cached, so we need to actually mark the object as
+	# changed so it gets included in the transaction and invalidates
+	# there (still invalidate locally, though, so it takes effect for
+	# the rest of the transaction). Fortunately these objects are tiny and
+	# have almost no state, so this doesn't bloat the transaction much
+
+
+	catalogs = []
+	# Include the parent, if we have one
+	catalogs.append( find_interface(course, IPersistentCourseCatalog, strict=False) )
+	# If the event has oldParent and/or newParent, include them
+	for n in 'oldParent', 'newParent':
+		catalogs.append( find_interface(getattr(event, n, None),
+										IPersistentCourseCatalog,
+										strict=False) )
+	# finally, anything else we can find
+	catalogs.extend(component.getAllUtilitiesRegisteredFor(ICourseCatalog))
+
+	for catalog in catalogs:
+		if catalog is None:
+			continue
+		try:
+			catalog._get_all_my_entries.invalidate(catalog)
+		except AttributeError: # pragma: no cover
+			pass
+		if hasattr(catalog, '_p_changed') and catalog._p_jar:
+			catalog._p_changed = True
