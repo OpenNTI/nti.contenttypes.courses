@@ -23,6 +23,9 @@ from nti.dataserver.interfaces import IUser
 
 from nti.dataserver.users import User
 
+from .sharing import add_principal_to_course_content_roles
+from .sharing import remove_principal_from_course_content_roles
+
 def _fill_roles_from_json(course, manager, json):
 	"""
 	A json dict that looks like::
@@ -76,6 +79,15 @@ def fill_roles_from_key(course, key):
 	role_last_mod = getattr(role_manager, 'lastModified', 0)
 
 	if key.lastModified <= role_last_mod:
+		# JAM: XXX: We had some environments that got set up
+		# before instructors were properly added to content roles;
+		# rather than force environments to remove the role files and
+		# sync, then put them back and sync again, I'm temporarily
+		# setting roles each time we get here. It's an idempotent process,
+		# though, so we won't be churning the database.
+		for instructor in course.instructors:
+			user = IUser(instructor)
+			add_principal_to_course_content_roles(user, course)
 		return role_manager
 
 	reset_roles_missing_key(role_manager)
@@ -111,6 +123,10 @@ def fill_roles_from_key(course, key):
 			# and the adaptation failed
 			pass
 		else:
+			# XXX: The addition and removal here are eerily similar
+			# to what enrollment does and they've gotten out of sync
+			# in the past.
+			add_principal_to_course_content_roles(user, course)
 			for scope in course.SharingScopes.values():
 				# They're a member...
 				user.record_dynamic_membership(scope)
@@ -123,6 +139,7 @@ def fill_roles_from_key(course, key):
 			user = IUser(orig_instructor)
 			# by definition here we have an IPrincipal that *came* from an IUser
 			# and has a hard reference to it, and so can become an IUser again
+			remove_principal_from_course_content_roles(user, course)
 			for scope in course.SharingScopes.values():
 				user.record_no_longer_dynamic_member(scope)
 				user.stop_following(scope)

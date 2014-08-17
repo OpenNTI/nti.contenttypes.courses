@@ -222,6 +222,8 @@ def _content_roles_for_course_instance(course):
 	"""
 	Returns the content roles for all the content packages
 	in the course, if there are any.
+
+	:return: A set.
 	"""
 	bundle = getattr(course, 'ContentPackageBundle', None)
 	packs = getattr(bundle, 'ContentPackages', ())
@@ -234,7 +236,24 @@ def _content_roles_for_course_instance(course):
 
 		roles.append(role_for_providers_content(provider, specific))
 
-	return roles
+	return set(roles)
+
+def add_principal_to_course_content_roles(principal, course):
+	membership = component.getAdapter(principal, IMutableGroupMember, CONTENT_ROLE_PREFIX)
+	orig_groups = set(membership.groups)
+	new_groups = _content_roles_for_course_instance(course)
+
+	final_groups = orig_groups | new_groups
+	if final_groups != orig_groups:
+		# be idempotent
+		membership.setGroups(final_groups)
+
+def remove_principal_from_course_content_roles(principal, course):
+	membership = component.getAdapter(principal, IMutableGroupMember, CONTENT_ROLE_PREFIX)
+	groups = set(membership.groups)
+	new_groups = groups - _content_roles_for_course_instance(course)
+	if new_groups != groups:
+		membership.setGroups(new_groups)
 
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IIntIdAddedEvent)
@@ -246,14 +265,8 @@ def on_enroll_record_scope_membership(record, event, course=None):
 	_adjust_scope_membership(record, course,
 							 'record_dynamic_membership',
 							 'follow' )
-
 	# Add the content roles
-	membership = component.getAdapter( record.Principal, IMutableGroupMember, CONTENT_ROLE_PREFIX)
-	groups = list(membership.groups)
-	groups.extend(_content_roles_for_course_instance(course or record.CourseInstance))
-	membership.setGroups(groups)
-
-
+	add_principal_to_course_content_roles(record.Principal, course or record.CourseInstance)
 
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IIntIdRemovedEvent)
@@ -276,10 +289,7 @@ def on_drop_exit_scope_membership(record, event, course=None):
 							  ignored_exceptions=(KeyError,))
 
 	# Remove the content roles
-	membership = component.getAdapter( record.Principal, IMutableGroupMember, CONTENT_ROLE_PREFIX)
-	groups = set(membership.groups)
-	groups = groups - set(_content_roles_for_course_instance(course or record.CourseInstance))
-	membership.setGroups(groups)
+	remove_principal_from_course_content_roles(record.Principal, course or record.CourseInstance)
 
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectModifiedEvent)
