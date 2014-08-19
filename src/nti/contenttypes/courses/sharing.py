@@ -289,25 +289,31 @@ def on_drop_exit_scope_membership(record, event, course=None):
 
 	principal = record.Principal
 	course = course or record.CourseInstance
-	if not ICourseSubInstance.providedBy(course):
-		## CS: If the user is droping from a parent course
-		## check to see if user is enrolled in any of its sub instances 
-		## then only remove access to content that is not shared amongst
-		## them.
-		course_roles = _content_roles_for_course_instance(course)
-		for subInstance in course.SubInstances.values():
-			enrollments = ICourseEnrollments(subInstance)
-			record = enrollments.get_enrollment_for_principal(principal)
-			if record is not None:
-				subInstance_roles = _content_roles_for_course_instance(subInstance)
-				course_roles = course_roles.difference(subInstance_roles)
+	course_roles = _content_roles_for_course_instance(course)
+	
+	## CS: If the user is droping from a course
+	## check to see if user is enrolled in any of other section or parent 
+	## then only remove access to content that is not shared amongst
+	## them.
 		
-		if course_roles:
-			remove_principal_from_course_content_roles(principal, course, course_roles)
+	if ICourseSubInstance.providedBy(course):
+		parent_course = course.__parent__.__parent__
 	else:
-		# Remove the content roles
-		remove_principal_from_course_content_roles(principal, course)
-
+		parent_course = course
+		
+	universe = list(parent_course.SubInstances.values()) + [course]
+	for instance in universe:
+		if instance == course:
+			continue
+		enrollments = ICourseEnrollments(instance)
+		record = enrollments.get_enrollment_for_principal(principal)
+		if record is not None:
+			instance_roles = _content_roles_for_course_instance(instance)
+			course_roles = course_roles.difference(instance_roles)
+		
+	if course_roles:
+		remove_principal_from_course_content_roles(principal, course, course_roles)
+	
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectModifiedEvent)
 def on_modified_update_scope_membership(record, event):
 	"""
