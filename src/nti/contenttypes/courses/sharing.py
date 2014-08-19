@@ -21,6 +21,8 @@ from zope import interface
 from zope import component
 from zope.cachedescriptors.property import cachedIn
 
+from .interfaces import ICourseSubInstance
+from .interfaces import ICourseEnrollments
 from .interfaces import ICourseInstanceSharingScope
 from .interfaces import ICourseInstanceSharingScopes
 from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
@@ -233,9 +235,7 @@ def _content_roles_for_course_instance(course):
 		ntiid = ntiids.get_parts(ntiid)
 		provider = ntiid.provider
 		specific = ntiid.specific
-
 		roles.append(role_for_providers_content(provider, specific))
-
 	return set(roles)
 
 def add_principal_to_course_content_roles(principal, course):
@@ -248,13 +248,13 @@ def add_principal_to_course_content_roles(principal, course):
 		# be idempotent
 		membership.setGroups(final_groups)
 
-def remove_principal_from_course_content_roles(principal, course):
+def remove_principal_from_course_content_roles(principal, course, roles_to_remove=None):
+	roles_to_remove = roles_to_remove or _content_roles_for_course_instance(course)
 	membership = component.getAdapter(principal, IMutableGroupMember, CONTENT_ROLE_PREFIX)
 	groups = set(membership.groups)
-	new_groups = groups - _content_roles_for_course_instance(course)
+	new_groups = groups - roles_to_remove
 	if new_groups != groups:
 		membership.setGroups(new_groups)
-
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IIntIdAddedEvent)
 def on_enroll_record_scope_membership(record, event, course=None):
@@ -267,7 +267,6 @@ def on_enroll_record_scope_membership(record, event, course=None):
 							 'follow' )
 	# Add the content roles
 	add_principal_to_course_content_roles(record.Principal, course or record.CourseInstance)
-
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IIntIdRemovedEvent)
 def on_drop_exit_scope_membership(record, event, course=None):
@@ -288,9 +287,26 @@ def on_drop_exit_scope_membership(record, event, course=None):
 							  # So the entity may no longer have an intid -> KeyError
 							  ignored_exceptions=(KeyError,))
 
-	# Remove the content roles
-	remove_principal_from_course_content_roles(record.Principal, course or record.CourseInstance)
-
+	principal = record.Principal
+	course = course or record.CourseInstance
+	if not ICourseSubInstance.providedBy(course):
+		## CS: If the user is droping from a parent course
+		## check to see if user is enrolled in any of its sub instances 
+		## then only remove access to content that is not shared amongst
+		## them.
+		course_roles = _content_roles_for_course_instance(course)
+		for subInstance in course.SubInstances.values():
+			enrollments = ICourseEnrollments(subInstance)
+			record = enrollments.get_enrollment_for_principal(principal)
+			if record is not None:
+				subInstance_roles = _content_roles_for_course_instance(subInstance)
+				course_roles = course_roles.difference(subInstance_roles)
+		
+		if course_roles:
+			remove_principal_from_course_content_roles(principal, course, course_roles)
+	else:
+		# Remove the content roles
+		remove_principal_from_course_content_roles(principal, course)
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectModifiedEvent)
 def on_modified_update_scope_membership(record, event):
