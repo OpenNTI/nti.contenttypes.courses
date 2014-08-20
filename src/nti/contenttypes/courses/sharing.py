@@ -247,8 +247,8 @@ def add_principal_to_course_content_roles(principal, course):
 		# be idempotent
 		membership.setGroups(final_groups)
 
-def remove_principal_from_course_content_roles(principal, course, roles_to_remove=None):
-	roles_to_remove = roles_to_remove or _content_roles_for_course_instance(course)
+def remove_principal_from_course_content_roles(principal, course):
+	roles_to_remove = _content_roles_for_course_instance(course)
 	membership = component.getAdapter(principal, IMutableGroupMember, CONTENT_ROLE_PREFIX)
 	groups = set(membership.groups)
 	new_groups = groups - roles_to_remove
