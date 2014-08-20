@@ -274,33 +274,50 @@ def on_drop_exit_scope_membership(record, event, course=None):
 	When you drop a course, leave the scopes you were in, including
 	content access.
 	"""
-	# If the course was in the process of being deleted,
-	# the sharing scopes may already have been deleted, which
-	# shouldn't be a problem: the removal listeners for those
-	# events should have cleaned up
-	_adjust_scope_membership( record, course,
-							  'record_no_longer_dynamic_member',
-							  'stop_following',
-							  # Depending on the order, we may have already
-							  # cleaned this up (e.g, deleting a principal
-							  # fires events twice due to various cleanups)
-							  # So the entity may no longer have an intid -> KeyError
-							  ignored_exceptions=(KeyError,))
-
+	
+	adjust_membership = True
 	principal = record.Principal
 	course = course or record.CourseInstance
-	course_roles = _content_roles_for_course_instance(course)
+	if not ICourseSubInstance.providedBy(course):
+		## CS: If we are dropping the main course
+		## check we don't have an enrollment in one of
+		## its sections. If there is a record
+		## then don't adjust the membership so 
+		## we still have access to the community forums
+		## TODO: Target Scope
+		for instance in course.SubInstances.values():
+			enrollments = ICourseEnrollments(instance)
+			record = enrollments.get_enrollment_for_principal(principal)
+			if record is not None:
+				adjust_membership = False
+				break
+	
+	if adjust_membership:
+		# If the course was in the process of being deleted,
+		# the sharing scopes may already have been deleted, which
+		# shouldn't be a problem: the removal listeners for those
+		# events should have cleaned up
+		_adjust_scope_membership( record, course,
+								  'record_no_longer_dynamic_member',
+								  'stop_following',
+								  # Depending on the order, we may have already
+								  # cleaned this up (e.g, deleting a principal
+								  # fires events twice due to various cleanups)
+								  # So the entity may no longer have an intid -> KeyError
+								  ignored_exceptions=(KeyError,))
 	
 	## CS: If the user is droping from a course
 	## check to see if user is enrolled in any of other section or parent 
 	## then only remove access to content that is not shared amongst
 	## them.
-		
+	
+	course_roles = _content_roles_for_course_instance(course)
+	
 	if ICourseSubInstance.providedBy(course):
 		parent_course = course.__parent__.__parent__
 	else:
 		parent_course = course
-		
+			
 	universe = list(parent_course.SubInstances.values()) + [course]
 	for instance in universe:
 		if instance == course:
