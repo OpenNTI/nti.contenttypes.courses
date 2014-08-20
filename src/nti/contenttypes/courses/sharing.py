@@ -191,7 +191,8 @@ def _adjust_scope_membership(record, course,
 							 join, follow,
 							 ignored_exceptions=(),
 							 currently_in=(),
-							 relevant_scopes=None):
+							 relevant_scopes=None,
+							 related_enrolled_courses=()):
 	course = course or record.CourseInstance
 	principal = record.Principal
 	join = getattr(principal, join)
@@ -200,8 +201,16 @@ def _adjust_scope_membership(record, course,
 
 	if relevant_scopes is None:
 		relevant_scopes = scopes.getAllScopesImpliedbyScope(record.Scope)
+
+	scopes_to_ignore = []
+	for related_course in related_enrolled_courses:
+		scopes_to_ignore.extend(related_course.SharingScopes.getAllScopesImpliedbyScope(record.Scope))
+
 	for scope in relevant_scopes:
 		if scope in currently_in:
+			continue
+
+		if scope in scopes_to_ignore:
 			continue
 
 		try:
@@ -218,6 +227,8 @@ from nti.dataserver.interfaces import IMutableGroupMember
 from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
 from nti.dataserver.authorization import role_for_providers_content
 from nti.ntiids import ntiids
+from .interfaces import ICourseSubInstance
+from .interfaces import ICourseEnrollments
 
 def _content_roles_for_course_instance(course):
 	"""
@@ -236,6 +247,29 @@ def _content_roles_for_course_instance(course):
 		specific = ntiid.specific
 		roles.append(role_for_providers_content(provider, specific))
 	return set(roles)
+
+def _principal_is_enrolled_in_related_course(principal, course):
+	"""
+	If the principal is enrolled in a parent or sibling course,
+	return those courses.
+	"""
+
+	result = []
+	potential_other_courses = []
+	potential_other_courses.extend(course.SubInstances.values())
+	if ICourseSubInstance.providedBy(course):
+		main_course = course.__parent__.__parent__
+		potential_other_courses.append(main_course)
+		potential_other_courses.extend((x for x in main_course.SubInstances.values()
+										if x is not course))
+
+	for other in potential_other_courses:
+		if ICourseEnrollments(other).get_enrollment_for_principal(principal) is not None:
+			result.append(other)
+
+	return result
+
+
 
 def add_principal_to_course_content_roles(principal, course):
 	membership = component.getAdapter(principal, IMutableGroupMember, CONTENT_ROLE_PREFIX)
@@ -273,10 +307,12 @@ def on_drop_exit_scope_membership(record, event, course=None):
 	When you drop a course, leave the scopes you were in, including
 	content access.
 	"""
-	
+
 	principal = record.Principal
 	course = course or record.CourseInstance
-	
+
+	related_enrolled_courses = _principal_is_enrolled_in_related_course(principal, course)
+
 	# If the course was in the process of being deleted,
 	# the sharing scopes may already have been deleted, which
 	# shouldn't be a problem: the removal listeners for those
@@ -288,10 +324,12 @@ def on_drop_exit_scope_membership(record, event, course=None):
 							  # cleaned this up (e.g, deleting a principal
 							  # fires events twice due to various cleanups)
 							  # So the entity may no longer have an intid -> KeyError
-							  ignored_exceptions=(KeyError,))
-	
-	remove_principal_from_course_content_roles(principal, course)
-	
+							  ignored_exceptions=(KeyError,),
+							  related_enrolled_courses=related_enrolled_courses)
+
+	if not related_enrolled_courses:
+		remove_principal_from_course_content_roles(principal, course)
+
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectModifiedEvent)
 def on_modified_update_scope_membership(record, event):
 	"""

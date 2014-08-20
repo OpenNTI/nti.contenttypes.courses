@@ -141,6 +141,10 @@ class TestFunctionalSharing(CourseLayerTest):
 			course.__dict__[str('ContentPackageBundle')] = bundle
 			assert_that( course.ContentPackageBundle, is_( same_instance(bundle)))
 
+			sub = course.SubInstances['child'] = courses.ContentCourseSubInstance()
+			sub.SharingScopes.initScopes()
+
+
 		self.principal  = principal
 		self.course = admin['course']
 		self.course2 = admin['course2']
@@ -167,6 +171,81 @@ class TestFunctionalSharing(CourseLayerTest):
 		manager.drop(principal)
 
 		assert_that( list(member.groups), is_empty() )
+
+	@WithMockDSTrans
+	def test_sub_and_parent_drop_parent(self):
+		self._shared_setup()
+
+		provider = ntiids.get_provider(MockContentPackage.ntiid)
+		specific = ntiids.get_specific(MockContentPackage.ntiid)
+		role = role_for_providers_content(provider, specific)
+
+		principal = self.principal
+		member = component.getAdapter( principal, nti_interfaces.IMutableGroupMember, CONTENT_ROLE_PREFIX )
+		assert_that( list(member.groups), is_empty() )
+
+		course = self.course
+		sub_course = self.course.SubInstances['child']
+
+		manager = interfaces.ICourseEnrollmentManager(course)
+		record = manager.enroll(principal, scope=ES_CREDIT_DEGREE)
+
+		public = course.SharingScopes[ES_PUBLIC]
+		credit = course.SharingScopes[ES_CREDIT]
+		degree = course.SharingScopes[ES_CREDIT_DEGREE]
+		ndgree = course.SharingScopes[ES_CREDIT_NONDEGREE]
+
+		assert_that( principal, is_in(public) )
+		assert_that( principal, is_in(credit) )
+		assert_that( principal, is_in(degree) )
+		assert_that( principal, is_not(is_in(ndgree)) )
+
+
+		submanager = interfaces.ICourseEnrollmentManager(sub_course)
+		submanager.enroll(principal, scope=ES_CREDIT_DEGREE)
+		assert_that( list(member.groups), contains(role))
+		# drop the parent first
+		manager.drop(principal)
+
+		# still in the role
+		assert_that( list(member.groups), contains(role))
+
+		# and still in the correct scopes
+		public = course.SharingScopes[ES_PUBLIC]
+		credit = course.SharingScopes[ES_CREDIT]
+		degree = course.SharingScopes[ES_CREDIT_DEGREE]
+		ndgree = course.SharingScopes[ES_CREDIT_NONDEGREE]
+
+		assert_that( principal, is_in(public) )
+		assert_that( principal, is_in(credit) )
+		assert_that( principal, is_in(degree) )
+		assert_that( principal, is_not(is_in(ndgree)) )
+
+		sub_public = sub_course.SharingScopes[ES_PUBLIC]
+		sub_credit = sub_course.SharingScopes[ES_CREDIT]
+		sub_degree = sub_course.SharingScopes[ES_CREDIT_DEGREE]
+		sub_ndgree = sub_course.SharingScopes[ES_CREDIT_NONDEGREE]
+
+		assert_that( principal, is_in(sub_public) )
+		assert_that( principal, is_in(sub_credit) )
+		assert_that( principal, is_in(sub_degree) )
+		assert_that( principal, is_not(is_in(sub_ndgree)) )
+
+		submanager.drop(principal)
+		# Now gone from the roles
+		assert_that( list(member.groups), is_empty() )
+
+		# and all the scopes
+		assert_that( principal, is_not(is_in(public) ))
+		assert_that( principal, is_not(is_in(credit) ))
+		assert_that( principal, is_not(is_in(degree) ))
+		assert_that( principal, is_not(is_in(ndgree)))
+
+		assert_that( principal, is_not(is_in(sub_public) ))
+		assert_that( principal, is_not(is_in(sub_credit) ))
+		assert_that( principal, is_not(is_in(sub_degree) ))
+		assert_that( principal, is_not(is_in(sub_ndgree)))
+
 
 	@WithMockDSTrans
 	def test_change_scope(self):
