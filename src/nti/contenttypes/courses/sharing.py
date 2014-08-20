@@ -21,17 +21,16 @@ from zope import interface
 from zope import component
 from zope.cachedescriptors.property import cachedIn
 
-from .interfaces import ICourseSubInstance
-from .interfaces import ICourseEnrollments
 from .interfaces import ICourseInstanceSharingScope
 from .interfaces import ICourseInstanceSharingScopes
 from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
 from nti.dataserver.users import Community
-from nti.ntiids.ntiids import TYPE_OID
+from nti.dataserver.containers import CheckingLastModifiedBTreeContainer
+
 from nti.externalization.oids import to_external_ntiid_oid
 
-from nti.dataserver.containers import CheckingLastModifiedBTreeContainer
+from nti.ntiids.ntiids import TYPE_OID
 
 @interface.implementer(ICourseInstanceSharingScope)
 class CourseInstanceSharingScope(Community):
@@ -291,30 +290,7 @@ def on_drop_exit_scope_membership(record, event, course=None):
 							  # So the entity may no longer have an intid -> KeyError
 							  ignored_exceptions=(KeyError,))
 	
-	## CS: If the user is droping from a course
-	## check to see if user is enrolled in any of other section or parent 
-	## then only remove access to content that is not shared amongst
-	## them.
-	
-	course_roles = _content_roles_for_course_instance(course)
-	
-	if ICourseSubInstance.providedBy(course):
-		parent_course = course.__parent__.__parent__
-	else:
-		parent_course = course
-			
-	universe = list(parent_course.SubInstances.values()) + [course]
-	for instance in universe:
-		if instance == course:
-			continue
-		enrollments = ICourseEnrollments(instance)
-		record = enrollments.get_enrollment_for_principal(principal)
-		if record is not None:
-			instance_roles = _content_roles_for_course_instance(instance)
-			course_roles = course_roles.difference(instance_roles)
-		
-	if course_roles:
-		remove_principal_from_course_content_roles(principal, course, course_roles)
+	remove_principal_from_course_content_roles(principal, course)
 	
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectModifiedEvent)
 def on_modified_update_scope_membership(record, event):
