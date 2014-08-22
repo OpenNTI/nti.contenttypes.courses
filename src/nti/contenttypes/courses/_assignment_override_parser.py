@@ -43,7 +43,7 @@ def fill_asg_from_key(course, key):
 
 	reset_asg_missing_key(course)
 
-	json = key.readContentsAsJson()
+	json = key.readContentsAsYaml()
 	dates.lastModified = key.lastModified
 
 	supported_date_keys = ('available_for_submission_beginning',

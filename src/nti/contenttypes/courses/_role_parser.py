@@ -92,7 +92,7 @@ def fill_roles_from_key(course, key):
 
 	reset_roles_missing_key(role_manager)
 
-	json = key.readContentsAsJson()
+	json = key.readContentsAsYaml()
 	_fill_roles_from_json(course, role_manager, json)
 	role_manager.lastModified = key.lastModified
 
