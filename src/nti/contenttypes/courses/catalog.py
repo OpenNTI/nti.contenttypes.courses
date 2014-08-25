@@ -29,7 +29,7 @@ from nti.dataserver.containers import CheckingLastModifiedBTreeContainer
 from nti.dataserver.containers import CheckingLastModifiedBTreeFolder
 
 from nti.externalization.persistence import NoPickle
-from nti.externalization.externalization import WithRepr
+from nti.externalization.representation import WithRepr
 
 from nti.schema.schema import EqHash
 from nti.schema.fieldproperty import createDirectFieldProperties
