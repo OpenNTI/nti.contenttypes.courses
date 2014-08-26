@@ -11,6 +11,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from datetime import datetime
+
 from zope import interface
 from zope import component
 
@@ -127,11 +129,10 @@ class CourseCatalogInstructorLegacyInfo(CourseCatalogInstructorInfo):
 	createDirectFieldProperties(ICourseCatalogInstructorLegacyInfo)
 
 from nti.utils.property import readproperty
-import datetime
 
 def _derive_preview(self):
 	if self.StartDate is not None:
-		return self.StartDate > datetime.datetime.utcnow()
+		return self.StartDate > datetime.utcnow()
 
 
 @interface.implementer(ICourseCatalogLegacyEntry)
@@ -241,7 +242,6 @@ from nti.schema.schema import EqHash
 
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
 from nti.dataserver.links import Link
-from datetime import datetime
 
 @component.adapter(ICourseSubInstance)
 @interface.implementer(ICourseCatalogLegacyEntry)
