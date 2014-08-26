@@ -640,6 +640,13 @@ class ICourseCatalogEntry(IDisplayableContent,
 	EndDate = ValidDatetime(title="The date on which the course ends",
 					   description="Currently optional; a missing value means the course has no defined end date.")
 
+	def isCourseCurrentlyActive():
+		"""
+		Return a boolean value answering whether the course
+		should be considered active, taking into account any information
+		about starting and ending dates and durations, preview
+		flags, etc.
+		"""
 
 
 ###

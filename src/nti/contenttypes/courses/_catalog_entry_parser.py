@@ -14,10 +14,10 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
 
-import isodate
-import pytz
 import datetime
 from urlparse import urljoin
+
+from zope.interface.common.idatetime import IDateTime
 
 from .interfaces import INonPublicCourseInstance
 
@@ -69,10 +69,9 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 			_quiet_delattr(catalog_entry, str(field))
 
 	if 'startDate' in info_json_dict:
-		catalog_entry.StartDate = isodate.parse_datetime(info_json_dict['startDate'])
-		# Convert to UTC if needed
-		if catalog_entry.StartDate.tzinfo is not None:
-			catalog_entry.StartDate = catalog_entry.StartDate.astimezone(pytz.UTC).replace(tzinfo=None)
+		# parse the date using nti.externalization, which gets us
+		# a guaranteed UTC datetime as a naive object
+		catalog_entry.StartDate = IDateTime(info_json_dict['startDate'])
 	else:
 		_quiet_delattr(catalog_entry, 'StartDate')
 

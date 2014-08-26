@@ -11,6 +11,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from datetime import datetime
 from functools import total_ordering
 
 from zope import interface
@@ -247,6 +248,7 @@ class CourseCatalogEntry(SchemaConfigured,
 	# shut up pylint
 	ntiid = None
 	StartDate = None
+	EndDate = None
 	Duration = None
 
 	_SET_CREATED_MODTIME_ON_INIT = False
@@ -336,6 +338,17 @@ class CourseCatalogEntry(SchemaConfigured,
 		signature = '\n\n'.join( sig_lines )
 		return signature
 
+	def isCourseCurrentlyActive(self):
+		if getattr(self, 'Preview', False):
+			# either manually set, or before the start date
+			# some objects don't have this flag at all
+			return False
+		if self.EndDate:
+			# if we end in the future we're active
+			return self.EndDate > datetime.utcnow()
+		# otherwise, with no information given, assume
+		# we're active
+		return True
 
 @interface.implementer(IPersistentCourseCatalog)
 class CourseCatalogFolder(_AbstractCourseCatalogMixin,
