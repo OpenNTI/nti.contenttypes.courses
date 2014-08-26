@@ -241,6 +241,7 @@ from nti.schema.schema import EqHash
 
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
 from nti.dataserver.links import Link
+from datetime import datetime
 
 @component.adapter(ICourseSubInstance)
 @interface.implementer(ICourseCatalogLegacyEntry)
@@ -302,6 +303,22 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 
 		# We don't have it, try to acquire it
 		return getattr(self._next_entry, 'Preview', None)
+
+	def isCourseCurrentlyActive(self):
+		# XXX: duplicated from the main catalog entry
+		if getattr(self, 'Preview', False):
+			# either manually set, or before the start date
+			# some objects don't have this flag at all
+			return False
+		# we've seen these with no actual _next_entry, meaning
+		# attribute access can raise (how'd that happen?)
+		if getattr(self, 'EndDate', None):
+			# if we end in the future we're active
+			return self.EndDate > datetime.utcnow()
+		# otherwise, with no information given, assume
+		# we're active
+		return True
+
 
 	@readproperty
 	def _next_instance(self):
