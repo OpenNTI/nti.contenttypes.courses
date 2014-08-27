@@ -339,6 +339,7 @@ class CourseCatalogEntry(SchemaConfigured,
 		return signature
 
 	def isCourseCurrentlyActive(self):
+		# XXX: duplicated for legacy sub-catalog entries
 		if getattr(self, 'Preview', False):
 			# either manually set, or before the start date
 			# some objects don't have this flag at all
