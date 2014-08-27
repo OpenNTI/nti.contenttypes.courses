@@ -163,7 +163,8 @@ class CourseCatalogLegacyEntry(CourseCatalogEntry):
 		return _derive_preview(self)
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
-from nti.externalization.externalization import WithRepr
+
+from nti.externalization.representation import WithRepr
 
 # The objects we're going to be containing we *assume* live somewhere beneath
 # an object that implements course catalog (folder). We automatically derive
