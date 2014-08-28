@@ -28,8 +28,8 @@ from hamcrest import has_length
 from nti.testing.matchers import validly_provides
 from nti.testing.matchers import is_empty
 
-from .. import sharing
-from .. import interfaces
+from nti.contenttypes.courses import sharing
+from nti.contenttypes.courses import interfaces
 
 
 class TestSharing(unittest.TestCase):
@@ -64,21 +64,24 @@ from nti.wref.interfaces import IWeakRef
 from nti.dataserver.interfaces import IUser
 from zope.component import eventtesting
 
+from nti.dataserver.users import User
 from nti.dataserver.sharing import SharingSourceMixin
 from nti.dataserver import interfaces as nti_interfaces
 from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
 from nti.dataserver.authorization import role_for_providers_content
+
 from nti.ntiids import ntiids
+
 from persistent import Persistent
+
 import functools
 
-from .. import interfaces
-from ..interfaces import ES_PUBLIC, ES_CREDIT, ES_CREDIT_NONDEGREE, ES_CREDIT_DEGREE
-from .. import courses
+from nti.contenttypes.courses.interfaces import ES_PUBLIC, ES_CREDIT, ES_CREDIT_NONDEGREE, ES_CREDIT_DEGREE
+from nti.contenttypes.courses import courses
 
 from zope import lifecycleevent
 
-from . import CourseLayerTest
+from nti.contenttypes.courses.tests import CourseLayerTest
 from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 
 
@@ -164,7 +167,7 @@ class TestFunctionalSharing(CourseLayerTest):
 		course = self.course
 
 		manager = interfaces.ICourseEnrollmentManager(course)
-		record = manager.enroll(principal, scope=ES_CREDIT_DEGREE)
+		manager.enroll(principal, scope=ES_CREDIT_DEGREE)
 
 		assert_that( list(member.groups), contains(role))
 
@@ -172,6 +175,20 @@ class TestFunctionalSharing(CourseLayerTest):
 
 		assert_that( list(member.groups), is_empty() )
 
+	@WithMockDSTrans
+	def test_usernames_of_dynamic_memberships(self):
+		self._shared_setup()
+		user = User.create_user(username="nti@nti.com")
+		
+		course = self.course
+		manager = interfaces.ICourseEnrollmentManager(course)
+		manager.enroll(user, scope=ES_CREDIT_DEGREE)
+		degree = course.SharingScopes[ES_CREDIT_DEGREE]
+		ntiid = degree.NTIID
+		
+		names = list(user.usernames_of_dynamic_memberships)
+		assert_that(ntiid, is_in(names))
+		
 	@WithMockDSTrans
 	def test_sub_and_parent_drop_parent(self):
 		self._shared_setup()
@@ -188,7 +205,7 @@ class TestFunctionalSharing(CourseLayerTest):
 		sub_course = self.course.SubInstances['child']
 
 		manager = interfaces.ICourseEnrollmentManager(course)
-		record = manager.enroll(principal, scope=ES_CREDIT_DEGREE)
+		manager.enroll(principal, scope=ES_CREDIT_DEGREE)
 
 		public = course.SharingScopes[ES_PUBLIC]
 		credit = course.SharingScopes[ES_CREDIT]
@@ -304,7 +321,7 @@ class TestFunctionalSharing(CourseLayerTest):
 		assert_that( principal, is_not(is_in(ndgree)) )
 
 		new_course = self.course2
-		from ..enrollment import IDefaultCourseInstanceEnrollmentStorage
+		from nti.contenttypes.courses.enrollment import IDefaultCourseInstanceEnrollmentStorage
 
 		mover = IObjectMover(record)
 
