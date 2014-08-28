@@ -471,7 +471,9 @@ replaces the data for the assignments specified within this course,
             "total_points": 20
         },
         "available_for_submission_beginning": "2014-01-13T06:00:00Z",
-        "available_for_submission_ending":    "2014-03-03T05:59:00Z"
+        "available_for_submission_ending":    "2014-03-03T05:59:00Z",
+        "excluded": false,
+        "student_nuclear_reset_capable": false,
     },
    }
 
@@ -480,12 +482,20 @@ basis. At this writing, the only supported value is ``total_points``,
 which defines a value to which all the equally-weighted questions will
 be normalized. (This value will be reflected in the ``Grade`` object's
 ``AutoGradeMax`` property.) It can be defined individually for each
-assignment; tool support lets you easily normalize all assignments the same.
+assignment; tool support lets you easily normalize all assignments the
+same. It can be explicitly set to ``null`` to disable auto-grading and
+better merge with the tool.
 
-The other known key (defined by
-:py:mod:`nti.app.assessment.assignment_filters`) is ``excluded``,
-which, if given, tells whether the assignment should not be visible in
-this course (neither to students nor the instructor).
+Another known key (defined by
+:py:mod:`nti.app.assessment.assignment_filters`) is ``excluded``, a
+boolean, which, if given, tells whether the assignment should not be
+visible in this course (neither to students nor the instructor).
+
+Yet another key (defined by :py:mod:`nti.app.assessment.history`) is
+``student_nuclear_reset_capable``, a boolean, which, if given, tells
+whether the nuclear reset option (deleting the entire assignment
+history) should be available to students on this assignment. The
+default is false.
 
 This file is meant to be automatically generated and then
 human-edited, but merged with additional automatic generated content:
