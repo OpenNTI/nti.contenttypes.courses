@@ -1,44 +1,37 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-
-
-.. $Id$
-"""
 
 from __future__ import print_function, unicode_literals, absolute_import, division
 __docformat__ = "restructuredtext en"
 
-logger = __import__('logging').getLogger(__name__)
+# disable: accessing protected members, too many methods
+# pylint: disable=W0212,R0904
 
-#disable: accessing protected members, too many methods
-#pylint: disable=W0212,R0904
-
-import unittest
-from hamcrest import assert_that
 from hamcrest import is_
-from hamcrest import is_not as does_not
-from hamcrest import all_of
-from hamcrest import has_length
-from hamcrest import has_key
-from hamcrest import has_entry
-from hamcrest import has_property
-from hamcrest import has_entries
-from hamcrest import not_none
 from hamcrest import none
-
-from nti.externalization.tests import externalizes
+from hamcrest import all_of
+from hamcrest import has_key
+from hamcrest import not_none
+from hamcrest import has_entry
+from hamcrest import has_length
+from hamcrest import has_entries
+from hamcrest import assert_that
+from hamcrest import has_property
+from hamcrest import is_not as does_not
 
 import os.path
-from nti.testing.matchers import validly_provides
-
-from .._outline_parser import fill_outline_from_key
-from ..outlines import PersistentCourseOutline as CourseOutline
-from ..interfaces import ICourseOutline
 
 from nti.contentlibrary.filesystem import FilesystemKey
 
-from . import CourseLayerTest
+from nti.contenttypes.courses.interfaces import ICourseOutline
+from nti.contenttypes.courses._outline_parser import fill_outline_from_key
+from nti.contenttypes.courses.outlines import PersistentCourseOutline as CourseOutline
+
+from nti.contenttypes.courses.tests import CourseLayerTest
+
+from nti.testing.matchers import validly_provides
+
+from nti.externalization.tests import externalizes
 
 class TestOutlineParser(CourseLayerTest):
 
@@ -78,18 +71,23 @@ class TestOutlineParser(CourseLayerTest):
 							 does_not(has_key('ContentNTIID')),
 							 has_entry('Class', 'CourseOutlineCalendarNode'))))
 
-
+		unit_7 = outline['6']
+		assert_that(unit_7, has_property('title', 'Dateless Resources'))
+		lesson_1 = unit_7["0"]
+		assert_that(lesson_1, has_property('AvailableEnding', is_(none())))
+		assert_that(lesson_1, has_property('AvailableBeginning', is_(none())))
+		
 		# Doing it again does nothing...
-		assert_that( outline, has_length(6) )
+		assert_that( outline, has_length(7) )
 
 		fill_outline_from_key(outline, key)
-		assert_that( outline, has_length(6) )
+		assert_that( outline, has_length(7) )
 
 		# ...even if we set modification back
 		outline.lastModified = -1
 
 		fill_outline_from_key(outline, key)
-		assert_that( outline, has_length(6) )
+		assert_that( outline, has_length(7) )
 
 	def test_parse_empty(self):
 		class Key(object):

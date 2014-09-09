@@ -1,76 +1,70 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-
-
-.. $Id$
-"""
 
 from __future__ import print_function, unicode_literals, absolute_import, division
 __docformat__ = "restructuredtext en"
 
-logger = __import__('logging').getLogger(__name__)
+# disable: accessing protected members, too many methods
+# pylint: disable=W0212,R0904
 
-#disable: accessing protected members, too many methods
-#pylint: disable=W0212,R0904
-
-from zope import interface
-
-from hamcrest import assert_that
 from hamcrest import is_
-from hamcrest import is_not
 from hamcrest import none
-from hamcrest import same_instance
-from hamcrest import has_length
-from hamcrest import has_entry
-from hamcrest import has_entries
-from hamcrest import has_properties
-from hamcrest import contains_inanyorder
-from hamcrest import has_property
-from hamcrest import contains
-from hamcrest import contains_string
+from hamcrest import is_not
 from hamcrest import has_key
-from hamcrest import has_item
-
-import datetime
-
-from nti.testing.matchers import verifiably_provides
-from nti.testing.matchers import is_empty
+from hamcrest import contains
+from hamcrest import has_entry
+from hamcrest import has_length
+from hamcrest import assert_that
+from hamcrest import has_entries
+from hamcrest import has_property
+from hamcrest import same_instance
+from hamcrest import has_properties
+from hamcrest import contains_string
+from hamcrest import contains_inanyorder
 
 import os.path
+import datetime
 
-from .. import catalog
-from .. import legacy_catalog
-from .._synchronize import synchronize_catalog_from_root
-from ..interfaces import ICourseInstanceVendorInfo
-from ..interfaces import ICourseCatalogEntry
-from ..interfaces import ICourseInstance
-from ..interfaces import IEnrollmentMappedCourseInstance
-from ..interfaces import ES_CREDIT
-from ..interfaces import INonPublicCourseInstance
-from ..interfaces import ICourseCatalog
+from zope import interface
+from zope import component
+
+from persistent.interfaces import IPersistent
 
 from nti.contentlibrary import filesystem
 from nti.contentlibrary.library import EmptyLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibrary
-from zope import component
-from persistent.interfaces import IPersistent
-
-from . import CourseLayerTest
-from nti.externalization.tests import externalizes
 
 from nti.assessment.interfaces import IQAssignmentDateContext
+
 from nti.assessment.interfaces import IQAssignmentPolicies
-from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
-
-from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
-from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ACT_CREATE
+from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
+from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
+from nti.dataserver.interfaces import ISharingTargetEntityIterable
+
+from .. import catalog
+from .. import legacy_catalog
+
+from ..interfaces import ES_CREDIT
+from ..interfaces import ICourseCatalog
+from ..interfaces import ICourseInstance
+from ..interfaces import ICourseCatalogEntry
+from ..interfaces import INonPublicCourseInstance
+from ..interfaces import ICourseInstanceVendorInfo
+from ..interfaces import IEnrollmentMappedCourseInstance
+from .._synchronize import synchronize_catalog_from_root
+
+from nti.externalization.tests import externalizes
 
 from nti.dataserver.tests.test_authorization_acl import permits
 from nti.dataserver.tests.test_authorization_acl import denies
+
+from nti.testing.matchers import is_empty
+from nti.testing.matchers import verifiably_provides
+
+from . import CourseLayerTest
 
 class TestFunctionalSynchronize(CourseLayerTest):
 
@@ -106,7 +100,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		assert_that( gateway, verifiably_provides(IEnrollmentMappedCourseInstance) )
 		assert_that( gateway, externalizes())
 
-		assert_that( gateway.Outline, has_length(6) )
+		assert_that( gateway.Outline, has_length(7) )
 
 		assert_that( gateway.ContentPackageBundle.__parent__,
 					 is_(gateway))
