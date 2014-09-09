@@ -114,6 +114,7 @@ class _LegacyCCEFieldDecorator(object):
 	__metaclass__ = SingletonDecorator
 
 	def _course_package(self, context):
+		package = None
 		course = ICourseInstance(context, None)
 		if course is not None:
 			try:

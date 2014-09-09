@@ -16,24 +16,19 @@ from datetime import datetime
 from zope import interface
 from zope import component
 
-###
-# Legacy interface Extensions
-###
-
-from .interfaces import ICourseCatalogInstructorInfo
-from .interfaces import ICourseCatalogEntry
-from .interfaces import ICourseCatalog
-
-from nti.schema.field import ValidTextLine
 from nti.schema.field import Int
 from nti.schema.field import Dict
 from nti.schema.field import List
-from nti.schema.field import ValidURI
 from nti.schema.field import Bool
 from nti.schema.field import Object
-
-from nti.schema.fieldproperty import createDirectFieldProperties
+from nti.schema.field import ValidURI
+from nti.schema.field import ValidTextLine
 from nti.schema.schema import SchemaConfigured
+from nti.schema.fieldproperty import createDirectFieldProperties
+
+from .interfaces import ICourseCatalog
+from .interfaces import ICourseCatalogEntry
+from .interfaces import ICourseCatalogInstructorInfo
 
 from .catalog import CourseCatalogEntry
 from .catalog import CourseCatalogInstructorInfo
@@ -102,6 +97,10 @@ class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
 				   description="This course should be considered an advertising preview"
 				   " and not yet have its content accessed.")
 
+
+	DisableOverviewCalendar = Bool(title="A URL or path of indeterminate type or meaning",
+								   required=False, default=False)
+	
 	###
 	# These are being replaced with presentation specific asset bundles
 	# (one path is insufficient to handle things like retina displays
@@ -112,9 +111,7 @@ class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
 
 	LegacyPurchasableThumbnail = ValidTextLine(title="A URL or path of indeterminate type or meaning",
 										  required=False)
-
-
-
+		
 # Legacy extensions
 
 @interface.implementer(ICourseCreditLegacyInfo)
@@ -134,9 +131,9 @@ def _derive_preview(self):
 	if self.StartDate is not None:
 		return self.StartDate > datetime.utcnow()
 
-
 @interface.implementer(ICourseCatalogLegacyEntry)
 class CourseCatalogLegacyEntry(CourseCatalogEntry):
+	DisableOverviewCalendar = False
 	__external_can_create__ = False
 	createDirectFieldProperties(ICourseCatalogLegacyEntry)
 
@@ -353,11 +350,8 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 CourseSubInstanceCatalogLegacyEntryFactory = an_factory(_CourseSubInstanceCatalogLegacyEntry,
 														key='CourseCatalogEntry')
 
-
 # For externalization of the interfaces defined in this module,
 # which does not fit the traditional pattern
-
-from nti.externalization.autopackage import AutoPackageSearchingScopedInterfaceObjectIO
 
 from zope.dottedname import resolve as dottedname
 
@@ -366,3 +360,4 @@ class _LegacyCatalogAutoPackageSearchingScopedInterfaceObjectIO(object):
 	@classmethod
 	def _ap_find_package_interface_module(cls):
 		return dottedname.resolve('nti.contenttypes.courses.legacy_catalog')
+

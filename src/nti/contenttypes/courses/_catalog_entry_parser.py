@@ -93,6 +93,10 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		if catalog_entry.StartDate and datetime.datetime.utcnow() < catalog_entry.StartDate:
 			assert catalog_entry.Preview
 
+	if info_json_dict.get('disable_calendar_overview',None) is not None:
+		catalog_entry.DisableOverviewCalendar = info_json_dict['disable_calendar_overview']
+	else:
+		catalog_entry.DisableOverviewCalendar = False
 
 	instructors = []
 	# For externalizing the photo URLs, we need

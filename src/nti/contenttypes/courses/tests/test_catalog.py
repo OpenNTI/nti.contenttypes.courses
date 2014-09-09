@@ -1,41 +1,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-
-
-.. $Id$
-"""
 
 from __future__ import print_function, unicode_literals, absolute_import, division
 __docformat__ = "restructuredtext en"
 
-logger = __import__('logging').getLogger(__name__)
+# disable: accessing protected members, too many methods
+# pylint: disable=W0212,R0904
 
-#disable: accessing protected members, too many methods
-#pylint: disable=W0212,R0904
-
-import unittest
-from hamcrest import assert_that
 from hamcrest import is_
 from hamcrest import none
-from hamcrest import has_entry
+from hamcrest import assert_that
 from hamcrest import has_property
 
-from nti.testing import base
+import isodate
+import unittest
+
+from zope.location.interfaces import ILocation
+
+from nti.contenttypes.courses.catalog import CourseCatalogEntry
+from nti.contenttypes.courses.catalog import CourseCatalogFolder
+from nti.contenttypes.courses.catalog import GlobalCourseCatalog
+
+from nti.contenttypes.courses.legacy_catalog import CourseCatalogLegacyEntry
+from nti.contenttypes.courses.legacy_catalog import _CourseSubInstanceCatalogLegacyEntry
+
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import IGlobalCourseCatalog
+
 from nti.testing.matchers import validly_provides
 from nti.testing.matchers import verifiably_provides
-
-import isodate
-
-from ..catalog import GlobalCourseCatalog
-from ..catalog import CourseCatalogFolder
-from ..catalog import CourseCatalogEntry
-from ..legacy_catalog import _CourseSubInstanceCatalogLegacyEntry
-from ..legacy_catalog import CourseCatalogLegacyEntry
-from ..interfaces import IGlobalCourseCatalog
-from ..interfaces import ICourseCatalog
-from ..interfaces import ICourseCatalogEntry
-from zope.location.interfaces import ILocation
 
 class TestCatalog(unittest.TestCase):
 
@@ -55,7 +49,6 @@ class TestCatalog(unittest.TestCase):
 
 		assert_that(_CourseSubInstanceCatalogLegacyEntry(),
 					validly_provides(ILocation))
-
 
 	def test_entry_timestamps(self):
 		cce = CourseCatalogEntry()
