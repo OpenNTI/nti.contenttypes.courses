@@ -149,6 +149,7 @@ def fill_outline_from_key(outline, key, xml_parent_name=None):
 	if key.lastModified <= outline.lastModified:
 		return outline
 
+	__traceback_info__ = key, outline
 	node = key.readContentsAsETree()
 	if xml_parent_name:
 		try:

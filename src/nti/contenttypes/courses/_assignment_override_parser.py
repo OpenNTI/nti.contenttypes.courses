@@ -43,6 +43,7 @@ def fill_asg_from_key(course, key):
 
 	reset_asg_missing_key(course)
 
+	__traceback_info__ = key, course
 	json = key.readContentsAsYaml()
 	dates.lastModified = key.lastModified
 
