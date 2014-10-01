@@ -701,7 +701,7 @@ def on_course_deletion_unenroll(course, event):
 
 from zope.copypastemove.interfaces import IObjectMover
 
-def migrate_enrollments_from_course_to_course(source, dest, verbose=False):
+def migrate_enrollments_from_course_to_course(source, dest, verbose=False, result=None):
 	"""
 	Move all the enrollments from the ``source`` course to the ``dest``
 	course. Sharing will be updated, but no emails will be sent.
@@ -718,6 +718,7 @@ def migrate_enrollments_from_course_to_course(source, dest, verbose=False):
 	"""
 
 	count = 0
+	result = list() if result is None else result
 	log = logger.debug if not verbose else logger.info
 	
 	log('Moving enrollment records from %s to %s',
@@ -735,10 +736,11 @@ def migrate_enrollments_from_course_to_course(source, dest, verbose=False):
 		if source_prin_id in dest_enrollments:
 			log("Ignoring dup enrollment for %s", source_prin_id)
 			continue
-
+		
 		source_enrollment = source_enrollments[source_prin_id]
 		mover = IObjectMover(source_enrollment)
 		mover.moveTo(dest_enrollments)
+		result.append(source_prin_id)
 		
 		log('Enrollment record for %s (scope=%s) moved',
 			source_prin_id, source_enrollment.Scope)
