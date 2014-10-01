@@ -12,10 +12,12 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
-from zope.interface import ro
 from zope import component
+from zope.interface import ro
 from zope import lifecycleevent
+from zope.cachedescriptors.method import cachedIn
 from zope.annotation.factory import factory as an_factory
+
 from ZODB.interfaces import IConnection
 
 from nti.externalization.persistence import NoPickle
@@ -26,9 +28,9 @@ from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
 from nti.schema.schema import SchemaConfigured
 
+from zope.container.constraints import contains
 from zope.container.interfaces import IContainer
 from zope.container.interfaces import IContained
-from zope.container.constraints import contains
 
 from zope.security.interfaces import IPrincipal
 
@@ -38,6 +40,7 @@ from .interfaces import ICourseEnrollmentManager
 from .interfaces import ICourseEnrollments
 from .interfaces import ICourseInstance
 from .interfaces import ICourseCatalog
+from .interfaces import ICourseCatalogEntry
 from .interfaces import IGlobalCourseCatalog
 from .interfaces import ES_PUBLIC
 from .interfaces import ES_CREDIT
@@ -48,8 +51,6 @@ from nti.contentlibrary.bundle import _readCurrent
 from nti.utils.property import alias
 from nti.utils.property import Lazy
 from nti.utils.property import CachedProperty
-from zope.cachedescriptors.method import cachedIn
-
 
 from nti.schema.fieldproperty import FieldProperty
 
@@ -700,7 +701,7 @@ def on_course_deletion_unenroll(course, event):
 
 from zope.copypastemove.interfaces import IObjectMover
 
-def migrate_enrollments_from_course_to_course(source, dest):
+def migrate_enrollments_from_course_to_course(source, dest, verbose=False):
 	"""
 	Move all the enrollments from the ``source`` course to the ``dest``
 	course. Sharing will be updated, but no emails will be sent.
@@ -716,24 +717,33 @@ def migrate_enrollments_from_course_to_course(source, dest):
 		any enrollments migrated.
 	"""
 
+	count = 0
+	log = logger.debug if not verbose else logger.info
+	
+	log('Moving enrollment records from %s to %s',
+		ICourseCatalogEntry(source).ntiid, ICourseCatalogEntry(dest).ntiid)
+	
 	# All we need to do is use IObjectMover to transport the
 	# EnrollmentRecord objects; they find their course from
 	# where they are located, and the Storage object is a simple
 	# IContainer. The sharing listeners take care of the rest.
 
-	source_enrollments = IDefaultCourseInstanceEnrollmentStorage(source)
 	dest_enrollments = IDefaultCourseInstanceEnrollmentStorage(dest)
+	source_enrollments = IDefaultCourseInstanceEnrollmentStorage(source)
 
-	count = 0
 	for source_prin_id in list(source_enrollments): # copy, we're mutating
 		if source_prin_id in dest_enrollments:
-			logger.debug("Ignoring dup enrollment for %s", source_prin_id)
+			log("Ignoring dup enrollment for %s", source_prin_id)
 			continue
 
 		source_enrollment = source_enrollments[source_prin_id]
 		mover = IObjectMover(source_enrollment)
-
 		mover.moveTo(dest_enrollments)
+		
+		log('Enrollment record for %s (scope=%s) moved',
+			source_prin_id, source_enrollment.Scope)
+		
 		count += 1
 
+	log('%s enrollment record(s) moved', count)
 	return count
