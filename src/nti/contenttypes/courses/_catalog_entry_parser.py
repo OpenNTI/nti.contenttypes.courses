@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-A parser for the on-disk representation
-of catalog information.
+A parser for the on-disk representation of catalog information.
 
 .. $Id$
 """
@@ -12,19 +11,19 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from zope import interface
-
 import datetime
 from urlparse import urljoin
 
+from zope import interface
 from zope.interface.common.idatetime import IDateTime
 
+from nti.dataserver.users import Entity
+
+from .interfaces import IDenyOpenEnrollment
 from .interfaces import INonPublicCourseInstance
 
-from .legacy_catalog import CourseCatalogInstructorLegacyInfo
 from .legacy_catalog import CourseCreditLegacyInfo
-
-from nti.dataserver.users import Entity
+from .legacy_catalog import CourseCatalogInstructorLegacyInfo
 
 def _quiet_delattr(o, k):
 	try:
@@ -150,9 +149,12 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 	else:
 		_quiet_delattr(catalog_entry, 'Prerequisites')
 
-
+	if info_json_dict.get('deny_open_enrollment'):
+		interface.alsoProvides(catalog_entry, IDenyOpenEnrollment)
+	elif IDenyOpenEnrollment.providedBy(catalog_entry):
+		interface.noLongerProvides(catalog_entry, IDenyOpenEnrollment)
+		
 	return catalog_entry
-
 
 def fill_entry_from_legacy_key(catalog_entry, key, base_href='/'):
 	"""

@@ -471,6 +471,16 @@ class INonPublicCourseInstance(interface.Interface):
 # interfaces.
 INonPublicCourseInstance.setTaggedValue('_ext_is_marker_interface', True)
 
+class IDenyOpenEnrollment(interface.Interface):
+	"""
+	A marker interface applied to course instances to designate
+	that they don't allow open enrollment
+	people enrolled for credit can see the catalog entry and the
+	course itself. This enrollment typically happens in a backend
+	process.
+	"""
+IDenyOpenEnrollment.setTaggedValue('_ext_is_marker_interface', True)
+
 from zope.location import LocationIterator
 
 def is_instructed_by_name(context, username):

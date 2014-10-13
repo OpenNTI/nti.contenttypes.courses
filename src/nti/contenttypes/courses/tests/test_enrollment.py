@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-
-
 .. $Id$
 """
 
@@ -34,15 +32,14 @@ from hamcrest import same_instance
 
 from zope.schema.interfaces import ConstraintNotSatisfied
 
-from nti.testing import base
-from nti.testing.matchers import is_empty
-from nti.testing.matchers import validly_provides
-from nti.testing.matchers import is_false
 
+from nti.testing.matchers import is_empty
+from nti.testing.matchers import is_false
+from nti.testing.matchers import validly_provides
+
+from .. import courses
 from .. import enrollment
 from .. import interfaces
-from .. import courses
-from .. import catalog
 
 from zope import lifecycleevent
 
@@ -85,8 +82,9 @@ from zope.lifecycleevent import IObjectRemovedEvent
 from nti.dataserver.sharing import SharingSourceMixin
 from persistent import Persistent
 import functools
+
 from nti.dataserver.authentication import _dynamic_memberships_that_participate_in_security
-from nti.dataserver.interfaces import ISharingTargetEntityIterable
+
 from ..interfaces import ES_CREDIT
 from ..interfaces import ES_CREDIT_NONDEGREE
 from ..interfaces import ES_CREDIT_DEGREE
@@ -380,7 +378,7 @@ class TestFunctionalEnrollment(CourseLayerTest):
 
 		principal = self.principal
 		course = self.course
-		course_parent = self.course.__parent__
+		# course_parent = self.course.__parent__
 
 		manager = interfaces.ICourseEnrollmentManager(course)
 		assert_that( manager, is_(enrollment.DefaultCourseEnrollmentManager) )
@@ -490,3 +488,14 @@ class TestFunctionalEnrollment(CourseLayerTest):
 					is_(1))
 		assert_that(ICourseEnrollments(new_course).count_enrollments(),
 					is_(1))
+		
+	@WithMockDSTrans
+	def test_check_open_enrolments(self):
+		self._shared_setup()
+		course = self.course
+		principal = self.principal
+		interface.alsoProvides(course, interfaces.IDenyOpenEnrollment)
+		
+		manager = interfaces.ICourseEnrollmentManager(course)
+		with self.assertRaises(ConstraintNotSatisfied):
+			manager.enroll(principal, scope=ES_PUBLIC)

@@ -11,12 +11,15 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from . import MessageFactory as _
+
 from zope import interface
 from zope import component
 from zope.interface import ro
 from zope import lifecycleevent
 from zope.cachedescriptors.method import cachedIn
 from zope.annotation.factory import factory as an_factory
+from zope.schema.interfaces import ConstraintNotSatisfied
 
 from ZODB.interfaces import IConnection
 
@@ -34,6 +37,7 @@ from zope.container.interfaces import IContained
 
 from zope.security.interfaces import IPrincipal
 
+from .interfaces import IDenyOpenEnrollment
 from .interfaces import ICourseInstanceEnrollmentRecord
 from .interfaces import ICourseInstanceEnrollmentRecordContainer
 from .interfaces import ICourseEnrollmentManager
@@ -438,6 +442,7 @@ class EnrollmentMappedCourseEnrollmentManager(DefaultCourseEnrollmentManager):
 	# didn't actually wind up enrolling in this course instance itself
 	# to start with.
 
+from zope.lifecycleevent import IObjectAddedEvent
 from zope.lifecycleevent import IObjectModifiedEvent
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectModifiedEvent)
@@ -459,15 +464,24 @@ def on_modified_potentially_move_courses(record, event):
 		# and we can't know what order that will happen in, so the code
 		# has to be robust to that.
 		dest_enrollments = IDefaultCourseInstanceEnrollmentStorage(mapped_course)
-
 		mover = IObjectMover(record)
 		mover.moveTo(dest_enrollments)
 
 
+@component.adapter(ICourseInstanceEnrollmentRecord, IObjectAddedEvent)
+def check_open_enrollment_record_added(record, event):
+	"""
+	If a user moves between scopes in an enrollment-mapped course,
+	we may need to transfer them to a different section too.
+	"""
 
-from nti.dataserver.interfaces import ILengthEnumerableEntityContainer
-from nti.dataserver.interfaces import IEntityContainer
+	course = record.CourseInstance
+	if record.Scope == ES_PUBLIC and IDenyOpenEnrollment.providedBy(course):
+		raise ConstraintNotSatisfied(_("Open enrollment is not allowed"))
+
 from nti.dataserver.interfaces import IEntity
+from nti.dataserver.interfaces import IEntityContainer
+from nti.dataserver.interfaces import ILengthEnumerableEntityContainer
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseEnrollments)

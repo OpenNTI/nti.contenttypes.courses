@@ -36,6 +36,7 @@ from .interfaces import ICourseInstanceVendorInfo
 from .interfaces import ICourseSubInstances
 from .interfaces import IContentCourseSubInstance
 from .interfaces import ICourseCatalogEntry
+from .interfaces import IDenyOpenEnrollment
 from .interfaces import INonPublicCourseInstance
 from .interfaces import CourseInstanceAvailableEvent
 from .interfaces import IEnrollmentMappedCourseInstance
@@ -333,6 +334,11 @@ class _ContentCourseSynchronizer(object):
 			interface.alsoProvides(course, INonPublicCourseInstance)
 		elif INonPublicCourseInstance.providedBy(course):
 			interface.noLongerProvides(course, INonPublicCourseInstance)
+			
+		if IDenyOpenEnrollment.providedBy(catalog_entry):
+			interface.alsoProvides(course, IDenyOpenEnrollment)
+		elif IDenyOpenEnrollment.providedBy(course):
+			interface.noLongerProvides(course, IDenyOpenEnrollment)
 
 	@classmethod
 	def update_instructor_roles(cls, course, bucket):
