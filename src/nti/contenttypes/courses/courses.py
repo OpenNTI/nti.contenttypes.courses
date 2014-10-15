@@ -77,7 +77,11 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		self._p_changed = True
 		outline = PersistentCourseOutline()
 		lifecycleevent.created(outline)
-		self['Outline'] = outline
+		try:
+			self['Outline'] = outline
+		except KeyError:
+			logger.error("Cannot set outline for %s", self.__name__)
+			raise
 		return outline
 	Outline = Lazy(_make_Outline, str('Outline'))
 
@@ -118,9 +122,9 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		return ()
 
 
+from Acquisition import aq_acquire
 from .interfaces import IContentCourseInstance
 from .interfaces import IContentCourseSubInstance
-from Acquisition import aq_acquire
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
 
 @interface.implementer(IContentCourseInstance)
