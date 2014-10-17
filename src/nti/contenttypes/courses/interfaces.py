@@ -761,7 +761,7 @@ class ICourseEnrollmentManager(interface.Interface):
 	may choose to implement this directly.
 	"""
 
-	def enroll(principal, scope=ES_PUBLIC):
+	def enroll(principal, scope=ES_PUBLIC, context=None):
 		"""
 		Cause the given principal to be enrolled in this course, raising
 		an appropriate error if that cannot be done.
@@ -770,6 +770,7 @@ class ICourseEnrollmentManager(interface.Interface):
 		regardless of scope.
 
 		:keyword scope: One of the items from the :data:`.ENROLLMENT_SCOPE_VOCABULARY`
+		:keyword context: Any information passed during record creation event
 
 		:return: A truth value that is True if some action was taken,
 			and false of no action was taken.
@@ -859,6 +860,23 @@ class ICourseInstanceAvailableEvent(IObjectEvent):
 class CourseInstanceAvailableEvent(ObjectEvent):
 	pass
 
+from zope.lifecycleevent import ObjectCreatedEvent
+from zope.lifecycleevent.interfaces import IObjectCreatedEvent
+
+class ICourseInstanceEnrollmentRecordCreatedEvent(IObjectCreatedEvent):
+	"""
+	An event that is sent during the creation of a 
+	:class:`.ICourseInstanceEnrollmentRecord`.
+	The context it's any information subscribers may be interested in
+	"""
+	context = interface.Attribute("Creationg context information")
+
+@interface.implementer(ICourseInstanceEnrollmentRecordCreatedEvent)
+class CourseInstanceEnrollmentRecordCreatedEvent(ObjectCreatedEvent):
+	
+	def __init__(self, obj, context=None):
+		super(CourseInstanceEnrollmentRecordCreatedEvent, self).__init__(obj)
+		self.context = context
 
 #### Back to discussions
 

@@ -16,7 +16,7 @@ from . import MessageFactory as _
 from zope import interface
 from zope import component
 from zope.interface import ro
-from zope import lifecycleevent
+from zope.event import notify
 from zope.cachedescriptors.method import cachedIn
 from zope.annotation.factory import factory as an_factory
 from zope.schema.interfaces import ConstraintNotSatisfied
@@ -52,8 +52,9 @@ from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
 from .interfaces import IPrincipalEnrollments
 
 from nti.contentlibrary.bundle import _readCurrent
-from nti.utils.property import alias
+
 from nti.utils.property import Lazy
+from nti.utils.property import alias
 from nti.utils.property import CachedProperty
 
 from nti.schema.fieldproperty import FieldProperty
@@ -242,6 +243,8 @@ def _global_course_catalog_storage(site_manager):
 		return None
 
 
+from .interfaces import CourseInstanceEnrollmentRecordCreatedEvent
+
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseEnrollmentManager)
 class DefaultCourseEnrollmentManager(object):
@@ -312,7 +315,7 @@ class DefaultCourseEnrollmentManager(object):
 	# enrolled, then pays for the course, and becomes for-credit-non-degree)
 	###
 
-	def enroll(self, principal, scope=ES_PUBLIC):
+	def enroll(self, principal, scope=ES_PUBLIC, context=None):
 		principal_id = IPrincipal(principal).id
 		if principal_id in self._inst_enrollment_storage:
 			# DO NOT readCurrent of this, until we determine that we won't actually
@@ -327,7 +330,7 @@ class DefaultCourseEnrollmentManager(object):
 		enrollments = self._cat_enrollment_storage.enrollments_for_id(principal_id,
 																	  principal)
 
-		lifecycleevent.created(record)
+		notify(CourseInstanceEnrollmentRecordCreatedEvent(record, context))
 		enrollments.add(record)
 		# now install and fire the ObjectAdded event, after
 		# it's in the IPrincipalEnrollments; that way
@@ -386,7 +389,6 @@ class DefaultCourseEnrollmentManager(object):
 			del storage[pid]
 
 		return records
-
 
 from .interfaces import ICourseInstanceVendorInfo
 from .interfaces import IEnrollmentMappedCourseInstance
