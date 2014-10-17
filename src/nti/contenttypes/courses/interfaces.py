@@ -677,6 +677,9 @@ class ICourseCatalogEntry(IDisplayableContent,
 #: the parent scopes.
 ES_PUBLIC = "Public"
 
+#: This scope extends the public scope with people that have purchase the course
+ES_PURCHASED = "Purchased"
+
 #: This scope extends the public scope with people taking the course
 #: to earn academic credit. They have probably paid money.
 ES_CREDIT = "ForCredit"
@@ -690,7 +693,6 @@ ES_CREDIT_DEGREE = "ForCreditDegree"
 #: seeking a degree.
 ES_CREDIT_NONDEGREE = "ForCreditNonDegree"
 
-
 from zope.schema.vocabulary import SimpleTerm
 from zope.schema.vocabulary import SimpleVocabulary
 
@@ -701,22 +703,25 @@ class ScopeTerm(SimpleTerm):
 		self.implies = implies
 		self.implied_by = implied_by
 
-
 ENROLLMENT_SCOPE_VOCABULARY = SimpleVocabulary(
 	[ScopeTerm(ES_PUBLIC,
 			   title=_('Open'),
-			   implied_by=(ES_CREDIT, ES_CREDIT_DEGREE, ES_CREDIT_NONDEGREE)),
+			   implied_by=(ES_CREDIT, ES_CREDIT_DEGREE, ES_CREDIT_NONDEGREE, ES_PURCHASED)),
+	 ScopeTerm(ES_PURCHASED,
+				title=_('Purchased'),
+				implies=(ES_PUBLIC,),
+				implied_by=(ES_CREDIT, ES_CREDIT_DEGREE, ES_CREDIT_NONDEGREE)),
 	 ScopeTerm(ES_CREDIT,
 				title=_('For Credit'),
-				implies=(ES_PUBLIC,),
+				implies=(ES_PUBLIC, ES_PURCHASED),
 				implied_by=(ES_CREDIT_DEGREE, ES_CREDIT_NONDEGREE)),
 	 ScopeTerm(ES_CREDIT_DEGREE,
 				title=_('For Credit (Degree)'),
-				implies=(ES_CREDIT, ES_PUBLIC),
+				implies=(ES_CREDIT, ES_PURCHASED, ES_PUBLIC),
 				implied_by=()),
 	 ScopeTerm(ES_CREDIT_NONDEGREE,
 				title=_('For Credit (Non-degree)'),
-				implies=(ES_CREDIT, ES_PUBLIC),
+				implies=(ES_CREDIT, ES_PURCHASED, ES_PUBLIC),
 				implied_by=())])
 
 class ICourseInstanceEnrollmentRecordContainer(IContainer):
