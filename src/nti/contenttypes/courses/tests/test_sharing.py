@@ -31,7 +31,6 @@ from nti.testing.matchers import is_empty
 from nti.contenttypes.courses import sharing
 from nti.contenttypes.courses import interfaces
 
-
 class TestSharing(unittest.TestCase):
 
 	def test_provides(self):
@@ -50,6 +49,7 @@ class TestSharing(unittest.TestCase):
 					 contains_inanyorder(
 						 has_property('__name__', interfaces.ES_PUBLIC ),
 						 has_property('__name__', interfaces.ES_CREDIT ),
+						 has_property('__name__', interfaces.ES_PURCHASED ),
 						 has_property('__name__', interfaces.ES_CREDIT_NONDEGREE )
 					 ))
 
@@ -76,14 +76,15 @@ from persistent import Persistent
 
 import functools
 
-from nti.contenttypes.courses.interfaces import ES_PUBLIC, ES_CREDIT, ES_CREDIT_NONDEGREE, ES_CREDIT_DEGREE
+from nti.contenttypes.courses.interfaces import ES_PUBLIC, ES_PURCHASED
+from nti.contenttypes.courses.interfaces import ES_CREDIT, ES_CREDIT_NONDEGREE, ES_CREDIT_DEGREE
 from nti.contenttypes.courses import courses
 
 from zope import lifecycleevent
 
 from nti.contenttypes.courses.tests import CourseLayerTest
-from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 
+from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 
 @functools.total_ordering
 @interface.implementer(IPrincipal, IWeakRef, IContained, IAttributeAnnotatable)
@@ -147,7 +148,6 @@ class TestFunctionalSharing(CourseLayerTest):
 			sub = course.SubInstances['child'] = courses.ContentCourseSubInstance()
 			sub.SharingScopes.initScopes()
 
-
 		self.principal  = principal
 		self.course = admin['course']
 		self.course2 = admin['course2']
@@ -190,6 +190,21 @@ class TestFunctionalSharing(CourseLayerTest):
 		assert_that(ntiid, is_in(names))
 		
 	@WithMockDSTrans
+	def test_purchased(self):
+		self._shared_setup()
+		principal = self.principal
+		
+		course = self.course
+		manager = interfaces.ICourseEnrollmentManager(course)
+		manager.enroll(principal, scope=ES_PURCHASED)
+		
+		public = course.SharingScopes[ES_PUBLIC]
+		purchased = course.SharingScopes[ES_PURCHASED]
+
+		assert_that( principal, is_in(public) )
+		assert_that( principal, is_in(purchased) )
+		
+	@WithMockDSTrans
 	def test_sub_and_parent_drop_parent(self):
 		self._shared_setup()
 
@@ -216,7 +231,6 @@ class TestFunctionalSharing(CourseLayerTest):
 		assert_that( principal, is_in(credit) )
 		assert_that( principal, is_in(degree) )
 		assert_that( principal, is_not(is_in(ndgree)) )
-
 
 		submanager = interfaces.ICourseEnrollmentManager(sub_course)
 		submanager.enroll(principal, scope=ES_CREDIT_DEGREE)
@@ -263,7 +277,6 @@ class TestFunctionalSharing(CourseLayerTest):
 		assert_that( principal, is_not(is_in(sub_degree) ))
 		assert_that( principal, is_not(is_in(sub_ndgree)))
 
-
 	@WithMockDSTrans
 	def test_change_scope(self):
 		self._shared_setup()
@@ -276,12 +289,14 @@ class TestFunctionalSharing(CourseLayerTest):
 
 		public = course.SharingScopes[ES_PUBLIC]
 		credit = course.SharingScopes[ES_CREDIT]
+		purchased = course.SharingScopes[ES_PURCHASED]
 		degree = course.SharingScopes[ES_CREDIT_DEGREE]
 		ndgree = course.SharingScopes[ES_CREDIT_NONDEGREE]
 
 		assert_that( principal, is_in(public) )
 		assert_that( principal, is_in(credit) )
 		assert_that( principal, is_in(degree) )
+		assert_that( principal, is_in(purchased) )
 		assert_that( principal, is_not(is_in(ndgree)) )
 
 		record.Scope = ES_CREDIT_NONDEGREE
@@ -289,6 +304,7 @@ class TestFunctionalSharing(CourseLayerTest):
 
 		assert_that( principal, is_in(public) )
 		assert_that( principal, is_in(credit) )
+		assert_that( principal, is_in(purchased) )
 		assert_that( principal, is_not(is_in(degree) ))
 		assert_that( principal, is_in(ndgree))
 
@@ -296,6 +312,7 @@ class TestFunctionalSharing(CourseLayerTest):
 		lifecycleevent.modified(record)
 
 		assert_that( principal, is_in(public) )
+		assert_that( principal, is_not(purchased) )
 		assert_that( principal, is_not(is_in(credit) ))
 		assert_that( principal, is_not(is_in(degree) ))
 		assert_that( principal, is_not(is_in(ndgree)))
@@ -349,25 +366,29 @@ class TestFunctionalSharing(CourseLayerTest):
 		assert_that( principal, is_not(is_in(ndgree)) )
 
 		# Only the desired events fired
-
-		# [<zope.lifecycleevent.ObjectMovedEvent object at 0x1039fbc50>,
-		#  <nti.dataserver.interfaces.StopDynamicMembershipEvent object at 0x1039fb8d0>,
-		#   <nti.dataserver.interfaces.StopFollowingEvent object at 0x103a1b690>,
-		#  <nti.dataserver.interfaces.StopDynamicMembershipEvent object at 0x103a1bd10>,
-		#  <nti.dataserver.interfaces.StopFollowingEvent object at 0x103a1b590>,
-		#  <nti.dataserver.interfaces.StopDynamicMembershipEvent object at 0x103a1bb90>,
-		#  <nti.dataserver.interfaces.StopFollowingEvent object at 0x1049c69d0>,
-		#  <nti.dataserver.interfaces.StartDynamicMembershipEvent object at 0x1044d1050>,
-		# <nti.dataserver.interfaces.EntityFollowingEvent object at 0x1039fb950>,
-		# <nti.dataserver.interfaces.FollowerAddedEvent object at 0x1049d2990>,
-		# <nti.dataserver.interfaces.StartDynamicMembershipEvent object at 0x1021df710>,
-		# <nti.dataserver.interfaces.EntityFollowingEvent object at 0x103673990>,
-		# <nti.dataserver.interfaces.FollowerAddedEvent object at 0x103673950>,
-		# <nti.dataserver.interfaces.StartDynamicMembershipEvent object at 0x103673910>,
-		# <nti.dataserver.interfaces.EntityFollowingEvent object at 0x103673b90>,
-		# <nti.dataserver.interfaces.FollowerAddedEvent object at 0x103673c10>,
-		# <zope.container.contained.ContainerModifiedEvent object at 0x1039fb9d0>,
-		# <zope.container.contained.ContainerModifiedEvent object at 0x1039fba50>]
+# 		[<zope.lifecycleevent.ObjectMovedEvent object at 0x1066d3e10>,
+# 		 <nti.dataserver.interfaces.StopDynamicMembershipEvent object at 0x1066d3d10>,
+# 		 <nti.dataserver.interfaces.StopFollowingEvent object at 0x1066d3fd0>,
+# 		 <nti.dataserver.interfaces.StopDynamicMembershipEvent object at 0x1066d3090>,
+# 		 <nti.dataserver.interfaces.StopFollowingEvent object at 0x1066d3110>,
+# 		 <nti.dataserver.interfaces.StopDynamicMembershipEvent object at 0x1066d31d0>,
+# 		 <nti.dataserver.interfaces.StopFollowingEvent object at 0x103be2250>,
+# 		 <nti.dataserver.interfaces.StopDynamicMembershipEvent object at 0x103be2410>,
+# 		 <nti.dataserver.interfaces.StopFollowingEvent object at 0x1066cc810>,
+# 		 <nti.dataserver.interfaces.StartDynamicMembershipEvent object at 0x1066cc210>,
+# 		 <nti.dataserver.interfaces.EntityFollowingEvent object at 0x1066cc310>,
+# 		 <nti.dataserver.interfaces.FollowerAddedEvent object at 0x1066cc150>,
+# 		 <nti.dataserver.interfaces.StartDynamicMembershipEvent object at 0x1066cc510>,
+# 		 <nti.dataserver.interfaces.EntityFollowingEvent object at 0x1066cc250>,
+# 		 <nti.dataserver.interfaces.FollowerAddedEvent object at 0x1066cc410>,
+# 		 <nti.dataserver.interfaces.StartDynamicMembershipEvent object at 0x1066cc0d0>,
+# 		 <nti.dataserver.interfaces.EntityFollowingEvent object at 0x1066cc4d0>,
+# 		 <nti.dataserver.interfaces.FollowerAddedEvent object at 0x1066cc1d0>,
+# 		 <nti.dataserver.interfaces.StartDynamicMembershipEvent object at 0x1066cc050>,
+# 		 <nti.dataserver.interfaces.EntityFollowingEvent object at 0x1066cc390>,
+# 		 <nti.dataserver.interfaces.FollowerAddedEvent object at 0x1066cc3d0>,
+# 		 <zope.container.contained.ContainerModifiedEvent object at 0x1066d3f10>,
+# 		 <zope.container.contained.ContainerModifiedEvent object at 0x1066d3250>]
 		evts = eventtesting.getEvents()
 		# XXX Not a good test
-		assert_that( evts, has_length(18))
+		assert_that( evts, has_length(23))

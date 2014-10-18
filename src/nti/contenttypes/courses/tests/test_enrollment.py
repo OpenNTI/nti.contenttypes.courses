@@ -466,7 +466,7 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		# <zope.container.contained.ContainerModifiedEvent object at 0x1039fba50>]
 		evts = eventtesting.getEvents()
 		# XXX Not a good test
-		assert_that( evts, has_length(18))
+		assert_that( evts, has_length(23))
 
 		assert_that(ICourseEnrollments(orig_course).count_enrollments(),
 					is_(0))
