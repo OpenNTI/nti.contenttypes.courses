@@ -400,8 +400,9 @@ def check_deny_open_enrollment(course):
 	"""
 	vendor_info = ICourseInstanceVendorInfo(course, {})
 	if 'NTI' in vendor_info:
+		nti_info = vendor_info.get('NTI')
 		for name in ('deny_open_enrollment', 'DenyOpenEnrollment'):
-			result = vendor_info.get(name, None)
+			result = nti_info.get(name, None)
 			if result is not None:
 				return bool(result)
 	return False

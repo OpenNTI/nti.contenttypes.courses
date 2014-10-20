@@ -99,7 +99,6 @@ class _GenericFolderSynchronizer(object):
 		# Otherwise, just a plain folder
 		return self._ADMIN_LEVEL_FACTORY
 
-
 	def synchronize(self, folder, bucket):
 		# Find the things in the filesystem
 		child_buckets = dict()
@@ -199,7 +198,7 @@ class _ContentCourseSynchronizer(object):
 		elif IDenyOpenEnrollment.providedBy(course):
 			interface.noLongerProvides(entry, IDenyOpenEnrollment)
 			interface.noLongerProvides(course, IDenyOpenEnrollment)
-			
+		
 	@classmethod
 	def update_common_info(cls, course, bucket, try_legacy_content_bundle=False):
 		course.SharingScopes.initScopes()
@@ -361,7 +360,6 @@ class _ContentCourseSynchronizer(object):
 			fill_asg_from_key(subcourse, key)
 		else:
 			reset_asg_missing_key(subcourse)
-
 
 @component.adapter(ICourseSubInstances, IDelimitedHierarchyBucket)
 class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
