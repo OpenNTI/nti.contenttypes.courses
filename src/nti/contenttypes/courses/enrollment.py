@@ -19,7 +19,6 @@ from zope.interface import ro
 from zope.event import notify
 from zope.cachedescriptors.method import cachedIn
 from zope.annotation.factory import factory as an_factory
-from zope.schema.interfaces import ConstraintNotSatisfied
 
 from ZODB.interfaces import IConnection
 
@@ -493,7 +492,7 @@ def check_open_enrollment_record_added(record, event):
 
 	course = record.CourseInstance
 	if record.Scope == ES_PUBLIC and IDenyOpenEnrollment.providedBy(course):
-		raise ConstraintNotSatisfied(_("Open enrollment is not allowed"))
+		raise ValueError(_("Open enrollment is not allowed"))
 
 from nti.dataserver.interfaces import IEntity
 from nti.dataserver.interfaces import IEntityContainer
