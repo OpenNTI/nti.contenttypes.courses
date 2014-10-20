@@ -19,7 +19,6 @@ from zope.interface.common.idatetime import IDateTime
 
 from nti.dataserver.users import Entity
 
-from .interfaces import IDenyOpenEnrollment
 from .interfaces import INonPublicCourseInstance
 
 from .legacy_catalog import CourseCreditLegacyInfo
@@ -148,11 +147,6 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		catalog_entry.Prerequisites = info_json_dict.get('prerequisites', [])
 	else:
 		_quiet_delattr(catalog_entry, 'Prerequisites')
-
-	if info_json_dict.get('deny_open_enrollment'):
-		interface.alsoProvides(catalog_entry, IDenyOpenEnrollment)
-	elif IDenyOpenEnrollment.providedBy(catalog_entry):
-		interface.noLongerProvides(catalog_entry, IDenyOpenEnrollment)
 		
 	return catalog_entry
 

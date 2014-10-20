@@ -24,24 +24,25 @@ class IObjectEntrySynchronizer(interface.Interface):
 	Something to synchronize one object and possibly its children.
 	"""
 
-	def synchronize(object, bucket):
+	def synchronize(obj, bucket):
 		"""
 		Synchronize the object from the bucket.
 		"""
 
 from zope.event import notify
 
-from .interfaces import ICourseInstance
-from .interfaces import ICourseInstanceVendorInfo
-from .interfaces import ICourseSubInstances
-from .interfaces import IContentCourseSubInstance
-from .interfaces import ICourseCatalogEntry
-from .interfaces import IDenyOpenEnrollment
-from .interfaces import INonPublicCourseInstance
-from .interfaces import CourseInstanceAvailableEvent
-from .interfaces import IEnrollmentMappedCourseInstance
 from .interfaces import ES_CREDIT
 from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
+
+from .interfaces import ICourseInstance
+from .interfaces import ICourseCatalogEntry
+from .interfaces import ICourseSubInstances
+from .interfaces import IDenyOpenEnrollment
+from .interfaces import INonPublicCourseInstance
+from .interfaces import IContentCourseSubInstance
+from .interfaces import ICourseInstanceVendorInfo
+from .interfaces import CourseInstanceAvailableEvent
+from .interfaces import IEnrollmentMappedCourseInstance
 
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
@@ -50,22 +51,23 @@ from .courses import ContentCourseSubInstance
 from .courses import CourseAdministrativeLevel
 
 from .enrollment import check_enrollment_mapped
+from .enrollment import check_deny_open_enrollment
 
-from ._outline_parser import fill_outline_from_key
-from ._catalog_entry_parser import fill_entry_from_legacy_key
+from .legacy_catalog import _ntiid_from_entry
 from ._role_parser import fill_roles_from_key
 from ._role_parser import reset_roles_missing_key
+from ._outline_parser import fill_outline_from_key
 from ._assignment_override_parser import fill_asg_from_key
+from ._catalog_entry_parser import fill_entry_from_legacy_key
 from ._assignment_override_parser import reset_asg_missing_key
-from .legacy_catalog import _ntiid_from_entry
 
-from nti.contentlibrary.bundle import PersistentContentPackageBundle
-from nti.contentlibrary.bundle import sync_bundle_from_json_key
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
+from nti.contentlibrary.bundle import sync_bundle_from_json_key
+from nti.contentlibrary.bundle import PersistentContentPackageBundle
 from nti.contentlibrary.dublincore import read_dublincore_from_named_key
 
-from nti.dataserver.users.interfaces import IFriendlyNamed
 from nti.dataserver.users.interfaces import IAvatarURL
+from nti.dataserver.users.interfaces import IFriendlyNamed
 
 VENDOR_INFO_NAME = 'vendor_info.json'
 COURSE_OUTLINE_NAME = 'course_outline.xml'
@@ -189,6 +191,15 @@ class _ContentCourseSynchronizer(object):
 		else:
 			interface.noLongerProvides(course, IEnrollmentMappedCourseInstance)
 
+		# check of open enrollment. Marke the entry as well
+		entry = ICourseCatalogEntry(course)
+		if check_deny_open_enrollment(course):
+			interface.alsoProvides(entry, IDenyOpenEnrollment)
+			interface.alsoProvides(course, IDenyOpenEnrollment)
+		elif IDenyOpenEnrollment.providedBy(course):
+			interface.noLongerProvides(entry, IDenyOpenEnrollment)
+			interface.noLongerProvides(course, IDenyOpenEnrollment)
+			
 	@classmethod
 	def update_common_info(cls, course, bucket, try_legacy_content_bundle=False):
 		course.SharingScopes.initScopes()
@@ -334,11 +345,6 @@ class _ContentCourseSynchronizer(object):
 			interface.alsoProvides(course, INonPublicCourseInstance)
 		elif INonPublicCourseInstance.providedBy(course):
 			interface.noLongerProvides(course, INonPublicCourseInstance)
-			
-		if IDenyOpenEnrollment.providedBy(catalog_entry):
-			interface.alsoProvides(course, IDenyOpenEnrollment)
-		elif IDenyOpenEnrollment.providedBy(course):
-			interface.noLongerProvides(course, IDenyOpenEnrollment)
 
 	@classmethod
 	def update_instructor_roles(cls, course, bucket):
@@ -399,8 +405,6 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		_ContentCourseSynchronizer.update_common_info(subcourse, bucket)
 
 		notify(CourseInstanceAvailableEvent(subcourse))
-
-
 
 def synchronize_catalog_from_root(catalog_folder, root):
 	"""

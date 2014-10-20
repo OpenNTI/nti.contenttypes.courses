@@ -37,19 +37,20 @@ from zope.container.interfaces import IContained
 
 from zope.security.interfaces import IPrincipal
 
-from .interfaces import IDenyOpenEnrollment
-from .interfaces import ICourseInstanceEnrollmentRecord
-from .interfaces import ICourseInstanceEnrollmentRecordContainer
-from .interfaces import ICourseEnrollmentManager
-from .interfaces import ICourseEnrollments
-from .interfaces import ICourseInstance
-from .interfaces import ICourseCatalog
-from .interfaces import ICourseCatalogEntry
-from .interfaces import IGlobalCourseCatalog
 from .interfaces import ES_PUBLIC
 from .interfaces import ES_CREDIT
 from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
+
+from .interfaces import ICourseCatalog
+from .interfaces import ICourseInstance
+from .interfaces import ICourseEnrollments
+from .interfaces import ICourseCatalogEntry
+from .interfaces import IDenyOpenEnrollment
+from .interfaces import IGlobalCourseCatalog
 from .interfaces import IPrincipalEnrollments
+from .interfaces import ICourseEnrollmentManager
+from .interfaces import ICourseInstanceEnrollmentRecord
+from .interfaces import ICourseInstanceEnrollmentRecordContainer
 
 from nti.contentlibrary.bundle import _readCurrent
 
@@ -392,6 +393,18 @@ class DefaultCourseEnrollmentManager(object):
 
 from .interfaces import ICourseInstanceVendorInfo
 from .interfaces import IEnrollmentMappedCourseInstance
+
+def check_deny_open_enrollment(course):
+	"""
+	Returns a true value if the course disallows open enrollemnt
+	"""
+	vendor_info = ICourseInstanceVendorInfo(course, {})
+	if 'NTI' in vendor_info:
+		for name in ('deny_open_enrollment', 'DenyOpenEnrollment'):
+			result = vendor_info.get(name, None)
+			if result is not None:
+				return bool(result)
+	return False
 
 def check_enrollment_mapped(course):
 	"""
