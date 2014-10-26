@@ -15,10 +15,12 @@ from . import MessageFactory as _
 
 from zope import interface
 from zope import component
+from zope import lifecycleevent
 from zope.interface import ro
 from zope.event import notify
 from zope.cachedescriptors.method import cachedIn
 from zope.annotation.factory import factory as an_factory
+from zope.location.location import locate
 
 from ZODB.interfaces import IConnection
 
@@ -96,7 +98,6 @@ class DefaultCourseInstanceEnrollmentStorage(CaseInsensitiveCheckingLastModified
 
 _DefaultCourseInstanceEnrollmentStorageFactory = an_factory(DefaultCourseInstanceEnrollmentStorage,
 														   'CourseInstanceEnrollmentStorage')
-
 
 @component.adapter(ICourseInstance)
 @interface.implementer(IDefaultCourseInstanceEnrollmentStorage)
@@ -335,8 +336,15 @@ class DefaultCourseEnrollmentManager(object):
 		# now install and fire the ObjectAdded event, after
 		# it's in the IPrincipalEnrollments; that way
 		# event listeners will see consistent data.
-		self._inst_enrollment_storage[principal_id] = record
 
+		# We manually add the item and fire the ObjectAddedEvent to
+		# avoid contention in an underlying Zope annotation data structure.
+		# A modified event ends up hitting the zope.dublincore.creatorannotator
+		# otherwise, which we do not use.
+		self._inst_enrollment_storage._setitemf( principal_id, record )
+		locate( record, self._inst_enrollment_storage, name=principal_id )
+		lifecycleevent.added( record, self._inst_enrollment_storage, principal_id )
+		self._inst_enrollment_storage.updateLastMod()
 		return record
 
 	def _drop_record_for_principal_id(self, record, principal_id):
@@ -749,10 +757,10 @@ def migrate_enrollments_from_course_to_course(source, dest, verbose=False, resul
 	count = 0
 	result = list() if result is None else result
 	log = logger.debug if not verbose else logger.info
-	
+
 	log('Moving enrollment records from %s to %s',
 		ICourseCatalogEntry(source).ntiid, ICourseCatalogEntry(dest).ntiid)
-	
+
 	# All we need to do is use IObjectMover to transport the
 	# EnrollmentRecord objects; they find their course from
 	# where they are located, and the Storage object is a simple
@@ -765,15 +773,15 @@ def migrate_enrollments_from_course_to_course(source, dest, verbose=False, resul
 		if source_prin_id in dest_enrollments:
 			log("Ignoring dup enrollment for %s", source_prin_id)
 			continue
-		
+
 		source_enrollment = source_enrollments[source_prin_id]
 		mover = IObjectMover(source_enrollment)
 		mover.moveTo(dest_enrollments)
 		result.append(source_prin_id)
-		
+
 		log('Enrollment record for %s (scope=%s) moved',
 			source_prin_id, source_enrollment.Scope)
-		
+
 		count += 1
 
 	log('%s enrollment record(s) moved', count)
