@@ -15,12 +15,13 @@ from . import MessageFactory as _
 
 from zope import interface
 from zope import component
-from zope import lifecycleevent
-from zope.interface import ro
 from zope.event import notify
+from zope import lifecycleevent
+from zope.location.location import locate
 from zope.cachedescriptors.method import cachedIn
 from zope.annotation.factory import factory as an_factory
-from zope.location.location import locate
+
+from zope.interface import ro
 
 from ZODB.interfaces import IConnection
 
@@ -171,7 +172,6 @@ class CourseEnrollmentList(Persistent):
 		"""
 		self._set_data.remove(IKeyReference(record))
 
-
 @component.adapter(ICourseCatalog)
 @interface.implementer(IDefaultCourseCatalogEnrollmentStorage)
 class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedBTreeContainer):
@@ -189,6 +189,7 @@ class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedB
 				jar.add(result)
 
 			self[principalid] = result
+
 			# result.__parent__ is self; but depending
 			# on where we are and when we got created, our
 			# self.__parent__ (the course catalog, typically, through which we are reachable)
@@ -283,7 +284,6 @@ class DefaultCourseEnrollmentManager(object):
 	# object.
 	###
 
-
 	@Lazy
 	def _inst_enrollment_storage_rc(self):
 		storage = self._inst_enrollment_storage
@@ -337,10 +337,11 @@ class DefaultCourseEnrollmentManager(object):
 		# it's in the IPrincipalEnrollments; that way
 		# event listeners will see consistent data.
 
-		# We manually add the item and fire the ObjectAddedEvent to
-		# avoid contention in an underlying Zope annotation data structure.
-		# A modified event ends up hitting the zope.dublincore.creatorannotator
-		# otherwise, which we do not use.
+		## CS/JZ 20141025 
+		## We manually add the item and fire the ObjectAddedEvent to
+		## avoid contention in an underlying Zope annotation data structure.
+		## A modified event ends up hitting the zope.dublincore.creatorannotator
+		## otherwise, which we do not use.
 		self._inst_enrollment_storage._setitemf( principal_id, record )
 		locate( record, self._inst_enrollment_storage, name=principal_id )
 		lifecycleevent.added( record, self._inst_enrollment_storage, principal_id )
@@ -490,7 +491,6 @@ def on_modified_potentially_move_courses(record, event):
 		mover = IObjectMover(record)
 		mover.moveTo(dest_enrollments)
 
-
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectAddedEvent)
 def check_open_enrollment_record_added(record, event):
 	"""
@@ -558,7 +558,6 @@ class DefaultCourseEnrollments(object):
 		public_count = self._count_in_scope_without_instructors(ES_PUBLIC)
 
 		return public_count - credit_count
-
 
 @interface.implementer(IPrincipalEnrollments)
 @NoPickle
@@ -706,7 +705,6 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 # We may have intid-weak references to these things,
 # so we need to catch them on the IntIdRemoved event
 # for dependable ordering
-
 
 def on_principal_deletion_unenroll(principal, event):
 	pins = component.subscribers( (principal,), IPrincipalEnrollments )
