@@ -84,11 +84,38 @@ class IDefaultCourseCatalogEnrollmentStorage(IContainer,IContained):
 			list will be stored in this jar.
 		"""
 
-from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
-from persistent import Persistent
 import BTrees
-from zope.keyreference.interfaces import IKeyReference
+
 from zope.keyreference.interfaces import NotYet
+from zope.keyreference.interfaces import IKeyReference
+
+from persistent import Persistent
+
+from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
+
+def save_in_container(container, key, value, add2jar=False, event=False):
+	if event:
+		container[key] = value
+	else:
+		container._setitemf(key, value)
+		locate(value, parent=container, name=key)
+		if add2jar:
+			IConnection(container).add(value)
+		lifecycleevent.added(value, container, key)
+		try:
+			container.updateLastMod()
+		except AttributeError:
+			pass
+		
+def remove_from_container(container, key, event=False):
+	if event:
+		del container[key]
+	else:
+		container._delitemf(key)
+		try:
+			container.updateLastMod()
+		except AttributeError:
+			pass
 
 # Recall that everything that's keyed by username/principalid must be case-insensitive
 
@@ -171,20 +198,6 @@ class CourseEnrollmentList(Persistent):
 		Remove the record if it exists, raise KeyError if not.
 		"""
 		self._set_data.remove(IKeyReference(record))
-
-def save_in_container(container, key, value, add2jar=False, event=False):
-	if event:
-		container[key] = value
-	else:
-		container._setitemf(key, value)
-		locate(value, parent=container, name=key)
-		if add2jar:
-			IConnection(container).add(value)
-		lifecycleevent.added(value, container, key)
-		try:
-			container.updateLastMod()
-		except AttributeError:
-			pass
 
 @component.adapter(ICourseCatalog)
 @interface.implementer(IDefaultCourseCatalogEnrollmentStorage)
@@ -397,7 +410,12 @@ class DefaultCourseEnrollmentManager(object):
 		# enrollment list then fire the event
 		self._drop_record_for_principal_id(record, principal_id)
 
-		del self._inst_enrollment_storage[principal_id]
+		## CS/JZ 201410256
+		## We manually remove the item and fire the ObjectRemovedEvent to
+		## avoid contention in an underlying zope dublincore annotation data structure.
+		## A modified event on the container calls zope.dublincore.creatorannotator
+		## whose data modifications, we currently do not use.
+		remove_from_container(self._inst_enrollment_storage, principal_id)
 
 		return record
 
