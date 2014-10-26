@@ -172,6 +172,18 @@ class CourseEnrollmentList(Persistent):
 		"""
 		self._set_data.remove(IKeyReference(record))
 
+def recordContainer(container, key, value, event=False):
+	if event:
+		container[key] = value
+	else:
+		container._setitemf(key, value)
+		locate(value, parent=container, name=key)
+		lifecycleevent.added(value, container, key)
+		try:
+			container.updateLastMod()
+		except AttributeError:
+			pass
+
 @component.adapter(ICourseCatalog)
 @interface.implementer(IDefaultCourseCatalogEnrollmentStorage)
 class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedBTreeContainer):
@@ -188,7 +200,12 @@ class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedB
 				# store with the principal, not with us
 				jar.add(result)
 
-			self[principalid] = result
+			## CS/JZ 20141026 
+			## We manually add the item and fire the ObjectAddedEvent to
+			## avoid contention in an underlying zope dublincore annotation data structure.
+			## A modified event on the container calls zope.dublincore.creatorannotator
+			## whose data modifications, we currently do not use.
+			recordContainer(self, principalid, result)
 
 			# result.__parent__ is self; but depending
 			# on where we are and when we got created, our
@@ -243,7 +260,6 @@ def _global_course_catalog_storage(site_manager):
 		return site_manager['default']['GlobalCourseCatalogEnrollmentStorage']
 	except (KeyError, TypeError):
 		return None
-
 
 from .interfaces import CourseInstanceEnrollmentRecordCreatedEvent
 
@@ -339,13 +355,10 @@ class DefaultCourseEnrollmentManager(object):
 
 		## CS/JZ 20141025 
 		## We manually add the item and fire the ObjectAddedEvent to
-		## avoid contention in an underlying Zope annotation data structure.
-		## A modified event ends up hitting the zope.dublincore.creatorannotator
-		## otherwise, which we do not use.
-		self._inst_enrollment_storage._setitemf( principal_id, record )
-		locate( record, self._inst_enrollment_storage, name=principal_id )
-		lifecycleevent.added( record, self._inst_enrollment_storage, principal_id )
-		self._inst_enrollment_storage.updateLastMod()
+		## avoid contention in an underlying zope dublincore annotation data structure.
+		## A modified event on the container calls zope.dublincore.creatorannotator
+		## whose data modifications, we currently do not use.
+		recordContainer(self._inst_enrollment_storage, principal_id, record)
 		return record
 
 	def _drop_record_for_principal_id(self, record, principal_id):
