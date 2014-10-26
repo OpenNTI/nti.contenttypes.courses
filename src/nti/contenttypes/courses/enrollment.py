@@ -172,12 +172,14 @@ class CourseEnrollmentList(Persistent):
 		"""
 		self._set_data.remove(IKeyReference(record))
 
-def recordContainer(container, key, value, event=False):
+def save_in_container(container, key, value, add2jar=False, event=False):
 	if event:
 		container[key] = value
 	else:
 		container._setitemf(key, value)
 		locate(value, parent=container, name=key)
+		if add2jar:
+			IConnection(container).add(value)
 		lifecycleevent.added(value, container, key)
 		try:
 			container.updateLastMod()
@@ -205,7 +207,7 @@ class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedB
 			## avoid contention in an underlying zope dublincore annotation data structure.
 			## A modified event on the container calls zope.dublincore.creatorannotator
 			## whose data modifications, we currently do not use.
-			recordContainer(self, principalid, result)
+			save_in_container(self, principalid, result)
 
 			# result.__parent__ is self; but depending
 			# on where we are and when we got created, our
@@ -358,7 +360,7 @@ class DefaultCourseEnrollmentManager(object):
 		## avoid contention in an underlying zope dublincore annotation data structure.
 		## A modified event on the container calls zope.dublincore.creatorannotator
 		## whose data modifications, we currently do not use.
-		recordContainer(self._inst_enrollment_storage, principal_id, record)
+		save_in_container(self._inst_enrollment_storage, principal_id, record)
 		return record
 
 	def _drop_record_for_principal_id(self, record, principal_id):
