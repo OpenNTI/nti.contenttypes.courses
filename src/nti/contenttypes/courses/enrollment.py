@@ -106,6 +106,7 @@ def save_in_container(container, key, value, event=False):
 			container.updateLastMod()
 		except AttributeError:
 			pass
+		container._p_changed = True
 		
 def remove_from_container(container, key, event=False):
 	if event:
@@ -116,6 +117,7 @@ def remove_from_container(container, key, event=False):
 			container.updateLastMod()
 		except AttributeError:
 			pass
+		container._p_changed = True
 
 # Recall that everything that's keyed by username/principalid must be case-insensitive
 
