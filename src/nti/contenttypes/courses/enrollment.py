@@ -93,13 +93,13 @@ from persistent import Persistent
 
 from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
-def save_in_container(container, key, value, add2jar=False, event=False):
+def save_in_container(container, key, value, event=False):
 	if event:
 		container[key] = value
 	else:
 		container._setitemf(key, value)
 		locate(value, parent=container, name=key)
-		if add2jar:
+		if getattr(value, '_p_jar', None) is None:
 			IConnection(container).add(value)
 		lifecycleevent.added(value, container, key)
 		try:
