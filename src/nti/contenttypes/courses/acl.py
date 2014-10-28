@@ -14,27 +14,28 @@ logger = __import__('logging').getLogger(__name__)
 from zope import interface
 from zope import component
 
-from .interfaces import ICourseInstance
-from .interfaces import ES_PUBLIC
-from .interfaces import ES_CREDIT
-from .interfaces import INonPublicCourseInstance
-from .interfaces import ICourseCatalogEntry
-
 from zope.security.interfaces import IPrincipal
+
+from nti.dataserver.interfaces import ACE_DENY_ALL
+from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
+from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 
 from nti.dataserver.interfaces import IACLProvider
 
-from nti.utils.property import Lazy
-
-from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
-from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
-from nti.dataserver.interfaces import ACE_DENY_ALL
-from nti.dataserver.authorization_acl import acl_from_aces
-from nti.dataserver.authorization_acl import ace_allowing
-from nti.dataserver.authorization_acl import ace_denying
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ACT_CREATE
+from nti.dataserver.authorization_acl import ace_denying
+from nti.dataserver.authorization_acl import acl_from_aces
+from nti.dataserver.authorization_acl import ace_allowing
 
+from nti.utils.property import Lazy
+
+from .interfaces import ES_PUBLIC
+from .interfaces import ES_CREDIT
+from .interfaces import ICourseInstance
+from .interfaces import ICourseEnrollments
+from .interfaces import ICourseCatalogEntry
+from .interfaces import INonPublicCourseInstance
 
 @component.adapter(ICourseInstance)
 @interface.implementer(IACLProvider)
@@ -146,3 +147,10 @@ class CourseCatalogEntryACLProvider(object):
 						  CourseCatalogEntryACLProvider)
 		)
 		return acl
+
+def has_open_enrollments(course):
+	if course is not None:
+		for record in ICourseEnrollments(course).iter_enrollments():
+			if record.Scope == ES_PUBLIC:
+				return True
+	return False
