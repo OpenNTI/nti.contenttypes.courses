@@ -62,15 +62,13 @@ class CourseInstanceACLProvider(object):
 	@Lazy
 	def __acl__(self):
 		course = self.context
-
 		sharing_scopes = course.SharingScopes
 		sharing_scopes.initScopes()
 		main_scope = sharing_scopes[ES_PUBLIC]
 		if INonPublicCourseInstance.providedBy(course):
 			main_scope = sharing_scopes[ES_CREDIT]
-
 		acl = acl_from_aces(
-				ace_allowing( IPrincipal(main_scope), ACT_READ, CourseInstanceACLProvider )
+			ace_allowing( IPrincipal(main_scope), ACT_READ, CourseInstanceACLProvider )
 		)
 		acl.extend( (ace_allowing( i, ACT_READ, CourseInstanceACLProvider )
 					 for i in course.instructors) )
@@ -103,7 +101,8 @@ class CourseCatalogEntryACLProvider(object):
 		if non_public:
 			# Ok, was that us, or are we not non-public and our direct parent
 			# is also not non-public?
-			if INonPublicCourseInstance.providedBy(self.context) or INonPublicCourseInstance.providedBy(self.__parent__):
+			if 	INonPublicCourseInstance.providedBy(self.context) or \
+				INonPublicCourseInstance.providedBy(self.__parent__):
 				non_public = True
 			else:
 				# We don't directly provide it, neither does our parent, so
@@ -122,6 +121,16 @@ class CourseCatalogEntryACLProvider(object):
 			course = course_in_lineage or ICourseInstance(cce, None)
 			if course is not None:
 				acl = IACLProvider(course).__acl__
+				# check if there are open enrollments. we still want to be able to give 
+				# them access to this course entry (e.g 2014 - chem of beer 100)
+				if has_open_enrollments(course):
+					# we only give them readaccess
+					sharing_scopes = course.SharingScopes
+					main_scope = sharing_scopes[ES_PUBLIC]
+					acl = acl_from_aces(
+						ace_allowing(IPrincipal(main_scope), ACT_READ,
+									 CourseCatalogEntryACLProvider)
+					)
 				acl.append(
 					# Nobody can 'create' (enroll)
 					# Nobody else can view it either
@@ -150,7 +159,10 @@ class CourseCatalogEntryACLProvider(object):
 
 def has_open_enrollments(course):
 	if course is not None:
-		for record in ICourseEnrollments(course).iter_enrollments():
-			if record.Scope == ES_PUBLIC:
-				return True
+		try:
+			for record in ICourseEnrollments(course).iter_enrollments():
+				if record.Scope == ES_PUBLIC:
+					return True
+		except StandardError:
+			logger.exception("Cannot get course enrollments")
 	return False
