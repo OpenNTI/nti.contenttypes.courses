@@ -15,21 +15,20 @@ logger = __import__('logging').getLogger(__name__)
 from zope import interface
 from zope import component
 from zope import lifecycleevent
+from zope.event import notify
 
 from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
 
-class IObjectEntrySynchronizer(interface.Interface):
-	"""
-	Something to synchronize one object and possibly its children.
-	"""
+from nti.contentlibrary.bundle import BUNDLE_META_NAME
+from nti.contentlibrary.bundle import sync_bundle_from_json_key
+from nti.contentlibrary.bundle import PersistentContentPackageBundle
 
-	def synchronize(obj, bucket):
-		"""
-		Synchronize the object from the bucket.
-		"""
+from nti.contentlibrary.dublincore import read_dublincore_from_named_key
 
-from zope.event import notify
+from nti.dataserver.users.interfaces import IAvatarURL
+from nti.dataserver.users.interfaces import IFriendlyNamed
+from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
 from .interfaces import ES_CREDIT
 from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
@@ -44,8 +43,6 @@ from .interfaces import ICourseInstanceVendorInfo
 from .interfaces import CourseInstanceAvailableEvent
 from .interfaces import IEnrollmentMappedCourseInstance
 
-from nti.dataserver.interfaces import ISharingTargetEntityIterable
-
 from .courses import ContentCourseInstance
 from .courses import ContentCourseSubInstance
 from .courses import CourseAdministrativeLevel
@@ -54,6 +51,7 @@ from .enrollment import check_enrollment_mapped
 from .enrollment import check_deny_open_enrollment
 
 from .legacy_catalog import _ntiid_from_entry
+
 from ._role_parser import fill_roles_from_key
 from ._role_parser import reset_roles_missing_key
 from ._outline_parser import fill_outline_from_key
@@ -61,32 +59,34 @@ from ._assignment_override_parser import fill_asg_from_key
 from ._catalog_entry_parser import fill_entry_from_legacy_key
 from ._assignment_override_parser import reset_asg_missing_key
 
-from nti.contentlibrary.bundle import BUNDLE_META_NAME
-from nti.contentlibrary.bundle import sync_bundle_from_json_key
-from nti.contentlibrary.bundle import PersistentContentPackageBundle
-from nti.contentlibrary.dublincore import read_dublincore_from_named_key
-
-from nti.dataserver.users.interfaces import IAvatarURL
-from nti.dataserver.users.interfaces import IFriendlyNamed
-
+SECTION_FOLDER_NAME = 'Sections'
+ROLE_INFO_NAME = 'role_info.json'
 VENDOR_INFO_NAME = 'vendor_info.json'
+CATALOG_INFO_NAME = 'course_info.json'
 COURSE_OUTLINE_NAME = 'course_outline.xml'
 INSTRUCTOR_INFO_NAME = 'instructor_info.json'
-CATALOG_INFO_NAME = 'course_info.json'
-ROLE_INFO_NAME = 'role_info.json'
 ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
-SECTION_FOLDER_NAME = 'Sections'
+
+class IObjectEntrySynchronizer(interface.Interface):
+	"""
+	Something to synchronize one object and possibly its children.
+	"""
+
+	def synchronize(obj, bucket):
+		"""
+		Synchronize the object from the bucket.
+		"""
 
 @interface.implementer(IObjectEntrySynchronizer)
 class _GenericFolderSynchronizer(object):
 
-	def __init__(self, folder, bucket):
-		pass
-
-	_COURSE_INSTANCE_FACTORY = ContentCourseInstance
 	_COURSE_KEY_NAME = BUNDLE_META_NAME
+	_COURSE_INSTANCE_FACTORY = ContentCourseInstance
 	_ADMIN_LEVEL_FACTORY = CourseAdministrativeLevel
 
+	def __init__(self, folder, bucket):
+		pass
+	
 	def _get_factory_for(self, bucket):
 		# order matters.
 
@@ -155,14 +155,14 @@ class _ContentCourseSynchronizer(object):
 		if not IDelimitedHierarchyKey.providedBy(bundle_json_key): # pragma: no cover
 			raise ValueError("No bundle defined for course", course, bucket)
 
+		bundle = None
 		created_bundle = False
 		if course.ContentPackageBundle is None:
 			bundle = PersistentContentPackageBundle()
 			bundle.root = bucket
-			course.ContentPackageBundle = bundle
-			bundle.lastModified = 0
-			bundle.createdTime = 0
 			bundle.__parent__ = course
+			course.ContentPackageBundle = bundle
+			bundle.createdTime = bundle.lastModified = 0
 			bundle.ntiid = _ntiid_from_entry(bundle, 'Bundle:CourseBundle')
 			lifecycleevent.created(bundle)
 			created_bundle = True
@@ -366,6 +366,7 @@ class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
 
 	#: We create sub-instances...
 	_COURSE_INSTANCE_FACTORY = ContentCourseSubInstance
+	
 	#: and we do not recurse into folders
 	_ADMIN_LEVEL_FACTORY = None
 
