@@ -1,6 +1,7 @@
 {
- "tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.asg:QUIZ1_aristotle":
-	{"available_for_submission_beginning": "2014-01-22T06:00:00Z",
+	"tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.asg:QUIZ1_aristotle":{
+		"available_for_submission_beginning": "2014-01-22T06:00:00Z",
+		"maximum_time_allowed": 50,
 		"Title": "Ignored",
 		"auto_grade": {
 			"total_points": 20

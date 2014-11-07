@@ -241,9 +241,9 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		assert_that( policies, has_property('_mapping',
 											has_entry(
 												"tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.asg:QUIZ1_aristotle",
-												is_( {'auto_grade': {'total_points': 20}} ) ) ) )
+												is_( {'auto_grade': {'total_points': 20}, "maximum_time_allowed": 50} ) ) ) )
 		assert_that( policies.getPolicyForAssignment("tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.asg:QUIZ1_aristotle"),
-					 is_( {'auto_grade': {'total_points': 20}} ) )
+					 is_( {'auto_grade': {'total_points': 20}, u'maximum_time_allowed': 50} ) )
 
 		sec2_ext = to_external_object(sec2)
 		dec._do_decorate_external(sec2, sec2_ext)

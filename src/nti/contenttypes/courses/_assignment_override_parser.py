@@ -11,15 +11,16 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from nti.assessment.interfaces import IQAssignmentDateContext
 from nti.assessment.interfaces import IQAssignmentPolicies
+from nti.assessment.interfaces import IQAssignmentDateContext
 
-from nti.ntiids.ntiids import validate_ntiid_string
 from nti.externalization.datetime import datetime_from_string
 
+from nti.ntiids.ntiids import validate_ntiid_string
+
 def reset_asg_missing_key(course):
-	IQAssignmentDateContext(course).clear()
 	IQAssignmentPolicies(course).clear()
+	IQAssignmentDateContext(course).clear()
 
 def fill_asg_from_key(course, key):
 	"""
@@ -36,17 +37,19 @@ def fill_asg_from_key(course, key):
 	# Note that regular courses do not track date contexts, so
 	# we do the comparison of dates based on the policies
 
-	policies = IQAssignmentPolicies(course)
+	__traceback_info__ = key, course
+	
 	dates = IQAssignmentDateContext(course)
+	policies = IQAssignmentPolicies(course)
 	if key.lastModified <= policies.lastModified:
 		return dates
 
 	reset_asg_missing_key(course)
-
-	__traceback_info__ = key, course
 	json = key.readContentsAsYaml()
 	dates.lastModified = key.lastModified
 
+	supported_pve_int_keys = ('maximum_time_allowed',)
+	
 	supported_date_keys = ('available_for_submission_beginning',
 						   'available_for_submission_ending')
 	dropped_policies_keys = supported_date_keys + ('Title',)
@@ -58,14 +61,25 @@ def fill_asg_from_key(course, key):
 		stored_dates = dict()
 		for k in supported_date_keys:
 			if k in val:
-				date_string = val[k]
-				__traceback_info__ = key, k, date_string
-				stored_dates[k] = datetime_from_string(date_string) if date_string else None
+				date_str = val[k]
+				__traceback_info__ = key, k, date_str
+				stored_dates[k] = datetime_from_string(date_str) if date_str else None
 
+		# data policy is stored in its own map
 		dates[key] = stored_dates
+		
+		for k in supported_pve_int_keys:
+			int_val = val.get(k)
+			if int_val is not None:
+				try:
+					int_val = int(int_val)
+					assert int_val > 0
+				except StandardError:
+					raise ValueError("Bad postive integer value: %r" % int_val)
+				val[k] = int_val
+
 		# Policies stores it directly, with the exception
 		# of things we know we don't want/need
-
 		policies[key] = {k: v for k,v in val.items()
 						 if k not in dropped_policies_keys}
 
