@@ -32,6 +32,7 @@ from nti.utils.property import Lazy
 
 from .interfaces import ES_PUBLIC
 from .interfaces import ES_CREDIT
+from .interfaces import ES_PURCHASED
 from .interfaces import ICourseInstance
 from .interfaces import ICourseEnrollments
 from .interfaces import ICourseCatalogEntry
@@ -64,12 +65,13 @@ class CourseInstanceACLProvider(object):
 		course = self.context
 		sharing_scopes = course.SharingScopes
 		sharing_scopes.initScopes()
-		main_scope = sharing_scopes[ES_PUBLIC]
+		main_scopes = (sharing_scopes[ES_PUBLIC],)
 		if INonPublicCourseInstance.providedBy(course):
-			main_scope = sharing_scopes[ES_CREDIT]
-		acl = acl_from_aces(
-			ace_allowing( IPrincipal(main_scope), ACT_READ, CourseInstanceACLProvider )
-		)
+			main_scopes = (sharing_scopes[ES_CREDIT], sharing_scopes[ES_PURCHASED])
+		for scope in main_scopes:
+			acl = acl_from_aces(
+				ace_allowing( IPrincipal(scope), ACT_READ, CourseInstanceACLProvider )
+			)
 		acl.extend( (ace_allowing( i, ACT_READ, CourseInstanceACLProvider )
 					 for i in course.instructors) )
 		return acl
