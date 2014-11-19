@@ -69,14 +69,15 @@ def fill_asg_from_key(course, key):
 		dates[key] = stored_dates
 		
 		for k in supported_pve_int_keys:
+			if k not in val:
+				continue
 			int_val = val.get(k)
-			if int_val is not None:
-				try:
-					int_val = int(int_val)
-					assert int_val > 0
-				except StandardError:
-					raise ValueError("Bad postive integer value: %r" % int_val)
-				val[k] = int_val
+			try:
+				int_val = int(int_val)
+				assert int_val > 0
+			except (AssertionError, TypeError, ValueError):
+				raise ValueError("Bad postive integer value: %r" % int_val)
+			val[k] = int_val
 
 		# Policies stores it directly, with the exception
 		# of things we know we don't want/need
