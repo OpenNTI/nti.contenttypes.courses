@@ -854,7 +854,7 @@ class IEnrollmentException(interface.Interface):
 	"""
 
 @interface.implementer(IEnrollmentException)
-class AlreadyEnrolledException(Exception):
+class AlreadyEnrolledException(ValueError):
 	pass
 
 from zope.interface.interfaces import ObjectEvent
