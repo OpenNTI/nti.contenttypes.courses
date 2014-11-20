@@ -1,46 +1,39 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-
-
-$Id$
-"""
 
 from __future__ import print_function, unicode_literals, absolute_import, division
 __docformat__ = "restructuredtext en"
 
-logger = __import__('logging').getLogger(__name__)
+# disable: accessing protected members, too many methods
+# pylint: disable=W0212,R0904
 
-#disable: accessing protected members, too many methods
-#pylint: disable=W0212,R0904
-
-
-from hamcrest import assert_that
 from hamcrest import is_
-from hamcrest import has_property
-from hamcrest import has_entry
-from hamcrest import has_key
-from hamcrest import is_not as does_not
-from hamcrest import has_entries
-from hamcrest import not_none
-from hamcrest import same_instance
 from hamcrest import all_of
+from hamcrest import has_key
+from hamcrest import not_none
+from hamcrest import has_entry
+from hamcrest import has_length
+from hamcrest import assert_that
+from hamcrest import has_entries
+from hamcrest import has_property
+from hamcrest import same_instance
+from hamcrest import is_not as does_not
 
-from nti.testing import base
-from nti.testing import matchers
-
-from nti.testing.matchers import verifiably_provides
-from nti.externalization.tests import externalizes
-
-
-from .. import courses
-from .. import interfaces
-
-from . import CourseLayerTest
 import fudge
 
-class TestCourseInstance(CourseLayerTest):
+from zope import interface
 
+from nti.testing.matchers import verifiably_provides
+
+from nti.externalization.tests import externalizes
+
+from nti.contenttypes.courses import acl
+from nti.contenttypes.courses import courses
+from nti.contenttypes.courses import interfaces
+
+from nti.contenttypes.courses.tests import CourseLayerTest
+
+class TestCourseInstance(CourseLayerTest):
 
 	def test_course_implements(self):
 		assert_that( courses.CourseInstance(), verifiably_provides(interfaces.ICourseInstance) )
@@ -54,14 +47,11 @@ class TestCourseInstance(CourseLayerTest):
 		assert_that( gp, verifiably_provides(interfaces.ICourseAdministrativeLevel) )
 
 	def test_course_instance_discussion(self):
-
 		assert_that( courses.CourseInstance(), has_property( 'Discussions', not_none() ) )
 		inst = courses.CourseInstance()
 		assert_that( inst.Discussions, is_( same_instance( inst.Discussions )))
 
-
 	def test_course_externalizes(self):
-
 		inst = courses.CourseInstance()
 		getattr(inst, 'Discussions' ) # this creates the Public scope
 		getattr(inst, 'SubInstances')
@@ -86,6 +76,18 @@ class TestCourseInstance(CourseLayerTest):
 						 # No sharing scopes, no request
 						 does_not( has_key('SharingScopes'))) ) )
 
+	def test_course_acl(self):
+		inst = courses.CourseInstance()
+		getattr(inst, 'Discussions' ) # this creates the Public scope
+		provider = acl.CourseInstanceACLProvider(inst)
+		inst_acl = provider.__acl__
+		assert_that(inst_acl, has_length(1))
+		
+		interface.alsoProvides(inst, interfaces.INonPublicCourseInstance)
+		provider = acl.CourseInstanceACLProvider(inst)
+		inst_acl = provider.__acl__
+		assert_that(inst_acl, has_length(2))
+		
 	@fudge.patch('nti.contenttypes.courses.decorators.IEntityContainer',
 				 'nti.app.renderers.decorators.get_remote_user')
 	def test_course_sharing_scopes_externalizes(self, mock_container, mock_rem_user):
@@ -94,7 +96,7 @@ class TestCourseInstance(CourseLayerTest):
 		mock_container.is_callable().returns(Container())
 		mock_rem_user.is_callable()
 
-		from ..decorators import _SharingScopesAndDiscussionDecorator
+		from nti.contenttypes.courses.decorators import _SharingScopesAndDiscussionDecorator
 
 		inst = courses.CourseInstance()
 		getattr(inst, 'Discussions' ) # this creates the Public scope

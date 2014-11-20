@@ -1,35 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-
-
-.. $Id$
-"""
 
 from __future__ import print_function, unicode_literals, absolute_import, division
 __docformat__ = "restructuredtext en"
 
-logger = __import__('logging').getLogger(__name__)
+# disable: accessing protected members, too many methods
+# pylint: disable=W0212,R0904
 
-#disable: accessing protected members, too many methods
-#pylint: disable=W0212,R0904
-
-import unittest
-from hamcrest import assert_that
 from hamcrest import is_
-from hamcrest import contains_inanyorder
-from hamcrest import has_property
 from hamcrest import is_in
 from hamcrest import is_not
-from hamcrest import same_instance
 from hamcrest import contains
 from hamcrest import has_length
+from hamcrest import assert_that
+from hamcrest import has_property
+from hamcrest import same_instance
+from hamcrest import contains_inanyorder
 
-from nti.testing.matchers import validly_provides
-from nti.testing.matchers import is_empty
+import unittest
 
 from nti.contenttypes.courses import sharing
 from nti.contenttypes.courses import interfaces
+
+from nti.testing.matchers import is_empty
+from nti.testing.matchers import validly_provides
 
 class TestSharing(unittest.TestCase):
 
