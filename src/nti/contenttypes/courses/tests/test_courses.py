@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 from hamcrest import is_
 from hamcrest import all_of
 from hamcrest import has_key
+from hamcrest import has_item
 from hamcrest import not_none
 from hamcrest import has_entry
 from hamcrest import has_length
@@ -17,21 +18,31 @@ from hamcrest import assert_that
 from hamcrest import has_entries
 from hamcrest import has_property
 from hamcrest import same_instance
+from hamcrest import has_properties
 from hamcrest import is_not as does_not
 
 import fudge
 
 from zope import interface
+from zope.security.interfaces import IPrincipal
 
-from nti.testing.matchers import verifiably_provides
-
-from nti.externalization.tests import externalizes
+from nti.dataserver.authorization import ACT_READ
 
 from nti.contenttypes.courses import acl
 from nti.contenttypes.courses import courses
 from nti.contenttypes.courses import interfaces
+from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import ES_CREDIT
+from nti.contenttypes.courses.interfaces import ES_PURCHASED
+
+from nti.externalization.tests import externalizes
 
 from nti.contenttypes.courses.tests import CourseLayerTest
+
+from nti.testing.matchers import verifiably_provides
+
+import nti.dataserver.tests.mock_dataserver as mock_dataserver
+from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 
 class TestCourseInstance(CourseLayerTest):
 
@@ -75,18 +86,42 @@ class TestCourseInstance(CourseLayerTest):
 						 does_not( has_key('SubInstances')),
 						 # No sharing scopes, no request
 						 does_not( has_key('SharingScopes'))) ) )
-
+	
+	@WithMockDSTrans
 	def test_course_acl(self):
+		connection = mock_dataserver.current_transaction
 		inst = courses.CourseInstance()
-		getattr(inst, 'Discussions' ) # this creates the Public scope
+		connection.add(inst)
+		
+		sharing_scopes = inst.SharingScopes
+		sharing_scopes.initScopes()
+		
+		public = IPrincipal(sharing_scopes[ES_PUBLIC])
+		credit = IPrincipal(sharing_scopes[ES_CREDIT])
+		purchased =  IPrincipal(sharing_scopes[ES_PURCHASED])
+
 		provider = acl.CourseInstanceACLProvider(inst)
 		inst_acl = provider.__acl__
 		assert_that(inst_acl, has_length(1))
+		assert_that(inst_acl,
+					has_item(has_properties('actor', is_(public),
+											'action', 'Allow',
+											'permission', is_([ACT_READ]) )))
 		
+		# non public
 		interface.alsoProvides(inst, interfaces.INonPublicCourseInstance)
 		provider = acl.CourseInstanceACLProvider(inst)
 		inst_acl = provider.__acl__
+		
 		assert_that(inst_acl, has_length(2))
+		assert_that(inst_acl,
+					has_item(has_properties('actor', is_(credit),
+											'action', 'Allow',
+											'permission', is_([ACT_READ]) )))
+		assert_that(inst_acl,
+					has_item(has_properties('actor', is_(purchased),
+											'action', 'Allow',
+											'permission', is_([ACT_READ]) )))
 		
 	@fudge.patch('nti.contenttypes.courses.decorators.IEntityContainer',
 				 'nti.app.renderers.decorators.get_remote_user')
