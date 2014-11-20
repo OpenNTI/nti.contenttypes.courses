@@ -68,13 +68,11 @@ class CourseInstanceACLProvider(object):
 		main_scopes = (sharing_scopes[ES_PUBLIC],)
 		if INonPublicCourseInstance.providedBy(course):
 			main_scopes = (sharing_scopes[ES_CREDIT], sharing_scopes[ES_PURCHASED])
-		for scope in main_scopes:
-			acl = acl_from_aces(
-				ace_allowing( IPrincipal(scope), ACT_READ, CourseInstanceACLProvider )
-			)
-		acl.extend( (ace_allowing( i, ACT_READ, CourseInstanceACLProvider )
-					 for i in course.instructors) )
-		return acl
+		aces = [ace_allowing( IPrincipal(x), ACT_READ, CourseInstanceACLProvider)
+				for x in main_scopes]
+		aces.extend( ace_allowing( i, ACT_READ, CourseInstanceACLProvider )
+					 for i in course.instructors)
+		return acl_from_aces( aces )
 
 from nti.dataserver.traversal import find_interface
 
