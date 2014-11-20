@@ -11,18 +11,20 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from zope import interface
 
 from . import MessageFactory as _
 
-from .interfaces import ICourseInstanceBoard
+from zope import interface
+from zope.cachedescriptors.property import cachedIn
 
 from nti.dataserver.contenttypes.forums.board import CommunityBoard
 from nti.dataserver.contenttypes.forums.forum import CommunityForum
-from nti.ntiids.ntiids import TYPE_OID
-from nti.externalization.oids import to_external_ntiid_oid
-from zope.cachedescriptors.property import cachedIn
 
+from nti.externalization.oids import to_external_ntiid_oid
+
+from nti.ntiids.ntiids import TYPE_OID
+
+from .interfaces import ICourseInstanceBoard
 
 @interface.implementer(ICourseInstanceBoard)
 class CourseInstanceBoard(CommunityBoard):
@@ -31,7 +33,7 @@ class CourseInstanceBoard(CommunityBoard):
 	"""
 
 	# The iPad isn't ready to have this appear externally as something different
-	#mime_type = mimeType = 'application/vnd.nextthought.courses.courseinstanceboard'
+	# mime_type = mimeType = 'application/vnd.nextthought.courses.courseinstanceboard'
 
 	__external_class_name__ = 'CommunityBoard'
 

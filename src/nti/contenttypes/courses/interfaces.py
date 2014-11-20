@@ -29,38 +29,37 @@ from zope.security.interfaces import IPrincipal
 
 from zope.site.interfaces import IFolder
 
+from zope.container.interfaces import IContainer
+from zope.container.interfaces import IContained
+from zope.container.interfaces import IContentContainer
 from zope.container.interfaces import IOrderedContainer
 from zope.container.interfaces import IContainerNamesContainer
-from zope.container.interfaces import IContentContainer
-from zope.container.interfaces import IContained
-from zope.container.interfaces import IContainer
 
 from zope.container.constraints import contains
 from zope.container.constraints import containers
 
-from nti.contentlibrary.interfaces import IContentPackageBundle
 from nti.contentlibrary.interfaces import IDisplayableContent
+from nti.contentlibrary.interfaces import IContentPackageBundle
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
-from nti.dataserver.interfaces import IShouldHaveTraversablePath
-from nti.dataserver.interfaces import ITitledDescribedContent
-from nti.dataserver.interfaces import ILastModified
 from nti.dataserver.interfaces import ICommunity
+from nti.dataserver.interfaces import ILastModified
+from nti.dataserver.interfaces import ITitledDescribedContent
+from nti.dataserver.interfaces import IShouldHaveTraversablePath
 from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
 
-from nti.dataserver.contenttypes.forums import interfaces as frm_interfaces
+from nti.dataserver.contenttypes.forums.interfaces import IBoard
 
 from nti.ntiids.schema import ValidNTIID
 
+from nti.schema.field import Choice
 from nti.schema.field import Object
+from nti.schema.field import Timedelta
+from nti.schema.field import ValidText
+from nti.schema.field import ListOrTuple
 from nti.schema.field import ValidDatetime
 from nti.schema.field import ValidTextLine
-from nti.schema.field import ValidText
 from nti.schema.field import UniqueIterable
-from nti.schema.field import Timedelta
-from nti.schema.field import ListOrTuple
-from nti.schema.field import Choice
-
 
 # Permissions defined for courses here should also be
 # registered in ZCML:
@@ -336,7 +335,7 @@ class ICourseInstance(IFolder,
 	# membership
 	SharingScopes.setTaggedValue('_ext_excluded_out', True)
 
-	Discussions = Object(frm_interfaces.IBoard,
+	Discussions = Object(IBoard,
 						 title="The root discussion board for this course.",
 						 description="Typically, courses will 'contain' their own discussions, "
 						 "but this may be a reference to another object.")
@@ -849,8 +848,17 @@ class ICourseEnrollments(interface.Interface):
 		If the principal is not enrolled, return None.
 		"""
 
-from zope.interface.interfaces import IObjectEvent
+class IEnrollmentException(interface.Interface):
+	"""
+	marker interface for enrollment exception"
+	"""
+
+@interface.implementer(IEnrollmentException)
+class AlreadyEnrolledException(Exception):
+	pass
+
 from zope.interface.interfaces import ObjectEvent
+from zope.interface.interfaces import IObjectEvent
 
 class ICourseInstanceAvailableEvent(IObjectEvent):
 	"""
