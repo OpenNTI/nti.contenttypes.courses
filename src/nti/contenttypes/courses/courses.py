@@ -20,25 +20,35 @@ from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeCo
 
 from nti.schema.fieldproperty import createDirectFieldProperties
 
-from . import interfaces
-from .outlines import PersistentCourseOutline
-from .sharing import CourseInstanceSharingScopes
-from .sharing import CourseSubInstanceSharingScopes
+from .interfaces import ES_PUBLIC
+from .interfaces import ICourseInstance
+from .interfaces import ICourseSubInstances
+from .interfaces import IContentCourseInstance
+from .interfaces import IContentCourseSubInstance
+from .interfaces import ICourseAdministrativeLevel
+
 from .forum import CourseInstanceBoard
 
-@interface.implementer(interfaces.ICourseAdministrativeLevel)
+from .outlines import PersistentCourseOutline
+
+from .sharing import CourseInstanceSharingScopes
+from .sharing import CourseSubInstanceSharingScopes
+
+@interface.implementer(ICourseAdministrativeLevel)
 class CourseAdministrativeLevel(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 	pass
 
-@interface.implementer(interfaces.ICourseSubInstances)
+@interface.implementer(ICourseSubInstances)
 class CourseSubInstances(CaseInsensitiveCheckingLastModifiedBTreeContainer):
 	pass
 
-@interface.implementer(interfaces.ICourseInstance)
+@interface.implementer(ICourseInstance)
 class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 	__external_can_create__ = False
-	createDirectFieldProperties(interfaces.ICourseInstance)
+	createDirectFieldProperties(ICourseInstance)
 
+	lastSynchronized = 0
+	
 	def __init__(self):
 		super(CourseInstance,self).__init__()
 
@@ -59,7 +69,7 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		# the public scope.
 		scopes = self.SharingScopes
 		scopes.initScopes()
-		public_scope = scopes[interfaces.ES_PUBLIC]
+		public_scope = scopes[ES_PUBLIC]
 
 		board = CourseInstanceBoard()
 		board.creator = public_scope
@@ -121,10 +131,8 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		"""
 		return ()
 
-
 from Acquisition import aq_acquire
-from .interfaces import IContentCourseInstance
-from .interfaces import IContentCourseSubInstance
+
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
 
 @interface.implementer(IContentCourseInstance)
@@ -147,7 +155,6 @@ class ContentCourseInstance(DisplayableContentMixin,
 
 		if self.ContentPackageBundle and self.root != self.ContentPackageBundle.root:
 			return self.ContentPackageBundle.PlatformPresentationResources
-
 
 @interface.implementer(IContentCourseSubInstance)
 class ContentCourseSubInstance(ContentCourseInstance):

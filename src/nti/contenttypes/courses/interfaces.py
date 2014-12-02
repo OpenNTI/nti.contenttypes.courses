@@ -54,6 +54,7 @@ from nti.ntiids.schema import ValidNTIID
 
 from nti.schema.field import Choice
 from nti.schema.field import Object
+from nti.schema.field import Number
 from nti.schema.field import Timedelta
 from nti.schema.field import ValidText
 from nti.schema.field import ListOrTuple
@@ -304,9 +305,15 @@ class ICourseSubInstances(IContainer):
 	__parent__.required = False
 	__setitem__.__doc__ = None
 
+class ISynchronizable(interface.Interface):
+	lastSynchronized = Number(title=u"The timestamp at which this object was last synchronized .",
+						  	  default=0.0)
+	lastSynchronized.setTaggedValue('_ext_excluded_out', True)
+	
 class ICourseInstance(IFolder,
 					  IShouldHaveTraversablePath,
-					  _ICourseOutlineNodeContainer):
+					  _ICourseOutlineNodeContainer,
+					  ISynchronizable):
 	"""
 	A concrete instance of a course (typically
 	in progress or opening). This can be annotated,
@@ -325,7 +332,6 @@ class ICourseInstance(IFolder,
 	containers(ICourseAdministrativeLevel,
 			   ICourseSubInstances)
 	__parent__.required = False
-
 
 	SharingScopes = Object(ICourseInstanceSharingScopes,
 						   title="The sharing scopes for this instance",
@@ -422,7 +428,6 @@ class IContentCourseInstance(ICourseInstance):
 class IContentCourseSubInstance(ICourseSubInstance,IContentCourseInstance):
 	pass
 
-
 class IEnrollmentMappedCourseInstance(ICourseInstance):
 	"""
 	A type of course instance that has its enrollment scopes specially
@@ -440,7 +445,6 @@ class IEnrollmentMappedCourseInstance(ICourseInstance):
 # interfaces. (This one does need to be a kind-of ICourseInstance because
 # we want to register enrollment managers for it.)
 IEnrollmentMappedCourseInstance.setTaggedValue('_ext_is_marker_interface', True)
-
 
 class ICourseInstanceVendorInfo(IEnumerableMapping,
 								ILastModified,
@@ -582,7 +586,6 @@ class IWritableCourseCatalog(ICourseCatalog,IContentContainer):
 			the object removed event.
 		"""
 
-
 class IGlobalCourseCatalog(IWritableCourseCatalog):
 	"""
 	A course catalog intended to be registered at the global
@@ -610,7 +613,8 @@ class ICourseCatalogInstructorInfo(interface.Interface):
 class ICourseCatalogEntry(IDisplayableContent,
 						  ILastModified,
 						  IShouldHaveTraversablePath,
-						  IContained):
+						  IContained,
+						  ISynchronizable):
 	"""
 	An entry in the course catalog containing metadata
 	and presentation data about the course.
@@ -656,7 +660,6 @@ class ICourseCatalogEntry(IDisplayableContent,
 		about starting and ending dates and durations, preview
 		flags, etc.
 		"""
-
 
 ###
 # Enrollments

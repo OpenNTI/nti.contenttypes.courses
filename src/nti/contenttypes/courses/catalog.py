@@ -247,10 +247,11 @@ class CourseCatalogEntry(SchemaConfigured,
 						 CreatedAndModifiedTimeMixin):
 	# shut up pylint
 	ntiid = None
-	StartDate = None
 	EndDate = None
 	Duration = None
-
+	StartDate = None
+	lastSynchronized = 0
+	
 	_SET_CREATED_MODTIME_ON_INIT = False
 
 	createDirectFieldProperties(ICourseCatalogEntry)

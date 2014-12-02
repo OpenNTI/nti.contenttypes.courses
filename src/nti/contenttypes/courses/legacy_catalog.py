@@ -211,7 +211,11 @@ class PersistentCourseCatalogLegacyEntry(CourseCatalogLegacyEntry,
 					 lambda s, nv: None)
 
 from zope.annotation.factory import factory as an_factory
+
 from nti.dataserver.traversal import find_interface
+
+from nti.schema.schema import EqHash
+
 from .interfaces import ICourseInstance
 
 @component.adapter(ICourseInstance)
@@ -231,15 +235,15 @@ class _CourseInstanceCatalogLegacyEntry(PersistentCourseCatalogLegacyEntry):
 CourseInstanceCatalogLegacyEntryFactory = an_factory(_CourseInstanceCatalogLegacyEntry,
 													 key='CourseCatalogEntry')
 
-from .interfaces import ICourseSubInstance
+from functools import total_ordering
+
 from zope.container.contained import Contained
 
-
-from functools import total_ordering
-from nti.schema.schema import EqHash
-
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
+
 from nti.dataserver.links import Link
+
+from .interfaces import ICourseSubInstance
 
 @component.adapter(ICourseSubInstance)
 @interface.implementer(ICourseCatalogLegacyEntry)
@@ -280,7 +284,6 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 			result = [Link( instance, rel="CourseInstance" )]
 		return result
 
-
 	@property
 	def PlatformPresentationResources(self):
 		ours = super(_CourseSubInstanceCatalogLegacyEntry,self).PlatformPresentationResources
@@ -316,7 +319,6 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 		# otherwise, with no information given, assume
 		# we're active
 		return True
-
 
 	@readproperty
 	def _next_instance(self):
@@ -360,4 +362,3 @@ class _LegacyCatalogAutoPackageSearchingScopedInterfaceObjectIO(object):
 	@classmethod
 	def _ap_find_package_interface_module(cls):
 		return dottedname.resolve('nti.contenttypes.courses.legacy_catalog')
-

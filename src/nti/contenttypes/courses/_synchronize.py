@@ -12,10 +12,12 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import time
+
 from zope import interface
 from zope import component
-from zope import lifecycleevent
 from zope.event import notify
+from zope import lifecycleevent
 
 from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
@@ -198,6 +200,8 @@ class _ContentCourseSynchronizer(object):
 		elif IDenyOpenEnrollment.providedBy(course):
 			interface.noLongerProvides(entry, IDenyOpenEnrollment)
 			interface.noLongerProvides(course, IDenyOpenEnrollment)
+		
+		course.lastSynchronized = entry.lastSynchronized = time.time()
 		
 	@classmethod
 	def update_common_info(cls, course, bucket, try_legacy_content_bundle=False):
