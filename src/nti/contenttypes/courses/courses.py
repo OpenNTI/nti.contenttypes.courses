@@ -79,6 +79,13 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		board.createDefaultForum()
 		return board
 
+	def _delete_Outline(self):
+		for m in (self.__dict__, self):
+			try:
+				del m['Outline']
+			except KeyError:
+				pass
+
 	def _make_Outline(self):
 		"""
 		A lazy helper to create this object's Outline.

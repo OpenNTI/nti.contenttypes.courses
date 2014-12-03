@@ -311,15 +311,20 @@ class _ContentCourseSynchronizer(object):
 		# again
 		if not outline_xml_key:
 			try:
-				del course.Outline
+				course._delete_Outline()
 			except AttributeError:
-				pass
+				try:
+					del course.Outline
+				except AttributeError:
+					pass
 		else:
 			try:
 				course.prepare_own_outline()
 			except AttributeError:
 				pass
-			fill_outline_from_key(course.Outline, outline_xml_key, xml_parent_name=outline_xml_node)
+			fill_outline_from_key(course.Outline,
+								  outline_xml_key,
+								  xml_parent_name=outline_xml_node)
 
 	@classmethod
 	def update_catalog_entry(cls, course, bucket, try_legacy_content_bundle=False):
