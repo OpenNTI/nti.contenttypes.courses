@@ -88,7 +88,7 @@ class _GenericFolderSynchronizer(object):
 
 	def __init__(self, folder, bucket):
 		pass
-	
+
 	def _get_factory_for(self, bucket):
 		# order matters.
 
@@ -151,7 +151,6 @@ class _ContentCourseSynchronizer(object):
 		# TODO: Need to be setting NTIIDs based on the
 		# bucket path for these guys
 		__traceback_info__ = course, bucket
-
 		# First, synchronize the bundle
 		bundle_json_key = bucket.getChildNamed(BUNDLE_META_NAME)
 		if not IDelimitedHierarchyKey.providedBy(bundle_json_key): # pragma: no cover
@@ -200,7 +199,7 @@ class _ContentCourseSynchronizer(object):
 		elif IDenyOpenEnrollment.providedBy(course):
 			interface.noLongerProvides(entry, IDenyOpenEnrollment)
 			interface.noLongerProvides(course, IDenyOpenEnrollment)
-		
+
 		course.lastSynchronized = entry.lastSynchronized = time.time()
 		
 	@classmethod
@@ -375,7 +374,7 @@ class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
 
 	#: We create sub-instances...
 	_COURSE_INSTANCE_FACTORY = ContentCourseSubInstance
-	
+
 	#: and we do not recurse into folders
 	_ADMIN_LEVEL_FACTORY = None
 

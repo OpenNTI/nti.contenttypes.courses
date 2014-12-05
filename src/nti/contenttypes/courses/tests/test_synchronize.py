@@ -31,7 +31,6 @@ from zope import component
 from persistent.interfaces import IPersistent
 
 from nti.contentlibrary import filesystem
-from nti.contentlibrary.library import EmptyLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
 from nti.assessment.interfaces import IQAssignmentDateContext
@@ -69,9 +68,10 @@ from . import CourseLayerTest
 class TestFunctionalSynchronize(CourseLayerTest):
 
 	def setUp(self):
-		self.library = EmptyLibrary()
-		component.getGlobalSiteManager().registerUtility(self.library, IContentPackageLibrary)
+		self.library = filesystem.GlobalFilesystemContentPackageLibrary(
+			os.path.join(os.path.dirname(__file__), 'test_subscribers' ))
 		self.library.syncContentPackages()
+		component.getGlobalSiteManager().registerUtility(self.library, IContentPackageLibrary)
 
 		root_name ='TestSynchronizeWithSubInstances'
 		absolute_path = os.path.join( os.path.dirname( __file__ ),

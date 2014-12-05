@@ -14,15 +14,11 @@ logger = __import__('logging').getLogger(__name__)
 #disable: accessing protected members, too many methods
 #pylint: disable=W0212,R0904
 
-import unittest
 from hamcrest import assert_that
 from hamcrest import is_
 from hamcrest import is_not
 from hamcrest import same_instance
 from hamcrest import has_entry
-
-from nti.testing import base
-from nti.testing import matchers
 
 import os
 from zope import component
