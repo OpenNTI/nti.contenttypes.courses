@@ -18,7 +18,7 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 # disable: too many ancestors, missing 'self''
-#pylint: disable=I0011,R0901,E0213
+# pylint: disable=I0011,R0901,E0213
 
 from . import MessageFactory as _
 
@@ -912,3 +912,13 @@ class ICourseInstanceForCreditScopedForum(ICourseInstanceScopedForum):
 									 required=False,
 									 default=ES_CREDIT)
 	SharingScopeName.setTaggedValue('value', ES_CREDIT)
+	
+class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
+	"""
+	A forum intended to be visible to those who have purchased a course.
+	"""
+
+	SharingScopeName = ValidTextLine(description="Should be the same as ES_PURCHASED",
+									 required=False,
+									 default=ES_PURCHASED)
+	SharingScopeName.setTaggedValue('value', ES_PURCHASED)
