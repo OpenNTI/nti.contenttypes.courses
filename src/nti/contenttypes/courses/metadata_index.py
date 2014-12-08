@@ -22,6 +22,8 @@ from nti.dataserver.interfaces import IPrincipalMetadataObjectsIntIds
 
 from nti.site.hostpolicy import run_job_in_all_host_sites
 
+from nti.utils.property import Lazy
+
 from .interfaces import ICourseCatalog
 from .interfaces import ICourseInstance
 
@@ -59,23 +61,46 @@ def outline_nodes_collector(course):
 		pass
 	return result
 			
-@component.adapter(ISystemUserPrincipal)
 @interface.implementer(IPrincipalMetadataObjectsIntIds)
-class _CoursePrincipalObjectsIntIds(object):
-
-	__slots__ = ()
+class _BasePrincipalObjectsIntIds(object):
 	
 	def __init__(self, *args, **kwargs):
 		pass
 
+	@Lazy
+	def _intids(self):
+		return component.getUtility(zope.intid.IIntIds)
+	
+	def iter_intids(self, intids=None):
+		raise NotImplementedError()
+
+@component.adapter(ISystemUserPrincipal)
+class _CoursePrincipalObjectsIntIds(_BasePrincipalObjectsIntIds):
+
 	def iter_intids(self, intids=None):
 		result = set()
-		intids = component.getUtility(zope.intid.IIntIds) if intids is None else intids
+		intids = self._intids if intids is None else intids
 		def _collector():
 			for course in course_collector():
 				uid = get_uid(course, intids)
 				if uid is not None:
 					result.add(uid)
+		run_job_in_all_host_sites(_collector)
+		for uid in result:
+			yield uid
+
+@component.adapter(ISystemUserPrincipal)
+class _OutlinePrincipalObjectsIntIds(_BasePrincipalObjectsIntIds):
+
+	def iter_intids(self, intids=None):
+		result = set()
+		intids = self._intids if intids is None else intids
+		def _collector():
+			for course in course_collector():
+				for node in outline_nodes_collector(course):
+					uid = get_uid(node, intids)
+					if uid is not None:
+						result.add(uid)
 		run_job_in_all_host_sites(_collector)
 		for uid in result:
 			yield uid
