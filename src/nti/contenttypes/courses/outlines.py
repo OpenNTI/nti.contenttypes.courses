@@ -13,13 +13,6 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
 
-from .interfaces import ICourseOutline
-from .interfaces import ICourseOutlineNode
-from .interfaces import ICourseOutlineCalendarNode
-from .interfaces import ICourseOutlineContentNode
-from nti.dataserver.interfaces import ITitledDescribedContent
-
-
 # We have no need or desire for these nodes to be Persistent (yet)
 # so we cannot extend OrderedContainer:
 #from zope.container.ordered import OrderedContainer
@@ -29,23 +22,30 @@ from nti.dataserver.interfaces import ITitledDescribedContent
 # from nti.dataserver.containers import _CheckObjectOnSetMixin
 # doesn't work with the OrderedContainer, so we have to do that ourself
 from zope.container.constraints import checkObject
-from zope.container.contained import Contained, setitem, uncontained
+from zope.container.ordered import OrderedContainer
+from zope.container.contained import Contained, uncontained
 
-from nti.dataserver.datastructures import CreatedModDateTrackingObject
+from nti.dataserver.interfaces import ITitledDescribedContent
 from nti.dataserver.datastructures import PersistentCreatedModDateTrackingObject
+
 # The exception to persistence is the top-level object, which
 # we expect to modify in place, and possible store references to
-from zope.container.ordered import OrderedContainer
 
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import AdaptingFieldProperty
 from nti.schema.fieldproperty import createFieldProperties
 from nti.schema.fieldproperty import createDirectFieldProperties
 
+from .interfaces import ICourseOutline
+from .interfaces import ICourseOutlineNode
+from .interfaces import ICourseOutlineContentNode
+from .interfaces import ICourseOutlineCalendarNode
+
 class _AbstractCourseOutlineNode(Contained):
 
 	createFieldProperties(ITitledDescribedContent)
 	createDirectFieldProperties(ICourseOutlineNode)
+	
 	__external_can_create__ = False
 
 	title = AdaptingFieldProperty(ITitledDescribedContent['title'])
@@ -103,9 +103,8 @@ class CourseOutlineCalendarNode(SchemaConfigured,
 		SchemaConfigured.__init__(self,**kwargs)
 		CourseOutlineNode.__init__(self)
 
-	AvailableBeginning = AdaptingFieldProperty(ICourseOutlineCalendarNode['AvailableBeginning'])
 	AvailableEnding = AdaptingFieldProperty(ICourseOutlineCalendarNode['AvailableEnding'])
-
+	AvailableBeginning = AdaptingFieldProperty(ICourseOutlineCalendarNode['AvailableBeginning'])
 
 @interface.implementer(ICourseOutlineContentNode)
 class CourseOutlineContentNode(CourseOutlineCalendarNode):
@@ -115,6 +114,7 @@ class CourseOutlineContentNode(CourseOutlineCalendarNode):
 class CourseOutline(CourseOutlineNode,
 					PersistentCreatedModDateTrackingObject):
 	createDirectFieldProperties(ICourseOutline)
+
 	_SET_CREATED_MODTIME_ON_INIT = False
 	__external_can_create__ = False
 

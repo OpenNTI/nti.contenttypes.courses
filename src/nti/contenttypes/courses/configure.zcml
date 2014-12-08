@@ -210,6 +210,12 @@
 	<adapter factory="nti.dataserver.traversal.ContainerAdapterTraversable"
 			 for=".interfaces.ICourseInstance" />
 
+	<!-- Metadata -->
+	<configure zcml:condition="installed nti.metadata">
+		<subscriber	factory=".metadata_index._CoursePrincipalObjectsIntIds"
+					provides="nti.dataserver.interfaces.IPrincipalMetadataObjectsIntIds" />
+	</configure>
+
 	<!--
 		To get maximum externalization testing, let the dataserver
 		register all its decorators.
