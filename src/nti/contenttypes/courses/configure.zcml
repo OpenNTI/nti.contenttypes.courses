@@ -214,6 +214,9 @@
 	<configure zcml:condition="installed nti.metadata">
 		<subscriber	factory=".metadata_index._CoursePrincipalObjectsIntIds"
 					provides="nti.dataserver.interfaces.IPrincipalMetadataObjectsIntIds" />
+					
+		<subscriber	factory=".metadata_index._OutlinePrincipalObjectsIntIds"
+					provides="nti.dataserver.interfaces.IPrincipalMetadataObjectsIntIds" />
 	</configure>
 
 	<!--
