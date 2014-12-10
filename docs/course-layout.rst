@@ -478,13 +478,32 @@ replaces the data for the assignments specified within this course,
    }
 
 The automatic grading information is being defined on an as-needed
-basis. At this writing, the only supported value is ``total_points``,
-which defines a value to which all the equally-weighted questions will
-be normalized. (This value will be reflected in the ``Grade`` object's
-``AutoGradeMax`` property.) It can be defined individually for each
-assignment; tool support lets you easily normalize all assignments the
-same. It can be explicitly set to ``null`` to disable auto-grading and
-better merge with the tool.
+basis. The supported values are 
+	``total_points`` which defines a value to which all the equally-weighted questions will
+	be normalized. (This value will be reflected in the ``Grade`` object's
+	``AutoGradeMax`` property.) It can be defined individually for each
+	assignment; tool support lets you easily normalize all assignments the
+	same. It can be explicitly set to ``null`` to disable auto-grading and
+	better merge with the tool.
+	
+	Aditionally (optionally)
+	``name`` which points to a defined registered named policy ``IPendingAssessmentAutoGradePolicy`` object.
+	 A special case when name is ``pointbased`` which requires additional information as follows:
+	 ``questions`` which defines map of question ids vs number of points. A special key called ``default``
+	 points to the default number of points to a question not specifed in this map 
+	
+	 {
+    "tag:nextthought.com,2011-10:OU-NAQ-CS1300_Power_and_Elegance_of_Computational_Thinking.naq.asg.assignment:3.3_Exercise_Sound": {
+        "Title": "Exercise: Learning to Make Sound",
+        "auto_grade": {
+            "total_points": 20,
+            "questions": {
+            	"default":1,
+            	"tag:nextthought.com,2011-10:OU-NAQ-CS1300_Power_and_Elegance_of_Computational_Thinking.naq.qid.verification.05":10
+            }
+        },
+        ...
+      }
 
 Another known key (defined by
 :py:mod:`nti.app.assessment.assignment_filters`) is ``excluded``, a
