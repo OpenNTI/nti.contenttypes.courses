@@ -496,6 +496,7 @@ basis. The supported values are
     "tag:nextthought.com,2011-10:OU-NAQ-CS1300_Power_and_Elegance_of_Computational_Thinking.naq.asg.assignment:3.3_Exercise_Sound": {
         "Title": "Exercise: Learning to Make Sound",
         "auto_grade": {
+			name: "pointbased",
             "total_points": 20,
             "questions": {
             	"default":1,
