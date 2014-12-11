@@ -13,19 +13,19 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
 from zope import component
-
-from .interfaces import ICourseInstance
-
-from nti.assessment.interfaces import IQAssignmentDateContext
-from nti.assessment.interfaces import IQAssignmentPolicies
-
 from zope.container.contained import Contained
-from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
+from zope.annotation.factory import factory as an_factory
+
 from persistent.mapping import PersistentMapping
+
+from nti.assessment.interfaces import IQAssignmentPolicies
+from nti.assessment.interfaces import IQAssignmentDateContext
+
+from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
 from nti.externalization.persistence import NoPickle
 
-from zope.annotation.factory import factory as an_factory
+from .interfaces import ICourseInstance
 
 @interface.implementer(IQAssignmentDateContext)
 class EmptyAssignmentDateContext(object):
@@ -38,6 +38,9 @@ class EmptyAssignmentDateContext(object):
 	def __init__(self, context):
 		pass
 
+	def assignments(self):
+		return ()
+
 	def of(self, asg):
 		return asg
 
@@ -47,13 +50,12 @@ class EmptyAssignmentDateContext(object):
 	def __setitem__(self, key, valu):
 		pass
 
-
 @NoPickle
 class _Dates(object):
 
 	def __init__(self, mapping, asg):
-		self._mapping = mapping
 		self._asg = asg
+		self._mapping = mapping
 
 	def __getattr__(self, name):
 		try:
@@ -75,6 +77,8 @@ class MappingAssignmentDateContext(Contained,
 		PersistentCreatedAndModifiedTimeObject.__init__(self)
 		self._mapping = PersistentMapping()
 
+	def assignments(self):
+		return list(self._mapping.keys())
 
 	def of(self, asg):
 		if asg.ntiid in self._mapping:
@@ -87,9 +91,7 @@ class MappingAssignmentDateContext(Contained,
 	def __setitem__(self, key, value):
 		self._mapping[key] = value
 
-
 CourseSubInstanceAssignmentDateContextFactory = an_factory(MappingAssignmentDateContext)
-
 
 @interface.implementer(IQAssignmentPolicies)
 @component.adapter(ICourseInstance)
@@ -106,6 +108,9 @@ class MappingAssignmentPolicies(Contained,
 		PersistentCreatedAndModifiedTimeObject.__init__(self)
 		self._mapping = PersistentMapping()
 
+	def assignments(self):
+		return list(self._mapping.keys())
+	
 	def clear(self):
 		self._mapping.clear()
 
