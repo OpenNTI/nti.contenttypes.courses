@@ -19,7 +19,7 @@ from nti.assessment.interfaces import IQAssignmentPolicyValidator
 from .interfaces import ICourseCatalogEntry
 
 @interface.implementer(IQAssignmentPolicyValidator)
-class AutoGradeAssignmentPolicyValidator(object):
+class DefaultAssignmentPolicyValidator(object):
 	
 	def validate(self, ntiid, policy):
 		assignment = component.queryUtility(IQAssignment, name=ntiid)
@@ -35,6 +35,16 @@ class AutoGradeAssignmentPolicyValidator(object):
 		except (TypeError, ValueError):
 			msg = "Invalid total points in policy for %s" % ntiid
 			raise ValueError(msg)
+		
+		name = auto_grade.get('name')
+		if not name:
+			return
+		
+		if name and name.lower() in ('pointbased'):
+			assert assignment, 'Could not find assignment %s' % ntiid
+		else:
+			logger.warn("Don't know how to validate policy %s in assignment", 
+						name, ntiid)
 
 def validate_assigment_policies(course): 
 	course_policies = IQAssignmentPolicies(course, None)
@@ -65,7 +75,9 @@ def validate_assigment_policies(course):
 				validator = None
 	
 	if validator is None:
-		validator = AutoGradeAssignmentPolicyValidator()
+		## let's try default validator
+		validator = DefaultAssignmentPolicyValidator()
 	
+	# go through policies
 	for k,v in policies.items():
 		validator.validate(k, v)
