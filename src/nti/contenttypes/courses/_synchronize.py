@@ -19,12 +19,12 @@ from zope import component
 from zope.event import notify
 from zope import lifecycleevent
 
-from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
-from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
-
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
 from nti.contentlibrary.bundle import PersistentContentPackageBundle
+
+from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
+from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
 
 from nti.contentlibrary.dublincore import read_dublincore_from_named_key
 
@@ -60,6 +60,7 @@ from ._outline_parser import fill_outline_from_key
 from ._assignment_override_parser import fill_asg_from_key
 from ._catalog_entry_parser import fill_entry_from_legacy_key
 from ._assignment_override_parser import reset_asg_missing_key
+from ._assignment_policy_validator import validate_assigment_policies
 
 SECTION_FOLDER_NAME = 'Sections'
 ROLE_INFO_NAME = 'role_info.json'
@@ -151,6 +152,7 @@ class _ContentCourseSynchronizer(object):
 		# TODO: Need to be setting NTIIDs based on the
 		# bucket path for these guys
 		__traceback_info__ = course, bucket
+
 		# First, synchronize the bundle
 		bundle_json_key = bucket.getChildNamed(BUNDLE_META_NAME)
 		if not IDelimitedHierarchyKey.providedBy(bundle_json_key): # pragma: no cover
@@ -208,23 +210,37 @@ class _ContentCourseSynchronizer(object):
 		if ES_CREDIT in course.SharingScopes:
 			# Make sure the credit scope, which is usually the smaller
 			# scope, is set to expand and send notices.
+			#
 			# TODO: We could do better with this by having the vocabulary
 			# terms know what scopes should be like this and/or have a file
+			#
 			# TODO: Because the scopes are now communities and have shoring storage
 			# of their own, we don't really need to broadcast this out to each individual
 			# stream storage, we just want an on-the-socket notification.
 			try:
 				ISharingTargetEntityIterable(course.SharingScopes[ES_CREDIT])
 			except TypeError:
-				interface.alsoProvides(course.SharingScopes[ES_CREDIT], ISharingTargetEntityIterable)
+				interface.alsoProvides(course.SharingScopes[ES_CREDIT],
+									   ISharingTargetEntityIterable)
+	
 		cls.update_vendor_info(course, bucket)
-		cls.update_outline(course, bucket, try_legacy_content_bundle=try_legacy_content_bundle)
-		cls.update_catalog_entry(course, bucket, try_legacy_content_bundle=try_legacy_content_bundle)
+		cls.update_outline(course=course,
+						   bucket=bucket, 
+						   try_legacy_content_bundle=try_legacy_content_bundle)
+		
+		cls.update_catalog_entry(course=course, 
+								 bucket=bucket, 
+								 try_legacy_content_bundle=try_legacy_content_bundle)
+		
 		cls.update_instructor_roles(course, bucket)
 		cls.update_assignment_dates(course, bucket)
+		
+		# make sure Discussions are initialized
 		getattr(course, 'Discussions')
-
 		cls.update_sharing_scopes_friendly_names(course)
+		
+		# finally validate assigment policies
+		cls.validate_assigment_policies(course, bucket)
 
 	@classmethod
 	def update_sharing_scopes_friendly_names(cls, course):
@@ -306,8 +322,7 @@ class _ContentCourseSynchronizer(object):
 					break
 
 		# We actually want to delete anything it has
-		# in case it's a subinstance so the parent can come through
-		# again
+		# in case it's a subinstance so the parent can come through again
 		if not outline_xml_key:
 			try:
 				course._delete_Outline()
@@ -336,8 +351,7 @@ class _ContentCourseSynchronizer(object):
 						catalog_json_key = package.make_sibling_key(CATALOG_INFO_NAME)
 						break
 
-		# TODO: Cleaning up?
-		# XXX base_url
+		# TODO: Cleaning up? # XXX base_url
 		catalog_entry = ICourseCatalogEntry(course)
 		if catalog_json_key:
 			fill_entry_from_legacy_key(catalog_entry, catalog_json_key)
@@ -368,6 +382,10 @@ class _ContentCourseSynchronizer(object):
 			fill_asg_from_key(subcourse, key)
 		else:
 			reset_asg_missing_key(subcourse)
+			
+	@classmethod
+	def validate_assigment_policies(cls, course, bucket):
+		validate_assigment_policies(course)
 
 @component.adapter(ICourseSubInstances, IDelimitedHierarchyBucket)
 class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
