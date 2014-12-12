@@ -31,7 +31,7 @@ class DefaultAssignmentPolicyValidator(object):
 			return
 		total_points = auto_grade.get('total_points')
 		try:
-			assert total_points is None or int(total_points) >= 0
+			assert int(total_points) >= 0
 		except (AssertionError, TypeError, ValueError):
 			msg = "Invalid total points in policy for %s" % ntiid
 			raise ValueError(msg)
