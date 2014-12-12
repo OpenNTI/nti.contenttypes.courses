@@ -485,16 +485,18 @@ class EnrollmentMappedCourseEnrollmentManager(DefaultCourseEnrollmentManager):
 	for particular scopes.
 	"""
 
-	def enroll(self, principal, scope=ES_PUBLIC):
+	def enroll(self, principal, scope=ES_PUBLIC, context=None):
 		mapped_course = _find_mapped_course_for_scope(self.context, scope)
 		if mapped_course is not self.context:
 			manager = (component.getMultiAdapter( (mapped_course, self.request),
 												  ICourseEnrollmentManager)
 					   if self.request is not None
 					   else ICourseEnrollmentManager(mapped_course))
-			return manager.enroll(principal, scope=scope)
+			return manager.enroll(principal, scope=scope, context=context)
 
-		return super(EnrollmentMappedCourseEnrollmentManager,self).enroll(principal,scope=scope)
+		return super(EnrollmentMappedCourseEnrollmentManager,self).enroll(principal, 
+																		  scope=scope,
+																		  context=context)
 
 
 	# Dropping does nothing special: we never get here if we
