@@ -14,30 +14,41 @@ logger = __import__('logging').getLogger(__name__)
 from . import MessageFactory as _
 
 from zope import interface
-from zope import component
-from zope.event import notify
-from zope import lifecycleevent
-from zope.location.location import locate
-from zope.cachedescriptors.method import cachedIn
-from zope.annotation.factory import factory as an_factory
-
 from zope.interface import ro
 
-from ZODB.interfaces import IConnection
+from zope import component
+from zope import lifecycleevent
 
-from nti.externalization.persistence import NoPickle
+from zope.annotation.factory import factory as an_factory
 
-from nti.wref.interfaces import IWeakRef
-
-from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
-
-from nti.schema.schema import SchemaConfigured
+from zope.event import notify
 
 from zope.container.constraints import contains
 from zope.container.interfaces import IContainer
 from zope.container.interfaces import IContained
 
+from zope.cachedescriptors.method import cachedIn
+
+from zope.location.location import locate
+
 from zope.security.interfaces import IPrincipal
+
+from ZODB.interfaces import IConnection
+
+from nti.contentlibrary.bundle import _readCurrent
+
+from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
+
+from nti.externalization.persistence import NoPickle
+
+from nti.utils.property import Lazy
+from nti.utils.property import alias
+from nti.utils.property import CachedProperty
+
+from nti.schema.schema import SchemaConfigured
+from nti.schema.fieldproperty import FieldProperty
+
+from nti.wref.interfaces import IWeakRef
 
 from .interfaces import ES_PUBLIC
 from .interfaces import ES_CREDIT
@@ -54,21 +65,14 @@ from .interfaces import ICourseEnrollmentManager
 from .interfaces import ICourseInstanceEnrollmentRecord
 from .interfaces import ICourseInstanceEnrollmentRecordContainer
 
-from nti.contentlibrary.bundle import _readCurrent
-
-from nti.utils.property import Lazy
-from nti.utils.property import alias
-from nti.utils.property import CachedProperty
-
-from nti.schema.fieldproperty import FieldProperty
-
-class IDefaultCourseInstanceEnrollmentStorage(ICourseInstanceEnrollmentRecordContainer,IContained):
+class IDefaultCourseInstanceEnrollmentStorage(ICourseInstanceEnrollmentRecordContainer,
+											  IContained):
 	"""
 	Maps from principal ids to their enrollment record.
 	"""
 	contains(ICourseInstanceEnrollmentRecord)
 
-class IDefaultCourseCatalogEnrollmentStorage(IContainer,IContained):
+class IDefaultCourseCatalogEnrollmentStorage(IContainer, IContained):
 	"""
 	Maps from principal IDs to a persistent list of their
 	enrollments. Intended to be installed on the course catalog that

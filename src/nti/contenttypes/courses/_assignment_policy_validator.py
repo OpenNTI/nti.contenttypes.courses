@@ -37,7 +37,6 @@ class AutoGradeAssignmentPolicyValidator(object):
 			raise ValueError(msg)
 
 def validate_assigment_policies(course): 
-	return
 	course_policies = IQAssignmentPolicies(course, None)
 	if not course_policies:
 		return
