@@ -9,7 +9,10 @@
 	<include package="zope.security" file="meta.zcml" />
 	<include package="zope.component" />
 	<include package="zope.security" />
-	<include package="zope.securitypolicy" /> <!-- for the annotation-based role maps -->
+	
+	<!-- for the annotation-based role maps -->
+	<include package="zope.securitypolicy" /> 
+	
 	<include package="nti.mimetype" />
 
 	<include package="zope.generations" />
@@ -35,6 +38,7 @@
 						 .interfaces.ICourseCatalogEntry
 						 .interfaces.ICourseCatalogInstructorInfo"
 		modules=".courses .outlines .catalog .sharing" />
+
 	<ext:registerAutoPackageIO
 		root_interfaces=".legacy_catalog.ICourseCatalogLegacyEntry
 						 .legacy_catalog.ICourseCreditLegacyInfo
@@ -47,12 +51,16 @@
 	<adapter factory="nti.dataserver.users.users_external._EntitySummaryExternalObject"
 			 for=".interfaces.ICourseInstanceSharingScope"
 			 name="summary" />
+
 	<adapter factory="nti.dataserver.users.users_external._EntityExternalObject"
 			 for=".interfaces.ICourseInstanceSharingScope" />
+
 	<subscriber factory=".decorators._SharingScopesAndDiscussionDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator" />
+
 	<subscriber factory=".decorators._LegacyCCEFieldDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator" />
+
 	<subscriber factory=".decorators._SharedScopesForumDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator" />
 
@@ -60,7 +68,6 @@
 	<subscriber handler=".subscribers.install_site_course_catalog" />
 	<subscriber handler=".subscribers.uninstall_site_course_catalog" />
 	<subscriber handler=".subscribers.sync_catalog_when_library_synched" />
-
 
 	<!-- Roles and permissions -->
 	<include package="zope.securitypolicy" file="meta.zcml" />
@@ -84,13 +91,11 @@
 		description="This role may have fewer permissions than an
 					 instructor" />
 
-	<adapter factory=".principalrole.CourseInstancePrincipalRoleMap" />
-
 	<adapter factory=".acl.CourseInstanceACLProvider" />
 	<adapter factory=".acl.CourseCatalogEntryACLProvider" />
-
+	<adapter factory=".principalrole.CourseInstancePrincipalRoleMap" />
+	
 	<!-- Catalog -->
-
 	<!--
 		We provide one global catalog,
 		but every site that registers its own courses
@@ -99,12 +104,15 @@
 	-->
 	<utility factory=".catalog.GlobalCourseCatalog"
 			 provides=".interfaces.IGlobalCourseCatalog" />
+			 
 	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
 				for=".interfaces.ICourseInstance
 					 .interfaces.ICourseInstanceAvailableEvent" />
+
 	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
 				for=".interfaces.ICourseInstance
 					 zope.lifecycleevent.IObjectRemovedEvent" />
+
 	<!-- By default, courses store their own catalog entries -->
 	<adapter factory=".legacy_catalog.CourseInstanceCatalogLegacyEntryFactory" />
 	<adapter factory=".legacy_catalog.CourseSubInstanceCatalogLegacyEntryFactory" />
@@ -115,19 +123,23 @@
 
 	<!-- Enrollment -->
 	<adapter factory=".enrollment.DefaultCourseEnrollmentManager" />
+	
 	<adapter factory=".enrollment.DefaultCourseEnrollmentManager"
 			 for=".interfaces.ICourseInstance
 				  pyramid.interfaces.IRequest" />
+				  
 	<adapter factory=".enrollment.EnrollmentMappedCourseEnrollmentManager" />
+
 	<adapter factory=".enrollment.EnrollmentMappedCourseEnrollmentManager"
 			 for=".interfaces.IEnrollmentMappedCourseInstance
 				  pyramid.interfaces.IRequest" />
 
+	<adapter factory=".enrollment.global_course_catalog_enrollment_storage" />
 	<adapter factory=".enrollment.DefaultCourseInstanceEnrollmentStorageFactory" />
 	<adapter factory=".enrollment.DefaultCourseCatalogEnrollmentStorageFactory" />
-	<adapter factory=".enrollment.global_course_catalog_enrollment_storage" />
 
 	<adapter factory=".enrollment.DefaultCourseEnrollments" />
+	
 	<!-- anything that can become a Principal... -->
 	<subscriber factory=".enrollment.DefaultPrincipalEnrollments"
 				provides=".interfaces.IPrincipalEnrollments"
@@ -138,6 +150,7 @@
 	<subscriber handler=".enrollment.on_principal_deletion_unenroll"
 				for="zope.security.interfaces.IPrincipal
 					 nti.intid.interfaces.IIntIdRemovedEvent" />
+
 	<subscriber handler=".enrollment.on_principal_deletion_unenroll"
 				for="nti.dataserver.interfaces.IUser
 					 nti.intid.interfaces.IIntIdRemovedEvent" />
@@ -153,8 +166,8 @@
 	<subscriber handler=".enrollment.on_modified_potentially_move_courses" />
 
 	<!-- managing the scope as you enroll/drop/modify -->
-	<subscriber handler=".sharing.on_enroll_record_scope_membership" />
 	<subscriber handler=".sharing.on_drop_exit_scope_membership" />
+	<subscriber handler=".sharing.on_enroll_record_scope_membership" />
 	<subscriber handler=".sharing.on_modified_update_scope_membership" />
 	<subscriber handler=".sharing.on_moved_between_courses_update_scope_membership" />
 
@@ -162,11 +175,13 @@
 	<adapter factory="nti.intid.wref.ArbitraryOrderableWeakRef"
 			 provides="nti.wref.interfaces.IWeakRef"
 			 for=".interfaces.ICourseInstanceEnrollmentRecord" />
+
 	<!-- These are a type of Entity, but they have no global
 	name, so we have to be careful to override the weak ref -->
 	<adapter factory=".sharing._CourseInstanceSharingScopeWeakRef"
 			 provides="nti.wref.interfaces.IWeakRef"
 			 for=".interfaces.ICourseInstanceSharingScope" />
+
 	<adapter factory=".sharing._CourseInstanceSharingScopePrincipal"
 			 for=".interfaces.ICourseInstanceSharingScope"
 			 provides="zope.security.interfaces.IPrincipal" />
@@ -178,6 +193,7 @@
 	<adapter factory="._synchronize._GenericFolderSynchronizer"
 			 for=".catalog.CourseCatalogFolder
 				  nti.contentlibrary.interfaces.IDelimitedHierarchyBucket" />
+
 	<adapter factory="._synchronize._GenericFolderSynchronizer"
 			 for=".interfaces.ICourseAdministrativeLevel
 				  nti.contentlibrary.interfaces.IDelimitedHierarchyBucket" />
@@ -196,9 +212,11 @@
 	<adapter factory="nti.contentlibrary.dublincore.DisplayableContentZopeDublinCoreAdapter"
 			 for=".interfaces.ICourseCatalogEntry"
 			 provides="zope.dublincore.interfaces.IWriteZopeDublinCore" />
+
 	<class class=".catalog.CourseCatalogEntry">
 		<implements interface="zope.annotation.interfaces.IAttributeAnnotatable" />
 	</class>
+
 	<class class=".legacy_catalog._CourseSubInstanceCatalogLegacyEntry">
 		<implements interface="zope.annotation.interfaces.IAttributeAnnotatable" />
 	</class>
@@ -207,6 +225,7 @@
 	<adapter factory=".traversal.CourseCatalogEntryTraverser"
 			 for=".interfaces.ICourseInstance *"
 			 name="CourseCatalogEntry" />
+
 	<adapter factory="nti.dataserver.traversal.ContainerAdapterTraversable"
 			 for=".interfaces.ICourseInstance" />
 
@@ -229,6 +248,5 @@
 		<include package="nti.dataserver.contenttypes.forums"
 				 zcml:condition="installed nti.dataserver.contenttypes.forums" />
 	</configure>
-
 
 </configure>

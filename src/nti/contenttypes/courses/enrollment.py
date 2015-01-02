@@ -18,6 +18,7 @@ from zope.interface import ro
 
 from zope import component
 from zope import lifecycleevent
+from zope.mimetype.interfaces import IContentTypeAware
 
 from zope.annotation.factory import factory as an_factory
 
@@ -40,6 +41,8 @@ from nti.contentlibrary.bundle import _readCurrent
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
 from nti.externalization.persistence import NoPickle
+
+from nti.mimetype.mimetype import nti_mimetype_with_class
 
 from nti.utils.property import Lazy
 from nti.utils.property import alias
@@ -502,7 +505,6 @@ class EnrollmentMappedCourseEnrollmentManager(DefaultCourseEnrollmentManager):
 																		  scope=scope,
 																		  context=context)
 
-
 	# Dropping does nothing special: we never get here if we
 	# didn't actually wind up enrolling in this course instance itself
 	# to start with.
@@ -676,7 +678,7 @@ class DefaultPrincipalEnrollments(object):
 
 from nti.dataserver.interfaces import IUser
 
-@interface.implementer(ICourseInstanceEnrollmentRecord)
+@interface.implementer(ICourseInstanceEnrollmentRecord, IContentTypeAware)
 class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 											PersistentCreatedAndModifiedTimeObject):
 	"""
@@ -688,7 +690,10 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 
 	__parent__ = None
 	__name__ = None
-
+	
+	parameters = {}
+	mime_type = mimeTye = nti_mimetype_with_class('DefaultCourseInstanceEnrollmentRecord')
+	
 	Scope = FieldProperty(ICourseInstanceEnrollmentRecord['Scope'])
 
 	def __init__(self, **kwargs):
@@ -703,10 +708,10 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 			return self.__parent__.__parent__
 		except AttributeError:
 			return None
-
 	CourseInstance = property(_get_CourseInstance, lambda s, nv: None)
 
 	_principal = None
+
 	def _get_Principal(self):
 		return self._principal() if self._principal is not None else None
 
@@ -716,9 +721,10 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 				del self._principal
 		else:
 			self._principal = IWeakRef(nv)
-
 	Principal = property(_get_Principal, _set_Principal)
 
+	creator = alias('Principal')
+	
 	def __eq__(self, other):
 		try:
 			return self is other or (self.__name__, self.__parent__) == (other.__name__, other.__parent__)
