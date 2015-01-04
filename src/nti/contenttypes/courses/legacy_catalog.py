@@ -302,11 +302,7 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 		if 'StartDate' in self.__dict__: # whether or not its None
 			return _derive_preview(self)
 
-		# We don't have it, try to acquire it
-		# First check forced preview/non-preview; else the flag.
-		result = getattr(self._next_entry, 'isPreview', None)
-
-		return result or getattr(self._next_entry, 'Preview', None)
+		return getattr(self._next_entry, 'Preview', None)
 
 	def isCourseCurrentlyActive(self):
 		# XXX: duplicated from the main catalog entry
