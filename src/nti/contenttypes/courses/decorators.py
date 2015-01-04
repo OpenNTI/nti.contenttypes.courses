@@ -98,7 +98,6 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 
 			if ES_CREDIT in scopes:
 				ls['restricted'] = scopes[ES_CREDIT].NTIID
-				
 			if ES_PURCHASED in scopes:
 				ls['purchased'] = scopes[ES_PURCHASED].NTIID
 
@@ -108,6 +107,8 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 		# For the default if you're not enrolled for credit, match what flat clients do
 		if user is not None and user in IEntityContainer(scopes[ES_CREDIT]):
 			result['SharingScopes']['DefaultSharingScopeNTIID'] = ls.get('restricted')
+		elif user is not None and user in IEntityContainer(scopes[ES_PURCHASED]):
+			result['SharingScopes']['DefaultSharingScopeNTIID'] = ls.get('purchased')
 		else:
 			result['SharingScopes']['DefaultSharingScopeNTIID'] = ls['public']
 
