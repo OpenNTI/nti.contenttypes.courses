@@ -18,13 +18,16 @@ import zope.intid
 from zope import component
 from zope.component.hooks import site as current_site
 
-from nti.metadata import metadata_queue
-
 from ..interfaces import ICourseCatalog
 from ..interfaces import ICourseInstance
 from ..interfaces import ICourseEnrollments
 
 def do_evolve(context):
+	try:
+		from nti.metadata import metadata_queue
+	except ImportError:
+		return
+	
 	conn = context.connection
 	dataserver_folder = conn.root()['nti.dataserver']
 	
