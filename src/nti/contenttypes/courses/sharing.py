@@ -30,6 +30,7 @@ from nti.ntiids.ntiids import TYPE_OID
 from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
 from .interfaces import ICourseInstanceSharingScope
 from .interfaces import ICourseInstanceSharingScopes
+from .interfaces import ICourseInstanceVendorInfo
 
 @interface.implementer(ICourseInstanceSharingScope)
 class CourseInstanceSharingScope(Community):
@@ -395,3 +396,15 @@ def on_moved_between_courses_update_scope_membership(record, event):
 
 	on_drop_exit_scope_membership(record, event, old_course)
 	on_enroll_record_scope_membership(record, event, new_course)
+
+def use_parent_default_sharing_scope( course ):
+	"""
+	Returns whether the given course should opt to use its
+	parent's default sharing scope instead of its own.
+	"""
+	vendor_info = ICourseInstanceVendorInfo(course, {})
+	try:
+		result = vendor_info['NTI']['UseParentDefaultSharingScope']
+	except (TypeError, KeyError):
+		result = False
+	return result

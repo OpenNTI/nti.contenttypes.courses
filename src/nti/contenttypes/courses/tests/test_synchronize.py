@@ -22,6 +22,7 @@ from hamcrest import has_properties
 from hamcrest import contains_string
 from hamcrest import contains_inanyorder
 
+import fudge
 import os.path
 import datetime
 
@@ -43,8 +44,12 @@ from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
 from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
+from nti.externalization.externalization import to_external_object
+
 from .. import catalog
 from .. import legacy_catalog
+
+from ..decorators import _SharingScopesAndDiscussionDecorator
 
 from ..interfaces import ES_CREDIT
 from ..interfaces import ICourseCatalog
@@ -97,6 +102,12 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		spring = folder['Spring2014']
 		gateway = spring['Gateway']
 
+		# Define our scope ntiids
+		public_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-public'
+		restricted_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted'
+		gateway.SharingScopes['Public'].to_external_ntiid_oid = lambda: public_ntiid
+		gateway.SharingScopes['ForCredit'].to_external_ntiid_oid = lambda: restricted_ntiid
+
 		assert_that( gateway, verifiably_provides(IEnrollmentMappedCourseInstance) )
 		assert_that( gateway, externalizes())
 
@@ -133,6 +144,11 @@ class TestFunctionalSynchronize(CourseLayerTest):
 					 is_(same_instance(legacy_catalog._CourseInstanceCatalogLegacyEntry)) )
 
 		sec1 = gateway.SubInstances['01']
+		sec_public_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-public-sec'
+		sec_restricted_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted-sec'
+		sec1.SharingScopes['Public'].to_external_ntiid_oid = lambda: sec_public_ntiid
+		sec1.SharingScopes['ForCredit'].to_external_ntiid_oid = lambda: sec_restricted_ntiid
+
 		assert_that( ICourseInstanceVendorInfo(sec1),
 					 has_entry( 'OU', has_entry('key2', 72) ) )
 
@@ -178,10 +194,8 @@ class TestFunctionalSynchronize(CourseLayerTest):
 						 'Class', 'CourseInstance') ) )
 
 
-		from nti.externalization.externalization import to_external_object
 		gateway_ext = to_external_object(gateway)
 		sec1_ext = to_external_object(sec1)
-		from ..decorators import _SharingScopesAndDiscussionDecorator
 		dec = _SharingScopesAndDiscussionDecorator(sec1, None)
 		dec._is_authenticated = False
 		dec._do_decorate_external(sec1, sec1_ext)
@@ -207,7 +221,6 @@ class TestFunctionalSynchronize(CourseLayerTest):
 			has_entries('Items', has_entry('Public',
 										   has_entry('alias', 'CLC 3403-01 - Open') ),
 						'DefaultSharingScopeNTIID', gateway.SharingScopes['Public'].NTIID) ) )
-
 
 		# although if we make the parent non-public, we go back to ourself
 		interface.alsoProvides(gateway, INonPublicCourseInstance)
@@ -256,12 +269,14 @@ class TestFunctionalSynchronize(CourseLayerTest):
 
 		# We should have the catalog functionality now
 
+		sec3 = gateway.SubInstances['03']
 		cat_entries = list(folder.iterCatalogEntries())
-		assert_that( cat_entries, has_length(3) )
+		assert_that( cat_entries, has_length(4) )
 		assert_that( cat_entries,
 					 contains_inanyorder( ICourseCatalogEntry(gateway),
 										  ICourseCatalogEntry(sec1),
-										  ICourseCatalogEntry(sec2)))
+										  ICourseCatalogEntry(sec2),
+										  ICourseCatalogEntry(sec3)))
 
 		# The NTIIDs are derived from the path
 		assert_that( cat_entries,
@@ -271,12 +286,14 @@ class TestFunctionalSynchronize(CourseLayerTest):
 						 has_property('ntiid',
 									  'tag:nextthought.com,2011-10:NTI-CourseInfo-Spring2014_Gateway_SubInstances_01'),
 						 has_property('ntiid',
+									  'tag:nextthought.com,2011-10:NTI-CourseInfo-Spring2014_Gateway_SubInstances_03'),
+						 has_property('ntiid',
 									  'tag:nextthought.com,2011-10:NTI-CourseInfo-Spring2014_Gateway')) )
 
 		# And each entry can be resolved by ntiid...
 		from nti.ntiids import ntiids
 		assert_that( [ntiids.find_object_with_ntiid(x.ntiid) for x in cat_entries],
-					 is_([None,None,None]))
+					 is_([None,None,None,None]))
 		# ...but only with the right catalog installed
 		old_cat = component.getUtility(ICourseCatalog)
 		component.provideUtility(folder,ICourseCatalog)
@@ -286,6 +303,128 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		finally:
 			component.provideUtility(old_cat,ICourseCatalog)
 
+	def test_default_sharing_scope_use_parent(self):
+		"""
+		Verify if the 'UseParentDefaultSharingScope' is set in the section, the
+		parent's default scope is used.
+		"""
+		bucket = self.bucket
+		folder = self.folder
+		synchronize_catalog_from_root(folder, bucket)
+
+		spring = folder['Spring2014']
+		gateway = spring['Gateway']
+		# Section 01 tests the non-case; Section 02 verifies toggle;
+		# Section 3 verifies negative case.
+		sec = gateway.SubInstances['02']
+
+		# Define our scope ntiids
+		public_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-public'
+		restricted_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted'
+		gateway.SharingScopes['Public'].to_external_ntiid_oid = lambda: public_ntiid
+		gateway.SharingScopes['ForCredit'].to_external_ntiid_oid = lambda: restricted_ntiid
+
+		sec_public_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-public-sec'
+		sec_restricted_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted-sec'
+		sec.SharingScopes['Public'].to_external_ntiid_oid = lambda: sec_public_ntiid
+		sec.SharingScopes['ForCredit'].to_external_ntiid_oid = lambda: sec_restricted_ntiid
+
+		gateway_ext = to_external_object(gateway)
+		sec2_ext = to_external_object(sec)
+		dec = _SharingScopesAndDiscussionDecorator(sec, None)
+		dec._is_authenticated = False
+		dec._do_decorate_external(sec, sec2_ext)
+		dec._do_decorate_external(gateway, gateway_ext)
+
+		assert_that( gateway_ext, has_entry('LegacyScopes',
+											has_entries('public', gateway.SharingScopes['Public'].NTIID,
+														'restricted', gateway.SharingScopes['ForCredit'].NTIID)) )
+
+		assert_that( gateway_ext, has_entries(
+			'SharingScopes',
+			has_entries('Items', has_entry('Public',
+										   has_entry('alias', 'CLC 3403 - Open') ),
+						'DefaultSharingScopeNTIID', gateway.SharingScopes['Public'].NTIID) ) )
+
+		assert_that( sec2_ext,
+					 has_entries(
+						 'LegacyScopes', has_entries(
+							 # public initially copied from the parent
+							 'public', gateway.SharingScopes['Public'].NTIID,
+							 'restricted', sec.SharingScopes['ForCredit'].NTIID)) )
+
+		# Our ForCredit section actually defaults to the parent Public scope
+		assert_that( sec2_ext, has_entries(
+			'SharingScopes',
+			has_entries('Items', has_entry('Public',
+										   has_entry('alias', 'From Vendor Info') ),
+						'DefaultSharingScopeNTIID', gateway.SharingScopes['Public'].NTIID) ) )
+
+	@fudge.patch('nti.contenttypes.courses.decorators.IEntityContainer',
+				 'nti.app.renderers.decorators.get_remote_user')
+	def test_default_sharing_scope_do_not_use_parent(self, mock_container, mock_rem_user):
+		"""
+		Verify if the 'UseParentDefaultSharingScope' is set to False, the
+		parent's default scope is *not* used.
+		"""
+		# Make sure we're enrolled in sec03
+		class Container(object):
+			def __contains__(self, o): return True
+		mock_container.is_callable().returns(Container())
+		mock_rem_user.is_callable().returns( object() )
+
+		bucket = self.bucket
+		folder = self.folder
+		synchronize_catalog_from_root(folder, bucket)
+
+		spring = folder['Spring2014']
+		gateway = spring['Gateway']
+		# Section 01 tests the non-case; Section 02 verifies toggle;
+		# Section 3 verifies negative case.
+		sec = gateway.SubInstances['03']
+
+		# Define our scope ntiids
+		public_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-public'
+		restricted_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted'
+		gateway.SharingScopes['Public'].to_external_ntiid_oid = lambda: public_ntiid
+		gateway.SharingScopes['ForCredit'].to_external_ntiid_oid = lambda: restricted_ntiid
+
+		sec_public_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-public-sec'
+		sec_restricted_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted-sec'
+		sec.SharingScopes['Public'].to_external_ntiid_oid = lambda: sec_public_ntiid
+		sec.SharingScopes['ForCredit'].to_external_ntiid_oid = lambda: sec_restricted_ntiid
+
+		gateway_ext = to_external_object(gateway)
+		sec_ext = to_external_object(sec)
+		dec = _SharingScopesAndDiscussionDecorator(sec, None)
+		dec._is_authenticated = True
+
+		dec._do_decorate_external(sec, sec_ext)
+		dec._do_decorate_external(gateway, gateway_ext)
+
+		assert_that( gateway_ext, has_entry('LegacyScopes',
+											has_entries('public', gateway.SharingScopes['Public'].NTIID,
+														'restricted', gateway.SharingScopes['ForCredit'].NTIID)) )
+
+		assert_that( gateway_ext, has_entries(
+			'SharingScopes',
+			has_entries('Items', has_entry('Public',
+										   has_entry('alias', 'CLC 3403 - Open') ),
+						'DefaultSharingScopeNTIID', gateway.SharingScopes['ForCredit'].NTIID) ) )
+
+		assert_that(  sec_ext,
+					 has_entries(
+						 'LegacyScopes', has_entries(
+							 # public initially copied from the parent
+							 'public', gateway.SharingScopes['Public'].NTIID,
+							 'restricted', sec.SharingScopes['ForCredit'].NTIID)) )
+
+		# This default comes from our section.
+		assert_that( sec_ext, has_entries(
+			'SharingScopes',
+			has_entries('Items', has_entry('Public',
+										   has_entry('alias', 'From Vendor Info') ),
+						'DefaultSharingScopeNTIID', sec.SharingScopes['ForCredit'].NTIID) ) )
 
 	def test_synchronize_clears_caches(self):
 		#User.create_user(self.ds, username='harp4162')
@@ -299,7 +438,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 
 
 		assert_that( list(folder.iterCatalogEntries()),
-					 has_length(3) )
+					 has_length(4) )
 
 
 		# Now delete the course

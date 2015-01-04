@@ -1,0 +1,20 @@
+<course
+    courseInfo="tag:nextthought.com,2011-10:OU-HTML-CLC3403_LawAndJustice.course_info"
+    courseName="CLC 3403"
+    discussionBoard="tag:nextthought.com,2011-10:CLC3403.ou.nextthought.com-Board:GeneralCommunity-DiscussionBoard"
+    instructorForum="tag:nextthought.com,2011-10:CLC3403.ou.nextthought.com-Forum:GeneralCommunity-In_Class_Announcements
+                     tag:nextthought.com,2011-10:CLC3403.ou.nextthought.com-Forum:GeneralCommunity-Open_Announcements"
+    label="Law and Justice"
+    ntiid="tag:nextthought.com,2011-10:OU-NTICourse-CLC3403_LawAndJustice.course.1">
+    <unit label="Introduction" ntiid="tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.1">
+		<lesson
+			date="2013-08-19T05:00:00+00:00,2013-08-22T04:59:59.999999+00:00"
+			topic-ntiid="tag:nextthought.com,2011-10:OU-HTML-CLC3403_LawAndJustice.lec:01_LESSON"
+			title="1. Defining Law and Justice">
+			<lesson topic-ntiid="tag:nextthought.com,2011-10:OU-HTML-DNE" />
+		</lesson>
+		<lesson isOutlineStubOnly='true' date="2013-08-21T05:00:00+00:00,2013-08-27T04:59:59.999999+00:00" topic-ntiid="tag:nextthought.com,2011-10:OU-HTML-CLC3403_LawAndJustice.lec:02_LESSON"/>
+    </unit>
+
+	<!-- This one is shorter, just has one unit -->
+</course>

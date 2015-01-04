@@ -4,7 +4,8 @@
 	},
 	"NTI": {
 		"EnrollmentMap": {
-			"ForCreditNonDegree": "02"
+			"ForCreditNonDegree": "02",
+			"ForCreditDegree": "03"
 		}
 	}
 }

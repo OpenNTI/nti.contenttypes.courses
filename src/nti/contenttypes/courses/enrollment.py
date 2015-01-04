@@ -114,7 +114,7 @@ def save_in_container(container, key, value, event=False):
 		except AttributeError:
 			pass
 		container._p_changed = True
-		
+
 def remove_from_container(container, key, event=False):
 	if event:
 		del container[key]
@@ -224,7 +224,7 @@ class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedB
 				# store with the principal, not with us
 				jar.add(result)
 
-			## CS/JZ 20141026 
+			## CS/JZ 20141026
 			## We manually add the item and fire the ObjectAddedEvent to
 			## avoid contention in an underlying zope dublincore annotation data structure.
 			## A modified event on the container calls zope.dublincore.creatorannotator
@@ -377,7 +377,7 @@ class DefaultCourseEnrollmentManager(object):
 		# it's in the IPrincipalEnrollments; that way
 		# event listeners will see consistent data.
 
-		## CS/JZ 20141025 
+		## CS/JZ 20141025
 		## We manually add the item and fire the ObjectAddedEvent to
 		## avoid contention in an underlying zope dublincore annotation data structure.
 		## A modified event on the container calls zope.dublincore.creatorannotator

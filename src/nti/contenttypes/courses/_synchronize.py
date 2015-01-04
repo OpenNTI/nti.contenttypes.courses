@@ -203,7 +203,7 @@ class _ContentCourseSynchronizer(object):
 			interface.noLongerProvides(course, IDenyOpenEnrollment)
 
 		course.lastSynchronized = entry.lastSynchronized = time.time()
-		
+
 	@classmethod
 	def update_common_info(cls, course, bucket, try_legacy_content_bundle=False):
 		course.SharingScopes.initScopes()
@@ -222,23 +222,23 @@ class _ContentCourseSynchronizer(object):
 			except TypeError:
 				interface.alsoProvides(course.SharingScopes[ES_CREDIT],
 									   ISharingTargetEntityIterable)
-	
+
 		cls.update_vendor_info(course, bucket)
 		cls.update_outline(course=course,
-						   bucket=bucket, 
+						   bucket=bucket,
 						   try_legacy_content_bundle=try_legacy_content_bundle)
-		
-		cls.update_catalog_entry(course=course, 
-								 bucket=bucket, 
+
+		cls.update_catalog_entry(course=course,
+								 bucket=bucket,
 								 try_legacy_content_bundle=try_legacy_content_bundle)
-		
+
 		cls.update_instructor_roles(course, bucket)
 		cls.update_assignment_dates(course, bucket)
-		
+
 		# make sure Discussions are initialized
 		getattr(course, 'Discussions')
 		cls.update_sharing_scopes_friendly_names(course)
-		
+
 		# finally validate assigment policies
 		cls.validate_assigment_policies(course, bucket)
 
@@ -382,7 +382,7 @@ class _ContentCourseSynchronizer(object):
 			fill_asg_from_key(subcourse, key)
 		else:
 			reset_asg_missing_key(subcourse)
-			
+
 	@classmethod
 	def validate_assigment_policies(cls, course, bucket):
 		validate_assigment_policies(course)

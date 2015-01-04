@@ -30,6 +30,8 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.externalization import to_external_object
 from nti.externalization.interfaces import IExternalObjectDecorator
 
+from nti.contenttypes.courses.sharing import use_parent_default_sharing_scope
+
 from .interfaces import ES_PUBLIC
 from .interfaces import ES_CREDIT
 from .interfaces import ES_PURCHASED
@@ -47,6 +49,9 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 
 	def _do_decorate_external(self, context, result):
 		is_section = ICourseSubInstance.providedBy(context)
+
+		default_sharing_scope = None
+
 		if is_section:
 			# conflated, yes, but simpler
 			parent = context.__parent__.__parent__
@@ -57,6 +62,9 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 				result['ParentSharingScopes'] = parent_result['SharingScopes']
 				result['ParentDiscussions'] = to_external_object(parent.Discussions,
 																 request=self.request)
+				if use_parent_default_sharing_scope( context ):
+					default_sharing_scope = result['ParentSharingScopes']['DefaultSharingScopeNTIID']
+
 
 		scopes = context.SharingScopes
 		ext_scopes = LocatedExternalDict()
@@ -65,7 +73,7 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 
 		ext_scopes[CLASS] = 'CourseInstanceSharingScopes'
 		items = ext_scopes['Items'] = {}
-		
+
 		user = self.remoteUser if self._is_authenticated else None
 		for name, scope in scopes.items():
 			if user is None or user in IEntityContainer(scope):
@@ -85,14 +93,17 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 			# is if the parent course is non-open-enrollable (e.g., closed, or not being used
 			# except for administration---one scenario had two sections that opened at different
 			# dates); in that case, we want to use the parent if we can get it.
-			public = None
-			parent = context.__parent__
-			if 	(is_section
-				 and find_interface(parent, INonPublicCourseInstance, strict=False) is None
-				 and 'public' in result.get('ParentLegacyScopes', ()) ):
-				public = result['ParentLegacyScopes']['public']
-			elif ES_PUBLIC in scopes:
-				public = scopes[ES_PUBLIC].NTIID
+			if default_sharing_scope is not None:
+				public = default_sharing_scope
+			else:
+				public = None
+				parent = context.__parent__
+				if 	(	is_section
+					 and find_interface(parent, INonPublicCourseInstance, strict=False) is None
+					 and 'public' in result.get('ParentLegacyScopes', ()) ):
+					public = result['ParentLegacyScopes']['public']
+				elif ES_PUBLIC in scopes:
+					public = scopes[ES_PUBLIC].NTIID
 
 			ls['public'] = public
 
@@ -102,15 +113,18 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 				ls['purchased'] = scopes[ES_PURCHASED].NTIID
 
 		ls = result['LegacyScopes']
-		
-		# Point clients to what the should do by default.
-		# For the default if you're not enrolled for credit, match what flat clients do
-		result['SharingScopes']['DefaultSharingScopeNTIID'] = ls['public']
-		if user is not None:
-			if ES_CREDIT in scopes and user in IEntityContainer(scopes[ES_CREDIT]):
-				result['SharingScopes']['DefaultSharingScopeNTIID'] = ls.get('restricted')
-			elif ES_PURCHASED in scopes and user in IEntityContainer(scopes[ES_PURCHASED]):
-				result['SharingScopes']['DefaultSharingScopeNTIID'] = ls.get('purchased')
+
+		if default_sharing_scope is None:
+			# Point clients to what the should do by default.
+			# For the default if you're not enrolled for credit, match what flat clients do.
+			default_sharing_scope = ls['public']
+			if user is not None:
+				if ES_CREDIT in scopes and user in IEntityContainer(scopes[ES_CREDIT]):
+					default_sharing_scope = ls.get('restricted')
+				elif ES_PURCHASED in scopes and user in IEntityContainer(scopes[ES_PURCHASED]):
+					default_sharing_scope = ls.get('purchased')
+
+		result['SharingScopes']['DefaultSharingScopeNTIID'] = default_sharing_scope
 
 @interface.implementer(IExternalObjectDecorator)
 @component.adapter(ICourseCatalogEntry)

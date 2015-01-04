@@ -100,7 +100,7 @@ class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
 
 	DisableOverviewCalendar = Bool(title="A URL or path of indeterminate type or meaning",
 								   required=False, default=False)
-	
+
 	###
 	# These are being replaced with presentation specific asset bundles
 	# (one path is insufficient to handle things like retina displays
@@ -111,7 +111,7 @@ class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
 
 	LegacyPurchasableThumbnail = ValidTextLine(title="A URL or path of indeterminate type or meaning",
 										  required=False)
-		
+
 # Legacy extensions
 
 @interface.implementer(ICourseCreditLegacyInfo)
@@ -303,7 +303,10 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 			return _derive_preview(self)
 
 		# We don't have it, try to acquire it
-		return getattr(self._next_entry, 'Preview', None)
+		# First check forced preview/non-preview; else the flag.
+		result = getattr(self._next_entry, 'isPreview', None)
+
+		return result or getattr(self._next_entry, 'Preview', None)
 
 	def isCourseCurrentlyActive(self):
 		# XXX: duplicated from the main catalog entry
