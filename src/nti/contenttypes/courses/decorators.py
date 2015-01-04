@@ -105,12 +105,12 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 		
 		# Point clients to what the should do by default.
 		# For the default if you're not enrolled for credit, match what flat clients do
-		if user is not None and user in IEntityContainer(scopes[ES_CREDIT]):
-			result['SharingScopes']['DefaultSharingScopeNTIID'] = ls.get('restricted')
-		elif user is not None and user in IEntityContainer(scopes[ES_PURCHASED]):
-			result['SharingScopes']['DefaultSharingScopeNTIID'] = ls.get('purchased')
-		else:
-			result['SharingScopes']['DefaultSharingScopeNTIID'] = ls['public']
+		result['SharingScopes']['DefaultSharingScopeNTIID'] = ls['public']
+		if user is not None:
+			if ES_CREDIT in scopes and user in IEntityContainer(scopes[ES_CREDIT]):
+				result['SharingScopes']['DefaultSharingScopeNTIID'] = ls.get('restricted')
+			elif ES_PURCHASED in scopes and user in IEntityContainer(scopes[ES_PURCHASED]):
+				result['SharingScopes']['DefaultSharingScopeNTIID'] = ls.get('purchased')
 
 @interface.implementer(IExternalObjectDecorator)
 @component.adapter(ICourseCatalogEntry)
