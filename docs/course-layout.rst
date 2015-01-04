@@ -450,6 +450,10 @@ SharingScopesDisplayInfo
 	generation). Likewise, ``avatarURL`` is a URL or path giving an
 	image to display.
 
+UseParentDefaultSharingScope
+	A boolean only really valid at the section level. If present and set
+	to true, the DefaultSharingScope on the externalized course instance
+	will be the parent's (super course) default sharing scope.
 
 ``assignment_policies.json`` (optional)
 ---------------------------------------------
@@ -478,20 +482,20 @@ replaces the data for the assignments specified within this course,
    }
 
 The automatic grading information is being defined on an as-needed
-basis. The supported values are 
+basis. The supported values are
 	``total_points`` which defines a value to which all the equally-weighted questions will
 	be normalized. (This value will be reflected in the ``Grade`` object's
 	``AutoGradeMax`` property.) It can be defined individually for each
 	assignment; tool support lets you easily normalize all assignments the
 	same. It can be explicitly set to ``null`` to disable auto-grading and
 	better merge with the tool.
-	
+
 	Aditionally (optionally)
 	``name`` which points to a defined registered named policy ``IPendingAssessmentAutoGradePolicy`` object.
 	 A special case when name is ``pointbased`` which requires additional information as follows:
 	 ``questions`` which defines map of question ids vs number of points. A special key called ``default``
-	 points to the default number of points to a question not specifed in this map 
-	
+	 points to the default number of points to a question not specifed in this map
+
 	 {
     "tag:nextthought.com,2011-10:OU-NAQ-CS1300_Power_and_Elegance_of_Computational_Thinking.naq.asg.assignment:3.3_Exercise_Sound": {
         "Title": "Exercise: Learning to Make Sound",
