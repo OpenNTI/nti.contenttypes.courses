@@ -42,8 +42,6 @@ from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
 from nti.externalization.persistence import NoPickle
 
-from nti.mimetype.mimetype import nti_mimetype_with_class
-
 from nti.utils.property import Lazy
 from nti.utils.property import alias
 from nti.utils.property import CachedProperty
@@ -692,7 +690,7 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 	__name__ = None
 	
 	parameters = {}
-	mime_type = mimeTye = nti_mimetype_with_class('DefaultCourseInstanceEnrollmentRecord')
+	mime_type = mimeType = 'application/vnd.nextthought.courses.defaultcourseinstanceenrollmentrecord'
 	
 	Scope = FieldProperty(ICourseInstanceEnrollmentRecord['Scope'])
 
