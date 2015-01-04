@@ -11,7 +11,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-
 # Despite the comments in interfaces.py, right now
 # we still stick to a fairly basic Community-derived
 # object for sharing purposes. This is largely for compatibility
@@ -21,16 +20,16 @@ from zope import interface
 from zope import component
 from zope.cachedescriptors.property import cachedIn
 
-from .interfaces import ICourseInstanceSharingScope
-from .interfaces import ICourseInstanceSharingScopes
-from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
-
 from nti.dataserver.users import Community
 from nti.dataserver.containers import CheckingLastModifiedBTreeContainer
 
 from nti.externalization.oids import to_external_ntiid_oid
 
 from nti.ntiids.ntiids import TYPE_OID
+
+from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
+from .interfaces import ICourseInstanceSharingScope
+from .interfaces import ICourseInstanceSharingScopes
 
 @interface.implementer(ICourseInstanceSharingScope)
 class CourseInstanceSharingScope(Community):
@@ -42,7 +41,6 @@ class CourseInstanceSharingScope(Community):
 	__external_class_name__ = 'Community'
 	mime_type = mimeType = 'application/vnd.nextthought.community'
 	__external_can_create__ = False
-
 
 	# Override things related to ntiids.
 	# These don't have global names, so they must be referenced
@@ -177,15 +175,16 @@ class CourseSubInstanceSharingScopes(CourseInstanceSharingScopes):
 # Event handling to get sharing correct.
 ###
 
-from .interfaces import ICourseInstanceEnrollmentRecord
 from zope.lifecycleevent import IObjectModifiedEvent
 from zope.lifecycleevent import IObjectMovedEvent
+
 # We may have intid-weak references to these things,
 # so we need to catch them on the IntIdRemoved event
 # for dependable ordering
 from zope.intid.interfaces import IIntIdAddedEvent
 from zope.intid.interfaces import IIntIdRemovedEvent
 
+from .interfaces import ICourseInstanceEnrollmentRecord
 
 def _adjust_scope_membership(record, course,
 							 join, follow,
@@ -204,7 +203,8 @@ def _adjust_scope_membership(record, course,
 
 	scopes_to_ignore = []
 	for related_course in related_enrolled_courses:
-		scopes_to_ignore.extend(related_course.SharingScopes.getAllScopesImpliedbyScope(record.Scope))
+		sharing_scopes = related_course.SharingScopes
+		scopes_to_ignore.extend(sharing_scopes.getAllScopesImpliedbyScope(record.Scope))
 
 	for scope in relevant_scopes:
 		if scope in currently_in:
@@ -224,9 +224,12 @@ def _adjust_scope_membership(record, course,
 			pass
 
 from nti.dataserver.interfaces import IMutableGroupMember
+
 from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
 from nti.dataserver.authorization import role_for_providers_content
+
 from nti.ntiids import ntiids
+
 from .interfaces import ICourseSubInstance
 from .interfaces import ICourseEnrollments
 
@@ -268,8 +271,6 @@ def _principal_is_enrolled_in_related_course(principal, course):
 			result.append(other)
 
 	return result
-
-
 
 def add_principal_to_course_content_roles(principal, course):
 	membership = component.getAdapter(principal, IMutableGroupMember, CONTENT_ROLE_PREFIX)
@@ -370,6 +371,7 @@ def on_modified_update_scope_membership(record, event):
 							  relevant_scopes=scopes_i_should_be_in)
 
 from nti.dataserver.traversal import find_interface
+
 from .interfaces import ICourseInstance
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectMovedEvent)

@@ -12,29 +12,25 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 from zope import component
-
-from nti.contentlibrary.interfaces import IContentPackageLibrary
-from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
-from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
-from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
-
-from .catalog import CourseCatalogFolder
-from .interfaces import IPersistentCourseCatalog
-
-from zope.component.hooks import site
-
-COURSE_CATALOG_NAME = 'Courses'
-
 from zope.interface.interfaces import IRegistered
 from zope.interface.interfaces import IUnregistered
 
+from nti.contentlibrary.interfaces import IContentPackageLibrary
+from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
+from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
+from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
 
 ### XXX: This is very similar to nti.contentlibrary.subscribers
 
+from zope.component.hooks import site
 
 from nti.site.localutility import install_utility
 from nti.site.localutility import uninstall_utility_on_unregistration
 
+from .catalog import CourseCatalogFolder
+from .interfaces import IPersistentCourseCatalog
+
+COURSE_CATALOG_NAME = 'Courses'
 
 @component.adapter(IPersistentContentPackageLibrary, IRegistered)
 def install_site_course_catalog(local_library, _=None):

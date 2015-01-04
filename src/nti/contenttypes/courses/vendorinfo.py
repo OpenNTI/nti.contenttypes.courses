@@ -16,12 +16,12 @@ from zope import component
 
 from zope.annotation.factory import factory as an_factory
 
-from .interfaces import ICourseInstance
-from .interfaces import ICourseInstanceVendorInfo
-
 from persistent.mapping import PersistentMapping
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
+
+from .interfaces import ICourseInstance
+from .interfaces import ICourseInstanceVendorInfo
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseInstanceVendorInfo)
@@ -40,7 +40,6 @@ class DefaultCourseInstanceVendorInfo(PersistentMapping,
 
 	def __init__(self):
 		super(DefaultCourseInstanceVendorInfo,self).__init__()
-
 
 CourseInstanceVendorInfo = an_factory(DefaultCourseInstanceVendorInfo,
 									  'CourseInstanceVendorInfo')

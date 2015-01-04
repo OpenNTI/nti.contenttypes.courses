@@ -14,8 +14,9 @@ logger = __import__('logging').getLogger(__name__)
 from zope import interface
 from zope import component
 
-from .interfaces import ICourseCatalog
 from nti.ntiids.interfaces import INTIIDResolver
+
+from .interfaces import ICourseCatalog
 
 @interface.implementer(INTIIDResolver)
 class _CourseInfoNTIIDResolver(object):
@@ -25,9 +26,8 @@ class _CourseInfoNTIIDResolver(object):
 
 	def resolve(self, ntiid):
 		catalog = component.queryUtility(ICourseCatalog)
-		if catalog is  None:
+		if catalog is None:
 			return
-
 		try:
 			return catalog.getCatalogEntry(ntiid)
 		except KeyError:

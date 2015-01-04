@@ -14,8 +14,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import interface
 
 from zope.traversing.interfaces import IPathAdapter
-from .interfaces import ICourseCatalogEntry
 
+from .interfaces import ICourseCatalogEntry
 
 @interface.implementer(IPathAdapter)
 def CourseCatalogEntryTraverser(instance, request):
