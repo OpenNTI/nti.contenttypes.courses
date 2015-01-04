@@ -16,28 +16,29 @@ from zope import interface
 
 from urlparse import urljoin
 
-from nti.dataserver.traversal import find_interface
-from nti.dataserver.interfaces import IEntityContainer
-from nti.externalization.interfaces import IExternalObjectDecorator
-
-from .interfaces import ICourseInstance
-from .interfaces import ICourseSubInstance
-from .interfaces import ICourseCatalogEntry
-from .interfaces import INonPublicCourseInstance
-from .interfaces import ES_PUBLIC
-from .interfaces import ES_CREDIT
-from .interfaces import ICourseInstanceScopedForum
-
-from nti.externalization.externalization import to_external_object
-from nti.externalization.singleton import SingletonDecorator
-from nti.externalization.oids import to_external_ntiid_oid
-
 # XXX: JAM: Don't like this dependency here. Refactor for zope.security interaction
 # support
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
+from nti.dataserver.traversal import find_interface
+from nti.dataserver.interfaces import IEntityContainer
+
+from nti.externalization.oids import to_external_ntiid_oid
+from nti.externalization.singleton import SingletonDecorator
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
+from nti.externalization.externalization import to_external_object
+from nti.externalization.interfaces import IExternalObjectDecorator
+
+from .interfaces import ES_PUBLIC
+from .interfaces import ES_CREDIT
+from .interfaces import ES_PURCHASED
+from .interfaces import ICourseInstance
+from .interfaces import ICourseSubInstance
+from .interfaces import ICourseCatalogEntry
+from .interfaces import INonPublicCourseInstance
+from .interfaces import ICourseInstanceScopedForum
+
 CLASS = StandardExternalFields.CLASS
 
 @interface.implementer(IExternalObjectDecorator)
@@ -59,14 +60,13 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 
 		scopes = context.SharingScopes
 		ext_scopes = LocatedExternalDict()
-		ext_scopes.__parent__ = scopes.__parent__
 		ext_scopes.__name__ = scopes.__name__
+		ext_scopes.__parent__ = scopes.__parent__
 
 		ext_scopes[CLASS] = 'CourseInstanceSharingScopes'
 		items = ext_scopes['Items'] = {}
-
+		
 		user = self.remoteUser if self._is_authenticated else None
-
 		for name, scope in scopes.items():
 			if user is None or user in IEntityContainer(scope):
 				items[name] = to_external_object(scope, request=self.request)
@@ -86,9 +86,10 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 			# except for administration---one scenario had two sections that opened at different
 			# dates); in that case, we want to use the parent if we can get it.
 			public = None
-			if (is_section
-				and find_interface(context.__parent__, INonPublicCourseInstance, strict=False) is None
-				and 'public' in result.get('ParentLegacyScopes', ()) ):
+			parent = context.__parent__
+			if 	(is_section
+				 and find_interface(parent, INonPublicCourseInstance, strict=False) is None
+				 and 'public' in result.get('ParentLegacyScopes', ()) ):
 				public = result['ParentLegacyScopes']['public']
 			elif ES_PUBLIC in scopes:
 				public = scopes[ES_PUBLIC].NTIID
@@ -97,15 +98,18 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 
 			if ES_CREDIT in scopes:
 				ls['restricted'] = scopes[ES_CREDIT].NTIID
+				
+			if ES_PURCHASED in scopes:
+				ls['purchased'] = scopes[ES_PURCHASED].NTIID
 
 		ls = result['LegacyScopes']
+		
 		# Point clients to what the should do by default.
 		# For the default if you're not enrolled for credit, match what flat clients do
 		if user is not None and user in IEntityContainer(scopes[ES_CREDIT]):
 			result['SharingScopes']['DefaultSharingScopeNTIID'] = ls.get('restricted')
 		else:
 			result['SharingScopes']['DefaultSharingScopeNTIID'] = ls['public']
-
 
 @interface.implementer(IExternalObjectDecorator)
 @component.adapter(ICourseCatalogEntry)
@@ -136,7 +140,9 @@ class _LegacyCCEFieldDecorator(object):
 			if package is not None:
 				result['ContentPackageNTIID'] = package.ntiid
 
-		if not result.get('LegacyPurchasableIcon') or not result.get('LegacyPurchasableThumbnail'):
+		if 	not result.get('LegacyPurchasableIcon') or \
+			not result.get('LegacyPurchasableThumbnail'):
+
 			if not checked:
 				course, package = self._course_package(context)
 				checked = True
