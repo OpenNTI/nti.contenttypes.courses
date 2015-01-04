@@ -723,7 +723,7 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 			self._principal = IWeakRef(nv)
 	Principal = property(_get_Principal, _set_Principal)
 
-	creator = alias('Principal')
+	Creator = creator = alias('Principal')
 	
 	def __eq__(self, other):
 		try:
