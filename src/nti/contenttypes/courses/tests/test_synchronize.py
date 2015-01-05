@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 from hamcrest import is_
 from hamcrest import none
+from hamcrest import not_none
 from hamcrest import is_not
 from hamcrest import has_key
 from hamcrest import contains
@@ -49,6 +50,7 @@ from nti.externalization.externalization import to_external_object
 from .. import catalog
 from .. import legacy_catalog
 
+from ..decorators import _AnnouncementsDecorator
 from ..decorators import _SharingScopesAndDiscussionDecorator
 
 from ..interfaces import ES_CREDIT
@@ -482,3 +484,51 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		# and as joint, just because
 		assert_that( cat, denies([EVERYONE_GROUP_NAME,AUTHENTICATED_GROUP_NAME],
 									   ACT_READ))
+
+	@fudge.patch('nti.contenttypes.courses.decorators.IEntityContainer',
+				 'nti.app.renderers.decorators.get_remote_user')
+	def test_course_announcements_externalizes(self, mock_container, mock_rem_user):
+		"""
+		Verify course announcements are externalized on the course.
+		"""
+		# Mock we have a user and they are in a scope
+		class Container(object):
+			def __contains__(self, o): return True
+		mock_container.is_callable().returns(Container())
+		mock_rem_user.is_callable().returns( object() )
+
+		bucket = self.bucket
+		folder = self.folder
+		synchronize_catalog_from_root(folder, bucket)
+
+		spring = folder['Spring2014']
+		gateway = spring['Gateway']
+		section = gateway.SubInstances['03']
+		gateway_discussions = getattr( gateway, 'Discussions' )
+
+		section_discussions = section.Discussions
+		# Setup. Just make sure we have a discussion here.
+		section_discussions['booya'] = gateway_discussions['Forum']
+
+		gateway_ext = {}
+		section_ext = {}
+
+		decorator = _AnnouncementsDecorator( gateway, None )
+		decorator._do_decorate_external( gateway, gateway_ext )
+		decorator = _AnnouncementsDecorator( section, None )
+		decorator._is_authenticated = True
+		decorator._do_decorate_external( section, section_ext )
+
+		# Gateway has empty announcements since it does not have any.
+		assert_that( gateway_ext,
+					has_entries(
+								'AnnouncementForums',
+								has_entries('Items', is_empty() ) ) )
+
+		# Our section has only open announcements.
+		assert_that( section_ext,
+					has_entries(
+								'AnnouncementForums',
+								has_entries('Items',
+											has_entry('Public',
+										   				not_none() )) ) )

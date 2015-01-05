@@ -35,6 +35,9 @@ from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ES_PURCHASED
 
+from nti.contenttypes.courses.decorators import _AnnouncementsDecorator
+from nti.contenttypes.courses.decorators import _SharingScopesAndDiscussionDecorator
+
 from nti.externalization.tests import externalizes
 
 from nti.contenttypes.courses.tests import CourseLayerTest
@@ -86,16 +89,16 @@ class TestCourseInstance(CourseLayerTest):
 						 does_not( has_key('SubInstances')),
 						 # No sharing scopes, no request
 						 does_not( has_key('SharingScopes'))) ) )
-	
+
 	@WithMockDSTrans
 	def test_course_acl(self):
 		connection = mock_dataserver.current_transaction
 		inst = courses.CourseInstance()
 		connection.add(inst)
-		
+
 		sharing_scopes = inst.SharingScopes
 		sharing_scopes.initScopes()
-		
+
 		public = IPrincipal(sharing_scopes[ES_PUBLIC])
 		credit = IPrincipal(sharing_scopes[ES_CREDIT])
 		purchased =  IPrincipal(sharing_scopes[ES_PURCHASED])
@@ -107,12 +110,12 @@ class TestCourseInstance(CourseLayerTest):
 					has_item(has_properties('actor', is_(public),
 											'action', 'Allow',
 											'permission', is_([ACT_READ]) )))
-		
+
 		# non public
 		interface.alsoProvides(inst, interfaces.INonPublicCourseInstance)
 		provider = acl.CourseInstanceACLProvider(inst)
 		inst_acl = provider.__acl__
-		
+
 		assert_that(inst_acl, has_length(2))
 		assert_that(inst_acl,
 					has_item(has_properties('actor', is_(credit),
@@ -122,7 +125,7 @@ class TestCourseInstance(CourseLayerTest):
 					has_item(has_properties('actor', is_(purchased),
 											'action', 'Allow',
 											'permission', is_([ACT_READ]) )))
-		
+
 	@fudge.patch('nti.contenttypes.courses.decorators.IEntityContainer',
 				 'nti.app.renderers.decorators.get_remote_user')
 	def test_course_sharing_scopes_externalizes(self, mock_container, mock_rem_user):
@@ -130,8 +133,6 @@ class TestCourseInstance(CourseLayerTest):
 			def __contains__(self, o): return True
 		mock_container.is_callable().returns(Container())
 		mock_rem_user.is_callable()
-
-		from nti.contenttypes.courses.decorators import _SharingScopesAndDiscussionDecorator
 
 		inst = courses.CourseInstance()
 		getattr(inst, 'Discussions' ) # this creates the Public scope
@@ -167,3 +168,4 @@ class TestCourseInstance(CourseLayerTest):
 
 		assert_that( result, has_entry('ParentDiscussions',
 									   has_entries('Creator', ntiid)))
+

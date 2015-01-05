@@ -7,6 +7,11 @@
 				"realname": "",
 				"avatarURL": "/foo/bar.jpg"
 			}
+		},
+		"Forums": {
+			"HasOpenAnnouncements": true,
+			"HasInClassAnnouncements": false,
+			"OpenAnnouncementsDisplayName": "booya"
 		}
 	}
 }

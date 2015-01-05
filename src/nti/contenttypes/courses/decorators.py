@@ -30,7 +30,11 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.externalization import to_external_object
 from nti.externalization.interfaces import IExternalObjectDecorator
 
+from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
+
 from nti.contenttypes.courses.sharing import use_parent_default_sharing_scope
+
+from nti.ntiids.ntiids import make_specific_safe
 
 from .interfaces import ES_PUBLIC
 from .interfaces import ES_CREDIT
@@ -42,6 +46,7 @@ from .interfaces import INonPublicCourseInstance
 from .interfaces import ICourseInstanceScopedForum
 
 CLASS = StandardExternalFields.CLASS
+ITEMS = StandardExternalFields.ITEMS
 
 @interface.implementer(IExternalObjectDecorator)
 @component.adapter(ICourseInstance, interface.Interface)
@@ -71,7 +76,7 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 		ext_scopes.__parent__ = scopes.__parent__
 
 		ext_scopes[CLASS] = 'CourseInstanceSharingScopes'
-		items = ext_scopes['Items'] = {}
+		items = ext_scopes[ITEMS] = {}
 
 		user = self.remoteUser if self._is_authenticated else None
 		for name, scope in scopes.items():
@@ -124,6 +129,55 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 					default_sharing_scope = ls.get('purchased')
 
 		result['SharingScopes']['DefaultSharingScopeNTIID'] = default_sharing_scope
+
+@interface.implementer(IExternalObjectDecorator)
+@component.adapter(ICourseInstance, interface.Interface)
+class _AnnouncementsDecorator(AbstractAuthenticatedRequestAwareDecorator):
+	"""
+	Adds announcement discussions to externalized course, by scope.
+	"""
+
+	def _in_scope(self, scope_name, course):
+		user = self.remoteUser if self._is_authenticated else None
+		scope = course.SharingScopes[scope_name]
+		# In scope if we have user and they are in scope.
+		return user is not None and user in IEntityContainer( scope )
+
+	def _get_forum_key(self, forum_types, name, display_key):
+		result = forum_types.get( display_key )
+		if not result:
+			# Replicate forum key logic used during create time
+			result = make_specific_safe( name + ' ' + 'Announcements' )
+		return result
+
+	def _do_decorate_external(self, context, result):
+		# TODO Can we use a marker interface?
+		# TODO More scope types?
+		announcements = {}
+		items = { ITEMS: announcements }
+		result[ 'AnnouncementForums' ] = items
+
+		vendor_info = ICourseInstanceVendorInfo( context )
+		forum_types = vendor_info.get('NTI', {}).get('Forums', {})
+
+		# Algorithm copied from course_legacy_views.
+		for name, key_prefix, scope in (
+				( 'Open', 'Open', 'Public' ),
+				( 'In-Class', 'InClass', 'ForCredit' )):
+
+			has_key = 'Has' + key_prefix + 'Announcements'
+
+			# They have announcements and we're in the scope
+			if 		forum_types.get( has_key ) \
+				and self._in_scope( scope, context ):
+				# Ok, let's find our forum
+				display_key = key_prefix + 'AnnouncementsDisplayName'
+				forum_key = self._get_forum_key(forum_types, name, display_key)
+
+				discussions = context.Discussions
+				found_forum = discussions.get( forum_key )
+				if found_forum is not None:
+					announcements[ scope ] = found_forum
 
 @interface.implementer(IExternalObjectDecorator)
 @component.adapter(ICourseCatalogEntry)
