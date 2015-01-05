@@ -48,7 +48,8 @@
 
 	<adapter factory=".externalization._CourseInstanceEnrollmentRecordExternalizer"
 			 for=".interfaces.ICourseInstanceEnrollmentRecord"
-			 provides="nti.externalization.interfaces.IInternalObjectExternalizer" />
+			 provides="nti.externalization.interfaces.IInternalObjectExternalizer"
+			 name="summary" />
 			 
 	<!-- Externalize the CourseInstanceSharingScope like the 'community'
 	it appears to be. -->

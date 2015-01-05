@@ -385,7 +385,7 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		assert_that( manager, is_(enrollment.DefaultCourseEnrollmentManager) )
 		record = manager.enroll(principal)
 		
-		result = to_external_object(record)
+		result = to_external_object(record, name="summary")
 		assert_that(result, has_key('Course'))
 		assert_that(result, has_entry('Scope', 'Public'))
 		assert_that(result, has_entry('Principal', principal.id))
