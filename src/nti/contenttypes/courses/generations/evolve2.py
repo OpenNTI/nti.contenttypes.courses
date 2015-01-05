@@ -22,7 +22,7 @@ from ..interfaces import ICourseCatalog
 from ..interfaces import ICourseInstance
 from ..interfaces import ICourseEnrollments
 
-def do_evolve(context):
+def do_evolve(context, generation=generation):
 	try:
 		from nti.metadata import metadata_queue
 	except ImportError:

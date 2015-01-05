@@ -19,4 +19,4 @@ def evolve(context):
 	"""
 	Evolve to generation 3 by putting all enrollment records in the metadata queue
 	"""
-	do_evolve(context)
+	do_evolve(context, generation)
