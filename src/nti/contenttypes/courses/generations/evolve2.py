@@ -63,7 +63,4 @@ def do_evolve(context, generation=generation):
 				generation, total)
 			
 def evolve(context):
-	"""
-	Evolve to generation 2 by putting all enrollment records in the metadata queue
-	"""
-	do_evolve(context)
+	pass
