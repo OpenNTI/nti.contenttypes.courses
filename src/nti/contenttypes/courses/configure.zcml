@@ -46,6 +46,10 @@
 		modules=".legacy_catalog"
 		iobase=".legacy_catalog._LegacyCatalogAutoPackageSearchingScopedInterfaceObjectIO"/>
 
+	<adapter factory=".externalization._CourseInstanceEnrollmentRecordExternalizer"
+			 for=".interfaces.ICourseInstanceEnrollmentRecord"
+			 provides="nti.externalization.interfaces.IInternalObjectExternalizer" />
+			 
 	<!-- Externalize the CourseInstanceSharingScope like the 'community'
 	it appears to be. -->
 	<adapter factory="nti.dataserver.users.users_external._EntitySummaryExternalObject"

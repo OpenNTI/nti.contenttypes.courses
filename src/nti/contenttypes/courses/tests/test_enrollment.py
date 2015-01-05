@@ -13,9 +13,11 @@ from hamcrest import is_in
 from hamcrest import is_not
 from hamcrest import raises
 from hamcrest import calling
+from hamcrest import has_key
 from hamcrest import contains
 from hamcrest import has_item
 from hamcrest import not_none
+from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import has_property
@@ -60,30 +62,36 @@ class TestEnrollment(unittest.TestCase):
 		assert_that( calling(setattr).with_args(record, 'Scope', 'not valid scope'),
 					 raises(ConstraintNotSatisfied))
 
+import functools
+from persistent import Persistent
 
 from zope.security.interfaces import IPrincipal
 from zope.container.interfaces import IContained
 from zope.location.interfaces import ISublocations
-from ..interfaces import ICourseInstance
-from ..interfaces import IEnrollmentMappedCourseInstance
-from ..interfaces import ICourseInstanceVendorInfo
-from zope.annotation.interfaces import IAttributeAnnotatable
-from nti.wref.interfaces import IWeakRef
-from nti.dataserver.interfaces import IUser
-from zope.component import eventtesting
 from zope.lifecycleevent import IObjectRemovedEvent
+from zope.annotation.interfaces import IAttributeAnnotatable
 
-from nti.dataserver.sharing import SharingSourceMixin
-from persistent import Persistent
-import functools
+from nti.dataserver.interfaces import IUser
+
+from nti.wref.interfaces import IWeakRef
 
 from nti.dataserver.authentication import _dynamic_memberships_that_participate_in_security
 
+from nti.externalization.externalization import to_external_object
+
 from ..interfaces import ES_CREDIT
-from ..interfaces import ES_CREDIT_NONDEGREE
-from ..interfaces import ES_CREDIT_DEGREE
 from ..interfaces import ES_PUBLIC
+from ..interfaces import ES_CREDIT_DEGREE
+from ..interfaces import ES_CREDIT_NONDEGREE
+
+from ..interfaces import ICourseInstance
 from ..interfaces import ICourseEnrollments
+from ..interfaces import ICourseInstanceVendorInfo
+from ..interfaces import IEnrollmentMappedCourseInstance
+
+from zope.component import eventtesting
+
+from nti.dataserver.sharing import SharingSourceMixin
 
 @functools.total_ordering
 @interface.implementer(IPrincipal, IWeakRef, IContained, IAttributeAnnotatable)
@@ -340,7 +348,6 @@ class TestFunctionalEnrollment(CourseLayerTest):
 			assert_that( public_scope, is_in(list(principal.dynamic_memberships)))
 			assert_that( principal, is_in(public_scope) )
 
-
 	@WithMockDSTrans
 	def test_delete_course_removes_enrollment_records(self):
 		self._shared_setup()
@@ -366,6 +373,23 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		# including un-parenting the record
 		assert_that( record, has_property('__parent__', none() ))
 
+	@WithMockDSTrans
+	def test_externalize_enrollment_records(self):
+		self._shared_setup()
+
+		principal = self.principal
+		course = self.course
+		# course_parent = self.course.__parent__
+
+		manager = interfaces.ICourseEnrollmentManager(course)
+		assert_that( manager, is_(enrollment.DefaultCourseEnrollmentManager) )
+		record = manager.enroll(principal)
+		
+		result = to_external_object(record)
+		assert_that(result, has_key('Course'))
+		assert_that(result, has_entry('Scope', 'Public'))
+		assert_that(result, has_entry('Principal', principal.id))
+		
 	@WithMockDSTrans
 	def test_delete_principal_removes_enrollment_records(self):
 		self._shared_setup()
@@ -397,8 +421,8 @@ class TestFunctionalEnrollment(CourseLayerTest):
 	def test_migrate_enrolments(self):
 		self._shared_setup()
 
-		principal = self.principal
 		orig_course = self.course
+		principal = self.principal
 
 		manager = interfaces.ICourseEnrollmentManager(orig_course)
 		record = manager.enroll(principal, scope=ES_CREDIT_DEGREE)
