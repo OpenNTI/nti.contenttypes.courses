@@ -309,7 +309,7 @@ class ISynchronizable(interface.Interface):
 	lastSynchronized = Number(title=u"The timestamp at which this object was last synchronized .",
 						  	  default=0.0)
 	lastSynchronized.setTaggedValue('_ext_excluded_out', True)
-	
+
 class ICourseInstance(IFolder,
 					  IShouldHaveTraversablePath,
 					  _ICourseOutlineNodeContainer,
@@ -700,15 +700,19 @@ from zope.schema.vocabulary import SimpleVocabulary
 
 class ScopeTerm(SimpleTerm):
 
-	def __init__(self, value, title=None, implies=(), implied_by=()):
+	def __init__(self, value, title=None, implies=(), implied_by=(), vendor_key=None, vendor_key_prefix=None):
 		SimpleTerm.__init__(self, value, title=title)
 		self.implies = implies
 		self.implied_by = implied_by
+		self.vendor_key = vendor_key if vendor_key else value
+		self.vendor_key_prefix = vendor_key_prefix if vendor_key_prefix else value
 
 ENROLLMENT_SCOPE_VOCABULARY = SimpleVocabulary(
 	[ScopeTerm(ES_PUBLIC,
 			   title=_('Open'),
-			   implied_by=(ES_CREDIT, ES_CREDIT_DEGREE, ES_CREDIT_NONDEGREE, ES_PURCHASED)),
+			   implied_by=(ES_CREDIT, ES_CREDIT_DEGREE, ES_CREDIT_NONDEGREE, ES_PURCHASED),
+			   vendor_key='Open',
+			   vendor_key_prefix='Open'),
 	 ScopeTerm(ES_PURCHASED,
 				title=_('Purchased'),
 				implies=(ES_PUBLIC,),
@@ -716,7 +720,9 @@ ENROLLMENT_SCOPE_VOCABULARY = SimpleVocabulary(
 	 ScopeTerm(ES_CREDIT,
 				title=_('For Credit'),
 				implies=(ES_PUBLIC, ES_PURCHASED),
-				implied_by=(ES_CREDIT_DEGREE, ES_CREDIT_NONDEGREE)),
+				implied_by=(ES_CREDIT_DEGREE, ES_CREDIT_NONDEGREE),
+				vendor_key='In-Class',
+				vendor_key_prefix='InClass'),
 	 ScopeTerm(ES_CREDIT_DEGREE,
 				title=_('For Credit (Degree)'),
 				implies=(ES_CREDIT, ES_PURCHASED, ES_PUBLIC),
@@ -881,7 +887,7 @@ from zope.lifecycleevent.interfaces import IObjectCreatedEvent
 
 class ICourseInstanceEnrollmentRecordCreatedEvent(IObjectCreatedEvent):
 	"""
-	An event that is sent during the creation of a 
+	An event that is sent during the creation of a
 	:class:`.ICourseInstanceEnrollmentRecord`.
 	The context it's any information subscribers may be interested in
 	"""
@@ -889,7 +895,7 @@ class ICourseInstanceEnrollmentRecordCreatedEvent(IObjectCreatedEvent):
 
 @interface.implementer(ICourseInstanceEnrollmentRecordCreatedEvent)
 class CourseInstanceEnrollmentRecordCreatedEvent(ObjectCreatedEvent):
-	
+
 	def __init__(self, obj, context=None):
 		super(CourseInstanceEnrollmentRecordCreatedEvent, self).__init__(obj)
 		self.context = context
@@ -912,7 +918,7 @@ class ICourseInstanceForCreditScopedForum(ICourseInstanceScopedForum):
 									 required=False,
 									 default=ES_CREDIT)
 	SharingScopeName.setTaggedValue('value', ES_CREDIT)
-	
+
 class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
 	"""
 	A forum intended to be visible to those who have purchased a course.

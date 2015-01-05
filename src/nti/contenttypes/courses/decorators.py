@@ -31,6 +31,7 @@ from nti.externalization.externalization import to_external_object
 from nti.externalization.interfaces import IExternalObjectDecorator
 
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
+from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
 from nti.contenttypes.courses.sharing import use_parent_default_sharing_scope
 
@@ -151,8 +152,7 @@ class _AnnouncementsDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		return result
 
 	def _do_decorate_external(self, context, result):
-		# TODO Can we use a marker interface?
-		# TODO More scope types?
+		# A marker interface might make these easier
 		announcements = {}
 		items = { ITEMS: announcements }
 		result[ 'AnnouncementForums' ] = items
@@ -160,16 +160,15 @@ class _AnnouncementsDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		vendor_info = ICourseInstanceVendorInfo( context )
 		forum_types = vendor_info.get('NTI', {}).get('Forums', {})
 
-		# Algorithm copied from course_legacy_views.
-		for name, key_prefix, scope in (
-				( 'Open', 'Open', 'Public' ),
-				( 'In-Class', 'InClass', 'ForCredit' )):
+		for scope_name, scope_term in ENROLLMENT_SCOPE_VOCABULARY.by_token.iteritems():
+			name = scope_term.vendor_key
+			key_prefix = scope_term.vendor_key_prefix
 
 			has_key = 'Has' + key_prefix + 'Announcements'
 
 			# They have announcements and we're in the scope
 			if 		forum_types.get( has_key ) \
-				and self._in_scope( scope, context ):
+				and self._in_scope( scope_name, context ):
 				# Ok, let's find our forum
 				display_key = key_prefix + 'AnnouncementsDisplayName'
 				forum_key = self._get_forum_key(forum_types, name, display_key)
@@ -177,7 +176,7 @@ class _AnnouncementsDecorator(AbstractAuthenticatedRequestAwareDecorator):
 				discussions = context.Discussions
 				found_forum = discussions.get( forum_key )
 				if found_forum is not None:
-					announcements[ scope ] = found_forum
+					announcements[ scope_name ] = found_forum
 
 @interface.implementer(IExternalObjectDecorator)
 @component.adapter(ICourseCatalogEntry)
