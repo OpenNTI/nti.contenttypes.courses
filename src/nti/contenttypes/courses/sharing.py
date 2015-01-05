@@ -397,11 +397,12 @@ def on_moved_between_courses_update_scope_membership(record, event):
 	on_drop_exit_scope_membership(record, event, old_course)
 	on_enroll_record_scope_membership(record, event, new_course)
 
-def use_parent_default_sharing_scope( course ):
+def use_parent_default_sharing_scope( context ):
 	"""
 	Returns whether the given course should opt to use its
 	parent's default sharing scope instead of its own.
 	"""
+	course = ICourseInstance(context, None)
 	vendor_info = ICourseInstanceVendorInfo(course, {})
 	try:
 		result = vendor_info['NTI']['UseParentDefaultSharingScope']

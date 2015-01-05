@@ -11,10 +11,10 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from urlparse import urljoin
+
 from zope import component
 from zope import interface
-
-from urlparse import urljoin
 
 # XXX: JAM: Don't like this dependency here. Refactor for zope.security interaction
 # support
@@ -64,7 +64,6 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 																 request=self.request)
 				if use_parent_default_sharing_scope( context ):
 					default_sharing_scope = result['ParentSharingScopes']['DefaultSharingScopeNTIID']
-
 
 		scopes = context.SharingScopes
 		ext_scopes = LocatedExternalDict()
