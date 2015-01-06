@@ -13,6 +13,8 @@ logger = __import__('logging').getLogger(__name__)
 
 from . import MessageFactory as _
 
+from functools import partial
+
 from zope import interface
 from zope.interface import ro
 
@@ -33,6 +35,8 @@ from zope.cachedescriptors.method import cachedIn
 from zope.location.location import locate
 
 from zope.security.interfaces import IPrincipal
+from zope.security.management import endInteraction
+from zope.security.management import restoreInteraction
 
 from ZODB.interfaces import IConnection
 
@@ -48,6 +52,8 @@ from nti.utils.property import CachedProperty
 
 from nti.schema.schema import SchemaConfigured
 from nti.schema.fieldproperty import FieldProperty
+
+from nti.site.hostpolicy import run_job_in_all_host_sites
 
 from nti.wref.interfaces import IWeakRef
 
@@ -751,14 +757,24 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 # so we need to catch them on the IntIdRemoved event
 # for dependable ordering
 
-def on_principal_deletion_unenroll(principal, event):
+def remove_user_enroll_data(principal):
 	pins = component.subscribers( (principal,), IPrincipalEnrollments )
 	for enrollments in pins:
-
 		for record in enrollments.iter_enrollments():
 			course = record.CourseInstance
 			manager = ICourseEnrollmentManager(course)
 			manager.drop(principal)
+
+def on_principal_deletion_unenroll(principal, event):
+	endInteraction()
+	try:
+		# try current site
+		remove_user_enroll_data(principal)
+		# try all sites
+		func = partial(remove_user_enroll_data, principal=principal)
+		run_job_in_all_host_sites(func)
+	finally:
+		restoreInteraction()
 
 def on_course_deletion_unenroll(course, event):
 	__traceback_info__ = course, event
