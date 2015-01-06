@@ -942,3 +942,8 @@ class ICourseGradingPolicy(interface.Interface):
 		"""
 		validate this policy
 		"""
+		
+	def grade(principal):
+		"""
+		return the [current] grade for the specified user/principal
+		"""
