@@ -46,3 +46,5 @@ def set_grading_policy_for_course(course, policy=None):
 	else:
 		assert ICourseGradingPolicy.providedBy(policy)
 		annotations[GRADING_POLICY_KEY] = policy
+		policy.__parent__ = course # take ownership
+		policy.__name__ = policy.__name__ or GRADING_POLICY_KEY

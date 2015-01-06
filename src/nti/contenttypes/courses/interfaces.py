@@ -933,12 +933,12 @@ class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
 # Policies
 ###
 
-class ICourseGradingPolicy(interface.Interface):
+class ICourseGradingPolicy(IContained):
 	"""
 	A marker interface to store a course grading policy
 	"""
 	
-	def validate(context):
+	def validate():
 		"""
 		validate this policy
 		"""
