@@ -937,4 +937,8 @@ class ICourseGradingPolicy(interface.Interface):
 	"""
 	A marker interface to store a course grading policy
 	"""
-	pass
+	
+	def validate(context):
+		"""
+		validate this policy
+		"""

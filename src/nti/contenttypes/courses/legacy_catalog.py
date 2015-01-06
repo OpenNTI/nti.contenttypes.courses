@@ -26,6 +26,8 @@ from nti.schema.field import ValidTextLine
 from nti.schema.schema import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
 
+from nti.utils.property import readproperty
+
 from .interfaces import ICourseCatalog
 from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseCatalogInstructorInfo
@@ -124,8 +126,6 @@ class CourseCatalogInstructorLegacyInfo(CourseCatalogInstructorInfo):
 	defaultphoto = None
 	__external_can_create__ = False
 	createDirectFieldProperties(ICourseCatalogInstructorLegacyInfo)
-
-from nti.utils.property import readproperty
 
 def _derive_preview(self):
 	if self.StartDate is not None:

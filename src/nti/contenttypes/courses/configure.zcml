@@ -257,4 +257,7 @@
 				 zcml:condition="installed nti.dataserver.contenttypes.forums" />
 	</configure>
 
+	<!-- Grading -->
+	<adapter factory=".grading._grading_policy_for_course" />
+	<adapter factory=".grading._grading_policy_for_course_subinstance" />
 </configure>
