@@ -152,10 +152,22 @@ class _AnnouncementsDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		return result
 
 	def _do_decorate_external(self, context, result):
-		# A marker interface might make these easier
+
+		# First, get parent if we are a section.
+		is_section = ICourseSubInstance.providedBy(context)
+
+		if is_section:
+			# conflated, yes, but simpler
+			parent = context.__parent__.__parent__
+			if parent is not None:
+				parent_result = {}
+				self._do_decorate_external(parent, parent_result)
+				result['ParentAnnouncementForums'] = parent_result.get('AnnouncementForums')
+
+		# A marker interface might make this easier
 		announcements = {}
-		items = { ITEMS: announcements }
-		result[ 'AnnouncementForums' ] = items
+		items = { 	ITEMS: announcements,
+					'Class': 'CourseInstanceAnnouncementForums' }
 
 		vendor_info = ICourseInstanceVendorInfo( context )
 		forum_types = vendor_info.get('NTI', {}).get('Forums', {})
@@ -177,6 +189,9 @@ class _AnnouncementsDecorator(AbstractAuthenticatedRequestAwareDecorator):
 				found_forum = discussions.get( forum_key )
 				if found_forum is not None:
 					announcements[ scope_name ] = found_forum
+
+		if announcements:
+			result[ 'AnnouncementForums' ] = items
 
 @interface.implementer(IExternalObjectDecorator)
 @component.adapter(ICourseCatalogEntry)

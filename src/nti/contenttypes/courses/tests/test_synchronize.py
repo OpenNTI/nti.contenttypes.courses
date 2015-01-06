@@ -519,11 +519,11 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		decorator._is_authenticated = True
 		decorator._do_decorate_external( section, section_ext )
 
-		# Gateway has empty announcements since it does not have any.
+		# Gateway does not have announcements since it does not have any.
 		assert_that( gateway_ext,
-					has_entries(
+					is_not( has_entries(
 								'AnnouncementForums',
-								has_entries('Items', is_empty() ) ) )
+								has_entries('Items', is_empty() ) ) ) )
 
 		# Our section has only open announcements.
 		assert_that( section_ext,
@@ -531,4 +531,6 @@ class TestFunctionalSynchronize(CourseLayerTest):
 								'AnnouncementForums',
 								has_entries('Items',
 											has_entry('Public',
-										   				not_none() )) ) )
+										   				not_none() ),
+										   	'Class',
+										   	'CourseInstanceAnnouncementForums') ) )
