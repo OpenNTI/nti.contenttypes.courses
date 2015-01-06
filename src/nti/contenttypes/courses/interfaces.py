@@ -928,3 +928,13 @@ class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
 									 required=False,
 									 default=ES_PURCHASED)
 	SharingScopeName.setTaggedValue('value', ES_PURCHASED)
+
+###
+# Policies
+###
+
+class ICourseGradingPolicy(interface.Interface):
+	"""
+	A marker interface to store a course grading policy
+	"""
+	pass
