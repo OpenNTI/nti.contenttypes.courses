@@ -21,6 +21,11 @@ from .interfaces import ICourseCatalogEntry
 @interface.implementer(IQAssignmentPolicyValidator)
 class DefaultAssignmentPolicyValidator(object):
 	
+	def question_points(self, auto_grade, ntiid):
+		question_map = auto_grade.get('questions') or auto_grade
+		points = question_map.get(ntiid) or question_map.get('default')
+		return points
+	
 	def validate(self, ntiid, policy):
 		assignment = component.queryUtility(IQAssignment, name=ntiid)
 		if assignment is None:
@@ -42,7 +47,14 @@ class DefaultAssignmentPolicyValidator(object):
 		
 		if name.lower() in ('pointbased'):
 			assert assignment, 'Could not find assignment %s' % ntiid
-			assert total_points, "Invalid total points in policy for %s" % ntiid
+			# check parts
+			for part in assignment.parts:
+				for question in part.question_set.questions:
+					q_ntiid = question.ntiid
+					points = self.question_points(auto_grade, ntiid)
+					if not points or int(points) <= 0:
+						msg = "Invalid points in policy for question %s" % q_ntiid
+						raise ValueError(msg)
 		else:
 			logger.warn("Don't know how to validate policy %s in assignment", 
 						name, ntiid)
