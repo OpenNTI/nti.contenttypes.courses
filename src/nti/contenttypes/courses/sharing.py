@@ -410,7 +410,7 @@ def on_moved_between_courses_update_scope_membership(record, event):
 
 def get_default_sharing_scope( context ):
 	"""
-	Returns whether the configured default scope for the context.
+	Returns the configured default scope for the context.
 	"""
 	course = ICourseInstance(context)
 	vendor_info = ICourseInstanceVendorInfo(course, {})
@@ -431,7 +431,8 @@ def get_default_sharing_scope( context ):
 			if len( parts ) > 1:
 				# We reference a scope in our parent.
 				scope = parts[1]
-				assert ICourseSubInstance.providedBy(context)
+				assert ICourseSubInstance.providedBy(context), \
+					"DefaultSharingScope referencing parent of top-level course."
 				# TODO Is this correct, or only correct for Public?
 				course = context.__parent__.__parent__
 
