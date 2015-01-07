@@ -57,9 +57,16 @@ from .legacy_catalog import _ntiid_from_entry
 
 from ._role_parser import fill_roles_from_key
 from ._role_parser import reset_roles_missing_key
+
 from ._outline_parser import fill_outline_from_key
+
+from ._grading_policy_parser import parse_grading_policy
+from ._grading_policy_parser import reset_grading_policy
+
 from ._assignment_override_parser import fill_asg_from_key
+
 from ._catalog_entry_parser import fill_entry_from_legacy_key
+
 from ._assignment_override_parser import reset_asg_missing_key
 from ._assignment_policy_validator import validate_assigment_policies
 
@@ -69,6 +76,7 @@ ROLE_INFO_NAME = 'role_info.json'
 VENDOR_INFO_NAME = 'vendor_info.json'
 CATALOG_INFO_NAME = 'course_info.json'
 COURSE_OUTLINE_NAME = 'course_outline.xml'
+GRADING_POLICY_NAME = 'grading_policy.json'
 INSTRUCTOR_INFO_NAME = 'instructor_info.json'
 ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
 
@@ -182,7 +190,8 @@ class _ContentCourseSynchronizer(object):
 			lifecycleevent.added(bundle)
 
 		self.update_common_info(course, bucket, try_legacy_content_bundle=True)
-
+		self.update_deny_open_enrollment(course)
+		
 		notify(CourseInstanceAvailableEvent(course))
 
 		sections_bucket = bucket.getChildNamed(SECTION_FOLDER_NAME)
@@ -194,9 +203,6 @@ class _ContentCourseSynchronizer(object):
 			interface.alsoProvides(course, IEnrollmentMappedCourseInstance)
 		else:
 			interface.noLongerProvides(course, IEnrollmentMappedCourseInstance)
-
-		# check of open enrollment.
-		self.update_deny_open_enrollment(course)
 		
 		# mark last sync time	
 		entry = ICourseCatalogEntry(course)
@@ -237,9 +243,12 @@ class _ContentCourseSynchronizer(object):
 		getattr(course, 'Discussions')
 		cls.update_sharing_scopes_friendly_names(course)
 
-		# finally validate assigment policies
+		# validate assigment policies
 		cls.validate_assigment_policies(course, bucket)
-
+		
+		# check grading policy
+		cls.upgade_grading_policy(course, bucket)
+		
 	@classmethod
 	def update_sharing_scopes_friendly_names(cls, course):
 		cce = ICourseCatalogEntry(course)
@@ -374,13 +383,21 @@ class _ContentCourseSynchronizer(object):
 			reset_roles_missing_key(course)
 
 	@classmethod
-	def update_assignment_dates(cls, subcourse, bucket):
+	def update_assignment_dates(cls, course, bucket):
 		key = bucket.getChildNamed(ASSIGNMENT_DATES_NAME)
 		if key is not None:
-			fill_asg_from_key(subcourse, key)
+			fill_asg_from_key(course, key)
 		else:
-			reset_asg_missing_key(subcourse)
+			reset_asg_missing_key(course)
 		
+	@classmethod
+	def upgade_grading_policy(cls, course, bucket):
+		key = bucket.getChildNamed(GRADING_POLICY_NAME)
+		if key is not None:
+			parse_grading_policy(course, key)
+		else:
+			reset_grading_policy(course)
+	
 	@classmethod
 	def validate_assigment_policies(cls, course, bucket):
 		validate_assigment_policies(course)

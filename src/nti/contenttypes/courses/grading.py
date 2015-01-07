@@ -41,8 +41,9 @@ def _grading_policy_for_course_subinstance(course):
 @interface.implementer(ICourseGradingPolicy)
 def set_grading_policy_for_course(course, policy=None):
 	annotations = IAnnotations(course)
-	if policy is None and GRADING_POLICY_KEY in annotations:
-		del annotations[GRADING_POLICY_KEY]
+	if policy is None:
+		if GRADING_POLICY_KEY in annotations:
+			del annotations[GRADING_POLICY_KEY]
 	else:
 		assert ICourseGradingPolicy.providedBy(policy)
 		annotations[GRADING_POLICY_KEY] = policy

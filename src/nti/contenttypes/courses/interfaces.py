@@ -933,7 +933,7 @@ class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
 # Policies
 ###
 
-class ICourseGradingPolicy(IContained):
+class ICourseGradingPolicy(IContained, ILastModified):
 	"""
 	A marker interface to store a course grading policy
 	"""
