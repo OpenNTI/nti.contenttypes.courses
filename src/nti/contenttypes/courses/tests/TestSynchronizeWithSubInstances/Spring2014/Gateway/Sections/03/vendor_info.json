@@ -1,6 +1,5 @@
 {
 	"NTI": {
-		"UseParentDefaultSharingScope" : false,
 		"SharingScopesDisplayInfo": {
 			"Public": {
 				"alias": "From Vendor Info",

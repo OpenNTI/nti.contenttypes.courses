@@ -7,6 +7,7 @@ Sharing support for courses.
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from __builtin__ import True
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -26,6 +27,8 @@ from nti.dataserver.containers import CheckingLastModifiedBTreeContainer
 from nti.externalization.oids import to_external_ntiid_oid
 
 from nti.ntiids.ntiids import TYPE_OID
+from nti.ntiids.ntiids import is_valid_ntiid_string
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
 from .interfaces import ICourseInstanceSharingScope
@@ -397,15 +400,33 @@ def on_moved_between_courses_update_scope_membership(record, event):
 	on_drop_exit_scope_membership(record, event, old_course)
 	on_enroll_record_scope_membership(record, event, new_course)
 
-def use_parent_default_sharing_scope( context ):
+def get_default_sharing_scope( context ):
 	"""
-	Returns whether the given course should opt to use its
-	parent's default sharing scope instead of its own.
+	Returns whether the configured default scope for the context.
 	"""
-	course = ICourseInstance(context, None)
+	course = ICourseInstance(context)
 	vendor_info = ICourseInstanceVendorInfo(course, {})
+	result = None
 	try:
-		result = vendor_info['NTI']['UseParentDefaultSharingScope']
+		result = vendor_info['NTI']['DefaultSharingScope']
 	except (TypeError, KeyError):
-		result = False
+		pass
+	else:
+		# Could have ntiid or special string
+		if is_valid_ntiid_string( result ):
+			result = find_object_with_ntiid( result )
+		else:
+			# Ex: Parent/Public or Public
+			parts = result.split( '/' )
+			scope = parts[0]
+
+			if len( parts ) > 1:
+				# We reference a scope in our parent.
+				scope = parts[1]
+				assert ICourseSubInstance.providedBy(context)
+				# TODO Is this correct, or only correct for Public?
+				course = context.__parent__.__parent__
+
+			result = course.SharingScopes[ scope ]
+
 	return result
