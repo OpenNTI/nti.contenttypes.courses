@@ -448,26 +448,37 @@ class DefaultCourseEnrollmentManager(object):
 from .interfaces import ICourseInstanceVendorInfo
 from .interfaces import IEnrollmentMappedCourseInstance
 
-def check_deny_open_enrollment(course):
+def has_deny_open_enrollment(context):
+	course = ICourseInstance(context, None)
+	vendor_info = ICourseInstanceVendorInfo(course, {})
+	nti_info = vendor_info.get('NTI', {})
+	for name in ('deny_open_enrollment', 'DenyOpenEnrollment'):
+		result = nti_info.get(name, None)
+		if result is not None:
+			return True
+	return False
+
+def check_deny_open_enrollment(context):
 	"""
 	Returns a true value if the course disallows open enrollemnt
 	"""
+	course = ICourseInstance(context, None)
 	vendor_info = ICourseInstanceVendorInfo(course, {})
-	if 'NTI' in vendor_info:
-		nti_info = vendor_info.get('NTI')
-		for name in ('deny_open_enrollment', 'DenyOpenEnrollment'):
-			result = nti_info.get(name, None)
-			if result is not None:
-				return bool(result)
+	nti_info = vendor_info.get('NTI', {})
+	for name in ('deny_open_enrollment', 'DenyOpenEnrollment'):
+		result = nti_info.get(name, None)
+		if result is not None:
+			return bool(result)
 	return False
 
-def check_enrollment_mapped(course):
+def check_enrollment_mapped(context):
 	"""
 	Returns a true value if the course is supposed to be enrollment mapped,
 	and passes the tests. Raises an error if it is supposed to be enrollment
 	mapped, but fails the tests.
 	"""
-	vendor_info = ICourseInstanceVendorInfo(course)
+	course = ICourseInstance(context, None)
+	vendor_info = ICourseInstanceVendorInfo(course, {})
 	if 'NTI' in vendor_info and 'EnrollmentMap' in vendor_info['NTI']:
 		result = False
 		for scope, sec_name in vendor_info['NTI']['EnrollmentMap'].items():
@@ -486,7 +497,6 @@ def _find_mapped_course_for_scope(course, scope):
 		section = course.SubInstances[section_name]
 		return section
 	return course
-
 
 @component.adapter(IEnrollmentMappedCourseInstance)
 @interface.implementer(ICourseEnrollmentManager)

@@ -23,8 +23,8 @@ from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
 from nti.contentlibrary.bundle import PersistentContentPackageBundle
 
-from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
+from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 
 from nti.contentlibrary.dublincore import read_dublincore_from_named_key
 
@@ -50,6 +50,7 @@ from .courses import ContentCourseSubInstance
 from .courses import CourseAdministrativeLevel
 
 from .enrollment import check_enrollment_mapped
+from .enrollment import has_deny_open_enrollment
 from .enrollment import check_deny_open_enrollment
 
 from .legacy_catalog import _ntiid_from_entry
@@ -63,6 +64,7 @@ from ._assignment_override_parser import reset_asg_missing_key
 from ._assignment_policy_validator import validate_assigment_policies
 
 SECTION_FOLDER_NAME = 'Sections'
+
 ROLE_INFO_NAME = 'role_info.json'
 VENDOR_INFO_NAME = 'vendor_info.json'
 CATALOG_INFO_NAME = 'course_info.json'
@@ -193,15 +195,11 @@ class _ContentCourseSynchronizer(object):
 		else:
 			interface.noLongerProvides(course, IEnrollmentMappedCourseInstance)
 
-		# check of open enrollment. Marke the entry as well
+		# check of open enrollment.
+		self.update_deny_open_enrollment(course)
+		
+		# mark last sync time	
 		entry = ICourseCatalogEntry(course)
-		if check_deny_open_enrollment(course):
-			interface.alsoProvides(entry, IDenyOpenEnrollment)
-			interface.alsoProvides(course, IDenyOpenEnrollment)
-		elif IDenyOpenEnrollment.providedBy(course):
-			interface.noLongerProvides(entry, IDenyOpenEnrollment)
-			interface.noLongerProvides(course, IDenyOpenEnrollment)
-
 		course.lastSynchronized = entry.lastSynchronized = time.time()
 
 	@classmethod
@@ -382,10 +380,25 @@ class _ContentCourseSynchronizer(object):
 			fill_asg_from_key(subcourse, key)
 		else:
 			reset_asg_missing_key(subcourse)
-
+		
 	@classmethod
 	def validate_assigment_policies(cls, course, bucket):
 		validate_assigment_policies(course)
+		
+	@classmethod
+	def set_deny_open_enrollment(self, course, deny):
+		entry = ICourseCatalogEntry(course)
+		if deny:
+			interface.alsoProvides(entry, IDenyOpenEnrollment)
+			interface.alsoProvides(course, IDenyOpenEnrollment)
+		elif IDenyOpenEnrollment.providedBy(course):
+			interface.noLongerProvides(entry, IDenyOpenEnrollment)
+			interface.noLongerProvides(course, IDenyOpenEnrollment)
+
+	@classmethod
+	def update_deny_open_enrollment(cls, course):
+		deny = check_deny_open_enrollment(course)
+		cls.set_deny_open_enrollment(course, deny)
 
 @component.adapter(ICourseSubInstances, IDelimitedHierarchyBucket)
 class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
@@ -397,7 +410,7 @@ class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
 	_ADMIN_LEVEL_FACTORY = None
 
 	_COURSE_KEY_NAME = None
-
+			
 	def _get_factory_for(self, bucket):
 		# We only support one level, and they must all
 		# be courses if they have one of the known
@@ -428,7 +441,15 @@ class _ContentCourseSubInstanceSynchronizer(object):
 	def synchronize(self, subcourse, bucket):
 		__traceback_info__ = subcourse, bucket
 		_ContentCourseSynchronizer.update_common_info(subcourse, bucket)
-
+		
+		# check for open enrollment
+		if has_deny_open_enrollment(subcourse):
+			_ContentCourseSynchronizer.update_deny_open_enrollment(subcourse)
+		else:
+			# inherit from parent
+			deny = check_deny_open_enrollment(subcourse.__parent__.__parent__)
+			_ContentCourseSynchronizer.set_deny_open_enrollment(subcourse, deny)
+			
 		notify(CourseInstanceAvailableEvent(subcourse))
 
 def synchronize_catalog_from_root(catalog_folder, root):
