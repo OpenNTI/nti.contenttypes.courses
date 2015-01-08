@@ -22,9 +22,9 @@ def reset_grading_policy(course):
 def parse_grading_policy(course, key):
 	
 	__traceback_info__ = key, course
-	
-	policy = ICourseGradingPolicy(course)
-	if key.lastModified <= policy.lastModified:
+
+	policy = ICourseGradingPolicy(course, None)
+	if policy is not None and key.lastModified <= policy.lastModified:
 		return policy
 
 	json = key.readContentsAsYaml()
