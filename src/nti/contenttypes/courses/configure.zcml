@@ -259,7 +259,6 @@
 
 	<!-- Grading -->
 	<adapter factory=".grading._grading_policy_for_course" />
-	<adapter factory=".grading._grading_policy_for_course_subinstance" />
 	
 	<ext:registerAutoPackageIO
 		root_interfaces=".interfaces.ICourseGradingPolicy"

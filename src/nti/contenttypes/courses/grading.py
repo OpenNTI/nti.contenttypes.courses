@@ -14,7 +14,6 @@ from zope import component
 from zope.annotation.interfaces import IAnnotations
 
 from .interfaces import ICourseInstance
-from .interfaces import ICourseSubInstance
 from .interfaces import ICourseGradingPolicy
 
 GRADING_POLICY_KEY = 'CourseGradingPolicy'
@@ -27,14 +26,6 @@ def _grading_policy_for_course(course):
 		result = annotations[GRADING_POLICY_KEY]
 	except KeyError:
 		result = None
-	return result
-
-@component.adapter(ICourseSubInstance)
-@interface.implementer(ICourseGradingPolicy)
-def _grading_policy_for_course_subinstance(course):
-	result = _grading_policy_for_course(course)
-	if result is None:
-		result = _grading_policy_for_course(course.__parent__.__parent__)
 	return result
 
 @component.adapter(ICourseInstance)
