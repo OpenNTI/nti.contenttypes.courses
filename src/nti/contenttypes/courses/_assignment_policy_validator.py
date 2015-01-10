@@ -16,6 +16,8 @@ from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQAssignmentPolicies
 from nti.assessment.interfaces import IQAssignmentPolicyValidator
 
+from nti.ntiids.ntiids import is_valid_ntiid_string
+
 from .interfaces import ICourseCatalogEntry
 
 @interface.implementer(IQAssignmentPolicyValidator)
@@ -27,9 +29,14 @@ class DefaultAssignmentPolicyValidator(object):
 		return points
 	
 	def validate(self, ntiid, policy):
-		assignment = component.queryUtility(IQAssignment, name=ntiid)
-		if assignment is None:
-			logger.warn("Could not find assignment with ntiid %s", ntiid)
+		assignment = None
+		
+		if is_valid_ntiid_string(ntiid):
+			assignment = component.queryUtility(IQAssignment, name=ntiid)
+			if assignment is None:
+				logger.warn("Could not find assignment with ntiid %s", ntiid)
+		else:
+			return
 			
 		auto_grade = policy.get('auto_grade')
 		if not auto_grade:
