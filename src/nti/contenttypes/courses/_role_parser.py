@@ -24,6 +24,9 @@ from zope.securitypolicy.securitymap import PersistentSecurityMap
 
 from ZODB.interfaces import IConnection
 
+from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
+
 from nti.dataserver.users import User
 from nti.dataserver.interfaces import IUser
 
@@ -77,7 +80,7 @@ def _check_scopes(course):
 		if uid is None or obj != scope:
 			if getattr( scope, '_p_jar', None ) is None:
 				IConnection( course ).add( scope )
-				
+
 			if uid is not None and obj is None:
 				logger.warn("Reregistering scope %s in course %r with intid facility",
 							scope, course)
@@ -88,7 +91,7 @@ def _check_scopes(course):
 				if hasattr(scope, intids.attribute):
 					delattr(scope, intids.attribute)
 				intids.register(scope)
-		
+
 def fill_roles_from_key(course, key):
 	"""
 	XXX Fill in description
@@ -165,6 +168,15 @@ def fill_roles_from_key(course, key):
 				# shared to it
 				user.follow(scope)
 
+			# If they're an instructor of a section, give them
+			# access to the public community of the main course.
+			if ICourseSubInstance.providedBy( course ):
+				parent_course = course.__parent__.__parent__
+				public_scope = parent_course.SharingScopes[ES_PUBLIC]
+				user.record_dynamic_membership(public_scope)
+				user.follow(public_scope)
+
+
 	for orig_instructor in orig_instructors:
 		if orig_instructor not in course.instructors:
 			user = IUser(orig_instructor)
@@ -174,5 +186,12 @@ def fill_roles_from_key(course, key):
 			for scope in course.SharingScopes.values():
 				user.record_no_longer_dynamic_member(scope)
 				user.stop_following(scope)
+
+			# And remove access to the parent public scope.
+			if ICourseSubInstance.providedBy( course ):
+				parent_course = course.__parent__.__parent__
+				public_scope = parent_course.SharingScopes[ES_PUBLIC]
+				user.record_no_longer_dynamic_member(public_scope)
+				user.stop_following(public_scope)
 
 	return role_manager
