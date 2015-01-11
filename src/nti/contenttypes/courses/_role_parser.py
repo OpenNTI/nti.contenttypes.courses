@@ -11,17 +11,24 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from zope.securitypolicy.interfaces import IPrincipalRoleManager
-from zope.securitypolicy.interfaces import Allow
+import zope.intid
+
+from zope import component
+
+from zope.security.interfaces import IPrincipal
+
 from zope.securitypolicy.role import checkRole
+from zope.securitypolicy.interfaces import Allow
+from zope.securitypolicy.interfaces import IPrincipalRoleManager
 from zope.securitypolicy.securitymap import PersistentSecurityMap
 
-from .interfaces import RID_INSTRUCTOR
-from .interfaces import RID_TA
-from zope.security.interfaces import IPrincipal
-from nti.dataserver.interfaces import IUser
+from ZODB.interfaces import IConnection
 
 from nti.dataserver.users import User
+from nti.dataserver.interfaces import IUser
+
+from .interfaces import RID_TA
+from .interfaces import RID_INSTRUCTOR
 
 from .sharing import add_principal_to_course_content_roles
 from .sharing import remove_principal_from_course_content_roles
@@ -60,7 +67,20 @@ def reset_roles_missing_key(course):
 		role_manager.map._bycol.clear()
 		role_manager.map._p_changed = True
 
-
+def _check_scopes(course):
+	## CS: In alpha we have seen scopes missing its intids
+	## Let's try to give it an intid
+	intids = component.getUtility(zope.intid.IIntIds)
+	for scope in course.SharingScopes.values():
+		uid = intids.queryId(scope)
+		obj = intids.queryObject(uid) if uid is not None else None
+		if uid is None or obj != scope:
+			if hasattr(scope, intids.attribute):
+				delattr(scope, intids.attribute)
+			if getattr( scope, '_p_jar', None ) is None:
+				IConnection( course ).add( scope )
+			intids.register(scope)
+		
 def fill_roles_from_key(course, key):
 	"""
 	XXX Fill in description
@@ -74,6 +94,8 @@ def fill_roles_from_key(course, key):
 	"""
 
 	# RoleManagers are not required to have lastModified by default...
+
+	_check_scopes(course)
 
 	role_manager = IPrincipalRoleManager(course)
 	role_last_mod = getattr(role_manager, 'lastModified', 0)
