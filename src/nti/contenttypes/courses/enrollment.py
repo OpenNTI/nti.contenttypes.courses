@@ -17,7 +17,7 @@ import six
 import sys
 from functools import partial
 from collections import Mapping
-from operator import itemgetter
+from functools import total_ordering
 
 from zope import interface
 from zope.interface import ro
@@ -49,11 +49,13 @@ from nti.contentlibrary.bundle import _readCurrent
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
 from nti.externalization.persistence import NoPickle
+from nti.externalization.representation import WithRepr
 
 from nti.utils.property import Lazy
 from nti.utils.property import alias
 from nti.utils.property import CachedProperty
 
+from nti.schema.schema import EqHash
 from nti.schema.schema import SchemaConfigured
 from nti.schema.fieldproperty import FieldProperty
 
@@ -505,6 +507,27 @@ def check_enrollment_mapped(context):
 
 		return result
 
+@total_ordering
+@WithRepr
+@EqHash("section_name")
+class SectionSeat(object):
+
+	def __init__(self, section_name, seat_count):
+		self.seat_count = seat_count
+		self.section_name = section_name
+		
+	def __lt__(self, other):
+		try:
+			return (self.seat_count, self.section_name) <  (other.seat_count, other.section_name)
+		except AttributeError:
+			return NotImplemented
+
+	def __gt__(self, other):
+		try:
+			return (self.seat_count, self.section_name) > (other.seat_count, other.section_name)
+		except AttributeError:
+			return NotImplemented
+
 def _get_enrollment_map(context):
 	result = {}
 	course = ICourseInstance(context, None)
@@ -520,22 +543,24 @@ def _find_mapped_course_for_scope(course, scope):
 	enrollment_map = _get_enrollment_map(course)
 	section_data = enrollment_map.get(scope)
 	if section_data:
-		items = {}
+		items = []
 		for section_name in section_data.keys():
 			# fail loudly rather than silently enroll in the wrong place
 			section = course.SubInstances[section_name]
-			items[section_name] = ICourseEnrollments(section).count_enrollments()
-		items = sorted(items.items(), key=itemgetter(1), reverse=True)
+			enrollment_count = ICourseEnrollments(section).count_enrollments()
+			items.append(SectionSeat(section_name, enrollment_count))
+		items.sort(reverse=True)
 		
 		section = None
-		for section_name, estimated_seat_count in items:
+		for item in items:
+			section_name, estimated_seat_count = item.section_name, item.seat_count
 			max_seat_count = section_data[section_name]
 			if estimated_seat_count < max_seat_count:
 				return course.SubInstances[section_name]
 			
 		# could not find a section simply pick lowest one and warn
-		section_name = items[-1][0]
-		section = course.SubInstances[items[-1][0]]
+		section_name = items[-1].section_name
+		section = course.SubInstances[section_name]
 		logger.warn("Seat count exceed for section %s", section_name)
 		return section
 	
