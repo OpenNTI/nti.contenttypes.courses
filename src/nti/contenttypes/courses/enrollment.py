@@ -15,6 +15,7 @@ from . import MessageFactory as _
 
 import six
 import sys
+import random
 from functools import partial
 from collections import Mapping
 from functools import total_ordering
@@ -560,8 +561,9 @@ def _find_mapped_course_for_scope(course, scope):
 			if estimated_seat_count < max_seat_count:
 				return course.SubInstances[section_name]
 			
-		# could not find a section simply pick lowest one and warn
-		section_name = items[0].section_name
+		# could not find a section simply pick at random
+		index = random.randint(0, len(items)-1)
+		section_name = items[index].section_name
 		section = course.SubInstances[section_name]
 		logger.warn("Seat count exceed for section %s", section_name)
 		return section
