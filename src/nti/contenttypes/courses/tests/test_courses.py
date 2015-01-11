@@ -35,7 +35,6 @@ from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ES_PURCHASED
 
-from nti.contenttypes.courses.decorators import _AnnouncementsDecorator
 from nti.contenttypes.courses.decorators import _SharingScopesAndDiscussionDecorator
 
 from nti.externalization.tests import externalizes
@@ -104,6 +103,7 @@ class TestCourseInstance(CourseLayerTest):
 		purchased =  IPrincipal(sharing_scopes[ES_PURCHASED])
 
 		provider = acl.CourseInstanceACLProvider(inst)
+
 		inst_acl = provider.__acl__
 		assert_that(inst_acl, has_length(1))
 		assert_that(inst_acl,
@@ -125,6 +125,30 @@ class TestCourseInstance(CourseLayerTest):
 					has_item(has_properties('actor', is_(purchased),
 											'action', 'Allow',
 											'permission', is_([ACT_READ]) )))
+
+		# Subinstances
+		instructor = IPrincipal( 'instructor-bob' )
+		subinstance = courses.CourseInstance()
+		connection.add(subinstance)
+		inst.SubInstances = { 'section-01' : subinstance }
+		subinstance.instructors = (instructor,)
+
+		provider = acl.CourseInstanceACLProvider(inst)
+		inst_acl = provider.__acl__
+		assert_that(inst_acl, has_length(3))
+		assert_that(inst_acl,
+					has_item(has_properties('actor', is_(credit),
+											'action', 'Allow',
+											'permission', is_([ACT_READ]) )))
+		assert_that(inst_acl,
+					has_item(has_properties('actor', is_(purchased),
+											'action', 'Allow',
+											'permission', is_([ACT_READ]) )))
+		assert_that(inst_acl,
+					has_item(has_properties('actor', is_(instructor),
+											'action', 'Allow',
+											'permission', is_([ACT_READ]) )))
+
 
 	@fudge.patch('nti.contenttypes.courses.decorators.IEntityContainer',
 				 'nti.app.renderers.decorators.get_remote_user')

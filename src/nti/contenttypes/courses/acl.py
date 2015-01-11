@@ -72,6 +72,13 @@ class CourseInstanceACLProvider(object):
 				for x in main_scopes]
 		aces.extend( ace_allowing( i, ACT_READ, CourseInstanceACLProvider )
 					 for i in course.instructors)
+
+		# Subinstance instructors get the same permissions as
+		# their students.
+		for subinstance in course.SubInstances.values():
+			aces.extend( ace_allowing( i, ACT_READ, CourseInstanceACLProvider )
+					 for i in subinstance.instructors)
+
 		return acl_from_aces( aces )
 
 from nti.dataserver.traversal import find_interface
@@ -121,7 +128,7 @@ class CourseCatalogEntryACLProvider(object):
 			course = course_in_lineage or ICourseInstance(cce, None)
 			if course is not None:
 				acl = IACLProvider(course).__acl__
-				# check if there are open enrollments. we still want to be able to give 
+				# check if there are open enrollments. we still want to be able to give
 				# them access to this course entry (e.g 2014 - chem of beer 100)
 				if has_open_enrollments(course):
 					# we only give them readaccess
