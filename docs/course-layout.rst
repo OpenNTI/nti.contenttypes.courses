@@ -397,10 +397,14 @@ documentation for what keys might be used.
 Known NTI keys are documented here:
 
 EnrollmentMap
-	A dictionary mapping enrollment scopes to the name of a section
+	A dictionary mapping enrollment scopes to the section data
 	that should handle that scope. Any attempts to enroll in this
 	course with that scope will instead be directed to this named
-	section of this course.
+	section of this course. A section data is either a string with
+	a section name or a dictionary with the sections_names vs a
+	maximum seat count. A section is filled before the next one.
+	If all sections are full, the section with the least enrollments
+	if chosen. 
 
 	Only valid at the main course level, and only intended to solve
 	the use case of directing certain for-credit enrollments in a

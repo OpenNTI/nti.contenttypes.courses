@@ -13,7 +13,11 @@ logger = __import__('logging').getLogger(__name__)
 
 from . import MessageFactory as _
 
+import six
+import sys
 from functools import partial
+from collections import Mapping
+from operator import itemgetter
 
 from zope import interface
 from zope.interface import ro
@@ -481,21 +485,60 @@ def check_enrollment_mapped(context):
 	vendor_info = ICourseInstanceVendorInfo(course, {})
 	if 'NTI' in vendor_info and 'EnrollmentMap' in vendor_info['NTI']:
 		result = False
-		for scope, sec_name in vendor_info['NTI']['EnrollmentMap'].items():
+		for scope, data in vendor_info['NTI']['EnrollmentMap'].items():
 			result = True
 			if scope not in ENROLLMENT_SCOPE_VOCABULARY:
 				raise KeyError("Unknown scope", scope)
-			if sec_name not in course.SubInstances:
-				raise KeyError("Unknown section", sec_name)
+			
+			if isinstance(data, six.string_types):
+				data = {data:sys.maxint}
+				
+			# we better get a mapping
+			assert isinstance(data, Mapping)
+			
+			# validate section and seat count
+			for sec_name, seat_count in data.items():
+				if sec_name not in course.SubInstances:
+					raise KeyError("Unknown section", sec_name)
+				if not isinstance(seat_count, (int, long)) or seat_count <= 0:
+					raise ValueError("Invalid seat count", sec_name)
+
 		return result
 
+def _get_enrollment_map(context):
+	result = {}
+	course = ICourseInstance(context, None)
+	vendor_info = ICourseInstanceVendorInfo(course, {})
+	if 'NTI' in vendor_info and 'EnrollmentMap' in vendor_info['NTI']:
+		for scope, data in vendor_info['NTI']['EnrollmentMap'].items():
+			if isinstance(data, six.string_types):
+				data = {data:sys.maxint}
+			result[scope] = data
+	return result
+	
 def _find_mapped_course_for_scope(course, scope):
-	vendor_info = ICourseInstanceVendorInfo(course)
-	section_name = vendor_info['NTI']['EnrollmentMap'].get(scope)
-	if section_name:
-		# fail loudly rather than silently enroll in the wrong place
-		section = course.SubInstances[section_name]
+	enrollment_map = _get_enrollment_map(course)
+	section_data = enrollment_map.get(scope)
+	if section_data:
+		items = {}
+		for section_name in section_data.keys():
+			# fail loudly rather than silently enroll in the wrong place
+			section = course.SubInstances[section_name]
+			items[section_name] = ICourseEnrollments(section).count_enrollments()
+		items = sorted(items.items(), key=itemgetter(1), reverse=True)
+		
+		section = None
+		for section_name, estimated_seat_count in items:
+			max_seat_count = section_data[section_name]
+			if estimated_seat_count < max_seat_count:
+				return course.SubInstances[section_name]
+			
+		# could not find a section simply pick lowest one and warn
+		section_name = items[-1][0]
+		section = course.SubInstances[items[-1][0]]
+		logger.warn("Seat count exceed for section %s", section_name)
 		return section
+	
 	return course
 
 @component.adapter(IEnrollmentMappedCourseInstance)
