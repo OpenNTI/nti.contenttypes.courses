@@ -34,7 +34,7 @@ class DefaultAssignmentPolicyValidator(object):
 		if is_valid_ntiid_string(ntiid):
 			assignment = component.queryUtility(IQAssignment, name=ntiid)
 			if assignment is None:
-				logger.warn("Could not find assignment with ntiid %s", ntiid)
+				logger.debug("Could not find assignment with ntiid %s", ntiid)
 		else:
 			return
 			
