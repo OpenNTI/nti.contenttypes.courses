@@ -75,13 +75,19 @@ def _check_scopes(course):
 		uid = intids.queryId(scope)
 		obj = intids.queryObject(uid) if uid is not None else None
 		if uid is None or obj != scope:
-			logger.warn("A new int id must be given to scope %s in course %r",
-						scope, course)
-			if hasattr(scope, intids.attribute):
-				delattr(scope, intids.attribute)
 			if getattr( scope, '_p_jar', None ) is None:
 				IConnection( course ).add( scope )
-			intids.register(scope)
+				
+			if uid is not None and obj is None:
+				logger.warn("Reregistering scope %s in course %r with intid facility",
+							scope, course)
+				intids.forceRegister(uid, scope)
+			else:
+				logger.warn("A new intid will be given to scope %s in course %r",
+							scope, course)
+				if hasattr(scope, intids.attribute):
+					delattr(scope, intids.attribute)
+				intids.register(scope)
 		
 def fill_roles_from_key(course, key):
 	"""
