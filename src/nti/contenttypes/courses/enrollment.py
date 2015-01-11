@@ -549,7 +549,9 @@ def _find_mapped_course_for_scope(course, scope):
 			section = course.SubInstances[section_name]
 			enrollment_count = ICourseEnrollments(section).count_enrollments()
 			items.append(SectionSeat(section_name, enrollment_count))
-		items.sort(reverse=True)
+			
+		# sort by lowest seat count, section name
+		items.sort()
 		
 		section = None
 		for item in items:
@@ -559,7 +561,7 @@ def _find_mapped_course_for_scope(course, scope):
 				return course.SubInstances[section_name]
 			
 		# could not find a section simply pick lowest one and warn
-		section_name = items[-1].section_name
+		section_name = items[0].section_name
 		section = course.SubInstances[section_name]
 		logger.warn("Seat count exceed for section %s", section_name)
 		return section
