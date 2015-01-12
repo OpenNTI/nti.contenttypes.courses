@@ -1,0 +1,5 @@
+{
+	"nti.roles.course_instructor": {
+		"allow": ["steve.johnson@nextthought.com"]
+	}
+}
