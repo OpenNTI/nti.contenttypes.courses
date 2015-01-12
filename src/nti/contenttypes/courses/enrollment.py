@@ -911,11 +911,15 @@ def migrate_enrollments_from_course_to_course(source, dest, verbose=False, resul
 	source_enrollments = IDefaultCourseInstanceEnrollmentStorage(source)
 
 	for source_prin_id in list(source_enrollments): # copy, we're mutating
-		if source_prin_id in dest_enrollments:
+		if not source_prin_id or source_prin_id in dest_enrollments:
 			log("Ignoring dup enrollment for %s", source_prin_id)
 			continue
 
 		source_enrollment = source_enrollments[source_prin_id]
+		if IPrincipal(source_enrollment.Principal, None) is None:
+			log("Ignoring dup enrollment for %s", source_prin_id)
+			continue
+		
 		mover = IObjectMover(source_enrollment)
 		mover.moveTo(dest_enrollments)
 		result.append(source_prin_id)
