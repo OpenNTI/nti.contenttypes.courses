@@ -384,13 +384,14 @@ documentation for what keys might be used.
         "NTI": {
             "EnrollmentMap": {
                 "ForCreditNonDegree": "section-name"
-            }
-        "SharingScopesDisplayInfo": {
-            "Public": {
-                "alias": "From Vendor Info",
-                "realname": "",
-                "avatarURL": "/foo/bar.jpg"
-            }
+            },
+        	"SharingScopesDisplayInfo": {
+           	 	"Public": {
+                	"alias": "From Vendor Info",
+                	"realname": "",
+                	"avatarURL": "/foo/bar.jpg"
+            },
+            "DefaultSharingScope" : "Parent/Public"
         }
     }
 
@@ -404,7 +405,7 @@ EnrollmentMap
 	a section name or a dictionary with the sections_names vs a
 	maximum seat count. A section is filled before the next one.
 	If all sections are full, the section with the least enrollments
-	if chosen. 
+	if chosen.
 
 	Only valid at the main course level, and only intended to solve
 	the use case of directing certain for-credit enrollments in a
@@ -454,10 +455,16 @@ SharingScopesDisplayInfo
 	generation). Likewise, ``avatarURL`` is a URL or path giving an
 	image to display.
 
-UseParentDefaultSharingScope
-	A boolean only really valid at the section level. If present and set
-	to true, the DefaultSharingScope on the externalized course instance
-	will be the parent's (super course) default sharing scope.
+DefaultSharingScope
+	A string that is only really valid at the section level. This
+	could be set to an NTIID that will be exposed as the
+	'DefaultSharingScope' when exposed to clients.  As an alternative
+	to an NTIID, the actual scope can be specified.
+
+	If this exists in a section, this string could specify two
+	bits of information: 'Parent' indicates that the parent
+	instance's scope should be used.  Following the '/' delimiter,
+	the actual parent scope to be used is specified.
 
 ``assignment_policies.json`` (optional)
 ---------------------------------------------
