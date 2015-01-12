@@ -33,5 +33,6 @@ def parse_grading_policy(course, key):
 	update_from_external_object(policy, json)
 	
 	set_grading_policy_for_course(course, policy)
-	
+	policy.synchronize()
+
 	return policy

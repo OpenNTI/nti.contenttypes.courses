@@ -943,6 +943,11 @@ class ICourseGradingPolicy(IContained, ILastModified):
 		validate this policy
 		"""
 		
+	def synchronize():
+		"""
+		Perform any adjustment of this policy during course synchronization
+		"""
+		
 	def grade(principal):
 		"""
 		return the [current] grade for the specified user/principal
