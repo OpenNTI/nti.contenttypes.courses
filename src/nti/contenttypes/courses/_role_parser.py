@@ -73,7 +73,9 @@ def reset_roles_missing_key(course):
 def _check_scopes(course):
 	## CS: In alpha we have seen scopes missing its intids
 	## Let's try to give it an intid
-	intids = component.getUtility(zope.intid.IIntIds)
+	intids = component.queryUtility(zope.intid.IIntIds)
+	if intids is None:
+		return
 	for scope in course.SharingScopes.values():
 		uid = intids.queryId(scope)
 		obj = intids.queryObject(uid) if uid is not None else None
