@@ -519,13 +519,13 @@ class SectionSeat(object):
 		
 	def __lt__(self, other):
 		try:
-			return (self.seat_count, self.section_name) <  (other.seat_count, other.section_name)
+			return (self.section_name, self.seat_count) < (other.section_name, other.seat_count)
 		except AttributeError:
 			return NotImplemented
 
 	def __gt__(self, other):
 		try:
-			return (self.seat_count, self.section_name) > (other.seat_count, other.section_name)
+			return (self.section_name, self.seat_count) > (other.section_name, other.seat_count)
 		except AttributeError:
 			return NotImplemented
 
@@ -551,7 +551,8 @@ def _find_mapped_course_for_scope(course, scope):
 			enrollment_count = ICourseEnrollments(section).count_enrollments()
 			items.append(SectionSeat(section_name, enrollment_count))
 			
-		# sort by lowest seat count, section name
+		# sort by lowest section name, seat count
+		# fill one section at a time
 		items.sort()
 		
 		section = None
