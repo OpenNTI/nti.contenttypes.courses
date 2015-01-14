@@ -283,10 +283,10 @@ class _ContentCourseSynchronizer(object):
 				lifecycleevent.modified(friendly_scope)
 				modified_scope = True
 
-			if (sharing_scope_data.get('avatarURL')
-				and sharing_scope_data.get('avatarURL') != getattr(scope, 'avatarURL', '')):
+			ssd_avatarURL = sharing_scope_data.get('avatarURL', None)
+			if (ssd_avatarURL and ssd_avatarURL != getattr(scope, 'avatarURL', '')):
 				interface.alsoProvides(scope, IAvatarURL)
-				scope.avatarURL = sharing_scope_data.get('avatarURL')
+				scope.avatarURL = ssd_avatarURL
 				modified_scope = True
 			else:
 				try:
