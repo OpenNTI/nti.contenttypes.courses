@@ -255,7 +255,6 @@ class _ContentCourseSynchronizer(object):
 		sharing_scopes_data = (ICourseInstanceVendorInfo(course)
 							   .get('NTI', {})
 							   .get("SharingScopesDisplayInfo", {}))
-
 		for scope in course.SharingScopes.values():
 			scope_name = scope.__name__
 			sharing_scope_data = sharing_scopes_data.get(scope_name, {})
@@ -288,19 +287,24 @@ class _ContentCourseSynchronizer(object):
 			inputed_avatarURL = sharing_scope_data.get('avatarURL', None)
 			if inputed_avatarURL:
 				if scope_avatarURL != inputed_avatarURL:
-					logger.info("Adjusting scope %s avatar to %s", 
-								scope_name, inputed_avatarURL)
+					logger.info("Adjusting scope %s avatar to %s for course %s", 
+								scope_name, inputed_avatarURL, cce.ntiid)
 					interface.alsoProvides(scope, IAvatarURL)
 					scope.avatarURL = inputed_avatarURL
 					modified_scope = True
 			else:
-				logger.warn("Removing scope %s avatar", scope_name)
+				removed = False
 				if hasattr(scope, 'avatarURL'):
+					removed = True
 					del scope.avatarURL
 					modified_scope = True
 				if IAvatarURL.providedBy(scope):
+					removed = True
 					interface.noLongerProvides(scope, IAvatarURL)
 					modified_scope = True
+				if removed:
+					logger.warn("Scope %s avatar was removed for course %s",
+								 scope_name, cce.ntiid)
 
 			if modified_scope:
 				lifecycleevent.modified(scope)
