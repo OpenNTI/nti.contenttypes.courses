@@ -257,10 +257,11 @@ class _ContentCourseSynchronizer(object):
 							   .get("SharingScopesDisplayInfo", {}))
 
 		for scope in course.SharingScopes.values():
-			sharing_scope_data = sharing_scopes_data.get(scope.__name__, {})
+			scope_name = scope.__name__
+			sharing_scope_data = sharing_scopes_data.get(scope_name, {})
 
 			friendly_scope = IFriendlyNamed(scope)
-			friendly_title = ENROLLMENT_SCOPE_VOCABULARY.getTerm(scope.__name__).title
+			friendly_title = ENROLLMENT_SCOPE_VOCABULARY.getTerm(scope_name).title
 
 			if sharing_scope_data.get('alias'):
 				alias = sharing_scope_data['alias']
@@ -283,19 +284,23 @@ class _ContentCourseSynchronizer(object):
 				lifecycleevent.modified(friendly_scope)
 				modified_scope = True
 
-			ssd_avatarURL = sharing_scope_data.get('avatarURL', None)
-			if (ssd_avatarURL and ssd_avatarURL != getattr(scope, 'avatarURL', '')):
-				interface.alsoProvides(scope, IAvatarURL)
-				scope.avatarURL = ssd_avatarURL
-				modified_scope = True
-			else:
-				try:
-					del scope.avatarURL
-				except AttributeError:
-					pass
-				else:
+			scope_avatarURL = getattr(scope, 'avatarURL', None)
+			inputed_avatarURL = sharing_scope_data.get('avatarURL', None)
+			if inputed_avatarURL:
+				if scope_avatarURL != inputed_avatarURL:
+					logger.info("Adjusting scope %s avatar to %s", 
+								scope_name, inputed_avatarURL)
+					interface.alsoProvides(scope, IAvatarURL)
+					scope.avatarURL = inputed_avatarURL
 					modified_scope = True
-				interface.noLongerProvides(scope, IAvatarURL)
+			else:
+				logger.warn("Removing scope %s avatar", scope_name)
+				if hasattr(scope, 'avatarURL'):
+					del scope.avatarURL
+					modified_scope = True
+				if IAvatarURL.providedBy(scope):
+					interface.noLongerProvides(scope, IAvatarURL)
+					modified_scope = True
 
 			if modified_scope:
 				lifecycleevent.modified(scope)
