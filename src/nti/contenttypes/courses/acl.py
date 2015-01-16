@@ -65,22 +65,27 @@ class CourseInstanceACLProvider(object):
 		course = self.context
 		sharing_scopes = course.SharingScopes
 		sharing_scopes.initScopes()
+		
+		## chose permission scopes
 		main_scopes = (sharing_scopes[ES_PUBLIC],)
 		if INonPublicCourseInstance.providedBy(course):
 			main_scopes = (sharing_scopes[ES_CREDIT], sharing_scopes[ES_PURCHASED])
+		
 		aces = [ace_allowing( IPrincipal(x), ACT_READ, CourseInstanceACLProvider)
 				for x in main_scopes]
+		
 		aces.extend( ace_allowing( i, ACT_READ, CourseInstanceACLProvider )
 					 for i in course.instructors)
 
-		# Subinstance instructors get the same permissions as
-		# their students.
+		## JZ: 2015-01-11 Subinstance instructors get the same permissions 
+		## as their students.
 		for subinstance in course.SubInstances.values():
-			aces.extend( ace_allowing( i, ACT_READ, CourseInstanceACLProvider )
-					 for i in subinstance.instructors)
+			aces.extend(ace_allowing( i, ACT_READ, CourseInstanceACLProvider )
+						for i in subinstance.instructors)
 
-		return acl_from_aces( aces )
-
+		result = acl_from_aces( aces )
+		return result
+	
 from nti.dataserver.traversal import find_interface
 
 @component.adapter(ICourseCatalogEntry)
