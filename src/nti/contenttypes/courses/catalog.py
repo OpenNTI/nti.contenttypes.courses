@@ -26,8 +26,8 @@ from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
-from nti.dataserver.containers import CheckingLastModifiedBTreeContainer
 from nti.dataserver.containers import CheckingLastModifiedBTreeFolder
+from nti.dataserver.containers import CheckingLastModifiedBTreeContainer
 
 from nti.externalization.persistence import NoPickle
 from nti.externalization.representation import WithRepr

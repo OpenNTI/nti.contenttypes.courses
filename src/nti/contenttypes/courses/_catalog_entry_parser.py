@@ -11,8 +11,9 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import datetime
 from urlparse import urljoin
+from datetime import datetime
+from datetime import timedelta
 
 from zope import interface
 from zope.interface.common.idatetime import IDateTime
@@ -77,7 +78,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		# We have durations as strings like "16 weeks"
 		duration_number, duration_kind = info_json_dict['duration'].split()
 		# Turn those into keywords for timedelta.
-		catalog_entry.Duration = datetime.timedelta(**{duration_kind.lower():int(duration_number)})
+		catalog_entry.Duration = timedelta(**{duration_kind.lower():int(duration_number)})
 		# Ensure the end date is derived properly
 		assert catalog_entry.StartDate is None or catalog_entry.EndDate
 	else:
@@ -88,7 +89,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		catalog_entry.Preview = info_json_dict['isPreview']
 	else:
 		_quiet_delattr(catalog_entry, 'Preview')
-		if catalog_entry.StartDate and datetime.datetime.utcnow() < catalog_entry.StartDate:
+		if catalog_entry.StartDate and datetime.utcnow() < catalog_entry.StartDate:
 			assert catalog_entry.Preview
 
 	if info_json_dict.get('disable_calendar_overview',None) is not None:
@@ -107,7 +108,8 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 			# XXX:  The need to map catalog instructors to the actual
 			# instructors is going away, coming from a new place
 			try:
-				if Entity.get_entity(username) is None and Entity.get_entity(userid) is not None:
+				if 	Entity.get_entity(username) is None and \
+					Entity.get_entity(userid) is not None:
 					username = userid
 			except LookupError:
 				# no dataserver
@@ -133,8 +135,9 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 	else:
 		_quiet_delattr(catalog_entry, 'Video')
 	if 'credit' in info_json_dict:
-		catalog_entry.Credit = [CourseCreditLegacyInfo(Hours=d['hours'],Enrollment=d['enrollment'])
-								for d in info_json_dict.get('credit', [])]
+		catalog_entry.Credit = \
+			 [	CourseCreditLegacyInfo(Hours=d['hours'], Enrollment=d['enrollment'])
+				for d in info_json_dict.get('credit', []) ]
 	else:
 		_quiet_delattr(catalog_entry, 'Credit')
 

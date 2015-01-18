@@ -85,6 +85,7 @@ class CourseInstanceSharingScope(Community):
 # weak ref. Plus, there are parts of the code that expect
 # IWeakRef to entity to have a username...
 from nti.intid.wref import ArbitraryOrderableWeakRef
+
 class _CourseInstanceSharingScopeWeakRef(ArbitraryOrderableWeakRef):
 
 	@property
@@ -96,6 +97,7 @@ class _CourseInstanceSharingScopeWeakRef(ArbitraryOrderableWeakRef):
 # Similarly for acting as principals
 from nti.dataserver.authorization import _CommunityGroup
 from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
+
 @interface.implementer(IUseNTIIDAsExternalUsername)
 class _CourseInstanceSharingScopePrincipal(_CommunityGroup):
 
@@ -179,8 +181,8 @@ class CourseSubInstanceSharingScopes(CourseInstanceSharingScopes):
 # Event handling to get sharing correct.
 ###
 
-from zope.lifecycleevent import IObjectModifiedEvent
 from zope.lifecycleevent import IObjectMovedEvent
+from zope.lifecycleevent import IObjectModifiedEvent
 
 # We may have intid-weak references to these things,
 # so we need to catch them on the IntIdRemoved event
@@ -435,6 +437,5 @@ def get_default_sharing_scope( context ):
 					"DefaultSharingScope referencing parent of top-level course."
 				# TODO Is this correct, or only correct for Public?
 				course = context.__parent__.__parent__
-
 			result = course.SharingScopes[ scope ]
 	return result

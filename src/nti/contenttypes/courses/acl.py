@@ -25,8 +25,8 @@ from nti.dataserver.interfaces import IACLProvider
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ACT_CREATE
 from nti.dataserver.authorization_acl import ace_denying
-from nti.dataserver.authorization_acl import acl_from_aces
 from nti.dataserver.authorization_acl import ace_allowing
+from nti.dataserver.authorization_acl import acl_from_aces
 
 from nti.utils.property import Lazy
 

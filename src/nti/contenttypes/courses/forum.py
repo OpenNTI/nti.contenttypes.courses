@@ -11,7 +11,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-
 from . import MessageFactory as _
 
 from zope import interface

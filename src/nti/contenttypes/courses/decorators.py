@@ -280,7 +280,8 @@ class _SharedScopesForumDecorator(AbstractAuthenticatedRequestAwareDecorator):
 			scope_name = getattr(context, 'SharingScopeName', None)
 		if not scope_name:
 			# ok, is it on the tagged value?
-			scope_name = interface.providedBy(context).get('SharingScopeName').queryTaggedValue('value')
+			provided_by = interface.providedBy(context)
+			scope_name = provided_by.get('SharingScopeName').queryTaggedValue('value')
 
 		if scope_name:
 			result.setdefault('AutoTags', []).append('SharingScopeName=' + scope_name)
