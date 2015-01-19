@@ -492,13 +492,13 @@ def check_enrollment_mapped(context):
 			result = True
 			if scope not in ENROLLMENT_SCOPE_VOCABULARY:
 				raise KeyError("Unknown scope", scope)
-			
+
 			if isinstance(data, six.string_types):
 				data = {data:sys.maxint}
-				
+
 			# we better get a mapping
 			assert isinstance(data, Mapping)
-			
+
 			# validate section and seat count
 			for sec_name, seat_count in data.items():
 				if sec_name not in course.SubInstances:
@@ -516,7 +516,7 @@ class SectionSeat(object):
 	def __init__(self, section_name, seat_count):
 		self.seat_count = seat_count
 		self.section_name = section_name
-		
+
 	def __lt__(self, other):
 		try:
 			return (self.section_name, self.seat_count) < (other.section_name, other.seat_count)
@@ -539,7 +539,7 @@ def _get_enrollment_map(context):
 				data = {data:sys.maxint}
 			result[scope] = data
 	return result
-	
+
 def _find_mapped_course_for_scope(course, scope):
 	enrollment_map = _get_enrollment_map(course)
 	section_data = enrollment_map.get(scope)
@@ -550,25 +550,25 @@ def _find_mapped_course_for_scope(course, scope):
 			section = course.SubInstances[section_name]
 			enrollment_count = ICourseEnrollments(section).count_enrollments()
 			items.append(SectionSeat(section_name, enrollment_count))
-			
+
 		# sort by lowest section name, seat count
 		# fill one section at a time
 		items.sort()
-		
+
 		section = None
 		for item in items:
 			section_name, estimated_seat_count = item.section_name, item.seat_count
 			max_seat_count = section_data[section_name]
 			if estimated_seat_count < max_seat_count:
 				return course.SubInstances[section_name]
-			
+
 		# could not find a section simply pick at random
 		index = random.randint(0, len(items)-1)
 		section_name = items[index].section_name
 		section = course.SubInstances[section_name]
 		logger.warn("Seat count exceed for section %s", section_name)
 		return section
-	
+
 	return course
 
 @component.adapter(IEnrollmentMappedCourseInstance)
@@ -588,7 +588,7 @@ class EnrollmentMappedCourseEnrollmentManager(DefaultCourseEnrollmentManager):
 					   else ICourseEnrollmentManager(mapped_course))
 			return manager.enroll(principal, scope=scope, context=context)
 
-		return super(EnrollmentMappedCourseEnrollmentManager,self).enroll(principal, 
+		return super(EnrollmentMappedCourseEnrollmentManager,self).enroll(principal,
 																		  scope=scope,
 																		  context=context)
 
@@ -658,6 +658,7 @@ class DefaultCourseEnrollments(object):
 		return len(self._inst_enrollment_storage)
 
 	def get_enrollment_for_principal(self, principal):
+		# TODO We get ConnectionStateErrors down this code path.
 		principal_id = IPrincipal(principal).id
 		return self._inst_enrollment_storage.get(principal_id)
 
@@ -777,10 +778,10 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 
 	__parent__ = None
 	__name__ = None
-	
+
 	parameters = {}
 	mime_type = mimeType = 'application/vnd.nextthought.courses.defaultcourseinstanceenrollmentrecord'
-	
+
 	Scope = FieldProperty(ICourseInstanceEnrollmentRecord['Scope'])
 
 	def __init__(self, **kwargs):
@@ -811,7 +812,7 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 	Principal = property(_get_Principal, _set_Principal)
 
 	Creator = creator = alias('Principal')
-	
+
 	def __eq__(self, other):
 		try:
 			return self is other or (self.__name__, self.__parent__) == (other.__name__, other.__parent__)
@@ -920,7 +921,7 @@ def migrate_enrollments_from_course_to_course(source, dest, verbose=False, resul
 		if IPrincipal(source_enrollment.Principal, None) is None:
 			log("Ignoring dup enrollment for %s", source_prin_id)
 			continue
-		
+
 		mover = IObjectMover(source_enrollment)
 		mover.moveTo(dest_enrollments)
 		result.append(source_prin_id)
