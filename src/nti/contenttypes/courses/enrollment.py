@@ -130,7 +130,10 @@ def remove_from_container(container, key, event=False):
 	if event:
 		del container[key]
 	else:
+		value = container[key]
 		container._delitemf(key)
+		lifecycleevent.removed(value, container, key)
+		locate(value, parent=None, name=None)
 		try:
 			container.updateLastMod()
 		except AttributeError:
