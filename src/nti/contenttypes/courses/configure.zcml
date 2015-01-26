@@ -244,6 +244,9 @@
 
 		<subscriber	factory=".metadata_index._OutlinePrincipalObjectsIntIds"
 					provides="nti.dataserver.interfaces.IPrincipalMetadataObjectsIntIds" />
+					
+		<subscriber	factory=".metadata_index._EnrollmentPrincipalObjectsIntIds"
+					provides="nti.dataserver.interfaces.IPrincipalMetadataObjectsIntIds" />
 	</configure>
 
 	<!--

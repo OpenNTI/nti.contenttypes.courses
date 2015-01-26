@@ -17,6 +17,7 @@ from zope import interface
 from ZODB.interfaces import IBroken
 from ZODB.POSException import POSError
 
+from nti.dataserver.interfaces import IUser
 from nti.dataserver.interfaces import ISystemUserPrincipal
 from nti.dataserver.interfaces import IPrincipalMetadataObjectsIntIds
 
@@ -26,6 +27,7 @@ from nti.utils.property import Lazy
 
 from .interfaces import ICourseCatalog
 from .interfaces import ICourseInstance
+from .interfaces import IPrincipalEnrollments
 
 def get_uid(obj, intids=None):
 	intids = component.getUtility(zope.intid.IIntIds) if intids is None else intids
@@ -99,6 +101,26 @@ class _OutlinePrincipalObjectsIntIds(_BasePrincipalObjectsIntIds):
 			for course in course_collector():
 				for node in outline_nodes_collector(course):
 					uid = get_uid(node, intids)
+					if uid is not None:
+						result.add(uid)
+		run_job_in_all_host_sites(_collector)
+		for uid in result:
+			yield uid
+
+@component.adapter(IUser)
+class _EnrollmentPrincipalObjectsIntIds(_BasePrincipalObjectsIntIds):
+
+	def __init__(self, user):
+		self.user = user
+	
+	def iter_intids(self, intids=None):
+		result = set()
+		user = self.user
+		intids = self._intids if intids is None else intids
+		def _collector():
+			for enrollments in component.subscribers( (user,), IPrincipalEnrollments):
+				for enrollment in enrollments.iter_enrollments():
+					uid = get_uid(enrollment, intids)
 					if uid is not None:
 						result.add(uid)
 		run_job_in_all_host_sites(_collector)
