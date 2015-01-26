@@ -16,8 +16,7 @@ from functools import total_ordering
 
 from zope import interface
 from zope import component
-
-from .interfaces import ICourseInstance
+from zope.cachedescriptors.method import cachedIn
 
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
 
@@ -29,6 +28,8 @@ from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 from nti.dataserver.containers import CheckingLastModifiedBTreeFolder
 from nti.dataserver.containers import CheckingLastModifiedBTreeContainer
 
+from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
+
 from nti.externalization.persistence import NoPickle
 from nti.externalization.representation import WithRepr
 
@@ -36,20 +37,18 @@ from nti.schema.schema import EqHash
 from nti.schema.fieldproperty import createDirectFieldProperties
 from nti.schema.schema import PermissiveSchemaConfigured as SchemaConfigured
 
+from nti.site.localutility import queryNextUtility
+
 from nti.utils.property import alias
 from nti.utils.property import readproperty
 from nti.utils.property import LazyOnClass
-from zope.cachedescriptors.method import cachedIn
 
-from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
-
+from .interfaces import ICourseCatalog
+from .interfaces import ICourseInstance
+from .interfaces import ICourseCatalogEntry
 from .interfaces import IGlobalCourseCatalog
 from .interfaces import IPersistentCourseCatalog
-from .interfaces import ICourseCatalog
-from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseCatalogInstructorInfo
-
-from nti.site.localutility import queryNextUtility
 
 def _queryNextCatalog(context):
 	return queryNextUtility(context,ICourseCatalog)
@@ -140,8 +139,6 @@ class _AbstractCourseCatalogMixin(object):
 
 		return parent.getCatalogEntry(name)
 
-
-
 @interface.implementer(IGlobalCourseCatalog)
 @NoPickle
 @WithRepr
@@ -231,7 +228,6 @@ class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
 			return False
 
 	__getitem__ = _AbstractCourseCatalogMixin.getCatalogEntry
-
 
 @interface.implementer(ICourseCatalogInstructorInfo)
 @WithRepr
@@ -426,7 +422,6 @@ def _clear_catalog_cache_when_course_updated(course, event):
 	# there (still invalidate locally, though, so it takes effect for
 	# the rest of the transaction). Fortunately these objects are tiny and
 	# have almost no state, so this doesn't bloat the transaction much
-
 
 	catalogs = []
 	# Include the parent, if we have one

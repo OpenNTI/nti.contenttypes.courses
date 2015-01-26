@@ -40,7 +40,7 @@ def get_uid(obj, intids=None):
 				logger.warn("ignoring unregistered object %s", obj)
 			else:
 				return uid
-	except (POSError):
+	except (TypeError, POSError):
 		logger.error("ignoring broken object %s", type(obj))
 	return None
 
