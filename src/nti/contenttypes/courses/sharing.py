@@ -204,6 +204,9 @@ def _adjust_scope_membership(record, course,
 	if principal is not None:
 		join = getattr(principal, join)
 		follow = getattr(principal, follow)
+	else:
+		join = follow = None
+		
 	scopes = course.SharingScopes
 
 	if relevant_scopes is None:
@@ -222,12 +225,14 @@ def _adjust_scope_membership(record, course,
 			continue
 
 		try:
-			join(scope)
+			if join is not None:
+				join(scope)
 		except ignored_exceptions:
 			pass
 
 		try:
-			follow(scope)
+			if follow is not None:
+				follow(scope)
 		except ignored_exceptions:
 			pass
 
