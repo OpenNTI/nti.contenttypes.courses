@@ -286,6 +286,9 @@ def _principal_is_enrolled_in_related_course(principal, course):
 	return result
 
 def add_principal_to_course_content_roles(principal, course):
+	if principal is None:
+		return
+	
 	membership = component.getAdapter(principal, IMutableGroupMember, 
 									  CONTENT_ROLE_PREFIX)
 	orig_groups = set(membership.groups)
@@ -297,6 +300,9 @@ def add_principal_to_course_content_roles(principal, course):
 		membership.setGroups(final_groups)
 
 def remove_principal_from_course_content_roles(principal, course):
+	if principal is None:
+		return
+	
 	roles_to_remove = _content_roles_for_course_instance(course)
 	membership = component.getAdapter(principal, IMutableGroupMember, 
 									  CONTENT_ROLE_PREFIX)
@@ -362,6 +368,9 @@ def on_modified_update_scope_membership(record, event):
 	# Try hard to avoid firing events for scopes we don't actually
 	# need to exit or add
 	principal = record.Principal
+	if principal is None:
+		return
+	
 	sharing_scopes = record.CourseInstance.SharingScopes
 	
 	scopes_i_should_be_in = sharing_scopes.getAllScopesImpliedbyScope(record.Scope)
