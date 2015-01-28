@@ -236,6 +236,9 @@ def _adjust_scope_membership(record, course,
 		except ignored_exceptions:
 			pass
 
+from ZODB.POSException import POSError
+
+from nti.dataserver.interfaces import IUser
 from nti.dataserver.interfaces import IMutableGroupMember
 from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
 from nti.dataserver.authorization import role_for_providers_content
@@ -244,6 +247,14 @@ from nti.ntiids import ntiids
 
 from .interfaces import ICourseSubInstance
 from .interfaces import ICourseEnrollments
+
+def get_principal(principal):
+	try:
+		if principal is None or IUser(principal, None) is None:
+			principal = None
+	except (TypeError, POSError):
+		principal = None
+	return principal
 
 def _content_roles_for_course_instance(course):
 	"""
@@ -278,15 +289,16 @@ def _principal_is_enrolled_in_related_course(principal, course):
 		potential_other_courses.extend((x for x in main_course.SubInstances.values()
 										if x is not course))
 
-	for other in potential_other_courses:
-		enrollments = ICourseEnrollments(other)
-		if enrollments.get_enrollment_for_principal(principal) is not None:
-			result.append(other)
-
+	principal = get_principal(principal)
+	if principal is not None:
+		for other in potential_other_courses:
+			enrollments = ICourseEnrollments(other)
+			if enrollments.get_enrollment_for_principal(principal) is not None:
+				result.append(other)
 	return result
 
 def add_principal_to_course_content_roles(principal, course):
-	if principal is None:
+	if get_principal(principal) is None:
 		return
 	
 	membership = component.getAdapter(principal, IMutableGroupMember, 
@@ -300,7 +312,7 @@ def add_principal_to_course_content_roles(principal, course):
 		membership.setGroups(final_groups)
 
 def remove_principal_from_course_content_roles(principal, course):
-	if principal is None:
+	if get_principal(principal) is None:
 		return
 	
 	roles_to_remove = _content_roles_for_course_instance(course)
@@ -331,7 +343,7 @@ def on_drop_exit_scope_membership(record, event, course=None):
 	content access.
 	"""
 
-	principal = record.Principal
+	principal = get_principal(record.Principal)
 	course = course or record.CourseInstance
 
 	related_enrolled_courses = \
@@ -367,7 +379,7 @@ def on_modified_update_scope_membership(record, event):
 
 	# Try hard to avoid firing events for scopes we don't actually
 	# need to exit or add
-	principal = record.Principal
+	principal = get_principal(record.Principal)
 	if principal is None:
 		return
 	
