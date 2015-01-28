@@ -201,8 +201,9 @@ def _adjust_scope_membership(record, course,
 							 related_enrolled_courses=()):
 	course = course or record.CourseInstance
 	principal = record.Principal
-	join = getattr(principal, join)
-	follow = getattr(principal, follow)
+	if principal is not None:
+		join = getattr(principal, join)
+		follow = getattr(principal, follow)
 	scopes = course.SharingScopes
 
 	if relevant_scopes is None:
