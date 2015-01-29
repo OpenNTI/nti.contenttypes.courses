@@ -127,11 +127,8 @@ def sync_catalog_when_library_synched(library, event):
 		return
 
 	enumeration = IDelimitedHierarchyContentPackageEnumeration(library)
-
 	enumeration_root = enumeration.root
-
 	courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
-
 	if courses_bucket is None:
 		logger.info("Not synchronizing: no directory named %s in %s for catalog %s",
 					catalog.__name__, getattr(enumeration_root, 'absolute_path', enumeration_root),
@@ -141,5 +138,6 @@ def sync_catalog_when_library_synched(library, event):
 	logger.info( "Synchronizing course catalog %s in site %s from directory %s",
 				 catalog, site_manager.__parent__.__name__,
 				 getattr(courses_bucket, 'absolute_path', courses_bucket) )
-	component.getMultiAdapter( (catalog, courses_bucket),
-							   IObjectEntrySynchronizer).synchronize(catalog, courses_bucket)
+	synchronizer = component.getMultiAdapter( (catalog, courses_bucket),
+							   				  IObjectEntrySynchronizer)
+	synchronizer.synchronize(catalog, courses_bucket)
