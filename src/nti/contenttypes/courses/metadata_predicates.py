@@ -46,7 +46,6 @@ class _CoursePrincipalObjects(BasePrincipalObjects):
 
 	def iter_objects(self, intids=None):
 		result = []
-		intids = self._intids if intids is None else intids
 		def _collector():
 			for course in course_collector():
 				result.append(course)
