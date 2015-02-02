@@ -49,17 +49,6 @@ class _CoursePrincipalObjects(BasePrincipalObjects):
 		def _collector():
 			for course in course_collector():
 				result.append(course)
-		run_job_in_all_host_sites(_collector)
-		for obj in result:
-			yield obj
-
-@component.adapter(ISystemUserPrincipal)
-class _OutlinePrincipalObjects(BasePrincipalObjects):
-
-	def iter_objects(self):
-		result = []
-		def _collector():
-			for course in course_collector():
 				for node in outline_nodes_collector(course):
 					result.append(node)
 		run_job_in_all_host_sites(_collector)
