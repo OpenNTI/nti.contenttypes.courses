@@ -16,6 +16,8 @@ from datetime import datetime
 from zope import interface
 from zope import component
 
+from nti.common.property import readproperty
+
 from nti.schema.field import Int
 from nti.schema.field import Dict
 from nti.schema.field import List
@@ -25,8 +27,6 @@ from nti.schema.field import ValidURI
 from nti.schema.field import ValidTextLine
 from nti.schema.schema import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
-
-from nti.utils.property import readproperty
 
 from .interfaces import ICourseCatalog
 from .interfaces import ICourseCatalogEntry
@@ -193,7 +193,7 @@ def _ntiid_from_entry(entry, nttype='CourseInfo'):
 					   specific=make_specific_safe(relative_path))
 	return ntiid
 
-from nti.utils.property import CachedProperty
+from nti.common.property import CachedProperty
 
 class PersistentCourseCatalogLegacyEntry(CourseCatalogLegacyEntry,
 										 PersistentCreatedAndModifiedTimeObject):

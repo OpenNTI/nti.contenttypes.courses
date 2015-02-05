@@ -16,6 +16,8 @@ from zope import component
 
 from zope.security.interfaces import IPrincipal
 
+from nti.common.property import Lazy
+
 from nti.dataserver.interfaces import ACE_DENY_ALL
 from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
 from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
@@ -27,8 +29,6 @@ from nti.dataserver.authorization import ACT_CREATE
 from nti.dataserver.authorization_acl import ace_denying
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
-
-from nti.utils.property import Lazy
 
 from .interfaces import ES_PUBLIC
 from .interfaces import ES_CREDIT

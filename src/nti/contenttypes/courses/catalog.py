@@ -18,6 +18,10 @@ from zope import interface
 from zope import component
 from zope.cachedescriptors.method import cachedIn
 
+from nti.common.property import alias
+from nti.common.property import LazyOnClass
+from nti.common.property import readproperty
+
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
 
 from nti.dataserver.links import Link
@@ -38,10 +42,6 @@ from nti.schema.fieldproperty import createDirectFieldProperties
 from nti.schema.schema import PermissiveSchemaConfigured as SchemaConfigured
 
 from nti.site.localutility import queryNextUtility
-
-from nti.utils.property import alias
-from nti.utils.property import readproperty
-from nti.utils.property import LazyOnClass
 
 from .interfaces import ICourseCatalog
 from .interfaces import ICourseInstance
