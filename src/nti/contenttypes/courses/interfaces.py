@@ -837,6 +837,11 @@ class ICourseEnrollments(interface.Interface):
 	that specialized versions will be provided tailored to specific consumers.
 	"""
 
+	def iter_principals():
+		"""
+		Iterate across principal names information for the context.
+		"""
+	
 	def iter_enrollments():
 		"""
 		Iterate across enrollment information for the context.

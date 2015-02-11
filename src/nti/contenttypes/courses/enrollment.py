@@ -651,6 +651,9 @@ class DefaultCourseEnrollments(object):
 		# attempt to readCurrent or add to connections
 		return IDefaultCourseInstanceEnrollmentStorage(self.context)
 
+	def iter_principals(self):
+		return self._inst_enrollment_storage.keys()
+	
 	def iter_enrollments(self):
 		return self._inst_enrollment_storage.values()
 
