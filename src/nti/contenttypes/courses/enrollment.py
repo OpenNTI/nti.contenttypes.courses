@@ -661,7 +661,6 @@ class DefaultCourseEnrollments(object):
 		return len(self._inst_enrollment_storage)
 
 	def get_enrollment_for_principal(self, principal):
-		# TODO We get ConnectionStateErrors down this code path.
 		principal_id = IPrincipal(principal).id
 		return self._inst_enrollment_storage.get(principal_id)
 
