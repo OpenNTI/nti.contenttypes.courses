@@ -81,7 +81,7 @@ def fill_outline_from_node(outline, course_element): #pylint:disable=I0011,R0912
 			# even if blank).
 			# If the XML itself has a value, that overrides
 
-			content_units = library.pathToNTIID(topic_ntiid) if library else None
+			content_units = library.pathToNTIID(topic_ntiid, skip_cache=True) if library else None
 			if not content_units:
 				logger.warn("Unable to find referenced course node %s", topic_ntiid)
 				content_unit = None
