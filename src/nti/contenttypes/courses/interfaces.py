@@ -700,7 +700,8 @@ from zope.schema.vocabulary import SimpleVocabulary
 
 class ScopeTerm(SimpleTerm):
 
-	def __init__(self, value, title=None, implies=(), implied_by=(), vendor_key=None, vendor_key_prefix=None):
+	def __init__(self, value, title=None, implies=(), implied_by=(), 
+				 vendor_key=None, vendor_key_prefix=None):
 		SimpleTerm.__init__(self, value, title=title)
 		self.implies = implies
 		self.implied_by = implied_by
