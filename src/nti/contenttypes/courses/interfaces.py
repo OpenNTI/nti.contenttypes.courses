@@ -827,6 +827,11 @@ class IPrincipalEnrollments(interface.Interface):
 		"""
 		Iterate across enrollment information for the context.
 		"""
+		
+	def count_enrollments():
+		"""
+		Count enrollments for the context.
+		"""
 
 class ICourseEnrollments(interface.Interface):
 	"""

@@ -706,6 +706,9 @@ class DefaultPrincipalEnrollments(object):
 	def iter_enrollments(self):
 		return iter(self._all_enrollments)
 
+	def count_enrollments(self):
+		return len(self._all_enrollments)
+	
 	def _query_enrollments(self):
 		iprincipal = IPrincipal(self.principal, None)
 		if iprincipal is None:
