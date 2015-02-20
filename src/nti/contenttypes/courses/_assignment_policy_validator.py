@@ -56,7 +56,6 @@ class DefaultAssignmentPolicyValidator(object):
 			if assignment is None:
 				raise AssertionError('Could not find assignment %s' % ntiid)
 
-			count = 0
 			for part in assignment.parts:
 				for question in part.question_set.questions:
 					q_ntiid = question.ntiid
@@ -64,10 +63,6 @@ class DefaultAssignmentPolicyValidator(object):
 					if not points or int(points) <= 0:
 						msg = "Invalid points in policy for question %s" % q_ntiid
 						raise ValueError(msg)
-					count += points
-
-			if  total_points != sum:
-				raise AssertionError("Sum of questions points is not assigment total points")
 		else:
 			logger.warn("Don't know how to validate policy %s in assignment", 
 						name, ntiid)
