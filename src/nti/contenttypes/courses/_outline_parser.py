@@ -16,14 +16,16 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import component
 
-from .outlines import CourseOutlineContentNode
-from .outlines import CourseOutlineCalendarNode
-from .outlines import CourseOutlineNode
-
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
-## too many branches
-def fill_outline_from_node(outline, course_element): #pylint:disable=I0011,R0912
+from .outlines import CourseOutlineNode
+from .outlines import CourseOutlineContentNode
+from .outlines import CourseOutlineCalendarNode
+
+# too many branches
+# pylint:disable=I0011,R0912
+
+def fill_outline_from_node(outline, course_element):
 	"""
 	Given a CourseOutline object and an eTree element object containing its
 	``unit`` and ``lesson`` definitions,
@@ -39,7 +41,6 @@ def fill_outline_from_node(outline, course_element): #pylint:disable=I0011,R0912
 	"""
 
 	outline.reset()
-
 	library = component.queryUtility(IContentPackageLibrary)
 
 	# TODO: Why do units in the toc have an NTIID?
@@ -77,8 +78,7 @@ def fill_outline_from_node(outline, course_element): #pylint:disable=I0011,R0912
 			__traceback_info__ = topic_ntiid
 
 			# Now give it the title and description of the content node,
-			# if they have them (they may not, but we require them,
-			# even if blank).
+			# if they have them (they may not, but we require them, even if blank).
 			# If the XML itself has a value, that overrides
 
 			content_units = library.pathToNTIID(topic_ntiid, skip_cache=True) if library else None
@@ -92,8 +92,6 @@ def fill_outline_from_node(outline, course_element): #pylint:disable=I0011,R0912
 				val = _attr_val(lesson, attr) or getattr(content_unit, attr, None)
 				if val:
 					setattr(lesson_node, attr, val)
-
-
 
 			# Now, if our node is supposed to have the NTIID, expose it.
 			# Even if it doesn't (and won't be in the schema and won't be
@@ -127,7 +125,6 @@ def fill_outline_from_node(outline, course_element): #pylint:disable=I0011,R0912
 
 	return outline
 
-
 def fill_outline_from_key(outline, key, xml_parent_name=None):
 	"""
 	Given a course outline node and a :class:`.IDelimitedHierarchyKey`,
@@ -159,5 +156,4 @@ def fill_outline_from_key(outline, key, xml_parent_name=None):
 	fill_outline_from_node( outline, node )
 
 	outline.lastModified = key.lastModified
-
 	return outline
