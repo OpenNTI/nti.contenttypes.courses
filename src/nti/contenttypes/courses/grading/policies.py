@@ -18,8 +18,6 @@ from zope.mimetype.interfaces import IContentTypeAware
 
 from zope.container.contained import Contained
 
-from persistent import Persistent
-
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQAssignmentPolicies
 
@@ -27,10 +25,14 @@ from nti.common.property import Lazy
 from nti.common.property import alias
 from nti.common.maps import CaseInsensitiveDict
 
+from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
+
 from nti.externalization.representation import WithRepr
 
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
+
+from nti.zodb.persistentproperty import PersistentPropertyHolder
 
 from ..interfaces import ICourseInstance
 
@@ -46,13 +48,13 @@ def get_assignment(ntiid):
 	return assignment
 
 @interface.implementer(IContentTypeAware)
-class BaseMixin(Persistent, SchemaConfigured, Contained):
+class BaseMixin(PersistentPropertyHolder, SchemaConfigured, Contained):
 	
 	parameters = {}
 
 	def __init__(self, *args, **kwargs):
 		# SchemaConfigured is not cooperative
-		Persistent.__init__(self)
+		PersistentPropertyHolder.__init__(self)
 		SchemaConfigured.__init__(self, *args, **kwargs)
 
 @WithRepr
@@ -133,7 +135,7 @@ class EqualGroupGrader(BaseMixin):
 
 @WithRepr
 @interface.implementer(ICourseGradingPolicy)
-class DefaultCourseGradingPolicy(BaseMixin):
+class DefaultCourseGradingPolicy(CreatedAndModifiedTimeMixin, BaseMixin):
 	createDirectFieldProperties(ICourseGradingPolicy)
 
 	mime_type = mimeType = 'application/vnd.nextthought.courses.grading.defaultpolicy'
