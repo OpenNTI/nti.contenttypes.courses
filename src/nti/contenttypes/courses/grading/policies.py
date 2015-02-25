@@ -77,17 +77,17 @@ class EqualGroupGrader(BaseMixin):
 		assert  round(count, 2) <= 1.0, \
 				"total category weight must be less than or equal to one"
 
-		categories = self.categories
+		categories = self._categories
 		for name in categories.keys():
 			assert name in self.groups, \
 				   "%s is an invalid group name" % name
 		
 		seen = set()
 		for name in self.groups.keys():
-			ids = categories.get(name)
-			assert ids, \
+			data = categories.get(name)
+			assert data, \
 				   "No assignment are defined for category %s" % name
-			for ntiid in ids:
+			for ntiid in [x['assignment'] for x in data]:
 				assert ntiid not in seen, \
 					   "Assignment %s is in multiple groups" % ntiid
 				seen.add(ntiid)
@@ -96,7 +96,7 @@ class EqualGroupGrader(BaseMixin):
 				if assignment is None:
 					raise AssertionError("assignment does not exists", ntiid)
 	@Lazy
-	def categories(self):
+	def _categories(self):
 		result = CaseInsensitiveDict()
 		policies = get_assignment_policies(self.course)
 		if policies is not None: 
@@ -106,20 +106,30 @@ class EqualGroupGrader(BaseMixin):
 					continue		  
 				if policy.get('excluded', False) or 'grader' not in policy:
 					continue
-				group = policy['grader'].get('group')
+				grader = policy['grader']
+				group = grader.get('group')
 				if group:
-					result.setdefault(group, set())
-					result[group].add(assignment)
+					# copy all data, include auto_grade info
+					data = CaseInsensitiveDict(policy.get('auto_grade', {}))
+					data['assignment'] = assignment
+					data.update(grader)
+					# add to map
+					result.setdefault(group, [])
+					result[group].append(data)
 		return result
 
 	@Lazy
-	def rev_categories(self):
+	def _rev_categories(self):
 		result = CaseInsensitiveDict()
-		for name, assignments in self.categories.items():
-			for assignment in assignments:
+		for name, data in self._categories.items():
+			for assignment in [x['assignment'] for x in data]:
 				result[assignment] = name
 		return result
 	
+	@Lazy
+	def _assignments(self):
+		return tuple(self._rev_categories.keys())
+
 	@property
 	def course(self):
 		return getattr(self.__parent__, 'course', None)

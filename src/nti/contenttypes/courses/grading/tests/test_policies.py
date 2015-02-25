@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from hamcrest.library.object.haslength import has_length
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -111,3 +112,8 @@ class TestPolicies(CourseLayerTest):
 		
 		mock_gap.is_callable().with_args().returns(cap)
 		policy.validate()
+		
+		assert_that(grader, has_property('_categories', has_length(2)))
+		assert_that(grader, has_property('_rev_categories', has_length(2)))
+		assert_that(grader, has_property('_assignments', has_length(2)))
+
