@@ -34,5 +34,6 @@ def parse_grading_policy(course, key):
 	
 	set_grading_policy_for_course(course, policy)
 	policy.synchronize()
+	policy.lastModified = key.lastModified
 
 	return policy
