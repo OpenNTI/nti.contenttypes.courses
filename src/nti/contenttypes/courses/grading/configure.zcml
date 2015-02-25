@@ -20,6 +20,7 @@
 	<ext:registerAutoPackageIO
 		root_interfaces=".interfaces.IGrader
 						 .interfaces.IEqualGroupGrader
+						 .interfaces.ICategoryGradeScheme
 						 .interfaces.ICourseGradingPolicy"
 		modules=".policies" />
 

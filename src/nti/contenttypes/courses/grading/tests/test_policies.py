@@ -24,9 +24,11 @@ from nti.contenttypes.courses.assignment import MappingAssignmentPolicies
 from nti.contenttypes.courses.grading import set_grading_policy_for_course
 
 from nti.contenttypes.courses.grading.policies import EqualGroupGrader
+from nti.contenttypes.courses.grading.policies import CategoryGradeScheme
+from nti.contenttypes.courses.grading.policies import DefaultCourseGradingPolicy
+
 from nti.contenttypes.courses.grading.interfaces import IEqualGroupGrader
 from nti.contenttypes.courses.grading.interfaces import ICourseGradingPolicy
-from nti.contenttypes.courses.grading.policies import DefaultCourseGradingPolicy
 
 from nti.externalization import internalization
 from nti.externalization import externalization
@@ -42,12 +44,12 @@ class TestPolicies(CourseLayerTest):
 
 	def test_equal_grader(self):
 		grader = EqualGroupGrader()
-		grader.groups = {'exams': 2}
+		grader.groups = {'exams': CategoryGradeScheme(Weight=0.2)}
 		assert_that( grader, validly_provides(IEqualGroupGrader) )
 		
 		ext_obj = externalization.toExternalObject(grader)
 		assert_that(ext_obj, all_of(has_key('Class'),
-									has_entry('Groups', has_entry('exams', 2)),
+									has_entry('Groups', has_entry('exams', has_entry('Weight', 0.2))),
 									has_entry('MimeType', 'application/vnd.nextthought.courses.grading.equalgroupgrader')))
 		
 		assert_that(internalization.find_factory_for(ext_obj),
@@ -58,14 +60,16 @@ class TestPolicies(CourseLayerTest):
 													 ext_obj,
 													 require_updater=True)
 		
-		assert_that(internal, has_property('Groups', has_entry('exams', 0.02)))
+		assert_that(internal, has_property('Groups', has_entry('exams',  has_property('Weight', 0.2))))
 
 	def test_validation_equal_grader(self):
 		grader = EqualGroupGrader()
-		grader.groups = {'exams': 0.2, "homeworks":0.9}
+		grader.groups = {'exams':CategoryGradeScheme(Weight=0.2),
+						 "homeworks": CategoryGradeScheme(Weight=0.9)}
 		with self.assertRaises(AssertionError):
 			grader.validate() # add more than one
-		grader.groups = {'exams': 0.2, "homeworks":0.7}
+		grader.groups = { 'exams':CategoryGradeScheme(Weight=0.2),
+						  'homeworks': CategoryGradeScheme(Weight=0.7)}
 		with self.assertRaises(AssertionError):
 			grader.validate() #
 	
@@ -78,7 +82,9 @@ class TestPolicies(CourseLayerTest):
 		connection.add(course)
 
 		grader = EqualGroupGrader()
-		grader.groups = {'exams': 0.2, "homeworks":0.8}
+		grader.groups = { 'exams':CategoryGradeScheme(Weight=0.2),
+						  'homeworks': CategoryGradeScheme(Weight=0.8)}
+		
 		policy = DefaultCourseGradingPolicy(Grader=grader)
 		assert_that(policy, has_property('Grader', is_(not_none())))
 		
@@ -93,7 +99,8 @@ class TestPolicies(CourseLayerTest):
 
 		ext_obj = externalization.toExternalObject(policy)
 		assert_that(ext_obj, all_of(has_key('Class'),
-									has_entry('Grader', has_entry('Groups', has_entry('homeworks', 0.8))),
+									has_entry('Grader', has_entry('Groups', 
+																  has_entry('homeworks', has_entry('Weight', 0.8)))),
 									has_entry('MimeType', 'application/vnd.nextthought.courses.grading.defaultpolicy')))
 		
 		internal = internalization.find_factory_for(ext_obj)()
@@ -101,8 +108,10 @@ class TestPolicies(CourseLayerTest):
 													ext_obj,
 													require_updater=True)
 		
-		assert_that(internal, has_property('Grader', has_property('Groups', has_entry('homeworks', 0.8))))
-		assert_that(internal, has_property('Grader', has_property('Groups', has_entry('exams', 0.2))))
+		assert_that(internal, has_property('Grader', has_property('Groups', 
+																 has_entry('homeworks', has_property('Weight', 0.8)))))
+		assert_that(internal, has_property('Grader', has_property('Groups',
+																 has_entry('exams', has_property('Weight', 0.2)))))
 		
 		mock_ga.is_callable().with_args().returns(fudge.Fake())
 		
@@ -114,6 +123,5 @@ class TestPolicies(CourseLayerTest):
 		policy.validate()
 		
 		assert_that(grader, has_property('_categories', has_length(2)))
-		assert_that(grader, has_property('_rev_categories', has_length(2)))
 		assert_that(grader, has_property('_assignments', has_length(2)))
-
+		assert_that(grader, has_property('_rev_categories', has_length(2)))

@@ -37,6 +37,7 @@ from nti.zodb.persistentproperty import PersistentPropertyHolder
 from ..interfaces import ICourseInstance
 
 from .interfaces import IEqualGroupGrader
+from .interfaces import ICategoryGradeScheme
 from .interfaces import ICourseGradingPolicy
 
 def get_assignment_policies(course):
@@ -58,6 +59,20 @@ class BaseMixin(PersistentPropertyHolder, SchemaConfigured, Contained):
 		SchemaConfigured.__init__(self, *args, **kwargs)
 
 @WithRepr
+@interface.implementer(ICategoryGradeScheme)
+class CategoryGradeScheme(BaseMixin):
+	
+	mime_type = mimeType = 'application/vnd.nextthought.courses.grading.categorygradescheme'
+	
+	createDirectFieldProperties(ICategoryGradeScheme)
+
+	LatePenalty = 1
+		
+	weight = alias('Weight')
+	penalty = alias('LatePenalty')
+	dropLowest = alias('DropLowest')
+
+@WithRepr
 @interface.implementer(IEqualGroupGrader)
 class EqualGroupGrader(BaseMixin):
 	createDirectFieldProperties(IEqualGroupGrader)
@@ -70,7 +85,8 @@ class EqualGroupGrader(BaseMixin):
 		assert self.groups, "must specify at least a group"
 		
 		count = 0
-		for name, weight in self.groups.items():
+		for name, category in self.groups.items():
+			weight = category.Weight
 			assert weight > 0 and weight <=1, "invalid weight for category %s" % name
 			count += weight
 			

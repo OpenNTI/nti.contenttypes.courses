@@ -11,6 +11,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from zope import interface
+
 from zope.container.interfaces import IContained
 
 from nti.dublincore.interfaces import ILastModified
@@ -30,10 +32,15 @@ class IGrader(IContained):
 		validate this grader
 		"""
 
+class ICategoryGradeScheme(interface.Interface):
+	Weight = Number(title="Category weight", default=0.0, min=0.0, max=1.0, required=True)
+	LatePenalty = Number(title="Late penalty", default=1, min=0.0, max=1.0, required=False)
+
 class IEqualGroupGrader(IGrader):
 
 	Groups = Dict(key_type=ValidTextLine(title="Category Name"),
-	  			  value_type=Number(title="Category Percentage"),
+	  			  value_type=Object(ICategoryGradeScheme, title="Category grade scheme",
+									required=True),
 				  min_length=1)
 
 
