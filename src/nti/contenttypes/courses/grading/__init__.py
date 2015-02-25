@@ -30,8 +30,6 @@ def _grading_policy_for_course(course):
         result = None
     return result
 
-@component.adapter(ICourseInstance)
-@interface.implementer(ICourseGradingPolicy)
 def set_grading_policy_for_course(course, policy=None):
     annotations = IAnnotations(course)
     if policy is None:

@@ -45,7 +45,7 @@ def get_assignment(ntiid):
 	assignment = component.queryUtility(IQAssignment, name=ntiid)
 	return assignment
 
-@interface.implementer(IEqualGroupGrader, IContentTypeAware)
+@interface.implementer(IContentTypeAware)
 class BaseMixin(Persistent, SchemaConfigured, Contained):
 	
 	parameters = {}
@@ -95,9 +95,9 @@ class EqualGroupGrader(BaseMixin):
 					raise AssertionError("assignment does not exists", ntiid)
 	@Lazy
 	def categories(self):
-		result = CaseInsensitiveDict(set)
+		result = CaseInsensitiveDict()
 		policies = get_assignment_policies(self.course)
-		if not policies: 
+		if policies is not None: 
 			for assignment in policies.assignments():
 				policy = policies.getPolicyForAssignment(assignment)
 				if not policy or not isinstance(policy, Mapping):
@@ -143,7 +143,7 @@ class DefaultCourseGradingPolicy(BaseMixin):
 	def __setattr__(self, name, value):
 		if name in ("Grader", "grader") and value is not None:
 			value.__parent__ = self
-		return SchemaConfigured.__setattr__(self, name, value)
+		return BaseMixin.__setattr__(self, name, value)
 
 	def validate(self):
 		assert self.grader, "must specify a grader"
@@ -157,3 +157,6 @@ class DefaultCourseGradingPolicy(BaseMixin):
 	@property
 	def course(self):
 		return ICourseInstance(self.__parent__, None)
+
+	def grade(self, *args, **kwargs):
+		raise NotImplementedError()

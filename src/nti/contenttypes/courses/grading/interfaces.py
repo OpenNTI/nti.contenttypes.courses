@@ -30,6 +30,13 @@ class IGrader(IContained):
 		validate this grader
 		"""
 
+class IEqualGroupGrader(IGrader):
+
+	Groups = Dict(key_type=ValidTextLine(title="Category Name"),
+	  			  value_type=Number(title="Category Percentage"),
+				  min_length=1)
+
+
 class ICourseGradingPolicy(IContained, ILastModified):
 	"""
 	A marker interface to store a course grading policy
@@ -51,9 +58,3 @@ class ICourseGradingPolicy(IContained, ILastModified):
 		"""
 		return the [current] grade for the specified user/principal
 		"""
-
-class IEqualGroupGrader(IGrader):
-
-	Groups = Dict(key_type=ValidTextLine(title="Category Name"),
-	  			  value_type=Number(title="Category Percentage"),
-				  min_length=1)
