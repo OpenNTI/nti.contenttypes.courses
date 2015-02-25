@@ -258,9 +258,6 @@
 	</configure>
 
 	<!-- Grading -->
-	<adapter factory=".grading._grading_policy_for_course" />
-	
-	<ext:registerAutoPackageIO
-		root_interfaces=".interfaces.ICourseGradingPolicy"
-		modules=".grading" />
+	<include package=".grading" />
+
 </configure>

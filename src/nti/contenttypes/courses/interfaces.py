@@ -940,26 +940,11 @@ class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
 									 default=ES_PURCHASED)
 	SharingScopeName.setTaggedValue('value', ES_PURCHASED)
 
-###
-# Policies
-###
 
-class ICourseGradingPolicy(IContained, ILastModified):
-	"""
-	A marker interface to store a course grading policy
-	"""
-	
-	def validate():
-		"""
-		validate this policy
-		"""
-		
-	def synchronize():
-		"""
-		Perform any adjustment of this policy during course synchronization
-		"""
-		
-	def grade(principal):
-		"""
-		return the [current] grade for the specified user/principal
-		"""
+import zope.deferredimport
+zope.deferredimport.initialize()
+zope.deferredimport.deprecatedFrom(
+	"Moved to nti.contenttypes.courses.grading.interfaces",
+	"nti.contenttypes.courses.grading.interfaces",
+	"ICourseGradingPolicy"
+)

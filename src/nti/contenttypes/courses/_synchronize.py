@@ -55,13 +55,13 @@ from .enrollment import check_deny_open_enrollment
 
 from .legacy_catalog import _ntiid_from_entry
 
+from .grading import parse_grading_policy
+from .grading import reset_grading_policy
+
 from ._role_parser import fill_roles_from_key
 from ._role_parser import reset_roles_missing_key
 
 from ._outline_parser import fill_outline_from_key
-
-from ._grading_policy_parser import parse_grading_policy
-from ._grading_policy_parser import reset_grading_policy
 
 from ._assignment_override_parser import fill_asg_from_key
 
@@ -246,7 +246,8 @@ class _ContentCourseSynchronizer(object):
 		# validate assigment policies
 		cls.validate_assigment_policies(course, bucket)
 		
-		# check grading policy
+		# check grading policy. it must be done after validating
+		# assigments
 		cls.upgade_grading_policy(course, bucket)
 		
 	@classmethod

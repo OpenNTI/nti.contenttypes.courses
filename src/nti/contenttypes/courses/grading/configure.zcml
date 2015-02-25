@@ -1,0 +1,31 @@
+<!-- -*- mode: nxml -*- -->
+<configure	xmlns="http://namespaces.zope.org/zope"
+			xmlns:i18n="http://namespaces.zope.org/i18n"
+			xmlns:ext="http://nextthought.com/ntp/ext"
+			xmlns:zcml="http://namespaces.zope.org/zcml"
+			i18n_domain="nti.dataserver">
+
+	<include package="zope.component" file="meta.zcml" />
+	<include package="zope.security" file="meta.zcml" />
+	<include package="zope.component" />
+	<include package="zope.security" />
+
+	<!-- Adapters -->
+	<adapter factory="._grading_policy_for_course" />
+	
+	<!-- Externalization -->
+	<include package="nti.externalization" file="meta.zcml" />
+	<include package="nti.externalization" />
+		
+	<ext:registerAutoPackageIO
+		root_interfaces=".interfaces.IGrader
+						 .interfaces.IEqualGroupGrader
+						 .interfaces.ICourseGradingPolicy"
+		modules=".policies" />
+
+	<!-- Internalization -->
+	<adapter factory=".internalization._EqualGroupGraderUpdater"
+			 for=".interfaces.IEqualGroupGrader"
+			 provides="nti.externalization.interfaces.IInternalObjectUpdater" />
+
+</configure>

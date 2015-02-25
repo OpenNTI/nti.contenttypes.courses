@@ -14,7 +14,7 @@ from nti.externalization.internalization import update_from_external_object
 
 from .interfaces import ICourseGradingPolicy
 
-from .grading import set_grading_policy_for_course
+from . import set_grading_policy_for_course
 
 def reset_grading_policy(course):
 	set_grading_policy_for_course(course, None)
