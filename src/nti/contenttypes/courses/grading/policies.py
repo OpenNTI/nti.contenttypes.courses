@@ -125,10 +125,13 @@ class EqualGroupGrader(BaseMixin):
 				grader = policy['grader']
 				group = grader.get('group')
 				if group:
-					# copy all data, include auto_grade info
-					data = CaseInsensitiveDict(policy.get('auto_grade', {}))
-					data['assignment'] = assignment
-					data.update(grader)
+					data = CaseInsensitiveDict()
+					auto_grade = policy.get('auto_grade', {})
+					total_points = auto_grade.get('total_points')
+					if total_points:
+						data['total_points'] = data['points'] = total_points
+					data.update(grader) # override
+					data['assignment'] = assignment # save 
 					# add to map
 					result.setdefault(group, [])
 					result[group].append(data)
