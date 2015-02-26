@@ -26,7 +26,8 @@ from zope.container.ordered import OrderedContainer
 from zope.container.contained import Contained, uncontained
 
 from nti.dataserver.interfaces import ITitledDescribedContent
-from nti.dataserver.datastructures import PersistentCreatedModDateTrackingObject
+
+from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
 
 # The exception to persistence is the top-level object, which
 # we expect to modify in place, and possible store references to
