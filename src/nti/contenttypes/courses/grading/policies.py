@@ -118,7 +118,7 @@ class EqualGroupGrader(BaseMixin):
 				if not policy or policy.get('excluded', False):
 					continue		  
 
-				auto_grade = policy.get('auto_grade', {})
+				auto_grade = policy.get('auto_grade') or {}
 				grader = policy.get('grader') or auto_grade.get('grader')
 				if not grader:
 					continue
