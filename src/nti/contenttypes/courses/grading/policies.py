@@ -21,7 +21,6 @@ from nti.assessment.interfaces import IQAssignmentPolicies
 
 from nti.common.property import Lazy
 from nti.common.property import alias
-from nti.common.maps import CaseInsensitiveDict
 
 from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
 
@@ -111,7 +110,7 @@ class EqualGroupGrader(BaseMixin):
 					raise AssertionError("assignment does not exists", ntiid)
 	@Lazy
 	def _categories(self):
-		result = CaseInsensitiveDict()
+		result = {}
 		policies = get_assignment_policies(self.course)
 		if policies is not None: 
 			for assignment in policies.assignments():
@@ -126,7 +125,7 @@ class EqualGroupGrader(BaseMixin):
 
 				group = grader.get('group')
 				if group:
-					data = CaseInsensitiveDict()
+					data = dict()
 					total_points = auto_grade.get('total_points')
 					if total_points:
 						data['total_points'] = data['points'] = total_points
@@ -139,7 +138,7 @@ class EqualGroupGrader(BaseMixin):
 
 	@Lazy
 	def _rev_categories(self):
-		result = CaseInsensitiveDict()
+		result = {}
 		for name, data in self._categories.items():
 			for assignment in [x['assignment'] for x in data]:
 				result[assignment] = name
