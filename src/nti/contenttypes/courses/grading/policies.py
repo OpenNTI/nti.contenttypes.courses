@@ -9,8 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from collections import Mapping
-
 from zope import component
 from zope import interface
 
@@ -118,21 +116,23 @@ class EqualGroupGrader(BaseMixin):
 		if policies is not None: 
 			for assignment in policies.assignments():
 				policy = policies.getPolicyForAssignment(assignment)
-				if not policy or not isinstance(policy, Mapping):
+				if not policy or policy.get('excluded', False):
 					continue		  
-				if policy.get('excluded', False) or 'grader' not in policy:
+
+				auto_grade = policy.get('auto_grade', {})
+				grader = policy.get('grader') or auto_grade.get('grader')
+				if not grader:
 					continue
-				grader = policy['grader']
+
 				group = grader.get('group')
 				if group:
 					data = CaseInsensitiveDict()
-					auto_grade = policy.get('auto_grade', {})
 					total_points = auto_grade.get('total_points')
 					if total_points:
 						data['total_points'] = data['points'] = total_points
 					data.update(grader) # override
 					data['assignment'] = assignment # save 
-					# add to map
+					
 					result.setdefault(group, [])
 					result[group].append(data)
 		return result
