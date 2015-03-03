@@ -23,11 +23,13 @@ from nti.common.property import LazyOnClass
 from nti.common.property import readproperty
 
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
-\
+
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
+
 from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
+
 from nti.dataserver.containers import CheckingLastModifiedBTreeFolder
 from nti.dataserver.containers import CheckingLastModifiedBTreeContainer
 
@@ -395,7 +397,7 @@ class CourseCatalogFolder(_AbstractCourseCatalogMixin,
 		_recur(self)
 		return entries
 
-from nti.dataserver.traversal import find_interface
+from nti.traversal.traversal import find_interface
 
 def _clear_catalog_cache_when_course_updated(course, event):
 	"""
@@ -425,8 +427,10 @@ def _clear_catalog_cache_when_course_updated(course, event):
 	# have almost no state, so this doesn't bloat the transaction much
 
 	catalogs = []
+
 	# Include the parent, if we have one
 	catalogs.append( find_interface(course, IPersistentCourseCatalog, strict=False) )
+
 	# If the event has oldParent and/or newParent, include them
 	for n in 'oldParent', 'newParent':
 		catalogs.append( find_interface(getattr(event, n, None),
