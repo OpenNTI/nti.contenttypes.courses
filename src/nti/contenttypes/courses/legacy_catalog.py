@@ -212,9 +212,9 @@ class PersistentCourseCatalogLegacyEntry(CourseCatalogLegacyEntry,
 
 from zope.annotation.factory import factory as an_factory
 
-from nti.dataserver.traversal import find_interface
-
 from nti.schema.schema import EqHash
+
+from nti.traversal.traversal import find_interface
 
 from .interfaces import ICourseInstance
 

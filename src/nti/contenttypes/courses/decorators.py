@@ -20,7 +20,6 @@ from zope import interface
 # support
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
-from nti.dataserver.traversal import find_interface
 from nti.dataserver.interfaces import IEntityContainer
 
 from nti.externalization.oids import to_external_ntiid_oid
@@ -36,6 +35,8 @@ from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 from nti.contenttypes.courses.sharing import get_default_sharing_scope
 
 from nti.ntiids.ntiids import make_specific_safe
+
+from nti.traversal.traversal import find_interface
 
 from .interfaces import ES_PUBLIC
 from .interfaces import ES_CREDIT

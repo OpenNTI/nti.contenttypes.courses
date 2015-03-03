@@ -86,7 +86,7 @@ class CourseInstanceACLProvider(object):
 		result = acl_from_aces( aces )
 		return result
 	
-from nti.dataserver.traversal import find_interface
+from nti.traversal.traversal import find_interface
 
 @component.adapter(ICourseCatalogEntry)
 @interface.implementer(IACLProvider)

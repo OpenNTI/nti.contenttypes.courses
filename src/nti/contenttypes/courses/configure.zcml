@@ -234,7 +234,7 @@
 			 for=".interfaces.ICourseInstance *"
 			 name="CourseCatalogEntry" />
 
-	<adapter factory="nti.dataserver.traversal.ContainerAdapterTraversable"
+	<adapter factory="nti.traversal.traversal.ContainerAdapterTraversable"
 			 for=".interfaces.ICourseInstance" />
 
 	<!-- Metadata -->

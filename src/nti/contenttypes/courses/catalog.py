@@ -23,8 +23,7 @@ from nti.common.property import LazyOnClass
 from nti.common.property import readproperty
 
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
-
-from nti.dataserver.links import Link
+\
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
@@ -36,6 +35,8 @@ from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
 
 from nti.externalization.persistence import NoPickle
 from nti.externalization.representation import WithRepr
+
+from nti.links.links import Link
 
 from nti.schema.schema import EqHash
 from nti.schema.fieldproperty import createDirectFieldProperties

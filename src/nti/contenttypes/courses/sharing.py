@@ -411,7 +411,7 @@ def on_modified_update_scope_membership(record, event):
 							  currently_in=currently_in,
 							  relevant_scopes=scopes_i_should_be_in)
 
-from nti.dataserver.traversal import find_interface
+from nti.traversal.traversal import find_interface
 
 from .interfaces import ICourseInstance
 
