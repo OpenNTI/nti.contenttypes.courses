@@ -15,7 +15,7 @@ from zope import interface
 
 from zope.container.interfaces import IContained
 
-from nti.dublincore.interfaces import ILastModified
+from nti.coremetadata.interfaces import ILastModified
 
 from nti.schema.field import Dict
 from nti.schema.field import Number
