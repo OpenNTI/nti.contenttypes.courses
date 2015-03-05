@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from ZODB import loglevels
+
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQAssignmentPolicies
 from nti.assessment.interfaces import IQAssignmentPolicyValidator
@@ -34,7 +36,8 @@ class DefaultAssignmentPolicyValidator(object):
 		if is_valid_ntiid_string(ntiid):
 			assignment = component.queryUtility(IQAssignment, name=ntiid)
 			if assignment is None:
-				logger.debug("Could not find assignment with ntiid %s", ntiid)
+				logger.log(	loglevels.TRACE,
+							"Could not find assignment with ntiid %s", ntiid)
 		else:
 			return
 			
