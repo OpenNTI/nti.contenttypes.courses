@@ -241,7 +241,7 @@ from zope.container.contained import Contained
 
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
 
-from nti.dataserver.links import Link
+from nti.links.links import Link
 
 from .interfaces import ICourseSubInstance
 
