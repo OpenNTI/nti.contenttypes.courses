@@ -24,21 +24,13 @@ setup(
 		'Operating System :: OS Independent',
 		'Programming Language :: Python :: 2',
 		'Programming Language :: Python :: 2.7',
-		'Programming Language :: Python :: 3',
-		'Programming Language :: Python :: 3.3',
-		'Topic :: Software Development :: Testing'
-		'Framework :: Pyramid',
+		'Programming Language :: Python :: Implementation :: CPython'
 	],
 	packages=find_packages('src'),
 	package_dir={'': 'src'},
 	namespace_packages=['nti', 'nti.contenttypes'],
 	install_requires=[
 		'setuptools',
-		# NOTE: We actually depend on nti.dataserver
-		# as well, but for the sake of legacy
-		# deployments, we do not yet declare that.
-		# We will declare it when everything is in
-		# buildout
 	],
 	entry_points=entry_points
 )
