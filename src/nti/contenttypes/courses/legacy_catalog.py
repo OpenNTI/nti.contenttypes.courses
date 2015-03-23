@@ -58,7 +58,8 @@ class ICourseCreditLegacyInfo(interface.Interface):
 	"""
 
 	Hours = Int(title="The number of hours that can be earned.",
-					   min=1)
+				default=0,
+				min=0)
 	Enrollment = Dict(title="Information about how to enroll. This is not modeled.",
 					  key_type=ValidTextLine(title="A key"),
 					  value_type=ValidTextLine(title="A value"))
