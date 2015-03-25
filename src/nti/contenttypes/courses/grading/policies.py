@@ -19,8 +19,8 @@ from zope.container.contained import Contained
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQAssignmentPolicies
 
-from nti.common.property import Lazy, CachedProperty
 from nti.common.property import alias
+from nti.common.property import CachedProperty
 
 from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
 
@@ -191,3 +191,15 @@ class DefaultCourseGradingPolicy(CreatedAndModifiedTimeMixin, BaseMixin):
 
 	def grade(self, *args, **kwargs):
 		raise NotImplementedError()
+
+	def updateLastMod(self, t=None):
+		result = super(DefaultCourseGradingPolicy, self).updateLastMod(t)
+		if self.grader is not None:
+			self.grader.updateLastMod(t)
+		return result
+
+	def updateLastModIfGreater( self, t ):
+		result = super(DefaultCourseGradingPolicy, self).updateLastModIfGreater(t)
+		if self.grader is not None:
+			self.grader.updateLastModIfGreater(t)
+		return result
