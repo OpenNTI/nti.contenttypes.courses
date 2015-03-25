@@ -396,9 +396,10 @@ class _ContentCourseSynchronizer(object):
 	def update_assignment_dates(cls, course, bucket):
 		key = bucket.getChildNamed(ASSIGNMENT_DATES_NAME)
 		if key is not None:
-			fill_asg_from_key(course, key)
+			return fill_asg_from_key(course, key)
 		else:
 			reset_asg_missing_key(course)
+			return True
 		
 	@classmethod
 	def upgade_grading_policy(cls, course, bucket):
