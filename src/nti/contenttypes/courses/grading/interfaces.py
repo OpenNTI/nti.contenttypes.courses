@@ -15,14 +15,14 @@ from zope import interface
 
 from zope.container.interfaces import IContained
 
-from nti.coremetadata.interfaces import ILastModified
+from nti.coremetadata.interfaces import @CachedProperty('lastModified')
 
 from nti.schema.field import Dict
 from nti.schema.field import Number
 from nti.schema.field import Object
 from nti.schema.field import ValidTextLine
 	
-class IGrader(IContained):
+class IGrader(IContained, ILastModified):
 	"""
 	Marker interface for a grader
 	"""

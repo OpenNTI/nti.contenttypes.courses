@@ -19,7 +19,7 @@ from zope.container.contained import Contained
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQAssignmentPolicies
 
-from nti.common.property import Lazy
+from nti.common.property import Lazy, CachedProperty
 from nti.common.property import alias
 
 from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
@@ -71,7 +71,7 @@ class CategoryGradeScheme(BaseMixin):
 
 @WithRepr
 @interface.implementer(IEqualGroupGrader)
-class EqualGroupGrader(BaseMixin):
+class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 	createDirectFieldProperties(IEqualGroupGrader)
 	
 	mime_type = mimeType = 'application/vnd.nextthought.courses.grading.equalgroupgrader'
@@ -108,7 +108,8 @@ class EqualGroupGrader(BaseMixin):
 				assignment = get_assignment(ntiid)
 				if assignment is None:
 					raise AssertionError("assignment does not exists", ntiid)
-	@Lazy
+				
+	@CachedProperty('lastModified')
 	def _categories(self):
 		result = {}
 		policies = get_assignment_policies(self.course)
@@ -136,7 +137,7 @@ class EqualGroupGrader(BaseMixin):
 					result[group].append(data)
 		return result
 
-	@Lazy
+	@CachedProperty('lastModified')
 	def _rev_categories(self):
 		result = {}
 		for name, data in self._categories.items():
@@ -144,7 +145,7 @@ class EqualGroupGrader(BaseMixin):
 				result[assignment] = name
 		return result
 	
-	@Lazy
+	@CachedProperty('lastModified')
 	def _assignments(self):
 		return tuple(self._rev_categories.keys())
 
