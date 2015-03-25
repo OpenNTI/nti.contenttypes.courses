@@ -42,7 +42,7 @@ def fill_asg_from_key(course, key):
 	dates = IQAssignmentDateContext(course)
 	policies = IQAssignmentPolicies(course)
 	if key.lastModified <= policies.lastModified:
-		return dates
+		return False
 
 	reset_asg_missing_key(course)
 	json = key.readContentsAsYaml()
@@ -84,4 +84,4 @@ def fill_asg_from_key(course, key):
 		policies[key] = {k: v for k,v in val.items()
 						 if k not in dropped_policies_keys}
 
-	return dates
+	return True
