@@ -237,7 +237,7 @@ class _ContentCourseSynchronizer(object):
 								 try_legacy_content_bundle=try_legacy_content_bundle)
 
 		cls.update_instructor_roles(course, bucket)
-		cls.update_assignment_dates(course, bucket)
+		policies_updated = cls.update_assignment_policies(course, bucket)
 
 		# make sure Discussions are initialized
 		getattr(course, 'Discussions')
@@ -248,7 +248,7 @@ class _ContentCourseSynchronizer(object):
 		
 		# check grading policy. it must be done after validating
 		# assigments
-		cls.upgade_grading_policy(course, bucket)
+		cls.upgade_grading_policy(course, bucket, policies_updated)
 		
 	@classmethod
 	def update_sharing_scopes_friendly_names(cls, course):
@@ -393,7 +393,7 @@ class _ContentCourseSynchronizer(object):
 			reset_roles_missing_key(course)
 
 	@classmethod
-	def update_assignment_dates(cls, course, bucket):
+	def update_assignment_policies(cls, course, bucket):
 		key = bucket.getChildNamed(ASSIGNMENT_DATES_NAME)
 		if key is not None:
 			return fill_asg_from_key(course, key)
@@ -402,10 +402,13 @@ class _ContentCourseSynchronizer(object):
 			return True
 		
 	@classmethod
-	def upgade_grading_policy(cls, course, bucket):
+	def upgade_grading_policy(cls, course, bucket, policies_updated=False):
 		key = bucket.getChildNamed(GRADING_POLICY_NAME)
 		if key is not None:
-			parse_grading_policy(course, key)
+			policy = parse_grading_policy(course, key)
+			# update last modified if update assignment policies has been updated
+			if policies_updated and policy is not None: 
+				policy.updateLastMod()
 		else:
 			reset_grading_policy(course)
 	
