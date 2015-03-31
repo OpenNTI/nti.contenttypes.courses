@@ -941,6 +941,16 @@ class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
 	SharingScopeName.setTaggedValue('value', ES_PURCHASED)
 
 
+class IObjectEntrySynchronizer(interface.Interface):
+	"""
+	Something to synchronize one object and possibly its children.
+	"""
+
+	def synchronize(obj, bucket, **kwargs):
+		"""
+		Synchronize the object from the bucket.
+		"""
+
 import zope.deferredimport
 zope.deferredimport.initialize()
 zope.deferredimport.deprecatedFrom(

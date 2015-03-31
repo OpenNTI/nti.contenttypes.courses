@@ -103,7 +103,7 @@ def uninstall_site_course_catalog(library, event):
 
 ### Sync-related subscribers
 
-from ._synchronize import IObjectEntrySynchronizer
+from .interfaces import IObjectEntrySynchronizer
 
 @component.adapter(IPersistentContentPackageLibrary, IContentPackageLibraryDidSyncEvent)
 def sync_catalog_when_library_synched(library, event):
@@ -113,6 +113,10 @@ def sync_catalog_when_library_synched(library, event):
 	we also synchronize the corresponding course catalog. (Because they could
 	change independently and in unknown ways)
 	"""
+
+	# packages synched
+	packages = event.packages
+	
 	# Find the local site manager
 	site_manager = component.getSiteManager(library)
 	if library.__parent__ is not site_manager:
@@ -138,6 +142,7 @@ def sync_catalog_when_library_synched(library, event):
 	logger.info( "Synchronizing course catalog %s in site %s from directory %s",
 				 catalog, site_manager.__parent__.__name__,
 				 getattr(courses_bucket, 'absolute_path', courses_bucket) )
+
 	synchronizer = component.getMultiAdapter( (catalog, courses_bucket),
 							   				  IObjectEntrySynchronizer)
-	synchronizer.synchronize(catalog, courses_bucket)
+	synchronizer.synchronize(catalog, courses_bucket, packages=packages)

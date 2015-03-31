@@ -55,9 +55,6 @@ from .enrollment import check_deny_open_enrollment
 
 from .legacy_catalog import _ntiid_from_entry
 
-from .grading import parse_grading_policy
-from .grading import reset_grading_policy
-
 from ._role_parser import fill_roles_from_key
 from ._role_parser import reset_roles_missing_key
 
@@ -70,6 +67,11 @@ from ._catalog_entry_parser import fill_entry_from_legacy_key
 from ._assignment_override_parser import reset_asg_missing_key
 from ._assignment_policy_validator import validate_assigment_policies
 
+from .grading import parse_grading_policy
+from .grading import reset_grading_policy
+
+from .interfaces import IObjectEntrySynchronizer
+
 SECTION_FOLDER_NAME = 'Sections'
 
 ROLE_INFO_NAME = 'role_info.json'
@@ -79,16 +81,6 @@ COURSE_OUTLINE_NAME = 'course_outline.xml'
 GRADING_POLICY_NAME = 'grading_policy.json'
 INSTRUCTOR_INFO_NAME = 'instructor_info.json'
 ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
-
-class IObjectEntrySynchronizer(interface.Interface):
-	"""
-	Something to synchronize one object and possibly its children.
-	"""
-
-	def synchronize(obj, bucket):
-		"""
-		Synchronize the object from the bucket.
-		"""
 
 @interface.implementer(IObjectEntrySynchronizer)
 class _GenericFolderSynchronizer(object):
@@ -112,7 +104,8 @@ class _GenericFolderSynchronizer(object):
 		# Otherwise, just a plain folder
 		return self._ADMIN_LEVEL_FACTORY
 
-	def synchronize(self, folder, bucket):
+	def synchronize(self, folder, bucket, **kwargs):
+		
 		# Find the things in the filesystem
 		child_buckets = dict()
 		for item in bucket.enumerateChildren():
@@ -149,7 +142,7 @@ class _GenericFolderSynchronizer(object):
 			child_bucket = child_buckets[child_name]
 			sync = component.getMultiAdapter( (child, child_bucket),
 											  IObjectEntrySynchronizer)
-			sync.synchronize(child, child_bucket)
+			sync.synchronize(child, child_bucket, **kwargs)
 
 @interface.implementer(IObjectEntrySynchronizer)
 @component.adapter(ICourseInstance, IDelimitedHierarchyBucket)
@@ -158,7 +151,7 @@ class _ContentCourseSynchronizer(object):
 	def __init__(self, course, bucket):
 		pass
 
-	def synchronize(self, course, bucket):
+	def synchronize(self, course, bucket, **kwargs):
 		# TODO: Need to be setting NTIIDs based on the
 		# bucket path for these guys
 		__traceback_info__ = course, bucket
@@ -196,7 +189,7 @@ class _ContentCourseSynchronizer(object):
 
 		sections_bucket = bucket.getChildNamed(SECTION_FOLDER_NAME)
 		sync = component.getMultiAdapter( (course.SubInstances, sections_bucket) )
-		sync.synchronize( course.SubInstances, sections_bucket )
+		sync.synchronize( course.SubInstances, sections_bucket, **kwargs)
 
 		# After we've loaded all the sections, check to see if we should map enrollment
 		if check_enrollment_mapped(course):
@@ -458,7 +451,7 @@ class _MissingCourseSubInstancesSynchronizer(object):
 	def __init__(self, instances, bucket):
 		pass
 
-	def synchronize(self, instances, _):
+	def synchronize(self, instances, *args, **kwargs):
 		instances.clear()
 
 @interface.implementer(IObjectEntrySynchronizer)
@@ -468,10 +461,10 @@ class _ContentCourseSubInstanceSynchronizer(object):
 	def __init__(self, subcourse, bucket):
 		pass
 
-	def synchronize(self, subcourse, bucket):
-		__traceback_info__ = subcourse, bucket
+	def synchronize(self, subcourse, bucket, **kwargs):
+		__traceback_info__ = subcourse, bucket		
 		_ContentCourseSynchronizer.update_common_info(subcourse, bucket)
-		
+
 		# check for open enrollment
 		if has_deny_open_enrollment(subcourse):
 			_ContentCourseSynchronizer.update_deny_open_enrollment(subcourse)
@@ -482,11 +475,11 @@ class _ContentCourseSubInstanceSynchronizer(object):
 			
 		notify(CourseInstanceAvailableEvent(subcourse))
 
-def synchronize_catalog_from_root(catalog_folder, root):
+def synchronize_catalog_from_root(catalog_folder, root, **kwargs):
 	"""
 	Given a :class:`CourseCatalogFolder` and a class:`.IDelimitedHierarchyBucket`,
 	synchronize the course catalog to match.
 	"""
-
-	component.getMultiAdapter( (catalog_folder, root),
-							   IObjectEntrySynchronizer).synchronize(catalog_folder, root)
+	synchronizer = component.getMultiAdapter( (catalog_folder, root),
+							   				 IObjectEntrySynchronizer)
+	synchronizer.synchronize(catalog_folder, root, **kwargs)
