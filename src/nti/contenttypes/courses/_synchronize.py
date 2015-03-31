@@ -156,7 +156,10 @@ class _ContentCourseSynchronizer(object):
 		# bucket path for these guys
 		__traceback_info__ = course, bucket
 
-		# First, synchronize the bundle
+		packages = kwargs.get('packages') or ()
+		packages = packages if isinstance(packages, set) else set(packages)
+
+		## First, synchronize the bundle
 		bundle_json_key = bucket.getChildNamed(BUNDLE_META_NAME)
 		if not IDelimitedHierarchyKey.providedBy(bundle_json_key): # pragma: no cover
 			raise ValueError("No bundle defined for course", course, bucket)
@@ -172,10 +175,15 @@ class _ContentCourseSynchronizer(object):
 			bundle.ntiid = _ntiid_from_entry(bundle, 'Bundle:CourseBundle')
 			lifecycleevent.created(bundle)
 			created_bundle = True
+		elif packages: ## check if underlying library was updated
+			ntiids = {x.ntiid for x in course.ContentPackageBundle.ContentPackages}
+			## if none of the bundle pacakges were updated return
+			if not ntiids.intersection(packages):
+				return
 
-		# The catalog entry gets the default DublinCore metadata file name,
-		# in this bucket, since it really describes the data.
-		# The content bundle, on the other hand, gets a custom file
+		## The catalog entry gets the default DublinCore metadata file name,
+		## in this bucket, since it really describes the data.
+		## The content bundle, on the other hand, gets a custom file
 		sync_bundle_from_json_key(bundle_json_key, course.ContentPackageBundle,
 								  dc_meta_name='bundle_dc_metadata.xml',
 								  excluded_keys=('ntiid',))
@@ -191,13 +199,13 @@ class _ContentCourseSynchronizer(object):
 		sync = component.getMultiAdapter( (course.SubInstances, sections_bucket) )
 		sync.synchronize( course.SubInstances, sections_bucket, **kwargs)
 
-		# After we've loaded all the sections, check to see if we should map enrollment
+		## After we've loaded all the sections, check to see if we should map enrollment
 		if check_enrollment_mapped(course):
 			interface.alsoProvides(course, IEnrollmentMappedCourseInstance)
 		else:
 			interface.noLongerProvides(course, IEnrollmentMappedCourseInstance)
 		
-		# mark last sync time	
+		## mark last sync time	
 		entry = ICourseCatalogEntry(course)
 		course.lastSynchronized = entry.lastSynchronized = time.time()
 
