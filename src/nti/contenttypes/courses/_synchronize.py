@@ -73,6 +73,7 @@ from .grading import reset_grading_policy
 from .interfaces import IObjectEntrySynchronizer
 
 SECTION_FOLDER_NAME = 'Sections'
+DISCUSSION_FOLDER_NAME = 'Discussions'
 
 ROLE_INFO_NAME = 'role_info.json'
 VENDOR_INFO_NAME = 'vendor_info.json'
@@ -93,11 +94,11 @@ class _GenericFolderSynchronizer(object):
 		pass
 
 	def _get_factory_for(self, bucket):
-		# order matters.
+		## order matters.
 
-		# Is this supposed to be a course instance?
-		# course instances are minimally defined by the presence of their
-		# bundle descriptor
+		## Is this supposed to be a course instance?
+		## course instances are minimally defined by the presence of 
+		## their bundle descriptor
 		if bucket.getChildNamed(self._COURSE_KEY_NAME):
 			return self._COURSE_INSTANCE_FACTORY
 
@@ -105,23 +106,22 @@ class _GenericFolderSynchronizer(object):
 		return self._ADMIN_LEVEL_FACTORY
 
 	def synchronize(self, folder, bucket, **kwargs):
-		
-		# Find the things in the filesystem
+		## Find the things in the filesystem
 		child_buckets = dict()
 		for item in bucket.enumerateChildren():
 			if IDelimitedHierarchyBucket.providedBy(item):
 				child_buckets[item.__name__] = item
 
-		# Remove anything the folder has that aren't on the
-		# filesystem
+		## Remove anything the folder has that aren't on the
+		## filesystem
 		for folder_child_name in list(folder):
 			if folder_child_name not in child_buckets:
 				logger.info("Removing child %s (%r)",
 							folder_child_name, folder[folder_child_name])
 				del folder[folder_child_name]
 
-		# Create anything the folder is missing if we
-		# have a factory for it
+		## Create anything the folder is missing if we
+		## have a factory for it
 		for bucket_child_name in child_buckets:
 			__traceback_info__ = folder, bucket, bucket_child_name
 			if bucket_child_name not in folder:
@@ -137,7 +137,7 @@ class _GenericFolderSynchronizer(object):
 				__traceback_info__ = folder, child_bucket, new_child_object
 				folder[bucket_child_name] = new_child_object
 
-		# Synchronize everything
+		## Synchronize everything
 		for child_name, child in folder.items():
 			child_bucket = child_buckets[child_name]
 			sync = component.getMultiAdapter( (child, child_bucket),
@@ -152,8 +152,6 @@ class _ContentCourseSynchronizer(object):
 		pass
 
 	def synchronize(self, course, bucket, **kwargs):
-		# TODO: Need to be setting NTIIDs based on the
-		# bucket path for these guys
 		__traceback_info__ = course, bucket
 
 		packages = kwargs.get('packages') or ()
@@ -192,6 +190,8 @@ class _ContentCourseSynchronizer(object):
 
 		self.update_common_info(course, bucket, try_legacy_content_bundle=True)
 		self.update_deny_open_enrollment(course)
+		
+		## TODO: Update dicussions
 		
 		notify(CourseInstanceAvailableEvent(course))
 
@@ -240,15 +240,14 @@ class _ContentCourseSynchronizer(object):
 		cls.update_instructor_roles(course, bucket)
 		assignment_policies = cls.update_assignment_policies(course, bucket)
 
-		# make sure Discussions are initialized
+		## make sure Discussions are initialized
 		getattr(course, 'Discussions')
 		cls.update_sharing_scopes_friendly_names(course)
 
-		# validate assigment policies
+		## validate assigment policies
 		cls.validate_assigment_policies(course, bucket)
 		
-		# check grading policy. it must be done after validating
-		# assigments
+		## check grading policy. it must be done after validatino assigments
 		cls.upgade_grading_policy(course, bucket, assignment_policies)
 		
 	@classmethod
@@ -330,17 +329,17 @@ class _ContentCourseSynchronizer(object):
 		outline_xml_key = bucket.getChildNamed(COURSE_OUTLINE_NAME)
 		outline_xml_node = None
 		if not outline_xml_key and try_legacy_content_bundle:
-			# Only want to do this for root courses
+			## Only want to do this for root courses
 			if course.ContentPackageBundle:
-				# Just take the first one. That should be all there
-				# is in legacy cases
+				## Just take the first one. That should be all there
+				## is in legacy cases
 				for package in course.ContentPackageBundle.ContentPackages:
 					outline_xml_key = package.index
 					outline_xml_node = 'course'
 					break
 
-		# We actually want to delete anything it has
-		# in case it's a subinstance so the parent can come through again
+		## We actually want to delete anything it has
+		## in case it's a subinstance so the parent can come through again
 		if not outline_xml_key:
 			try:
 				course._delete_Outline()
@@ -369,7 +368,6 @@ class _ContentCourseSynchronizer(object):
 						catalog_json_key = package.make_sibling_key(CATALOG_INFO_NAME)
 						break
 
-		# TODO: Cleaning up? # XXX base_url
 		catalog_entry = ICourseCatalogEntry(course)
 		if catalog_json_key:
 			fill_entry_from_legacy_key(catalog_entry, catalog_json_key)
@@ -434,21 +432,20 @@ class _ContentCourseSynchronizer(object):
 @component.adapter(ICourseSubInstances, IDelimitedHierarchyBucket)
 class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
 
-	#: We create sub-instances...
+	##: We create sub-instances...
 	_COURSE_INSTANCE_FACTORY = ContentCourseSubInstance
 
-	#: and we do not recurse into folders
+	##: and we do not recurse into folders
 	_ADMIN_LEVEL_FACTORY = None
 
 	_COURSE_KEY_NAME = None
 			
 	def _get_factory_for(self, bucket):
-		# We only support one level, and they must all
-		# be courses if they have one of the known
-		# files in it
+		## We only support one level, and they must all
+		## be courses if they have one of the known files in it
 		for possible_key in (ROLE_INFO_NAME, COURSE_OUTLINE_NAME,
 							 VENDOR_INFO_NAME, ASSIGNMENT_DATES_NAME,
-							 CATALOG_INFO_NAME):
+							 CATALOG_INFO_NAME, DISCUSSION_FOLDER_NAME):
 			if bucket.getChildNamed(possible_key):
 				return self._COURSE_INSTANCE_FACTORY
 
@@ -473,14 +470,20 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		__traceback_info__ = subcourse, bucket		
 		_ContentCourseSynchronizer.update_common_info(subcourse, bucket)
 
-		# check for open enrollment
+		## TODO: Update discussions
+		
+		## check for open enrollment
 		if has_deny_open_enrollment(subcourse):
 			_ContentCourseSynchronizer.update_deny_open_enrollment(subcourse)
 		else:
-			# inherit from parent
+			## inherit from parent
 			deny = check_deny_open_enrollment(subcourse.__parent__.__parent__)
 			_ContentCourseSynchronizer.set_deny_open_enrollment(subcourse, deny)
 			
+		## mark last sync time	
+		entry = ICourseCatalogEntry(subcourse)
+		subcourse.lastSynchronized = entry.lastSynchronized = time.time()
+		
 		notify(CourseInstanceAvailableEvent(subcourse))
 
 def synchronize_catalog_from_root(catalog_folder, root, **kwargs):
