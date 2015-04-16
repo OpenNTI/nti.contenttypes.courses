@@ -5,10 +5,12 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
+
+from zope.container.constraints import contains
+from zope.container.interfaces import IContainer
 
 from zope.schema.vocabulary import SimpleTerm
 from zope.schema.vocabulary import SimpleVocabulary
@@ -38,3 +40,10 @@ class ICourseDiscussion(ITitled, ILastModified, IContained):
 	
 	id = ValidTextLine(title="Internal id", required=False)
 	id.setTaggedValue('_ext_excluded_out', True)
+
+
+class ICourseDiscussions(IContainer, IContained):
+	"""
+	A container for all the discussions
+	"""
+	contains(str('.ICourseDiscussion'))

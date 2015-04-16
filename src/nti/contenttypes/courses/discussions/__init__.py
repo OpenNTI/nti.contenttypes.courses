@@ -8,10 +8,3 @@ from __future__ import print_function, unicode_literals, absolute_import, divisi
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
-
-from zope import interface
-from zope import component
-
-from zope.annotation.interfaces import IAnnotations
-
-from ..interfaces import ICourseInstance

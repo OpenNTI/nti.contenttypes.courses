@@ -11,5 +11,14 @@
 	<include package="zope.security" />
 
 	<!-- Adapters -->
+	<adapter factory=".model.CourseDiscussions" />
+	
+	<!-- Externalization -->
+	<include package="nti.externalization" file="meta.zcml" />
+	<include package="nti.externalization" />
+		
+	<ext:registerAutoPackageIO
+		root_interfaces=".interfaces.ICourseDiscussion"
+		modules=".model" />
 
 </configure>

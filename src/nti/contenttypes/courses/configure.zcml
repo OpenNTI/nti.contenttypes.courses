@@ -260,4 +260,7 @@
 	<!-- Grading -->
 	<include package=".grading" />
 
+	<!-- Discussions -->
+	<include package=".discussions" />
+	
 </configure>

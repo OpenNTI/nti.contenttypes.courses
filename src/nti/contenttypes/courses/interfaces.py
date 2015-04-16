@@ -947,6 +947,8 @@ class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
 	SharingScopeName.setTaggedValue('value', ES_PURCHASED)
 
 
+#### Synchronizer
+
 class IObjectEntrySynchronizer(interface.Interface):
 	"""
 	Something to synchronize one object and possibly its children.

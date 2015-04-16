@@ -9,11 +9,16 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from zope import component
 from zope import interface
+
+from zope.annotation.factory import factory as an_factory
 
 from zope.container.contained import Contained
 
 from zope.mimetype.interfaces import IContentTypeAware
+
+from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
 
@@ -21,7 +26,10 @@ from nti.schema.schema import EqHash
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
 
+from ..interfaces import ICourseInstance
+
 from .interfaces import ICourseDiscussion
+from .interfaces import ICourseDiscussions
 	
 @interface.implementer(ICourseDiscussion, IContentTypeAware)
 @EqHash('id')
@@ -35,6 +43,24 @@ class CourseDiscussion(SchemaConfigured,
 
 	parameters = {}
 	
+	_SET_CREATED_MODTIME_ON_INIT = False
+	
 	def __init__(self, *args, **kwargs):
 		SchemaConfigured.__init__(self, *args, **kwargs)
 		PersistentCreatedModDateTrackingObject.__init__(self, *args, **kwargs)
+
+
+@component.adapter(ICourseInstance)
+@interface.implementer(ICourseDiscussions)
+class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer):
+	"""
+	The default representation of course discussions.
+	"""
+
+	__name__ = None
+	__parent__ = None
+	
+	def __init__(self):
+		super(DefaultCourseDiscussions,self).__init__()
+
+CourseDiscussions = an_factory(DefaultCourseDiscussions, 'CourseDiscussions')
