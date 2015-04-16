@@ -193,7 +193,7 @@ class _ContentCourseSynchronizer(object):
 		
 		## TODO: Update dicussions
 		
-		notify(CourseInstanceAvailableEvent(course))
+		notify(CourseInstanceAvailableEvent(course, bucket))
 
 		sections_bucket = bucket.getChildNamed(SECTION_FOLDER_NAME)
 		sync = component.getMultiAdapter( (course.SubInstances, sections_bucket) )
@@ -484,7 +484,7 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		entry = ICourseCatalogEntry(subcourse)
 		subcourse.lastSynchronized = entry.lastSynchronized = time.time()
 		
-		notify(CourseInstanceAvailableEvent(subcourse))
+		notify(CourseInstanceAvailableEvent(subcourse, bucket))
 
 def synchronize_catalog_from_root(catalog_folder, root, **kwargs):
 	"""

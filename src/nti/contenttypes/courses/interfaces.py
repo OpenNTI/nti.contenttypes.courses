@@ -40,6 +40,7 @@ from zope.container.constraints import containers
 
 from nti.contentlibrary.interfaces import IDisplayableContent
 from nti.contentlibrary.interfaces import IContentPackageBundle
+from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
 from nti.dataserver.interfaces import ICommunity
@@ -888,10 +889,15 @@ class ICourseInstanceAvailableEvent(IObjectEvent):
 	need to do, such as synchronizing database state with course
 	content state.
 	"""
+	
+	bucket = Object(IDelimitedHierarchyBucket, title="Bucket", required=False)
 
 @interface.implementer(ICourseInstanceAvailableEvent)
 class CourseInstanceAvailableEvent(ObjectEvent):
-	pass
+	
+	def __init__(self, obj, bucket=None):
+		super(CourseInstanceAvailableEvent, self).__init__(obj)
+		self.bucket = bucket
 
 from zope.lifecycleevent import ObjectCreatedEvent
 from zope.lifecycleevent.interfaces import IObjectCreatedEvent
