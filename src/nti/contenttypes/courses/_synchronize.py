@@ -70,6 +70,8 @@ from ._assignment_policy_validator import validate_assigment_policies
 from .grading import parse_grading_policy
 from .grading import reset_grading_policy
 
+from .discussions import parse_discussions
+
 from .interfaces import IObjectEntrySynchronizer
 
 SECTION_FOLDER_NAME = 'Sections'
@@ -191,8 +193,6 @@ class _ContentCourseSynchronizer(object):
 		self.update_common_info(course, bucket, try_legacy_content_bundle=True)
 		self.update_deny_open_enrollment(course)
 		
-		## TODO: Update dicussions
-		
 		notify(CourseInstanceAvailableEvent(course, bucket))
 
 		sections_bucket = bucket.getChildNamed(SECTION_FOLDER_NAME)
@@ -248,7 +248,10 @@ class _ContentCourseSynchronizer(object):
 		cls.validate_assigment_policies(course, bucket)
 		
 		## check grading policy. it must be done after validatino assigments
-		cls.upgade_grading_policy(course, bucket, assignment_policies)
+		cls.update_grading_policy(course, bucket, assignment_policies)
+		
+		## update dicussions
+		cls.update_course_discussions(course, bucket)
 		
 	@classmethod
 	def update_sharing_scopes_friendly_names(cls, course):
@@ -401,7 +404,7 @@ class _ContentCourseSynchronizer(object):
 			return None
 		
 	@classmethod
-	def upgade_grading_policy(cls, course, bucket, assignment_policies=None):
+	def update_grading_policy(cls, course, bucket, assignment_policies=None):
 		key = bucket.getChildNamed(GRADING_POLICY_NAME)
 		if key is not None:
 			policy = parse_grading_policy(course, key)
@@ -428,6 +431,12 @@ class _ContentCourseSynchronizer(object):
 	def update_deny_open_enrollment(cls, course):
 		deny = check_deny_open_enrollment(course)
 		cls.set_deny_open_enrollment(course, deny)
+		
+	@classmethod
+	def update_course_discussions(cls, course, bucket):
+		key = bucket.getChildNamed(DISCUSSION_FOLDER_NAME)
+		if key is not None and IDelimitedHierarchyBucket.providedBy(key):
+			parse_discussions(course, bucket)
 
 @component.adapter(ICourseSubInstances, IDelimitedHierarchyBucket)
 class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
@@ -470,8 +479,6 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		__traceback_info__ = subcourse, bucket		
 		_ContentCourseSynchronizer.update_common_info(subcourse, bucket)
 
-		## TODO: Update discussions
-		
 		## check for open enrollment
 		if has_deny_open_enrollment(subcourse):
 			_ContentCourseSynchronizer.update_deny_open_enrollment(subcourse)
