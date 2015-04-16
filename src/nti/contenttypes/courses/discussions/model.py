@@ -49,7 +49,6 @@ class CourseDiscussion(SchemaConfigured,
 		SchemaConfigured.__init__(self, *args, **kwargs)
 		PersistentCreatedModDateTrackingObject.__init__(self, *args, **kwargs)
 
-
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseDiscussions)
 class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer):
