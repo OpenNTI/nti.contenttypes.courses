@@ -1,34 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-
-
-.. $Id$
-"""
 
 from __future__ import print_function, unicode_literals, absolute_import, division
 __docformat__ = "restructuredtext en"
 
-logger = __import__('logging').getLogger(__name__)
+# disable: accessing protected members, too many methods
+# pylint: disable=W0212,R0904
 
-#disable: accessing protected members, too many methods
-#pylint: disable=W0212,R0904
-
-import unittest
-from hamcrest import assert_that
 from hamcrest import is_
 from hamcrest import empty
 from hamcrest import contains
+from hamcrest import assert_that
 
-from nti.testing import base
-from nti.testing.matchers import validly_provides
+import unittest
 
-from ..principalrole import CourseInstancePrincipalRoleMap
-from ..interfaces import RID_TA
-from ..interfaces import RID_INSTRUCTOR
-from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import Unset
+from zope.securitypolicy.interfaces import IPrincipalRoleMap
+
+from nti.contenttypes.courses.interfaces import RID_TA
+from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
+from nti.contenttypes.courses.principalrole import CourseInstancePrincipalRoleMap
+
+from nti.testing.matchers import validly_provides
 
 class _PhonyPrincipal(object):
 	id = None
@@ -91,7 +85,6 @@ class TestCourseInstancePrincipalRoleMap(unittest.TestCase):
 					 is_(Allow))
 		assert_that( self.rolemap.getSetting(RID_TA, 'foo'),
 					 is_(Unset))
-
 
 	def test_get_all(self):
 		assert_that( self.rolemap.getPrincipalsAndRoles(),

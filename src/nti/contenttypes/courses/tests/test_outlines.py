@@ -1,42 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-
-
-$Id$
-"""
 
 from __future__ import print_function, unicode_literals, absolute_import, division
 __docformat__ = "restructuredtext en"
 
-logger = __import__('logging').getLogger(__name__)
+# disable: accessing protected members, too many methods
+# pylint: disable=W0212,R0904
 
-#disable: accessing protected members, too many methods
-#pylint: disable=W0212,R0904
-
-
-from hamcrest import assert_that
-from hamcrest import is_
-from hamcrest import has_property
-from hamcrest import has_entry
 from hamcrest import has_entries
-from hamcrest import has_item
-from hamcrest import same_instance
-
-from nti.testing import base
-from nti.testing import matchers
-
-from nti.testing.matchers import verifiably_provides
-from nti.testing.matchers import validly_provides
-from nti.externalization.tests import externalizes
-
-from .. import outlines
-from .. import courses
-from .. import interfaces
+from hamcrest import assert_that
 
 from datetime import datetime
 
-from . import CourseLayerTest
+from nti.contenttypes.courses import courses
+from nti.contenttypes.courses import outlines
+from nti.contenttypes.courses import interfaces
+
+from nti.externalization.tests import externalizes
+
+from nti.testing.matchers import validly_provides
+from nti.testing.matchers import verifiably_provides
+
+from nti.contenttypes.courses.tests import CourseLayerTest
 
 class TestCourseOutline(CourseLayerTest):
 
