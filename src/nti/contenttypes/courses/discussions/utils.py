@@ -16,6 +16,7 @@ from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import make_provider_safe
 from nti.ntiids.ntiids import make_specific_safe
 
+from ..interfaces import ES_PUBLIC
 from ..interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
 from .interfaces import ALL
@@ -26,14 +27,12 @@ ENROLLED_COURSE_SECTION = ':EnrolledCourseSection'
 ALL_SCOPES = tuple(x.value for x in ENROLLMENT_SCOPE_VOCABULARY)
 
 def get_topics_ntiids(discussion, is_section=False, provider=None, base=None):
-	assert discussion.id
 	if not provider and not base:
 		raise ValueError( 'Must supply provider' )
 	
 	result = {}
-	
-	parts = urlparse(discussion.id)
-	is_ncb = NTI_COURSE_BUNDLE == parts.scheme
+	parts = urlparse(discussion.id) if discussion.id else None
+	is_ncb = NTI_COURSE_BUNDLE == parts.scheme if parts else False
 	if is_ncb:
 		type_postfix = u''
 		ncb_specific = discussion.id[len(NTI_COURSE_BUNDLE) + 3:]
@@ -49,9 +48,11 @@ def get_topics_ntiids(discussion, is_section=False, provider=None, base=None):
 		scopes = set(discussion.scopes)
 		
 	for scope in scopes:
-		pre_spec = '%s_Discussions' % scope
+		key = scope
+		scope = 'Open' if scope == ES_PUBLIC else scope
 		nttype = 'Topic%s' % type_postfix
+		pre_spec = '%s%s' % (scope, (u'' if is_ncb else '_Discussions') )
 		specific = make_specific_safe("%s_%s" % (pre_spec, ncb_specific))
 		ntiid = make_ntiid(provider=provider, nttype=nttype, specific=specific, base=base)
-		result[scope] = ntiid
+		result[key] = ntiid
 	return result

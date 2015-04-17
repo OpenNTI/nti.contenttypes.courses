@@ -76,6 +76,9 @@ RID_INSTRUCTOR = "nti.roles.course_instructor"
 #: The ID of a role for teaching assistants
 RID_TA = "nti.roles.course_ta"
 
+SECTIONS = 'Sections'
+DISCUSSIONS = 'Discussions'
+
 ###
 # Notes:
 #

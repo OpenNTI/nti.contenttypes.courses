@@ -73,9 +73,8 @@ from .grading import reset_grading_policy
 from .discussions import parse_discussions
 
 from .interfaces import IObjectEntrySynchronizer
-
-SECTION_FOLDER_NAME = 'Sections'
-DISCUSSION_FOLDER_NAME = 'Discussions'
+from .interfaces import SECTIONS as SECTION_FOLDER_NAME
+from .interfaces import DISCUSSIONS as DISCUSSION_FOLDER_NAME
 
 ROLE_INFO_NAME = 'role_info.json'
 VENDOR_INFO_NAME = 'vendor_info.json'
