@@ -28,9 +28,8 @@ from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
 
+from .interfaces import NTI_COURSE_BUNDLE
 from .interfaces import ICourseDiscussions
-
-from . import NTI_COURSE_BUNDLE
 
 def path_to_course(resource):
 	result = []
@@ -69,6 +68,7 @@ def parse_discussions(course, bucket, intids=None):
 		if discussion is not None and key.lastModified <= discussion.lastModified:
 			continue
 
+		print(name , key)
 		json = key.readContentsAsYaml()
 		factory = find_factory_for(json)
 		new_discussion = factory()

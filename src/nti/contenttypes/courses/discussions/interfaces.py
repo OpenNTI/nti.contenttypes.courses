@@ -28,6 +28,8 @@ from nti.schema.field import ValidTextLine
 
 from ..interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
+NTI_COURSE_BUNDLE = u'nti-course-bundle'
+
 SCOPES_VOCABULARY = SimpleVocabulary( [SimpleTerm(u'All')] + list(ENROLLMENT_SCOPE_VOCABULARY))
 	
 class ICourseDiscussion(ITitled, ILastModified, IContained):
