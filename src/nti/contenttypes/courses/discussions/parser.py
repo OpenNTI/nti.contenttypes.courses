@@ -47,8 +47,8 @@ def path_to_course(resource):
 	return result
 
 def parse_discussions(course, bucket, intids=None):
-	discussions = ICourseDiscussions(course)
 	__traceback_info__ = bucket, course
+	discussions = ICourseDiscussions(course)
 
 	child_files = dict()
 	for item in bucket.enumerateChildren():
