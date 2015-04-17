@@ -47,20 +47,23 @@ from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
 from nti.externalization.externalization import to_external_object
 
-from .. import catalog
-from .. import legacy_catalog
+from nti.contenttypes.courses import catalog
+from nti.contenttypes.courses import legacy_catalog
 
-from ..decorators import _AnnouncementsDecorator
-from ..decorators import _SharingScopesAndDiscussionDecorator
+from nti.contenttypes.courses.decorators import _AnnouncementsDecorator
+from nti.contenttypes.courses.decorators import _SharingScopesAndDiscussionDecorator
 
-from ..interfaces import ES_CREDIT
-from ..interfaces import ICourseCatalog
-from ..interfaces import ICourseInstance
-from ..interfaces import ICourseCatalogEntry
-from ..interfaces import INonPublicCourseInstance
-from ..interfaces import ICourseInstanceVendorInfo
-from ..interfaces import IEnrollmentMappedCourseInstance
-from .._synchronize import synchronize_catalog_from_root
+from nti.contenttypes.courses.interfaces import ES_CREDIT
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
+from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
+from nti.contenttypes.courses.interfaces import IEnrollmentMappedCourseInstance
+
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
+
+from nti.contenttypes.courses._synchronize import synchronize_catalog_from_root
 
 from nti.externalization.tests import externalizes
 
@@ -70,7 +73,7 @@ from nti.dataserver.tests.test_authorization_acl import denies
 from nti.testing.matchers import is_empty
 from nti.testing.matchers import verifiably_provides
 
-from . import CourseLayerTest
+from nti.contenttypes.courses.tests import CourseLayerTest
 
 class TestFunctionalSynchronize(CourseLayerTest):
 
@@ -195,7 +198,6 @@ class TestFunctionalSynchronize(CourseLayerTest):
 					 externalizes( has_entries(
 						 'Class', 'CourseInstance') ) )
 
-
 		gateway_ext = to_external_object(gateway)
 		sec1_ext = to_external_object(sec1)
 		dec = _SharingScopesAndDiscussionDecorator(sec1, None)
@@ -235,7 +237,6 @@ class TestFunctionalSynchronize(CourseLayerTest):
 							 'restricted', sec1.SharingScopes['ForCredit'].NTIID)) )
 		interface.noLongerProvides(gateway, INonPublicCourseInstance)
 
-
 		assert_that( sec1_cat,
 					 externalizes( has_key('PlatformPresentationResources')))
 		assert_that( sec1_cat,
@@ -270,7 +271,6 @@ class TestFunctionalSynchronize(CourseLayerTest):
 													 "avatarURL", '/foo/bar.jpg')))))
 
 		# We should have the catalog functionality now
-
 		sec3 = gateway.SubInstances['03']
 		cat_entries = list(folder.iterCatalogEntries())
 		assert_that( cat_entries, has_length(4) )
@@ -304,6 +304,12 @@ class TestFunctionalSynchronize(CourseLayerTest):
 						 is_(cat_entries))
 		finally:
 			component.provideUtility(old_cat,ICourseCatalog)
+			
+		# course discussions
+		discussions = ICourseDiscussions(gateway, None)
+		assert_that(discussions, is_not(none()))
+		assert_that(discussions, has_key('d0.json'))
+		assert_that(discussions['d0.json'], has_property('id', is_(u'nti-course-bundle://Discussions/d0.json')))
 
 	def test_default_sharing_scope_use_parent(self):
 		"""
