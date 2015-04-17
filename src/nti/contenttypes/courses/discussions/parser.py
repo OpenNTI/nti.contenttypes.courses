@@ -68,7 +68,6 @@ def parse_discussions(course, bucket, intids=None):
 		if discussion is not None and key.lastModified <= discussion.lastModified:
 			continue
 
-		print(name , key)
 		json = key.readContentsAsYaml()
 		factory = find_factory_for(json)
 		new_discussion = factory()
