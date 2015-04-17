@@ -20,6 +20,7 @@ from zope.location.interfaces import IContained
 from nti.coremetadata.interfaces import ITitled
 from nti.coremetadata.interfaces import ILastModified
 
+from nti.dataserver.fragments.interfaces import ITaggedContent
 from nti.dataserver.fragments.schema import CompoundModeledContentBody
 
 from nti.schema.field import Choice
@@ -32,7 +33,7 @@ NTI_COURSE_BUNDLE = u'nti-course-bundle'
 
 SCOPES_VOCABULARY = SimpleVocabulary( [SimpleTerm(u'All')] + list(ENROLLMENT_SCOPE_VOCABULARY))
 	
-class ICourseDiscussion(ITitled, ILastModified, IContained):
+class ICourseDiscussion(ITitled, ITaggedContent, ILastModified, IContained):
 	title = ValidTextLine(title="Discussion title", required=True)
 	icon = ValidTextLine(title="Discussion icon href", required=False)
 	label = ValidTextLine(title="The label", required=False, default=u'')
@@ -42,7 +43,6 @@ class ICourseDiscussion(ITitled, ILastModified, IContained):
 	
 	id = ValidTextLine(title="Internal id", required=False)
 	id.setTaggedValue('_ext_excluded_out', True)
-
 
 class ICourseDiscussions(IContainer, IContained):
 	"""
