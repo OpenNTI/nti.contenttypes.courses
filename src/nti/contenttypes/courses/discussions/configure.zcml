@@ -12,7 +12,8 @@
 
 	<!-- Adapters -->
 	<adapter factory=".model.CourseDiscussions" />
-	
+	<adapter factory=".adapters._course_discussion_to_course" />
+			 
 	<!-- Externalization -->
 	<include package="nti.externalization" file="meta.zcml" />
 	<include package="nti.externalization" />
