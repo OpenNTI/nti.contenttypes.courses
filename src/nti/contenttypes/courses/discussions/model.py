@@ -48,7 +48,16 @@ class CourseDiscussion(SchemaConfigured,
 	def __init__(self, *args, **kwargs):
 		SchemaConfigured.__init__(self, *args, **kwargs)
 		PersistentCreatedModDateTrackingObject.__init__(self, *args, **kwargs)
+		
+	def __str__(self, *args, **kwargs):
+		if self.id:
+			result = "%s(id=%s)" % (self.__class__.__name__, self.id)
+		else:
+			result = super(CourseDiscussion, self).__str__(self, *args, **kwargs)
+		return result
 
+	__repr__ = __str__
+	
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseDiscussions)
 class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer):
