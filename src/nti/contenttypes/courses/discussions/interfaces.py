@@ -32,14 +32,14 @@ from ..interfaces import ENROLLMENT_SCOPE_VOCABULARY
 ALL = u"All"
 NTI_COURSE_BUNDLE = u'nti-course-bundle'
 
-SCOPES_VOCABULARY = SimpleVocabulary( [SimpleTerm(ALL)] + list(ENROLLMENT_SCOPE_VOCABULARY))
+ALL_SCOPES_VOCABULARY = SimpleVocabulary( [SimpleTerm(ALL)] + list(ENROLLMENT_SCOPE_VOCABULARY))
 	
 class ICourseDiscussion(ITitled, ITaggedContent, ILastModified, IContained):
 	title = ValidTextLine(title="Discussion title", required=True)
 	icon = ValidTextLine(title="Discussion icon href", required=False)
 	label = ValidTextLine(title="The label", required=False, default=u'')
 	body = CompoundModeledContentBody(required=False)
-	scopes = ListOrTuple(Choice(vocabulary=SCOPES_VOCABULARY),
+	scopes = ListOrTuple(Choice(vocabulary=ALL_SCOPES_VOCABULARY),
 						 title='scopes', required=True, min_length=1)
 	
 	id = ValidTextLine(title="Internal id", required=False)

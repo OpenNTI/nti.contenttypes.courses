@@ -737,6 +737,8 @@ ENROLLMENT_SCOPE_VOCABULARY = SimpleVocabulary(
 				implies=(ES_CREDIT, ES_PURCHASED, ES_PUBLIC),
 				implied_by=())])
 
+ENROLLMENT_SCOPE_NAMES = tuple(x.value for x in ENROLLMENT_SCOPE_VOCABULARY)
+
 class ICourseInstanceEnrollmentRecordContainer(IContainer):
 	"""
 	The primary home of the enrollment records for a course.

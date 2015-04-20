@@ -17,14 +17,13 @@ from nti.ntiids.ntiids import make_provider_safe
 from nti.ntiids.ntiids import make_specific_safe
 
 from ..interfaces import ES_PUBLIC
-from ..interfaces import ENROLLMENT_SCOPE_VOCABULARY
+from ..interfaces import ENROLLMENT_SCOPE_NAMES
 
 from .interfaces import ALL
 from .interfaces import NTI_COURSE_BUNDLE
 
 ENROLLED_COURSE_ROOT = ':EnrolledCourseRoot'
 ENROLLED_COURSE_SECTION = ':EnrolledCourseSection'
-ALL_SCOPES = tuple(x.value for x in ENROLLMENT_SCOPE_VOCABULARY)
 
 def get_topics_ntiids(discussion, is_section=False, provider=None, base=None):
 	if not provider and not base:
@@ -43,7 +42,7 @@ def get_topics_ntiids(discussion, is_section=False, provider=None, base=None):
 		
 	provider = make_provider_safe(provider or get_provider(base))
 	if ALL in discussion.scopes:
-		scopes = ALL_SCOPES
+		scopes = ENROLLMENT_SCOPE_NAMES
 	else:
 		scopes = set(discussion.scopes)
 		
