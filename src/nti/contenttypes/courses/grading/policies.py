@@ -108,7 +108,13 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 				assignment = get_assignment(ntiid)
 				if assignment is None:
 					raise AssertionError("assignment does not exists", ntiid)
-			
+		
+	@property	
+	def lastSynchronized(self):
+		self_lastModified = self.lastModified or 0
+		parent_lastSynchronized = getattr(self.course, 'lastSynchronized', None) or 0
+		return max(self_lastModified, parent_lastSynchronized)
+
 	def _raw_categories(self):
 		result = {}
 		policies = get_assignment_policies(self.course)
@@ -136,7 +142,7 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 					result[group].append(data)
 		return result
 	
-	@CachedProperty('lastModified')
+	@CachedProperty('lastSynchronized')
 	def _categories(self):
 		result = self._raw_categories()
 		return result
@@ -148,7 +154,7 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 				result[assignment] = name
 		return result
 	
-	@CachedProperty('lastModified')
+	@CachedProperty('lastSynchronized')
 	def _rev_categories(self):
 		result = self._raw_rev_categories()
 		return result
@@ -156,7 +162,7 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 	def _raw_assignments(self):
 		return tuple(self._raw_rev_categories().keys())
 	
-	@CachedProperty('lastModified')
+	@CachedProperty('lastSynchronized')
 	def _assignments(self):
 		result = self._raw_assignments()
 		return result
