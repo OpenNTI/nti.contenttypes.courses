@@ -90,7 +90,7 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 		assert  round(count, 2) <= 1.0, \
 				"total category weight must be less than or equal to one"
 
-		categories = self._categories
+		categories = self._raw_categories()
 		for name in categories.keys():
 			assert name in self.groups, \
 				   "%s is an invalid group name" % name
@@ -108,9 +108,8 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 				assignment = get_assignment(ntiid)
 				if assignment is None:
 					raise AssertionError("assignment does not exists", ntiid)
-				
-	@CachedProperty('lastModified')
-	def _categories(self):
+			
+	def _raw_categories(self):
 		result = {}
 		policies = get_assignment_policies(self.course)
 		if policies is not None: 
@@ -136,9 +135,13 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 					result.setdefault(group, [])
 					result[group].append(data)
 		return result
-
+	
 	@CachedProperty('lastModified')
-	def _rev_categories(self):
+	def _categories(self):
+		result = self._raw_categories()
+		return result
+
+	def _raw_rev_categories(self):
 		result = {}
 		for name, data in self._categories.items():
 			for assignment in [x['assignment'] for x in data]:
@@ -146,8 +149,17 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 		return result
 	
 	@CachedProperty('lastModified')
+	def _rev_categories(self):
+		result = self._raw_rev_categories()
+		return result
+	
+	def _raw_assignments(self):
+		return tuple(self._raw_rev_categories().keys())
+	
+	@CachedProperty('lastModified')
 	def _assignments(self):
-		return tuple(self._rev_categories.keys())
+		result = self._raw_assignments()
+		return result
 
 	@property
 	def course(self):
