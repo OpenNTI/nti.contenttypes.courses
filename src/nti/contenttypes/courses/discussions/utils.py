@@ -16,10 +16,10 @@ from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import make_provider_safe
 from nti.ntiids.ntiids import make_specific_safe
 
+from ..interfaces import ES_ALL
 from ..interfaces import ES_PUBLIC
 from ..interfaces import ENROLLMENT_SCOPE_NAMES
 
-from .interfaces import ALL
 from .interfaces import NTI_COURSE_BUNDLE
 
 ENROLLED_COURSE_ROOT = ':EnrolledCourseRoot'
@@ -41,7 +41,7 @@ def get_topics_ntiids(discussion, is_section=False, provider=None, base=None):
 		type_postfix = ENROLLED_COURSE_SECTION if is_section else ENROLLED_COURSE_ROOT
 		
 	provider = make_provider_safe(provider or get_provider(base))
-	if ALL in discussion.scopes:
+	if ES_ALL in discussion.scopes:
 		scopes = ENROLLMENT_SCOPE_NAMES
 	else:
 		scopes = set(discussion.scopes)

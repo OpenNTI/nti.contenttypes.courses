@@ -673,6 +673,7 @@ class ICourseCatalogEntry(IDisplayableContent,
 # for them. In the future, we can use a vocabularyregistry
 # to have these be site-specific.
 
+ES_ALL = u'All'
 
 #: The "root" enrollment or sharing scope; everyone enrolled or administrating
 #: is a member of this scope.
@@ -738,6 +739,15 @@ ENROLLMENT_SCOPE_VOCABULARY = SimpleVocabulary(
 				implied_by=())])
 
 ENROLLMENT_SCOPE_NAMES = tuple(x.value for x in ENROLLMENT_SCOPE_VOCABULARY)
+
+ENROLLMENT_LINEAGE_MAP = {
+	ES_ALL: (ES_PUBLIC, ES_CREDIT),
+	ES_PUBLIC: (ES_PUBLIC,),
+	ES_CREDIT: (ES_CREDIT,),
+	ES_PURCHASED: (ES_CREDIT,),
+	ES_CREDIT_DEGREE: (ES_CREDIT,),
+	ES_CREDIT_NONDEGREE: (ES_CREDIT,)
+}
 
 class ICourseInstanceEnrollmentRecordContainer(IContainer):
 	"""

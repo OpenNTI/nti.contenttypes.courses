@@ -149,7 +149,6 @@ class TestCourseInstance(CourseLayerTest):
 											'action', 'Allow',
 											'permission', is_([ACT_READ]) )))
 
-
 	@fudge.patch('nti.contenttypes.courses.decorators.IEntityContainer',
 				 'nti.app.renderers.decorators.get_remote_user')
 	def test_course_sharing_scopes_externalizes(self, mock_container, mock_rem_user):

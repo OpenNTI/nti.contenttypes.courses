@@ -34,11 +34,11 @@ from nti.testing.matchers import is_empty
 from nti.testing.matchers import is_false
 from nti.testing.matchers import validly_provides
 
-from .. import courses
-from .. import enrollment
-from .. import interfaces
+from nti.contenttypes.courses import courses
+from nti.contenttypes.courses import enrollment
+from nti.contenttypes.courses import interfaces
 
-from . import CourseLayerTest
+from nti.contenttypes.courses.tests import CourseLayerTest
 
 from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 
@@ -79,15 +79,17 @@ from nti.dataserver.authentication import _dynamic_memberships_that_participate_
 
 from nti.externalization.externalization import to_external_object
 
-from ..interfaces import ES_CREDIT
-from ..interfaces import ES_PUBLIC
-from ..interfaces import ES_CREDIT_DEGREE
-from ..interfaces import ES_CREDIT_NONDEGREE
+from nti.contenttypes.courses.interfaces import ES_ALL
+from nti.contenttypes.courses.interfaces import ES_CREDIT
+from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import ES_CREDIT_DEGREE
+from nti.contenttypes.courses.interfaces import ES_CREDIT_NONDEGREE
+from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 
-from ..interfaces import ICourseInstance
-from ..interfaces import ICourseEnrollments
-from ..interfaces import ICourseInstanceVendorInfo
-from ..interfaces import IEnrollmentMappedCourseInstance
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseEnrollments
+from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
+from nti.contenttypes.courses.interfaces import IEnrollmentMappedCourseInstance
 
 from zope.component import eventtesting
 
@@ -122,7 +124,6 @@ class MockContentPackageBundle(object):
 	@property
 	def ContentPackages(self):
 		return (MockContentPackage(),)
-
 
 class TestFunctionalEnrollment(CourseLayerTest):
 
@@ -159,7 +160,6 @@ class TestFunctionalEnrollment(CourseLayerTest):
 
 		course = self.course
 		self.section = course.SubInstances['section1'] = courses.ContentCourseSubInstance()
-
 
 	def _do_test_add_drop(self, principal, course,
 						  enroll_scope='Public',
@@ -206,7 +206,6 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		#   <zope.container.contained.ContainerModifiedEvent object at 0x1052244d0>]
 		assert_that( evts[0], validly_provides(IObjectRemovedEvent) )
 		assert_that( evts[0], has_property('object', is_(enrollment.DefaultCourseInstanceEnrollmentRecord)))
-
 
 		# again does nothing
 		eventtesting.clearEvents()
@@ -416,7 +415,6 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		assert_that( record, has_property('__parent__', none() ))
 		assert_that( record, has_property('_ds_intid', none() ))
 
-
 	@WithMockDSTrans
 	def test_migrate_enrolments(self):
 		self._shared_setup()
@@ -517,3 +515,7 @@ class TestFunctionalEnrollment(CourseLayerTest):
 		manager = interfaces.ICourseEnrollmentManager(course)
 		with self.assertRaises(ValueError):
 			manager.enroll(principal, scope=ES_PUBLIC)
+
+	def test_es_lineage(self):
+		assert_that(ENROLLMENT_LINEAGE_MAP, has_length(6))
+		assert_that(ENROLLMENT_LINEAGE_MAP, has_entry(ES_ALL, is_((ES_PUBLIC, ES_CREDIT))))

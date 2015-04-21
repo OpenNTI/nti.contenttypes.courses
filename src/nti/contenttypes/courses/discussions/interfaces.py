@@ -27,12 +27,12 @@ from nti.schema.field import Choice
 from nti.schema.field import ListOrTuple
 from nti.schema.field import ValidTextLine
 
+from ..interfaces import ES_ALL
 from ..interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
-ALL = u"All"
 NTI_COURSE_BUNDLE = u'nti-course-bundle'
 
-ALL_SCOPES_VOCABULARY = SimpleVocabulary( [SimpleTerm(ALL)] + list(ENROLLMENT_SCOPE_VOCABULARY))
+ALL_SCOPES_VOCABULARY = SimpleVocabulary( [SimpleTerm(ES_ALL)] + list(ENROLLMENT_SCOPE_VOCABULARY))
 	
 class ICourseDiscussion(ITitled, ITaggedContent, ILastModified, IContained):
 	title = ValidTextLine(title="Discussion title", required=True)
