@@ -9,7 +9,10 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from urllib import unquote
 from urlparse import urlparse
+
+from zope import component
 
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
@@ -20,18 +23,40 @@ from ..interfaces import ES_ALL
 from ..interfaces import ES_PUBLIC
 from ..interfaces import ENROLLMENT_SCOPE_NAMES
 
+from ..interfaces import ICourseCatalog
+
 from .interfaces import NTI_COURSE_BUNDLE
 
 ENROLLED_COURSE_ROOT = ':EnrolledCourseRoot'
 ENROLLED_COURSE_SECTION = ':EnrolledCourseSection'
+
+def is_nti_course_bundle(discussion):
+	parts = urlparse(discussion.id) if discussion.id else None
+	result = NTI_COURSE_BUNDLE == parts.scheme if parts else False
+	return result
+
+def get_discussion_provider(discussion):
+	if is_nti_course_bundle(discussion):
+		parts = urlparse(discussion.id)
+		result = unquote(parts.netloc)
+		return result
+	return None
+
+def get_entry_for_discussion(discussion, catalog=None, registry=component):
+	provider = get_discussion_provider(discussion)
+	catalog = registry.queryUtility(ICourseCatalog) if catalog is None else catalog
+	if provider and catalog is not None:
+		for entry in catalog.iterCatalogEntries():
+			if entry.ProviderUniqueID == provider:
+				return entry
+	return None
 
 def get_topics_ntiids(discussion, is_section=False, provider=None, base=None):
 	if not provider and not base:
 		raise ValueError( 'Must supply provider' )
 	
 	result = {}
-	parts = urlparse(discussion.id) if discussion.id else None
-	is_ncb = NTI_COURSE_BUNDLE == parts.scheme if parts else False
+	is_ncb = is_nti_course_bundle(discussion)
 	if is_ncb:
 		type_postfix = u''
 		ncb_specific = discussion.id[len(NTI_COURSE_BUNDLE) + 3:]
