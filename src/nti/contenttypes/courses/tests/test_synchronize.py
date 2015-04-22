@@ -309,7 +309,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		discussions = ICourseDiscussions(gateway, None)
 		assert_that(discussions, is_not(none()))
 		assert_that(discussions, has_key('d0.json'))
-		assert_that(discussions['d0.json'], has_property('id', is_(u'nti-course-bundle://Discussions/d0.json')))
+		assert_that(discussions['d0.json'], has_property('id', is_(u'nti-course-bundle://CLC%203403/Discussions/d0.json')))
 
 	def test_default_sharing_scope_use_parent(self):
 		"""

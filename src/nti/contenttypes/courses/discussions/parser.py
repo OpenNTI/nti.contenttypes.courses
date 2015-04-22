@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 import os
+from urllib import quote
 
 import zope.intid
 
@@ -27,6 +28,8 @@ from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 
 from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
+
+from ..interfaces import ICourseCatalogEntry
 
 from .interfaces import NTI_COURSE_BUNDLE
 from .interfaces import ICourseDiscussions
@@ -62,6 +65,7 @@ def parse_discussions(course, bucket, intids=None):
 						 discussions[child_name])
 			del discussions[child_name]
 		
+	provider = quote(ICourseCatalogEntry(course).ProviderUniqueID)
 	intids = component.queryUtility(zope.intid.IIntIds) if intids is None else intids
 	for name, key  in child_files.items():
 		discussion = discussions.get(name)
@@ -74,7 +78,7 @@ def parse_discussions(course, bucket, intids=None):
 		update_from_external_object(new_discussion, json)
 	
 		path = path_to_course(key)
-		new_discussion.id = "%s://%s" % (NTI_COURSE_BUNDLE, path)
+		new_discussion.id = "%s://%s/%s" % (NTI_COURSE_BUNDLE, provider, path)
 		if discussion is None:
 			lifecycleevent.created(new_discussion)
 			discussions[name] = new_discussion
