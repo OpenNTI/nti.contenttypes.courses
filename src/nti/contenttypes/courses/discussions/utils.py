@@ -21,6 +21,7 @@ from nti.ntiids.ntiids import make_specific_safe
 
 from ..interfaces import ES_ALL
 from ..interfaces import ES_PUBLIC
+from ..interfaces import ENROLLMENT_LINEAGE_MAP
 from ..interfaces import ENROLLMENT_SCOPE_NAMES
 
 from ..interfaces import ICourseCatalog
@@ -50,6 +51,12 @@ def get_entry_for_discussion(discussion, catalog=None, registry=component):
 			if entry.ProviderUniqueID == provider:
 				return entry
 	return None
+
+def get_discussion_scopes(discussion):
+	scopes = set()
+	for scope in discussion.scopes:
+		scopes.update(ENROLLMENT_LINEAGE_MAP.get(scope) or ())
+	return scopes
 
 def get_topics_ntiids(discussion, is_section=False, provider=None, base=None):
 	if not provider and not base:
