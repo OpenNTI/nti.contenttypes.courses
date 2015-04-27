@@ -669,6 +669,15 @@ class ICourseCatalogEntry(IDisplayableContent,
 # Enrollments
 ###
 
+OPEN = 'Open'
+PURCHASED = 'Purchased'
+FOR_CREDIT = 'For Credit'
+FOR_CREDIT_DEGREE = 'For Credit (Degree)'
+FOR_CREDIT_NON_DEGREE = 'For Credit (Non-degree)'
+
+IN_CLASS = 'In-Class'
+IN_CLASS_PREFIX = 'InClass'
+
 # Now we list the scopes and create a vocabulary
 # for them. In the future, we can use a vocabularyregistry
 # to have these be site-specific.
@@ -715,26 +724,26 @@ class ScopeTerm(SimpleTerm):
 
 ENROLLMENT_SCOPE_VOCABULARY = SimpleVocabulary(
 	[ScopeTerm(ES_PUBLIC,
-			   title=_('Open'),
+			   title=_(OPEN),
 			   implied_by=(ES_CREDIT, ES_CREDIT_DEGREE, ES_CREDIT_NONDEGREE, ES_PURCHASED),
-			   vendor_key='Open',
-			   vendor_key_prefix='Open'),
+			   vendor_key=OPEN,
+			   vendor_key_prefix=OPEN),
 	 ScopeTerm(ES_PURCHASED,
-				title=_('Purchased'),
+				title=_(PURCHASED),
 				implies=(ES_PUBLIC,),
 				implied_by=(ES_CREDIT, ES_CREDIT_DEGREE, ES_CREDIT_NONDEGREE)),
 	 ScopeTerm(ES_CREDIT,
-				title=_('For Credit'),
+				title=_(FOR_CREDIT),
 				implies=(ES_PUBLIC, ES_PURCHASED),
 				implied_by=(ES_CREDIT_DEGREE, ES_CREDIT_NONDEGREE),
-				vendor_key='In-Class',
-				vendor_key_prefix='InClass'),
+				vendor_key=IN_CLASS,
+				vendor_key_prefix=IN_CLASS_PREFIX),
 	 ScopeTerm(ES_CREDIT_DEGREE,
-				title=_('For Credit (Degree)'),
+				title=_(FOR_CREDIT_DEGREE),
 				implies=(ES_CREDIT, ES_PURCHASED, ES_PUBLIC),
 				implied_by=()),
 	 ScopeTerm(ES_CREDIT_NONDEGREE,
-				title=_('For Credit (Non-degree)'),
+				title=_(FOR_CREDIT_NON_DEGREE),
 				implies=(ES_CREDIT, ES_PURCHASED, ES_PUBLIC),
 				implied_by=())])
 
