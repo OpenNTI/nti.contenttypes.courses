@@ -82,6 +82,7 @@ from nti.externalization.externalization import to_external_object
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import ES_PURCHASED
 from nti.contenttypes.courses.interfaces import ES_CREDIT_DEGREE
 from nti.contenttypes.courses.interfaces import ES_CREDIT_NONDEGREE
 from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
@@ -518,4 +519,9 @@ class TestFunctionalEnrollment(CourseLayerTest):
 
 	def test_es_lineage(self):
 		assert_that(ENROLLMENT_LINEAGE_MAP, has_length(6))
-		assert_that(ENROLLMENT_LINEAGE_MAP, has_entry(ES_ALL, is_((ES_PUBLIC, ES_CREDIT))))
+		assert_that(ENROLLMENT_LINEAGE_MAP, has_entry(ES_PUBLIC, is_((ES_PUBLIC,))))
+		assert_that(ENROLLMENT_LINEAGE_MAP, has_entry(ES_CREDIT, is_((ES_CREDIT,))))
+		assert_that(ENROLLMENT_LINEAGE_MAP, has_entry(ES_PURCHASED, is_((ES_CREDIT,))))
+		assert_that(ENROLLMENT_LINEAGE_MAP, has_entry(ES_CREDIT_DEGREE, is_((ES_CREDIT,))))
+		assert_that(ENROLLMENT_LINEAGE_MAP, has_entry(ES_ALL, is_((ES_PUBLIC, ES_CREDIT,))))
+		assert_that(ENROLLMENT_LINEAGE_MAP, has_entry(ES_CREDIT_NONDEGREE, is_((ES_CREDIT,))))
