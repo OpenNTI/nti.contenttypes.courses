@@ -28,7 +28,9 @@ from .legacy_catalog import CourseCatalogInstructorLegacyInfo
 def _quiet_delattr(o, k):
 	try:
 		delattr(o, k)
-	except AttributeError:
+	except (AttributeError,TypeError):
+		# TypeError is raised when pure-python persistence on PyPy
+		# tries to delete a non-data-descriptor like a FieldProperty
 		pass
 
 def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
@@ -150,7 +152,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		catalog_entry.Prerequisites = info_json_dict.get('prerequisites', [])
 	else:
 		_quiet_delattr(catalog_entry, 'Prerequisites')
-		
+
 	return catalog_entry
 
 def fill_entry_from_legacy_key(catalog_entry, key, base_href='/'):
