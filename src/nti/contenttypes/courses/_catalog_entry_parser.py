@@ -76,13 +76,23 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		catalog_entry.StartDate = IDateTime(info_json_dict['startDate'])
 	else:
 		_quiet_delattr(catalog_entry, 'StartDate')
+	
+	#Allow explicitly setting endDate.  If endDate is not specified
+	#one will be computed if duration is present	
+	if 'endDate' in info_json_dict:
+		# parse the date using nti.externalization, which gets us
+		# a guaranteed UTC datetime as a naive object
+		catalog_entry.EndDate = IDateTime(info_json_dict['endDate'])
+	else:
+		_quiet_delattr(catalog_entry, 'EndDate')
 
 	if 'duration' in info_json_dict:
 		# We have durations as strings like "16 weeks"
 		duration_number, duration_kind = info_json_dict['duration'].split()
 		# Turn those into keywords for timedelta.
 		catalog_entry.Duration = timedelta(**{duration_kind.lower():int(duration_number)})
-		# Ensure the end date is derived properly
+		
+		# Ensure the end date is derived properly (or was previously set)
 		assert catalog_entry.StartDate is None or catalog_entry.EndDate
 	else:
 		_quiet_delattr(catalog_entry, 'Duration')
