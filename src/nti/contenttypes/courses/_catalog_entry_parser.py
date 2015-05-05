@@ -31,6 +31,7 @@ def _quiet_delattr(o, k):
 	except (AttributeError,TypeError):
 		# TypeError is raised when pure-python persistence on PyPy
 		# tries to delete a non-data-descriptor like a FieldProperty
+		# https://bitbucket.org/pypy/pypy/issue/2039/delattr-and-del-can-raise-typeerror-when
 		pass
 
 def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
