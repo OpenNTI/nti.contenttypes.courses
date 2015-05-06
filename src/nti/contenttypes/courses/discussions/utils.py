@@ -24,21 +24,28 @@ from .interfaces import NTI_COURSE_BUNDLE
 ENROLLED_COURSE_ROOT = ':EnrolledCourseRoot'
 ENROLLED_COURSE_SECTION = ':EnrolledCourseSection'
 
+def get_discussion_id(discussion):
+	result = getattr(discussion, 'id', discussion)
+	return result
+
 def is_nti_course_bundle(discussion):
-	parts = urlparse(discussion.id) if discussion.id else None
+	iden = get_discussion_id(discussion)
+	parts = urlparse(iden) if iden else None
 	result = NTI_COURSE_BUNDLE == parts.scheme if parts else False
 	return result
 
 def get_discussion_provider(discussion):
-	if is_nti_course_bundle(discussion):
-		parts = urlparse(discussion.id)
+	iden = get_discussion_id(discussion)
+	if is_nti_course_bundle(iden):
+		parts = urlparse(iden)
 		result = unquote(parts.netloc)
 		return result
 	return None
 
 def get_discussion_key(discussion):
-	if is_nti_course_bundle(discussion):
-		parts = urlparse(discussion.id)
+	iden = get_discussion_id(discussion)
+	if is_nti_course_bundle(iden):
+		parts = urlparse(iden)
 		result = os.path.split(unquote(parts.path))
 		return result[1]
 	return None
@@ -53,8 +60,8 @@ def get_entry_for_discussion(discussion, catalog=None, registry=component):
 	return None
 
 def get_discussion_scopes(discussion):
-	scopes = set()
+	result = set()
 	for scope in discussion.scopes:
-		scopes.update(ENROLLMENT_LINEAGE_MAP.get(scope) or ())
-	return scopes
+		result.update(ENROLLMENT_LINEAGE_MAP.get(scope) or ())
+	return result
 
