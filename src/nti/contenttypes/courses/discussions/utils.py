@@ -92,7 +92,7 @@ def get_course_for_discussion(discussion, context=None):
 		parent = get_parent_course(context)
 		if parent is not None:
 			parts = urlparse(get_discussion_id(discussion))
-			splits = parts.path('/') 
+			splits = parts.path.split('/') 
 			if SECTIONS in splits: # e.g. /Sections/02/Discussions
 				return parent.SubInstances.get(splits[2]) if len(splits) >=3 else None 
 			else:
