@@ -15,9 +15,12 @@ from urlparse import urlparse
 
 from zope import component
 
+from ..interfaces import SECTIONS
 from ..interfaces import ENROLLMENT_LINEAGE_MAP
 
 from ..interfaces import ICourseCatalog
+from ..interfaces import ICourseInstance
+from ..interfaces import ICourseSubInstance
 
 from .interfaces import NTI_COURSE_BUNDLE
 
@@ -50,18 +53,35 @@ def get_discussion_key(discussion):
 		return result[1]
 	return None
 
-def get_entry_for_discussion(discussion, catalog=None, registry=component):
+def get_discussion_mapped_scopes(discussion):
+	result = set()
+	for scope in discussion.scopes:
+		result.update(ENROLLMENT_LINEAGE_MAP.get(scope) or ())
+	return result
+
+def get_entry_for_discussion(discussion, catalog=None):
 	provider = get_discussion_provider(discussion)
-	catalog = registry.queryUtility(ICourseCatalog) if catalog is None else catalog
+	catalog = component.queryUtility(ICourseCatalog) if catalog is None else catalog
 	if provider and catalog is not None:
 		for entry in catalog.iterCatalogEntries():
 			if entry.ProviderUniqueID == provider:
 				return entry
 	return None
 
-def get_discussion_scopes(discussion):
-	result = set()
-	for scope in discussion.scopes:
-		result.update(ENROLLMENT_LINEAGE_MAP.get(scope) or ())
-	return result
-
+def get_course_for_discussion(discussion, context=None, catalog=None):
+	if is_nti_course_bundle(discussion):
+		context = get_entry_for_discussion(context, catalog) if not context else context
+		context = ICourseInstance(context, None)
+		if ICourseSubInstance.providedBy(context):
+			parent = context.__parent__.__parent__
+		else:
+			parent = context
+		
+		if parent is not None:
+			parts = urlparse(get_discussion_id(discussion))
+			splits = parts.path('/') 
+			if SECTIONS in splits: # e.g. /Sections/02/Discussions
+				return parent.SubInstances.get(splits[2]) if len(splits) >=3 else None 
+			else:
+				return parent
+	return None
