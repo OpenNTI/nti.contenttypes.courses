@@ -5,11 +5,13 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
 import os
+import itertools
 from urllib import unquote
 from urlparse import urlparse
 
@@ -59,24 +61,35 @@ def get_discussion_mapped_scopes(discussion):
 		result.update(ENROLLMENT_LINEAGE_MAP.get(scope) or ())
 	return result
 
-def get_entry_for_discussion(discussion, catalog=None):
+def get_parent_course(context):
+	context = ICourseInstance(context, None)
+	if ICourseSubInstance.providedBy(context):
+		parent = context.__parent__.__parent__
+	elif context is not None:
+		parent = context
+	return parent
+		
+def get_entry_for_discussion(discussion, context=None):
 	provider = get_discussion_provider(discussion)
-	catalog = component.queryUtility(ICourseCatalog) if catalog is None else catalog
-	if provider and catalog is not None:
-		for entry in catalog.iterCatalogEntries():
-			if entry.ProviderUniqueID == provider:
-				return entry
+	if not provider:
+		return None
+	elif context is None:
+		catalog = component.queryUtility(ICourseCatalog)
+		entries = catalog.iterCatalogEntries() if catalog is not None else ()
+	else:
+		parent = get_parent_course(context)
+		entries = itertools.chain(parent, parent.SubInstances.values()) if parent else ()
+	
+	for entry in entries:
+		entry = ICourseCatalogEntry(entry)
+		if entry.ProviderUniqueID == provider:
+			return entry
 	return None
 
-def get_course_for_discussion(discussion, context=None, catalog=None):
+def get_course_for_discussion(discussion, context=None):
 	if is_nti_course_bundle(discussion):
-		context = get_entry_for_discussion(context, catalog) if not context else context
-		context = ICourseInstance(context, None)
-		if ICourseSubInstance.providedBy(context):
-			parent = context.__parent__.__parent__
-		else:
-			parent = context
-		
+		context = get_entry_for_discussion(context) if context is None else context
+		parent = get_parent_course(context)
 		if parent is not None:
 			parts = urlparse(get_discussion_id(discussion))
 			splits = parts.path('/') 
