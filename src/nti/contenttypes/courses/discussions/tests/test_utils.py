@@ -13,8 +13,8 @@ from hamcrest import assert_that
 from nti.contenttypes.courses.discussions.model import CourseDiscussion
 from nti.contenttypes.courses.discussions.utils import get_discussion_key
 from nti.contenttypes.courses.discussions.utils import is_nti_course_bundle
-from nti.contenttypes.courses.discussions.utils import get_discussion_scopes
 from nti.contenttypes.courses.discussions.utils import get_discussion_provider
+from nti.contenttypes.courses.discussions.utils import get_discussion_mapped_scopes
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 
@@ -36,5 +36,5 @@ class TestUtils(CourseLayerTest):
 		discussion.title = '11:6:Perspectives'
 		discussion.scopes = (u'All',)
 		discussion.id = 'nti-course-bundle://LSTD/Sections/010/Discussions/d0.json'
-		assert_that(list(get_discussion_scopes(discussion)), 
+		assert_that(list(get_discussion_mapped_scopes(discussion)), 
 					is_([u'ForCredit', u'Public']))
