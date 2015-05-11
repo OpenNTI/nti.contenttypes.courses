@@ -13,8 +13,10 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
 from zope import component
-from zope.container.contained import Contained
+
 from zope.annotation.factory import factory as an_factory
+
+from zope.container.contained import Contained
 
 from persistent.mapping import PersistentMapping
 
@@ -93,8 +95,8 @@ class MappingAssignmentDateContext(Contained,
 
 CourseSubInstanceAssignmentDateContextFactory = an_factory(MappingAssignmentDateContext)
 
-@interface.implementer(IQAssignmentPolicies)
 @component.adapter(ICourseInstance)
+@interface.implementer(IQAssignmentPolicies)
 class MappingAssignmentPolicies(Contained,
 								PersistentCreatedAndModifiedTimeObject):
 	"""
@@ -108,8 +110,9 @@ class MappingAssignmentPolicies(Contained,
 		PersistentCreatedAndModifiedTimeObject.__init__(self)
 		self._mapping = PersistentMapping()
 
-	def assignments(self):
+	def assessments(self):
 		return list(self._mapping.keys())
+	assignments = assessments #BWC
 	
 	def clear(self):
 		self._mapping.clear()
@@ -117,8 +120,9 @@ class MappingAssignmentPolicies(Contained,
 	def __setitem__(self, key, value):
 		self._mapping[key] = value
 
-	def getPolicyForAssignment(self, key):
+	def getPolicyForAssessment(self, key):
 		return self._mapping.get(key, {})
+	getPolicyForAssignment = getPolicyForAssessment #BWC
 
 	def __bool__(self):
 		return bool(self._mapping)
