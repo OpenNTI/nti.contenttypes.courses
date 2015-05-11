@@ -30,17 +30,7 @@ class DefaultAssignmentPolicyValidator(object):
 		points = question_map.get(ntiid) or question_map.get('default')
 		return points
 	
-	def validate(self, ntiid, policy):
-		assignment = None
-		
-		if is_valid_ntiid_string(ntiid):
-			assignment = component.queryUtility(IQAssignment, name=ntiid)
-			if assignment is None:
-				logger.log(	loglevels.TRACE,
-							"Could not find assignment with ntiid %s", ntiid)
-		else:
-			return
-			
+	def valid_auto_grade(self, policy, assignment, ntiid):
 		auto_grade = policy.get('auto_grade')
 		if not auto_grade:
 			return
@@ -50,9 +40,11 @@ class DefaultAssignmentPolicyValidator(object):
 		except (AssertionError, TypeError, ValueError):
 			msg = "Invalid total points in policy for %s" % ntiid
 			raise ValueError(msg)
+		return auto_grade
 		
+	def validate_pointbased_policy(self, auto_grade, assignment, ntiid):
 		name = auto_grade.get('name')
-		if not name:
+		if not name or (assignment and not IQAssignment.providedBy(assignment)):
 			return
 		
 		if name.lower() in ('pointbased'):
@@ -70,6 +62,16 @@ class DefaultAssignmentPolicyValidator(object):
 			logger.warn("Don't know how to validate policy %s in assignment", 
 						name, ntiid)
 
+	def validate(self, ntiid, policy):
+		if not is_valid_ntiid_string(ntiid):
+			return # pragma no cover
+		assignment = component.queryUtility(IQAssignment, name=ntiid)
+		if assignment is None:
+			logger.log(	loglevels.TRACE,
+						"Could not find assessment with ntiid %s", ntiid)
+		auto_grade = self.valid_auto_grade(policy, assignment, ntiid)
+		self.validate_pointbased_policy(auto_grade, assignment, ntiid)
+		
 def validate_assigment_policies(course): 
 	course_policies = IQAssignmentPolicies(course, None)
 	if not course_policies:
