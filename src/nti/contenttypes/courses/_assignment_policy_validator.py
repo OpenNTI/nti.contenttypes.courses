@@ -43,7 +43,7 @@ class DefaultAssignmentPolicyValidator(object):
 		return auto_grade
 		
 	def validate_pointbased_policy(self, auto_grade, assignment, ntiid):
-		name = auto_grade.get('name')
+		name = auto_grade.get('name') if auto_grade else None
 		if not name or (assignment and not IQAssignment.providedBy(assignment)):
 			return
 		
