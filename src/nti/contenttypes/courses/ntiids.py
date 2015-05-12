@@ -26,9 +26,9 @@ class _CourseInfoNTIIDResolver(object):
 
 	def resolve(self, ntiid):
 		catalog = component.queryUtility(ICourseCatalog)
-		if catalog is None:
-			return
-		try:
-			return catalog.getCatalogEntry(ntiid)
-		except KeyError:
-			return None
+		if catalog is not None:
+			try:
+				return catalog.getCatalogEntry(ntiid)
+			except KeyError:
+				pass
+		return None
