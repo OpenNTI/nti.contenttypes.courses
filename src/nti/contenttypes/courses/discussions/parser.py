@@ -18,10 +18,6 @@ from zope import component
 
 from zope import lifecycleevent
 
-from zope.location.location import locate
-
-from ZODB.interfaces import IConnection
-
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
 from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
@@ -74,8 +70,8 @@ def parse_discussions(course, bucket, intids=None):
 
 		json = key.readContentsAsYaml()
 		factory = find_factory_for(json)
-		new_discussion = factory()
-		update_from_external_object(new_discussion, json)
+		new_discussion = factory() if discussion is None else discussion
+		update_from_external_object(new_discussion, json, notify=False)
 	
 		path = path_to_course(key)
 		new_discussion.id = "%s://%s/%s" % (NTI_COURSE_BUNDLE, provider, path)
@@ -83,21 +79,8 @@ def parse_discussions(course, bucket, intids=None):
 			lifecycleevent.created(new_discussion)
 			discussions[name] = new_discussion
 		else:
-			## remove an unregister all w/o event
-			discussions._delitemf(name, event=False)
-			if intids is not None:
-				intids.unregister(discussion)
-			
-			## add new object w/o event
-			discussions._setitemf(name, new_discussion)
-			locate(new_discussion, parent=discussions, name=key)
-			if intids is not None:
-				IConnection(discussions).add(new_discussion)
-				intids.register(new_discussion)
 			discussions._p_changed = True
 			discussions.updateLastMod()
-			
-			## notify
 			lifecycleevent.modified(new_discussion)
 
 		## set to key last modified
