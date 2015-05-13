@@ -28,11 +28,11 @@ class TestUtils(CourseLayerTest):
 		assert_that(is_nti_course_bundle(iden), is_(True))
 		assert_that(is_nti_course_bundle(discussion), is_(True))
 		assert_that(get_discussion_key(discussion), is_('d0.json'))
-		
+
 	def test_scopes(self):
 		discussion = CourseDiscussion()
 		discussion.title = '11:6:Perspectives'
 		discussion.scopes = (u'All',)
 		discussion.id = 'nti-course-bundle://Sections/010/Discussions/d0.json'
-		assert_that(list(get_discussion_mapped_scopes(discussion)), 
+		assert_that(list(get_discussion_mapped_scopes(discussion)),
 					is_([u'ForCredit', u'Public']))

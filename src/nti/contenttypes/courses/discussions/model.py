@@ -22,7 +22,7 @@ from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeCo
 
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
 
-from nti.schema.schema import EqHash 
+from nti.schema.schema import EqHash
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
 
@@ -30,7 +30,7 @@ from ..interfaces import ICourseInstance
 
 from .interfaces import ICourseDiscussion
 from .interfaces import ICourseDiscussions
-	
+
 @interface.implementer(ICourseDiscussion, IContentTypeAware)
 @EqHash('id')
 class CourseDiscussion(SchemaConfigured,
@@ -42,13 +42,13 @@ class CourseDiscussion(SchemaConfigured,
 	mime_type = mimeType = u'application/vnd.nextthought.courses.discussion'
 
 	parameters = {}
-	
+
 	_SET_CREATED_MODTIME_ON_INIT = False
-	
+
 	def __init__(self, *args, **kwargs):
 		SchemaConfigured.__init__(self, *args, **kwargs)
 		PersistentCreatedModDateTrackingObject.__init__(self, *args, **kwargs)
-		
+
 	def __str__(self, *args, **kwargs):
 		if self.id:
 			result = "%s(id=%s)" % (self.__class__.__name__, self.id)
@@ -57,7 +57,7 @@ class CourseDiscussion(SchemaConfigured,
 		return result
 
 	__repr__ = __str__
-	
+
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseDiscussions)
 class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer):
@@ -67,8 +67,8 @@ class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer
 
 	__name__ = None
 	__parent__ = None
-	
+
 	def __init__(self):
-		super(DefaultCourseDiscussions,self).__init__()
+		super(DefaultCourseDiscussions, self).__init__()
 
 CourseDiscussions = an_factory(DefaultCourseDiscussions, 'CourseDiscussions')

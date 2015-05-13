@@ -36,24 +36,24 @@ class TestModel(CourseLayerTest):
 					verifiably_provides(ICourseDiscussion))
 
 	def test_extenalizes(self):
-		assert_that( CourseDiscussion(),
-					 externalizes( has_entries(
+		assert_that(CourseDiscussion(),
+					 externalizes(has_entries(
 								  'Class', 'Discussion',
 								  'MimeType', 'application/vnd.nextthought.courses.discussion',
 								  'body', is_(none()),
 								  'scopes', is_(none()),
-								  'tags', is_([]) ) ) ) 
+								  'tags', is_([]))))
 	def test_internalize(self):
 		path = os.path.join(os.path.dirname(__file__), 'discussion.json')
 		with open(path, "r") as fp:
 			context = fp.read()
 			context = unicode(context, 'utf-8') if isinstance(context, bytes) else context
 			source = simplejson.loads(context)
-			
+
 		factory = find_factory_for(source)
 		assert_that(factory, is_not(none()))
 		obj = factory()
-		update_from_external_object(obj,source )
+		update_from_external_object(obj, source)
 		assert_that(obj, has_property('mimeType', is_('application/vnd.nextthought.courses.discussion')))
 		assert_that(obj, has_property('body', is_not(none())))
 		assert_that(obj, has_property('scopes', is_(['All'])))

@@ -62,7 +62,7 @@ def get_course_for_discussion(discussion, context):
 	if is_nti_course_bundle(iden) and context is not None:
 		parent = get_parent_course(context)
 		if parent is not None:
-			parts = iden[len(NTI_COURSE_BUNDLE_REF):] 
+			parts = iden[len(NTI_COURSE_BUNDLE_REF):]
 			splits = parts.split('/')
 			if SECTIONS in splits:  # e.g. Sections/02/Discussions
 				return parent.SubInstances.get(splits[1]) if len(splits) >= 2 else None

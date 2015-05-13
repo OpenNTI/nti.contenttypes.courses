@@ -33,8 +33,8 @@ from ..interfaces import ENROLLMENT_SCOPE_VOCABULARY
 NTI_COURSE_BUNDLE = u'nti-course-bundle'
 NTI_COURSE_BUNDLE_REF = "%s://" % NTI_COURSE_BUNDLE
 
-ALL_SCOPES_VOCABULARY = SimpleVocabulary( [SimpleTerm(ES_ALL)] + list(ENROLLMENT_SCOPE_VOCABULARY))
-	
+ALL_SCOPES_VOCABULARY = SimpleVocabulary([SimpleTerm(ES_ALL)] + list(ENROLLMENT_SCOPE_VOCABULARY))
+
 class ICourseDiscussion(ITitled, ITaggedContent, ILastModified, IContained):
 	title = ValidTextLine(title="Discussion title", required=True)
 	icon = ValidTextLine(title="Discussion icon href", required=False)
@@ -42,7 +42,7 @@ class ICourseDiscussion(ITitled, ITaggedContent, ILastModified, IContained):
 	body = CompoundModeledContentBody(required=False)
 	scopes = ListOrTuple(Choice(vocabulary=ALL_SCOPES_VOCABULARY),
 						 title='scopes', required=True, min_length=1)
-	
+
 	id = ValidTextLine(title="Internal id", required=False)
 	id.setTaggedValue('_ext_excluded_out', True)
 

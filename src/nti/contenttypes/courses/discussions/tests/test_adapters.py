@@ -31,16 +31,16 @@ class TestAdapters(CourseLayerTest):
 		connection = mock_dataserver.current_transaction
 		inst = CourseInstance()
 		connection.add(inst)
-		
+
 		discussions = ICourseDiscussions(inst, None)
 		assert_that(discussions, is_not(none()))
 		assert_that(discussions, has_property('__parent__', is_(inst)))
-		
+
 		discussion = CourseDiscussion()
 		discussion.id = 'foo'
 		discussions['foo'] = discussion
 		assert_that(discussions, has_entry('foo', is_(discussion)))
-		
+
 		course = ICourseInstance(discussion, None)
 		assert_that(course, is_not(none()))
 		assert_that(course, is_(inst))
