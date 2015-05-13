@@ -10,7 +10,6 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 import os
-from urllib import quote
 
 import zope.intid
 
@@ -24,8 +23,6 @@ from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 
 from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
-
-from ..interfaces import ICourseCatalogEntry
 
 from .interfaces import NTI_COURSE_BUNDLE
 from .interfaces import ICourseDiscussions
@@ -54,14 +51,13 @@ def parse_discussions(course, bucket, intids=None):
 		if IDelimitedHierarchyKey.providedBy(item):
 			child_files[item.__name__] = item
 
-	## Remove anything the discussions has that aren't on the filesystem
+	# Remove anything the discussions has that aren't on the filesystem
 	for child_name in list(discussions):
 		if child_name not in child_files:
 			logger.info("Removing discussion %s (%r)", child_name,
 						 discussions[child_name])
 			del discussions[child_name]
-		
-	provider = quote(ICourseCatalogEntry(course).ProviderUniqueID)
+
 	intids = component.queryUtility(zope.intid.IIntIds) if intids is None else intids
 	for name, key  in child_files.items():
 		discussion = discussions.get(name)
@@ -72,9 +68,9 @@ def parse_discussions(course, bucket, intids=None):
 		factory = find_factory_for(json)
 		new_discussion = factory() if discussion is None else discussion
 		update_from_external_object(new_discussion, json, notify=False)
-	
+
 		path = path_to_course(key)
-		new_discussion.id = "%s://%s/%s" % (NTI_COURSE_BUNDLE, provider, path)
+		new_discussion.id = "%s://%s" % (NTI_COURSE_BUNDLE, path)
 		if discussion is None:
 			lifecycleevent.created(new_discussion)
 			discussions[name] = new_discussion
@@ -83,5 +79,5 @@ def parse_discussions(course, bucket, intids=None):
 			discussions.updateLastMod()
 			lifecycleevent.modified(new_discussion)
 
-		## set to key last modified
+		# set to key last modified
 		new_discussion.lastModified = key.lastModified

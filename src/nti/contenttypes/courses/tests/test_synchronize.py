@@ -79,13 +79,13 @@ class TestFunctionalSynchronize(CourseLayerTest):
 
 	def setUp(self):
 		self.library = filesystem.GlobalFilesystemContentPackageLibrary(
-			os.path.join(os.path.dirname(__file__), 'test_subscribers' ))
+			os.path.join(os.path.dirname(__file__), 'test_subscribers'))
 		self.library.syncContentPackages()
 		component.getGlobalSiteManager().registerUtility(self.library, IContentPackageLibrary)
 
-		root_name ='TestSynchronizeWithSubInstances'
-		absolute_path = os.path.join( os.path.dirname( __file__ ),
-									  root_name )
+		root_name = 'TestSynchronizeWithSubInstances'
+		absolute_path = os.path.join(os.path.dirname(__file__),
+									  root_name)
 		bucket = filesystem.FilesystemBucket(name=root_name)
 		bucket.absolute_path = absolute_path
 
@@ -108,54 +108,54 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		gateway = spring['Gateway']
 
 		# Define our scope ntiids
-		public_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-public'
-		restricted_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted'
+		public_ntiid = 'tag:nextthought.com,2011-10:NTI-OID-0x12345-public'
+		restricted_ntiid = 'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted'
 		gateway.SharingScopes['Public'].to_external_ntiid_oid = lambda: public_ntiid
 		gateway.SharingScopes['ForCredit'].to_external_ntiid_oid = lambda: restricted_ntiid
 
-		assert_that( gateway, verifiably_provides(IEnrollmentMappedCourseInstance) )
-		assert_that( gateway, externalizes())
+		assert_that(gateway, verifiably_provides(IEnrollmentMappedCourseInstance))
+		assert_that(gateway, externalizes())
 
-		assert_that( gateway.Outline, has_length(7) )
+		assert_that(gateway.Outline, has_length(7))
 
-		assert_that( gateway.ContentPackageBundle.__parent__,
+		assert_that(gateway.ContentPackageBundle.__parent__,
 					 is_(gateway))
 
 		# The bundle's NTIID is derived from the path
-		assert_that( gateway.ContentPackageBundle,
+		assert_that(gateway.ContentPackageBundle,
 					 has_property('ntiid', 'tag:nextthought.com,2011-10:NTI-Bundle:CourseBundle-Spring2014_Gateway'))
 		# The name is currently an alias of the NTIID; that's not
 		# exactly what we want, but unless/until it's an issue, we'll
 		# ignore that.
-		assert_that( gateway.ContentPackageBundle,
-					 has_property('__name__', gateway.ContentPackageBundle.ntiid) )
+		assert_that(gateway.ContentPackageBundle,
+					 has_property('__name__', gateway.ContentPackageBundle.ntiid))
 
-		#assert_that( gateway.instructors, is_((IPrincipal('harp4162'),)))
+		# assert_that( gateway.instructors, is_((IPrincipal('harp4162'),)))
 
-		assert_that( ICourseInstanceVendorInfo(gateway),
-					 has_entry( 'OU', has_entry('key', 42) ) )
+		assert_that(ICourseInstanceVendorInfo(gateway),
+					 has_entry('OU', has_entry('key', 42)))
 
-		assert_that( ICourseCatalogEntry(gateway),
-					 has_properties( 'ProviderUniqueID', 'CLC 3403',
+		assert_that(ICourseCatalogEntry(gateway),
+					 has_properties('ProviderUniqueID', 'CLC 3403',
 									 'Title', 'Law and Justice',
-									 'creators', ('Jason',)) )
-		assert_that( ICourseInstance(ICourseCatalogEntry(gateway)),
-					 is_(gateway) )
+									 'creators', ('Jason',)))
+		assert_that(ICourseInstance(ICourseCatalogEntry(gateway)),
+					 is_(gateway))
 
-		assert_that( ICourseCatalogEntry(gateway),
+		assert_that(ICourseCatalogEntry(gateway),
 					 verifiably_provides(IPersistent))
 		# Ensure we're not proxied
-		assert_that( type(ICourseCatalogEntry(gateway)),
-					 is_(same_instance(legacy_catalog._CourseInstanceCatalogLegacyEntry)) )
+		assert_that(type(ICourseCatalogEntry(gateway)),
+					 is_(same_instance(legacy_catalog._CourseInstanceCatalogLegacyEntry)))
 
 		sec1 = gateway.SubInstances['01']
-		sec_public_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-public-sec'
-		sec_restricted_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted-sec'
+		sec_public_ntiid = 'tag:nextthought.com,2011-10:NTI-OID-0x12345-public-sec'
+		sec_restricted_ntiid = 'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted-sec'
 		sec1.SharingScopes['Public'].to_external_ntiid_oid = lambda: sec_public_ntiid
 		sec1.SharingScopes['ForCredit'].to_external_ntiid_oid = lambda: sec_restricted_ntiid
 
-		assert_that( ICourseInstanceVendorInfo(sec1),
-					 has_entry( 'OU', has_entry('key2', 72) ) )
+		assert_that(ICourseInstanceVendorInfo(sec1),
+					 has_entry('OU', has_entry('key2', 72)))
 
 		assert_that(sec1.ContentPackageBundle,
 					is_(gateway.ContentPackageBundle))
@@ -167,36 +167,36 @@ class TestFunctionalSynchronize(CourseLayerTest):
 
 		# partially overridden course info
 		sec1_cat = ICourseCatalogEntry(sec1)
-		assert_that( sec1_cat,
-					 has_property( 'key',
+		assert_that(sec1_cat,
+					 has_property('key',
 								   is_(bucket.getChildNamed('Spring2014')
 									   .getChildNamed('Gateway')
 									   .getChildNamed('Sections')
 									   .getChildNamed('01')
 									   .getChildNamed('course_info.json'))))
-		assert_that( sec1_cat,
+		assert_that(sec1_cat,
 					 is_not(same_instance(ICourseCatalogEntry(gateway))))
-		assert_that( sec1_cat,
+		assert_that(sec1_cat,
 					 is_(legacy_catalog._CourseSubInstanceCatalogLegacyEntry))
-		assert_that( sec1_cat,
-					 has_properties( 'ProviderUniqueID', 'CLC 3403-01',
+		assert_that(sec1_cat,
+					 has_properties('ProviderUniqueID', 'CLC 3403-01',
 									 'Title', 'Law and Justice',
-									 'creators', ('Steve',)) )
-		assert_that( sec1_cat,
+									 'creators', ('Steve',)))
+		assert_that(sec1_cat,
 					 has_property('PlatformPresentationResources',
-								  contains( has_property('root',
+								  contains(has_property('root',
 														 has_property('absolute_path',
 																	  contains_string('Sections/01'))))))
 
-		assert_that( sec1_cat, has_property( 'links',
+		assert_that(sec1_cat, has_property('links',
 											 contains(has_property('target', sec1))))
 
 		gateway.SharingScopes['Public']._v_ntiid = 'gateway-public'
 		sec1.SharingScopes['Public']._v_ntiid = 'section1-public'
 		sec1.SharingScopes['ForCredit']._v_ntiid = 'section1-forcredit'
-		assert_that( sec1,
-					 externalizes( has_entries(
-						 'Class', 'CourseInstance') ) )
+		assert_that(sec1,
+					 externalizes(has_entries(
+						 'Class', 'CourseInstance')))
 
 		gateway_ext = to_external_object(gateway)
 		sec1_ext = to_external_object(sec1)
@@ -204,62 +204,62 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		dec._is_authenticated = False
 		dec._do_decorate_external(sec1, sec1_ext)
 		dec._do_decorate_external(gateway, gateway_ext)
-		assert_that( gateway_ext, has_entry('LegacyScopes',
+		assert_that(gateway_ext, has_entry('LegacyScopes',
 											has_entries('public', gateway.SharingScopes['Public'].NTIID,
-														'restricted', gateway.SharingScopes['ForCredit'].NTIID)) )
-		assert_that( gateway_ext, has_entries(
+														'restricted', gateway.SharingScopes['ForCredit'].NTIID)))
+		assert_that(gateway_ext, has_entries(
 			'SharingScopes',
 			has_entries('Items', has_entry('Public',
-										   has_entry('alias', 'CLC 3403 - Open') ),
-						'DefaultSharingScopeNTIID', gateway.SharingScopes['Public'].NTIID) ) )
+										   has_entry('alias', 'CLC 3403 - Open')),
+						'DefaultSharingScopeNTIID', gateway.SharingScopes['Public'].NTIID)))
 
-		assert_that( sec1_ext,
+		assert_that(sec1_ext,
 					 has_entries(
 						 'LegacyScopes', has_entries(
 							 # public initially copied from the parent
 							 'public', gateway.SharingScopes['Public'].NTIID,
-							 'restricted', sec1.SharingScopes['ForCredit'].NTIID)) )
+							 'restricted', sec1.SharingScopes['ForCredit'].NTIID)))
 
-		assert_that( sec1_ext, has_entries(
+		assert_that(sec1_ext, has_entries(
 			'SharingScopes',
 			has_entries('Items', has_entry('Public',
-										   has_entry('alias', 'CLC 3403-01 - Open') ),
-						'DefaultSharingScopeNTIID', gateway.SharingScopes['Public'].NTIID) ) )
+										   has_entry('alias', 'CLC 3403-01 - Open')),
+						'DefaultSharingScopeNTIID', gateway.SharingScopes['Public'].NTIID)))
 
 		# although if we make the parent non-public, we go back to ourself
 		interface.alsoProvides(gateway, INonPublicCourseInstance)
 		sec1_ext = to_external_object(sec1)
 		dec._do_decorate_external(sec1, sec1_ext)
-		assert_that( sec1_ext,
+		assert_that(sec1_ext,
 					 has_entries(
 						 'LegacyScopes', has_entries(
 							 'public', sec1.SharingScopes['Public'].NTIID,
-							 'restricted', sec1.SharingScopes['ForCredit'].NTIID)) )
+							 'restricted', sec1.SharingScopes['ForCredit'].NTIID)))
 		interface.noLongerProvides(gateway, INonPublicCourseInstance)
 
-		assert_that( sec1_cat,
-					 externalizes( has_key('PlatformPresentationResources')))
-		assert_that( sec1_cat,
+		assert_that(sec1_cat,
+					 externalizes(has_key('PlatformPresentationResources')))
+		assert_that(sec1_cat,
 					 # there, but not meaningful yet
-					 externalizes( has_entry('CourseNTIID', none() ) ) )
+					 externalizes(has_entry('CourseNTIID', none())))
 
 		sec2 = gateway.SubInstances['02']
-		assert_that( sec2.Outline, has_length(1) )
+		assert_that(sec2.Outline, has_length(1))
 
 		date_context = IQAssignmentDateContext(sec2)
-		assert_that( date_context, has_property('_mapping',
+		assert_that(date_context, has_property('_mapping',
 												has_entry(
 													"tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.asg:QUIZ1_aristotle",
 													has_entry('available_for_submission_beginning',
-															  datetime.datetime(2014, 1, 22, 6, 0) ) ) ) )
+															  datetime.datetime(2014, 1, 22, 6, 0)))))
 
 		policies = IQAssignmentPolicies(sec2)
-		assert_that( policies, has_property('_mapping',
+		assert_that(policies, has_property('_mapping',
 											has_entry(
 												"tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.asg:QUIZ1_aristotle",
-												is_( {'auto_grade': {'total_points': 20}, "maximum_time_allowed": 50} ) ) ) )
-		assert_that( policies.getPolicyForAssignment("tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.asg:QUIZ1_aristotle"),
-					 is_( {'auto_grade': {'total_points': 20}, u'maximum_time_allowed': 50} ) )
+												is_({'auto_grade': {'total_points': 20}, "maximum_time_allowed": 50}))))
+		assert_that(policies.getPolicyForAssignment("tag:nextthought.com,2011-10:OU-NAQ-CLC3403_LawAndJustice.naq.asg:QUIZ1_aristotle"),
+					 is_({'auto_grade': {'total_points': 20}, u'maximum_time_allowed': 50}))
 
 		sec2_ext = to_external_object(sec2)
 		dec._do_decorate_external(sec2, sec2_ext)
@@ -273,15 +273,15 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		# We should have the catalog functionality now
 		sec3 = gateway.SubInstances['03']
 		cat_entries = list(folder.iterCatalogEntries())
-		assert_that( cat_entries, has_length(4) )
-		assert_that( cat_entries,
-					 contains_inanyorder( ICourseCatalogEntry(gateway),
+		assert_that(cat_entries, has_length(4))
+		assert_that(cat_entries,
+					 contains_inanyorder(ICourseCatalogEntry(gateway),
 										  ICourseCatalogEntry(sec1),
 										  ICourseCatalogEntry(sec2),
 										  ICourseCatalogEntry(sec3)))
 
 		# The NTIIDs are derived from the path
-		assert_that( cat_entries,
+		assert_that(cat_entries,
 					 contains_inanyorder(
 						 has_property('ntiid',
 									  'tag:nextthought.com,2011-10:NTI-CourseInfo-Spring2014_Gateway_SubInstances_02'),
@@ -290,31 +290,31 @@ class TestFunctionalSynchronize(CourseLayerTest):
 						 has_property('ntiid',
 									  'tag:nextthought.com,2011-10:NTI-CourseInfo-Spring2014_Gateway_SubInstances_03'),
 						 has_property('ntiid',
-									  'tag:nextthought.com,2011-10:NTI-CourseInfo-Spring2014_Gateway')) )
+									  'tag:nextthought.com,2011-10:NTI-CourseInfo-Spring2014_Gateway')))
 
 		# And each entry can be resolved by ntiid...
 		from nti.ntiids import ntiids
-		assert_that( [ntiids.find_object_with_ntiid(x.ntiid) for x in cat_entries],
-					 is_([None,None,None,None]))
+		assert_that([ntiids.find_object_with_ntiid(x.ntiid) for x in cat_entries],
+					 is_([None, None, None, None]))
 		# ...but only with the right catalog installed
 		old_cat = component.getUtility(ICourseCatalog)
-		component.provideUtility(folder,ICourseCatalog)
+		component.provideUtility(folder, ICourseCatalog)
 		try:
-			assert_that( [ntiids.find_object_with_ntiid(x.ntiid) for x in cat_entries],
+			assert_that([ntiids.find_object_with_ntiid(x.ntiid) for x in cat_entries],
 						 is_(cat_entries))
 		finally:
-			component.provideUtility(old_cat,ICourseCatalog)
-			
+			component.provideUtility(old_cat, ICourseCatalog)
+
 		# course discussions
 		discussions = ICourseDiscussions(gateway, None)
 		assert_that(discussions, is_not(none()))
 		assert_that(discussions, has_key('d0.json'))
-		assert_that(discussions['d0.json'], has_property('id', is_(u'nti-course-bundle://CLC%203403/Discussions/d0.json')))
-		
+		assert_that(discussions['d0.json'], has_property('id', is_(u'nti-course-bundle://Discussions/d0.json')))
+
 		discussions = ICourseDiscussions(sec2, None)
 		assert_that(discussions, is_not(none()))
 		assert_that(discussions, has_key('d1.json'))
-		assert_that(discussions['d1.json'], has_property('id', is_(u'nti-course-bundle://CLC%203403/Sections/02/Discussions/d1.json')))
+		assert_that(discussions['d1.json'], has_property('id', is_(u'nti-course-bundle://Sections/02/Discussions/d1.json')))
 
 	def test_default_sharing_scope_use_parent(self):
 		"""
@@ -332,13 +332,13 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		sec = gateway.SubInstances['02']
 
 		# Define our scope ntiids
-		public_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-public'
-		restricted_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted'
+		public_ntiid = 'tag:nextthought.com,2011-10:NTI-OID-0x12345-public'
+		restricted_ntiid = 'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted'
 		gateway.SharingScopes['Public'].to_external_ntiid_oid = lambda: public_ntiid
 		gateway.SharingScopes['ForCredit'].to_external_ntiid_oid = lambda: restricted_ntiid
 
-		sec_public_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-public-sec'
-		sec_restricted_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted-sec'
+		sec_public_ntiid = 'tag:nextthought.com,2011-10:NTI-OID-0x12345-public-sec'
+		sec_restricted_ntiid = 'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted-sec'
 		sec.SharingScopes['Public'].to_external_ntiid_oid = lambda: sec_public_ntiid
 		sec.SharingScopes['ForCredit'].to_external_ntiid_oid = lambda: sec_restricted_ntiid
 
@@ -349,29 +349,29 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		dec._do_decorate_external(sec, sec2_ext)
 		dec._do_decorate_external(gateway, gateway_ext)
 
-		assert_that( gateway_ext, has_entry('LegacyScopes',
+		assert_that(gateway_ext, has_entry('LegacyScopes',
 											has_entries('public', gateway.SharingScopes['Public'].NTIID,
-														'restricted', gateway.SharingScopes['ForCredit'].NTIID)) )
+														'restricted', gateway.SharingScopes['ForCredit'].NTIID)))
 
-		assert_that( gateway_ext, has_entries(
+		assert_that(gateway_ext, has_entries(
 			'SharingScopes',
 			has_entries('Items', has_entry('Public',
-										   has_entry('alias', 'CLC 3403 - Open') ),
-						'DefaultSharingScopeNTIID', gateway.SharingScopes['Public'].NTIID) ) )
+										   has_entry('alias', 'CLC 3403 - Open')),
+						'DefaultSharingScopeNTIID', gateway.SharingScopes['Public'].NTIID)))
 
-		assert_that( sec2_ext,
+		assert_that(sec2_ext,
 					 has_entries(
 						 'LegacyScopes', has_entries(
 							 # public initially copied from the parent
 							 'public', gateway.SharingScopes['Public'].NTIID,
-							 'restricted', sec.SharingScopes['ForCredit'].NTIID)) )
+							 'restricted', sec.SharingScopes['ForCredit'].NTIID)))
 
 		# Our ForCredit section actually defaults to the parent Public scope
-		assert_that( sec2_ext, has_entries(
+		assert_that(sec2_ext, has_entries(
 			'SharingScopes',
 			has_entries('Items', has_entry('Public',
-										   has_entry('alias', 'From Vendor Info') ),
-						'DefaultSharingScopeNTIID', gateway.SharingScopes['Public'].NTIID) ) )
+										   has_entry('alias', 'From Vendor Info')),
+						'DefaultSharingScopeNTIID', gateway.SharingScopes['Public'].NTIID)))
 
 	@fudge.patch('nti.contenttypes.courses.decorators.IEntityContainer',
 				 'nti.app.renderers.decorators.get_remote_user')
@@ -384,7 +384,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		class Container(object):
 			def __contains__(self, o): return True
 		mock_container.is_callable().returns(Container())
-		mock_rem_user.is_callable().returns( object() )
+		mock_rem_user.is_callable().returns(object())
 
 		bucket = self.bucket
 		folder = self.folder
@@ -397,13 +397,13 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		sec = gateway.SubInstances['03']
 
 		# Define our scope ntiids
-		public_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-public'
-		restricted_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted'
+		public_ntiid = 'tag:nextthought.com,2011-10:NTI-OID-0x12345-public'
+		restricted_ntiid = 'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted'
 		gateway.SharingScopes['Public'].to_external_ntiid_oid = lambda: public_ntiid
 		gateway.SharingScopes['ForCredit'].to_external_ntiid_oid = lambda: restricted_ntiid
 
-		sec_public_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-public-sec'
-		sec_restricted_ntiid =  'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted-sec'
+		sec_public_ntiid = 'tag:nextthought.com,2011-10:NTI-OID-0x12345-public-sec'
+		sec_restricted_ntiid = 'tag:nextthought.com,2011-10:NTI-OID-0x12345-restricted-sec'
 		sec.SharingScopes['Public'].to_external_ntiid_oid = lambda: sec_public_ntiid
 		sec.SharingScopes['ForCredit'].to_external_ntiid_oid = lambda: sec_restricted_ntiid
 
@@ -415,51 +415,51 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		dec._do_decorate_external(sec, sec_ext)
 		dec._do_decorate_external(gateway, gateway_ext)
 
-		assert_that( gateway_ext, has_entry('LegacyScopes',
+		assert_that(gateway_ext, has_entry('LegacyScopes',
 											has_entries('public', gateway.SharingScopes['Public'].NTIID,
-														'restricted', gateway.SharingScopes['ForCredit'].NTIID)) )
+														'restricted', gateway.SharingScopes['ForCredit'].NTIID)))
 
-		assert_that( gateway_ext, has_entries(
+		assert_that(gateway_ext, has_entries(
 			'SharingScopes',
 			has_entries('Items', has_entry('Public',
-										   has_entry('alias', 'CLC 3403 - Open') ),
-						'DefaultSharingScopeNTIID', gateway.SharingScopes['ForCredit'].NTIID) ) )
+										   has_entry('alias', 'CLC 3403 - Open')),
+						'DefaultSharingScopeNTIID', gateway.SharingScopes['ForCredit'].NTIID)))
 
-		assert_that(  sec_ext,
+		assert_that(sec_ext,
 					 has_entries(
 						 'LegacyScopes', has_entries(
 							 # public initially copied from the parent
 							 'public', gateway.SharingScopes['Public'].NTIID,
-							 'restricted', sec.SharingScopes['ForCredit'].NTIID)) )
+							 'restricted', sec.SharingScopes['ForCredit'].NTIID)))
 
 		# This default comes from our section.
-		assert_that( sec_ext, has_entries(
+		assert_that(sec_ext, has_entries(
 			'SharingScopes',
 			has_entries('Items', has_entry('Public',
-										   has_entry('alias', 'From Vendor Info') ),
-						'DefaultSharingScopeNTIID', sec.SharingScopes['ForCredit'].NTIID) ) )
+										   has_entry('alias', 'From Vendor Info')),
+						'DefaultSharingScopeNTIID', sec.SharingScopes['ForCredit'].NTIID)))
 
 	def test_synchronize_clears_caches(self):
-		#User.create_user(self.ds, username='harp4162')
+		# User.create_user(self.ds, username='harp4162')
 		bucket = self.bucket
 		folder = self.folder
 
-		assert_that( list(folder.iterCatalogEntries()),
-					 is_empty() )
+		assert_that(list(folder.iterCatalogEntries()),
+					 is_empty())
 
 		synchronize_catalog_from_root(folder, bucket)
 
 
-		assert_that( list(folder.iterCatalogEntries()),
-					 has_length(4) )
+		assert_that(list(folder.iterCatalogEntries()),
+					 has_length(4))
 
 
 		# Now delete the course
 		del folder['Spring2014']['Gateway']
 
 		# and the entries are gone
-		assert_that( list(folder.iterCatalogEntries()),
-					 is_empty() )
+		assert_that(list(folder.iterCatalogEntries()),
+					 is_empty())
 
 	def test_non_public_parent_course_doesnt_hide_child_section(self):
 		bucket = self.bucket
@@ -479,21 +479,21 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		sec1_cat = ICourseCatalogEntry(sec1)
 
 
-		assert_that( sec1_cat, permits(AUTHENTICATED_GROUP_NAME,
+		assert_that(sec1_cat, permits(AUTHENTICATED_GROUP_NAME,
 									   ACT_READ))
-		assert_that( sec1_cat, permits(AUTHENTICATED_GROUP_NAME,
+		assert_that(sec1_cat, permits(AUTHENTICATED_GROUP_NAME,
 									   ACT_CREATE))
 		# and as joint, just because
-		assert_that( sec1_cat, permits([EVERYONE_GROUP_NAME,AUTHENTICATED_GROUP_NAME],
+		assert_that(sec1_cat, permits([EVERYONE_GROUP_NAME, AUTHENTICATED_GROUP_NAME],
 									   ACT_READ))
 
 		# But the CCE for the course is not public
-		assert_that( cat, denies(AUTHENTICATED_GROUP_NAME,
+		assert_that(cat, denies(AUTHENTICATED_GROUP_NAME,
 									   ACT_READ))
-		assert_that( cat, denies(AUTHENTICATED_GROUP_NAME,
+		assert_that(cat, denies(AUTHENTICATED_GROUP_NAME,
 									   ACT_CREATE))
 		# and as joint, just because
-		assert_that( cat, denies([EVERYONE_GROUP_NAME,AUTHENTICATED_GROUP_NAME],
+		assert_that(cat, denies([EVERYONE_GROUP_NAME, AUTHENTICATED_GROUP_NAME],
 									   ACT_READ))
 
 	@fudge.patch('nti.contenttypes.courses.decorators.IEntityContainer',
@@ -506,7 +506,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		class Container(object):
 			def __contains__(self, o): return True
 		mock_container.is_callable().returns(Container())
-		mock_rem_user.is_callable().returns( object() )
+		mock_rem_user.is_callable().returns(object())
 
 		bucket = self.bucket
 		folder = self.folder
@@ -515,7 +515,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		spring = folder['Spring2014']
 		gateway = spring['Gateway']
 		section = gateway.SubInstances['03']
-		gateway_discussions = getattr( gateway, 'Discussions' )
+		gateway_discussions = getattr(gateway, 'Discussions')
 
 		section_discussions = section.Discussions
 		# Setup. Just make sure we have a discussion here.
@@ -524,24 +524,24 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		gateway_ext = {}
 		section_ext = {}
 
-		decorator = _AnnouncementsDecorator( gateway, None )
-		decorator._do_decorate_external( gateway, gateway_ext )
-		decorator = _AnnouncementsDecorator( section, None )
+		decorator = _AnnouncementsDecorator(gateway, None)
+		decorator._do_decorate_external(gateway, gateway_ext)
+		decorator = _AnnouncementsDecorator(section, None)
 		decorator._is_authenticated = True
-		decorator._do_decorate_external( section, section_ext )
+		decorator._do_decorate_external(section, section_ext)
 
 		# Gateway does not have announcements since it does not have any.
-		assert_that( gateway_ext,
-					is_not( has_entries(
+		assert_that(gateway_ext,
+					is_not(has_entries(
 								'AnnouncementForums',
-								has_entries('Items', is_empty() ) ) ) )
+								has_entries('Items', is_empty()))))
 
 		# Our section has only open announcements.
-		assert_that( section_ext,
+		assert_that(section_ext,
 					has_entries(
 								'AnnouncementForums',
 								has_entries('Items',
 											has_entry('Public',
-										   				not_none() ),
+										   				not_none()),
 										   	'Class',
-										   	'CourseInstanceAnnouncementForums') ) )
+										   	'CourseInstanceAnnouncementForums')))

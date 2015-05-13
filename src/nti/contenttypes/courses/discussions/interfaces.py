@@ -31,6 +31,7 @@ from ..interfaces import ES_ALL
 from ..interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
 NTI_COURSE_BUNDLE = u'nti-course-bundle'
+NTI_COURSE_BUNDLE_REF = "%s://" % NTI_COURSE_BUNDLE
 
 ALL_SCOPES_VOCABULARY = SimpleVocabulary( [SimpleTerm(ES_ALL)] + list(ENROLLMENT_SCOPE_VOCABULARY))
 	
