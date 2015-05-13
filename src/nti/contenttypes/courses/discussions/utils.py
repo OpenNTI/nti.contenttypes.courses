@@ -35,6 +35,13 @@ def is_nti_course_bundle(discussion):
 	result = NTI_COURSE_BUNDLE == parts.scheme if parts else False
 	return result
 
+def get_discussion_path(discussion):
+	iden = get_discussion_id(discussion)
+	if is_nti_course_bundle(iden):
+		result = iden[len(NTI_COURSE_BUNDLE_REF)-1:]
+		return result
+	return None
+
 def get_discussion_key(discussion):
 	iden = get_discussion_id(discussion)
 	if is_nti_course_bundle(iden):
@@ -62,10 +69,10 @@ def get_course_for_discussion(discussion, context):
 	if is_nti_course_bundle(iden) and context is not None:
 		parent = get_parent_course(context)
 		if parent is not None:
-			parts = iden[len(NTI_COURSE_BUNDLE_REF):]
-			splits = parts.split('/')
-			if SECTIONS in splits:  # e.g. Sections/02/Discussions
-				return parent.SubInstances.get(splits[1]) if len(splits) >= 2 else None
+			path = get_discussion_path(iden)
+			splits = path.split('/')
+			if SECTIONS in splits:  # e.g. /Sections/02/Discussions
+				return parent.SubInstances.get(splits[2]) if len(splits) >= 3 else None
 			else:
 				return parent
 	return None
