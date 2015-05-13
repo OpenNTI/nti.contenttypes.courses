@@ -40,8 +40,9 @@ class EmptyAssignmentDateContext(object):
 	def __init__(self, context):
 		pass
 
-	def assignments(self):
+	def assessments(self):
 		return ()
+	assignments = assessments
 
 	def of(self, asg):
 		return asg
@@ -70,7 +71,7 @@ class _Dates(object):
 class MappingAssignmentDateContext(Contained,
 								   PersistentCreatedAndModifiedTimeObject):
 	"""
-	A persistent mapping of assignment_ntiid -> {'available_for_submission_beginning': datetime}
+	A persistent mapping of assessment_ntiid -> {'available_for_submission_beginning': datetime}
 	"""
 
 	_SET_CREATED_MODTIME_ON_INIT = False
@@ -79,8 +80,9 @@ class MappingAssignmentDateContext(Contained,
 		PersistentCreatedAndModifiedTimeObject.__init__(self)
 		self._mapping = PersistentMapping()
 
-	def assignments(self):
+	def assessments(self):
 		return list(self._mapping.keys())
+	assignments = assessments  # BWC
 
 	def of(self, asg):
 		if asg.ntiid in self._mapping:
@@ -100,7 +102,7 @@ CourseSubInstanceAssignmentDateContextFactory = an_factory(MappingAssignmentDate
 class MappingAssignmentPolicies(Contained,
 								PersistentCreatedAndModifiedTimeObject):
 	"""
-	A persistent mapping of assignment ids to policy information,
+	A persistent mapping of assessment ids to policy information,
 	that is uninterpreted by this module.
 	"""
 
@@ -112,8 +114,8 @@ class MappingAssignmentPolicies(Contained,
 
 	def assessments(self):
 		return list(self._mapping.keys())
-	assignments = assessments #BWC
-	
+	assignments = assessments  # BWC
+
 	def clear(self):
 		self._mapping.clear()
 
@@ -122,7 +124,7 @@ class MappingAssignmentPolicies(Contained,
 
 	def getPolicyForAssessment(self, key):
 		return self._mapping.get(key, {})
-	getPolicyForAssignment = getPolicyForAssessment #BWC
+	getPolicyForAssignment = getPolicyForAssessment  # BWC
 
 	def __bool__(self):
 		return bool(self._mapping)
