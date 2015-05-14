@@ -34,5 +34,5 @@ class TestUtils(CourseLayerTest):
 		discussion.title = '11:6:Perspectives'
 		discussion.scopes = (u'All',)
 		discussion.id = 'nti-course-bundle://Sections/010/Discussions/d0.json'
-		assert_that(list(get_discussion_mapped_scopes(discussion)),
+		assert_that(list(sorted(get_discussion_mapped_scopes(discussion))),
 					is_([u'ForCredit', u'Public']))

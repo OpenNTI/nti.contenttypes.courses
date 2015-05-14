@@ -714,7 +714,7 @@ from zope.schema.vocabulary import SimpleVocabulary
 
 class ScopeTerm(SimpleTerm):
 
-	def __init__(self, value, title=None, implies=(), implied_by=(), 
+	def __init__(self, value, title=None, implies=(), implied_by=(),
 				 vendor_key=None, vendor_key_prefix=None):
 		SimpleTerm.__init__(self, value, title=title)
 		self.implies = implies
@@ -853,7 +853,7 @@ class IPrincipalEnrollments(interface.Interface):
 		"""
 		Iterate across enrollment information for the context.
 		"""
-		
+
 	def count_enrollments():
 		"""
 		Count enrollments for the context.
@@ -872,7 +872,7 @@ class ICourseEnrollments(interface.Interface):
 		"""
 		Iterate across principal names information for the context.
 		"""
-	
+
 	def iter_enrollments():
 		"""
 		Iterate across enrollment information for the context.
@@ -913,12 +913,12 @@ class ICourseInstanceAvailableEvent(IObjectEvent):
 	need to do, such as synchronizing database state with course
 	content state.
 	"""
-	
+
 	bucket = Object(IDelimitedHierarchyBucket, title="Bucket", required=False)
 
 @interface.implementer(ICourseInstanceAvailableEvent)
 class CourseInstanceAvailableEvent(ObjectEvent):
-	
+
 	def __init__(self, obj, bucket=None):
 		super(CourseInstanceAvailableEvent, self).__init__(obj)
 		self.bucket = bucket
