@@ -9,10 +9,10 @@ __docformat__ = "restructuredtext en"
 
 from hamcrest import is_
 from hamcrest import none
-from hamcrest import not_none
 from hamcrest import is_not
 from hamcrest import has_key
 from hamcrest import contains
+from hamcrest import not_none
 from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
@@ -136,7 +136,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 					 has_entry('OU', has_entry('key', 42)))
 
 		assert_that(ICourseCatalogEntry(gateway),
-					 has_properties( 'DisplayName', 'CLC 3403',
+					 has_properties('DisplayName', 'CLC 3403',
 									 'ProviderUniqueID', 'CLC 3403 S014',
 									 'Title', 'Law and Justice',
 									 'creators', ('Jason',)))
@@ -384,6 +384,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		# Make sure we're enrolled in sec03
 		class Container(object):
 			def __contains__(self, o): return True
+
 		mock_container.is_callable().returns(Container())
 		mock_rem_user.is_callable().returns(object())
 
@@ -479,23 +480,20 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		sec1 = gateway.SubInstances['01']
 		sec1_cat = ICourseCatalogEntry(sec1)
 
+		assert_that(sec1_cat, permits(AUTHENTICATED_GROUP_NAME, ACT_READ))
+		assert_that(sec1_cat, permits(AUTHENTICATED_GROUP_NAME, ACT_CREATE))
 
-		assert_that(sec1_cat, permits(AUTHENTICATED_GROUP_NAME,
-									   ACT_READ))
-		assert_that(sec1_cat, permits(AUTHENTICATED_GROUP_NAME,
-									   ACT_CREATE))
 		# and as joint, just because
 		assert_that(sec1_cat, permits([EVERYONE_GROUP_NAME, AUTHENTICATED_GROUP_NAME],
 									   ACT_READ))
 
 		# But the CCE for the course is not public
-		assert_that(cat, denies(AUTHENTICATED_GROUP_NAME,
-									   ACT_READ))
-		assert_that(cat, denies(AUTHENTICATED_GROUP_NAME,
-									   ACT_CREATE))
+		assert_that(cat, denies(AUTHENTICATED_GROUP_NAME, ACT_READ))
+		assert_that(cat, denies(AUTHENTICATED_GROUP_NAME, ACT_CREATE))
+		
 		# and as joint, just because
 		assert_that(cat, denies([EVERYONE_GROUP_NAME, AUTHENTICATED_GROUP_NAME],
-									   ACT_READ))
+								ACT_READ))
 
 	@fudge.patch('nti.contenttypes.courses.decorators.IEntityContainer',
 				 'nti.app.renderers.decorators.get_remote_user')
@@ -542,7 +540,6 @@ class TestFunctionalSynchronize(CourseLayerTest):
 					has_entries(
 								'AnnouncementForums',
 								has_entries('Items',
-											has_entry('Public',
-										   				not_none()),
+											has_entry('Public', not_none()),
 										   	'Class',
 										   	'CourseInstanceAnnouncementForums')))
