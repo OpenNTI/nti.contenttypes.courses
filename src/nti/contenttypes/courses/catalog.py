@@ -249,6 +249,7 @@ class CourseCatalogEntry(SchemaConfigured,
 	EndDate = None
 	Duration = None
 	StartDate = None
+	DisplayName = None
 	lastSynchronized = 0
 	
 	_SET_CREATED_MODTIME_ON_INIT = False

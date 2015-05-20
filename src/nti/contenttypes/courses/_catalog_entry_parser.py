@@ -7,6 +7,7 @@ A parser for the on-disk representation of catalog information.
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.contenttypes.courses.interfaces import ICourseCatalog
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -15,7 +16,9 @@ from urlparse import urljoin
 from datetime import datetime
 from datetime import timedelta
 
+from zope import component
 from zope import interface
+
 from zope.interface.common.idatetime import IDateTime
 
 from nti.dataserver.users import Entity
@@ -28,12 +31,19 @@ from .legacy_catalog import CourseCatalogInstructorLegacyInfo
 def _quiet_delattr(o, k):
 	try:
 		delattr(o, k)
-	except (AttributeError,TypeError):
+	except (AttributeError, TypeError):
 		# TypeError is raised when pure-python persistence on PyPy
 		# tries to delete a non-data-descriptor like a FieldProperty
 		# https://bitbucket.org/pypy/pypy/issue/2039/delattr-and-del-can-raise-typeerror-when
 		pass
 
+def get_provider_unique_ids(entry=None):
+	catalog = component.queryUtility(ICourseCatalog)
+	if catalog is not None:
+		result = {x.ProviderUniqueID for x in catalog.iterCatalogEntries() if x != entry}
+		return result
+	return ()
+	
 def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 	"""
 	Given a course catalog entry, fill in the data
@@ -55,20 +65,41 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 	elif INonPublicCourseInstance.providedBy(catalog_entry):
 		interface.noLongerProvides(catalog_entry, INonPublicCourseInstance)
 
-	for field, key in (('Description', 'description'),
-					   ('Title', 'title'),
-					   ('ProviderUniqueID', 'id'),
-					   ('ProviderDepartmentTitle', 'school'),
+	for field, key in (('Term', 'term'),  # XXX: non-interface
 					   ('ntiid', 'ntiid'),
-					   ('Term', 'term'), # XXX: non-interface
+					   ('Title', 'title'),
+					   ('Description', 'description'),
+					   ('ProviderDepartmentTitle', 'school'),
 					   ('InstructorsSignature', 'InstructorsSignature')):
 		val = info_json_dict.get(key)
 		__traceback_info__ = field, key, val
 		if val:
-			setattr( catalog_entry, str(field), val)
+			setattr(catalog_entry, str(field), val)
 		else:
 			# XXX: Does deleting fieldproperties do the right thing?
 			_quiet_delattr(catalog_entry, str(field))
+
+	if 'uid' in info_json_dict: # unique id
+		for field, key in ( ('DisplayName', 'id') # id is the dislplay name - legacy
+							('ProviderUniqueID', 'uid') ):
+			value = info_json_dict.get(key)
+			__traceback_info__ = field, key, value
+			if value:
+				setattr(catalog_entry, str(field), value)
+			else:
+				_quiet_delattr(catalog_entry, str(field))
+				
+		uid = info_json_dict.get('uid')
+		if uid and uid in get_provider_unique_ids(catalog_entry):
+			raise TypeError("Unique ID has already been used")
+	else:
+		value = info_json_dict.get('id')
+		if value: # DisplayName and ProviderUniqueID are the same - legacy
+			setattr(catalog_entry, str('DisplayName'), value)
+			setattr(catalog_entry, str('ProviderUniqueID'), value)
+		else:
+			_quiet_delattr(catalog_entry, str('DisplayName'))
+			_quiet_delattr(catalog_entry, str('ProviderUniqueID'))
 
 	if 'startDate' in info_json_dict:
 		# parse the date using nti.externalization, which gets us
@@ -76,9 +107,9 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		catalog_entry.StartDate = IDateTime(info_json_dict['startDate'])
 	else:
 		_quiet_delattr(catalog_entry, 'StartDate')
-	
-	#Allow explicitly setting endDate.  If endDate is not specified
-	#one will be computed if duration is present	
+
+	# Allow explicitly setting endDate.  If endDate is not specified
+	# one will be computed if duration is present
 	if 'endDate' in info_json_dict:
 		# parse the date using nti.externalization, which gets us
 		# a guaranteed UTC datetime as a naive object
@@ -91,7 +122,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		duration_number, duration_kind = info_json_dict['duration'].split()
 		# Turn those into keywords for timedelta.
 		catalog_entry.Duration = timedelta(**{duration_kind.lower():int(duration_number)})
-		
+
 		# Ensure the end date is derived properly (or was previously set)
 		assert catalog_entry.StartDate is None or catalog_entry.EndDate
 	else:
@@ -105,7 +136,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		if catalog_entry.StartDate and datetime.utcnow() < catalog_entry.StartDate:
 			assert catalog_entry.Preview
 
-	if info_json_dict.get('disable_calendar_overview',None) is not None:
+	if info_json_dict.get('disable_calendar_overview', None) is not None:
 		catalog_entry.DisableOverviewCalendar = info_json_dict['disable_calendar_overview']
 	else:
 		catalog_entry.DisableOverviewCalendar = False
@@ -116,8 +147,8 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 	# TODO: Switch these to DelimitedHierarchyKeys
 	if 'instructors' in info_json_dict:
 		for inst in info_json_dict['instructors']:
-			username = inst.get('username','')
-			userid = inst.get('userid','') # e.g legacy OU userid
+			username = inst.get('username', '')
+			userid = inst.get('userid', '')  # e.g legacy OU userid
 			# XXX:  The need to map catalog instructors to the actual
 			# instructors is going away, coming from a new place
 			try:
@@ -128,20 +159,19 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 				# no dataserver
 				pass
 
-			instructor = CourseCatalogInstructorLegacyInfo( Name=inst['name'],
-															JobTitle=inst['title'],
-															username=username)
+			instructor = CourseCatalogInstructorLegacyInfo(Name=inst['name'],
+														   JobTitle=inst['title'],
+														   username=username)
 			if inst.get('defaultphoto'):
 				photo_name = inst['defaultphoto']
 				# Ensure it exists and is readable before we advertise it
 				instructor.defaultphoto = urljoin(base_href, photo_name)
 
-			instructors.append( instructor )
+			instructors.append(instructor)
 
 		catalog_entry.Instructors = tuple(instructors)
 	else:
 		_quiet_delattr(catalog_entry, 'Instructors')
-
 
 	if info_json_dict.get('video'):
 		catalog_entry.Video = info_json_dict.get('video').encode('utf-8')
@@ -179,14 +209,11 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/'):
 
 	:return: The entry
 	"""
-
-	if key.lastModified <= catalog_entry.lastModified:
-		return catalog_entry
-	__traceback_info__ = key, catalog_entry
-	json = key.readContentsAsYaml()
-	fill_entry_from_legacy_json(catalog_entry, json, base_href=base_href)
-	catalog_entry.root = key.__parent__
-	catalog_entry.key = key
-	catalog_entry.lastModified = key.lastModified
-
+	if key.lastModified > catalog_entry.lastModified:
+		__traceback_info__ = key, catalog_entry
+		json = key.readContentsAsYaml()
+		fill_entry_from_legacy_json(catalog_entry, json, base_href=base_href)
+		catalog_entry.key = key
+		catalog_entry.root = key.__parent__
+		catalog_entry.lastModified = key.lastModified
 	return catalog_entry

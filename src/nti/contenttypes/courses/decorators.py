@@ -16,18 +16,21 @@ from urlparse import urljoin
 from zope import component
 from zope import interface
 
-# XXX: JAM: Don't like this dependency here. Refactor for zope.security interaction
-# support
+# XXX: JAM: Don't like this dependency here. 
+# Refactor for zope.security interaction support
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
 from nti.dataserver.interfaces import IEntityContainer
 
-from nti.externalization.oids import to_external_ntiid_oid
-from nti.externalization.singleton import SingletonDecorator
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
-from nti.externalization.externalization import to_external_object
 from nti.externalization.interfaces import IExternalObjectDecorator
+
+from nti.externalization.externalization import to_external_object
+
+from nti.externalization.oids import to_external_ntiid_oid
+
+from nti.externalization.singleton import SingletonDecorator
 
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
@@ -193,8 +196,18 @@ class _AnnouncementsDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		if announcements:
 			result[ 'AnnouncementForums' ] = items
 
-@interface.implementer(IExternalObjectDecorator)
 @component.adapter(ICourseCatalogEntry)
+@interface.implementer(IExternalObjectDecorator)
+class _CourseCatalogEntryDecorator(object):
+
+	__metaclass__ = SingletonDecorator
+	
+	def decorateExternalObject(self, context, result):
+		if context.DisplayName:
+			result['ProviderUniqueID'] = context.DisplayName # replace for legacy purposes
+	
+@component.adapter(ICourseCatalogEntry)
+@interface.implementer(IExternalObjectDecorator)
 class _LegacyCCEFieldDecorator(object):
 
 	__metaclass__ = SingletonDecorator
@@ -205,7 +218,7 @@ class _LegacyCCEFieldDecorator(object):
 		if course is not None:
 			try:
 				package = list(course.ContentPackageBundle.ContentPackages)[0]
-			except (AttributeError,IndexError):
+			except (AttributeError, IndexError):
 				package = None
 		return course, package
 

@@ -66,6 +66,9 @@
 	<subscriber factory=".decorators._AnnouncementsDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator" />
 
+	<subscriber factory=".decorators._CourseCatalogEntryDecorator"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator" />
+
 	<subscriber factory=".decorators._LegacyCCEFieldDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator" />
 
@@ -87,7 +90,6 @@
 		locally to each course maps the proper people into those roles.
 		Recall that role permission grants are not transitive.
 	-->
-
 	<role
 		id="nti.roles.course_instructor"
 		title="A course instructor"
