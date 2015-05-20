@@ -2,22 +2,24 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from hamcrest.core.core.isnone import none
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
-from hamcrest import assert_that
+from hamcrest import none
+from hamcrest import is_not
 from hamcrest import equal_to
+from hamcrest import assert_that
 from hamcrest import has_entries
 from hamcrest import has_properties
-from hamcrest import is_not
-from hamcrest import is_not as does_not
+does_not = is_not
+
+import os.path
 
 from datetime import timedelta
 
-import os.path
+from zope.interface.common.idatetime import IDateTime
 
 from nti.contentlibrary.filesystem import FilesystemKey
 
@@ -27,6 +29,7 @@ from nti.contenttypes.courses._catalog_entry_parser import fill_entry_from_legac
 from nti.contenttypes.courses._catalog_entry_parser import fill_entry_from_legacy_json
 
 from nti.contenttypes.courses.legacy_catalog import ICourseCatalogLegacyEntry
+
 from nti.contenttypes.courses.legacy_catalog import PersistentCourseCatalogLegacyEntry as CourseCatalogLegacyEntry
 
 from nti.externalization.tests import externalizes
@@ -34,8 +37,6 @@ from nti.externalization.tests import externalizes
 from nti.contenttypes.courses.tests import CourseLayerTest
 
 from nti.testing.matchers import verifiably_provides
-
-from zope.interface.common.idatetime import IDateTime
 
 class TestCatalogParser(CourseLayerTest):
 
@@ -56,7 +57,8 @@ class TestCatalogParser(CourseLayerTest):
 		fill_entry_from_legacy_key(entry, key)
 
 		assert_that( entry,
-					 has_properties( 'ProviderUniqueID', 'CLC 3403',
+					 has_properties( 'ProviderUniqueID', 'CLC 3403 S014',
+									 'DisplayName', 'CLC 3403',
 									 'Title', 'Law and Justice',
 									 'DisableOverviewCalendar', True) )
 		assert_that(entry, verifiably_provides(ICourseCatalogLegacyEntry))
@@ -67,7 +69,7 @@ class TestCatalogParser(CourseLayerTest):
 		
 		fill_entry_from_legacy_key(entry, key)
 		assert_that( entry,
-					 has_properties( 'ProviderUniqueID', 'CLC 3403',
+					 has_properties( 'ProviderUniqueID', 'CLC 3403 S014',
 									 'Title', 'Law and Justice') )
 		
 	def test_start_and_duration_parse(self):
@@ -106,7 +108,6 @@ class TestCatalogParser(CourseLayerTest):
 		assert_that(entry.StartDate, equal_to(IDateTime('2015-06-29T05:00:00+00:00')))
 		assert_that(entry.Duration, equal_to(timedelta(days=7)))
 		assert_that(entry.EndDate, equal_to(IDateTime('2015-06-30T05:00:00+00:00')))
-		
 
 	def test_toggle_non_public(self):
 		key = self.key

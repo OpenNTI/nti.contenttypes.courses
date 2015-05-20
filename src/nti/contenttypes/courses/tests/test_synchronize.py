@@ -136,7 +136,8 @@ class TestFunctionalSynchronize(CourseLayerTest):
 					 has_entry('OU', has_entry('key', 42)))
 
 		assert_that(ICourseCatalogEntry(gateway),
-					 has_properties('ProviderUniqueID', 'CLC 3403',
+					 has_properties( 'DisplayName', 'CLC 3403',
+									 'ProviderUniqueID', 'CLC 3403 S014',
 									 'Title', 'Law and Justice',
 									 'creators', ('Jason',)))
 		assert_that(ICourseInstance(ICourseCatalogEntry(gateway)),

@@ -80,7 +80,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 			_quiet_delattr(catalog_entry, str(field))
 
 	if 'uid' in info_json_dict: # unique id
-		for field, key in ( ('DisplayName', 'id') # id is the dislplay name - legacy
+		for field, key in ( ('DisplayName', 'id'), # id is the dislplay name - legacy
 							('ProviderUniqueID', 'uid') ):
 			value = info_json_dict.get(key)
 			__traceback_info__ = field, key, value
