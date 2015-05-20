@@ -7,7 +7,6 @@ A parser for the on-disk representation of catalog information.
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.contenttypes.courses.interfaces import ICourseCatalog
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -23,6 +22,7 @@ from zope.interface.common.idatetime import IDateTime
 
 from nti.dataserver.users import Entity
 
+from .interfaces import ICourseCatalog
 from .interfaces import INonPublicCourseInstance
 
 from .legacy_catalog import CourseCreditLegacyInfo
