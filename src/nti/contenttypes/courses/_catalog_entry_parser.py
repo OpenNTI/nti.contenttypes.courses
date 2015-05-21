@@ -91,7 +91,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 				
 		uid = info_json_dict.get('uid')
 		if uid and uid in get_provider_unique_ids(catalog_entry):
-			raise TypeError("Unique ID has already been used")
+			raise ValueError("Unique ID has already been used")
 	else:
 		value = info_json_dict.get('id')
 		if value: # DisplayName and ProviderUniqueID are the same - legacy
