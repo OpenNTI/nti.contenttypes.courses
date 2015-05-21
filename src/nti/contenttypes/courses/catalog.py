@@ -249,6 +249,7 @@ class CourseCatalogEntry(SchemaConfigured,
 	EndDate = None
 	Duration = None
 	StartDate = None
+	DisplayName = None
 	lastSynchronized = 0
 	
 	_SET_CREATED_MODTIME_ON_INIT = False
@@ -273,10 +274,6 @@ class CourseCatalogEntry(SchemaConfigured,
 	def links(self):
 		return self._make_links()
 
-	@readproperty
-	def DisplayName(self):
-		return self.ProviderUniqueID
-	
 	def _make_links(self):
 		"""
 		Subclasses can extend this to customize the available links.
