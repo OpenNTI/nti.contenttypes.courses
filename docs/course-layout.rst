@@ -443,6 +443,11 @@ Forums
 	  that, if set, will override the default display name for these
 	  items the first time the forum is created; after that, you must
 	  use the API or GUI to change them.
+	  
+	* ``AutoCreate`: A boolean that determine whether
+	  the corresponding boards are automatically created if course 
+	  disussions are defined
+
 SharingScopesDisplayInfo
 	A dictionary, valid at any level, containing optional information
 	about how the auto-created sharing scopes should be displayed.
@@ -479,18 +484,18 @@ replaces the data for the assignments specified within this course,
 
 ::
 
-   {
-    "tag:nextthought.com,2011-10:OU-NAQ-CS1300_Power_and_Elegance_of_Computational_Thinking.naq.asg.assignment:3.3_Exercise_Sound": {
-        "Title": "Exercise: Learning to Make Sound",
-        "auto_grade": {
-            "total_points": 20
-        },
-        "available_for_submission_beginning": "2014-01-13T06:00:00Z",
-        "available_for_submission_ending":    "2014-03-03T05:59:00Z",
-        "excluded": false,
-        "student_nuclear_reset_capable": false,
-    },
-   }
+	{
+		"tag:nextthought.com,2011-10:OU-NAQ-CS1300_Power_and_Elegance_of_Computational_Thinking.naq.asg.assignment:3.3_Exercise_Sound": {
+		    "Title": "Exercise: Learning to Make Sound",
+		    "auto_grade": {
+		        "total_points": 20
+		    },
+		    "available_for_submission_beginning": "2014-01-13T06:00:00Z",
+		    "available_for_submission_ending":    "2014-03-03T05:59:00Z",
+		    "excluded": false,
+		    "student_nuclear_reset_capable": false,
+		},
+	}
 
 The automatic grading information is being defined on an as-needed
 basis. The supported values are
@@ -613,3 +618,47 @@ assignment_date_overrides.json
 presentation-assets/
 	This directory of assets is used for this course section. It
 	may contain images of this section's instructors, for example.
+
+	
+Course Discussions
+===============
+
+If a course instance directory contains a directory called
+``Discussions``, then the json files of that directory defines the 
+discussions in the course:
+
+	platform.ou.edu/
+	    Fall2014/
+	        CLC 3403/
+                bundle_meta_info.json
+                Discussions/
+                   01.json
+                   02.json
+	
+A course discussion is json file with the following format.
+
+::
+	{
+		"Class": "Discussion",
+		"MimeType": "application/vnd.nextthought.courses.discussion",
+		"body": ["<html><body><span>The United States' Trade Promotion Authority><\/body><\/html>"],
+		"tags": [
+			"japan",
+			"trade",
+			"pacific"
+		],
+		"scopes": ["All"],
+		"title": "U.S.: A Potential Breakthrough in Trans-Pacific Trade Talks"
+	}
+
+The ``Class`` and ``MimeType`` fields are always set to 'Discussion' and 'application/vnd.nextthought.courses.discussion'
+
+The ``body`` field is an array of [html] text
+
+The ``tags`` field is an array of the discussion tags
+
+The ``scopes`` fields refers to the enrollment scopes associated with this discussion. That is students in a particular
+scope have access to the discussion. ``All`` is a special string to indicate all scopes
+
+The ``title`` fiels is the discussion title.
+
