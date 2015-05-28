@@ -35,6 +35,14 @@ from nti.dataserver.interfaces import ISharingTargetEntityIterable
 from .interfaces import ES_CREDIT
 from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
+from .courses import ContentCourseInstance
+from .courses import ContentCourseSubInstance
+from .courses import CourseAdministrativeLevel
+
+from .enrollment import check_enrollment_mapped
+from .enrollment import has_deny_open_enrollment
+from .enrollment import check_deny_open_enrollment
+
 from .interfaces import ICourseInstance
 from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseSubInstances
@@ -44,14 +52,6 @@ from .interfaces import IContentCourseSubInstance
 from .interfaces import ICourseInstanceVendorInfo
 from .interfaces import CourseInstanceAvailableEvent
 from .interfaces import IEnrollmentMappedCourseInstance
-
-from .courses import ContentCourseInstance
-from .courses import ContentCourseSubInstance
-from .courses import CourseAdministrativeLevel
-
-from .enrollment import check_enrollment_mapped
-from .enrollment import has_deny_open_enrollment
-from .enrollment import check_deny_open_enrollment
 
 from .legacy_catalog import _ntiid_from_entry
 
@@ -95,11 +95,11 @@ class _GenericFolderSynchronizer(object):
 		pass
 
 	def _get_factory_for(self, bucket):
-		## order matters.
+		# order matters.
 
-		## Is this supposed to be a course instance?
-		## course instances are minimally defined by the presence of 
-		## their bundle descriptor
+		# Is this supposed to be a course instance?
+		# course instances are minimally defined by the presence of
+		# their bundle descriptor
 		if bucket.getChildNamed(self._COURSE_KEY_NAME):
 			return self._COURSE_INSTANCE_FACTORY
 
@@ -107,22 +107,22 @@ class _GenericFolderSynchronizer(object):
 		return self._ADMIN_LEVEL_FACTORY
 
 	def synchronize(self, folder, bucket, **kwargs):
-		## Find the things in the filesystem
+		# Find the things in the filesystem
 		child_buckets = dict()
 		for item in bucket.enumerateChildren():
 			if IDelimitedHierarchyBucket.providedBy(item):
 				child_buckets[item.__name__] = item
 
-		## Remove anything the folder has that aren't on the
-		## filesystem
+		# Remove anything the folder has that aren't on the
+		# filesystem
 		for folder_child_name in list(folder):
 			if folder_child_name not in child_buckets:
 				logger.info("Removing child %s (%r)",
 							folder_child_name, folder[folder_child_name])
 				del folder[folder_child_name]
 
-		## Create anything the folder is missing if we
-		## have a factory for it
+		# Create anything the folder is missing if we
+		# have a factory for it
 		for bucket_child_name in child_buckets:
 			__traceback_info__ = folder, bucket, bucket_child_name
 			if bucket_child_name not in folder:
@@ -138,10 +138,10 @@ class _GenericFolderSynchronizer(object):
 				__traceback_info__ = folder, child_bucket, new_child_object
 				folder[bucket_child_name] = new_child_object
 
-		## Synchronize everything
+		# Synchronize everything
 		for child_name, child in folder.items():
 			child_bucket = child_buckets[child_name]
-			sync = component.getMultiAdapter( (child, child_bucket),
+			sync = component.getMultiAdapter((child, child_bucket),
 											  IObjectEntrySynchronizer)
 			sync.synchronize(child, child_bucket, **kwargs)
 
@@ -158,9 +158,9 @@ class _ContentCourseSynchronizer(object):
 		packages = kwargs.get('packages') or ()
 		packages = packages if isinstance(packages, set) else set(packages)
 
-		## First, synchronize the bundle
+		# First, synchronize the bundle
 		bundle_json_key = bucket.getChildNamed(BUNDLE_META_NAME)
-		if not IDelimitedHierarchyKey.providedBy(bundle_json_key): # pragma: no cover
+		if not IDelimitedHierarchyKey.providedBy(bundle_json_key):  # pragma: no cover
 			raise ValueError("No bundle defined for course", course, bucket)
 
 		bundle = None
@@ -174,15 +174,15 @@ class _ContentCourseSynchronizer(object):
 			bundle.ntiid = _ntiid_from_entry(bundle, 'Bundle:CourseBundle')
 			lifecycleevent.created(bundle)
 			created_bundle = True
-		elif packages: ## check if underlying library was updated
+		elif packages:  # check if underlying library was updated
 			ntiids = {x.ntiid for x in course.ContentPackageBundle.ContentPackages}
-			## if none of the bundle pacakges were updated return
+			# if none of the bundle pacakges were updated return
 			if not ntiids.intersection(packages):
 				return
 
-		## The catalog entry gets the default DublinCore metadata file name,
-		## in this bucket, since it really describes the data.
-		## The content bundle, on the other hand, gets a custom file
+		# The catalog entry gets the default DublinCore metadata file name,
+		# in this bucket, since it really describes the data.
+		# The content bundle, on the other hand, gets a custom file
 		sync_bundle_from_json_key(bundle_json_key, course.ContentPackageBundle,
 								  dc_meta_name='bundle_dc_metadata.xml',
 								  excluded_keys=('ntiid',))
@@ -191,20 +191,20 @@ class _ContentCourseSynchronizer(object):
 
 		self.update_common_info(course, bucket, try_legacy_content_bundle=True)
 		self.update_deny_open_enrollment(course)
-		
+
 		notify(CourseInstanceAvailableEvent(course, bucket))
 
 		sections_bucket = bucket.getChildNamed(SECTION_FOLDER_NAME)
-		sync = component.getMultiAdapter( (course.SubInstances, sections_bucket) )
-		sync.synchronize( course.SubInstances, sections_bucket, **kwargs)
+		sync = component.getMultiAdapter((course.SubInstances, sections_bucket))
+		sync.synchronize(course.SubInstances, sections_bucket, **kwargs)
 
-		## After we've loaded all the sections, check to see if we should map enrollment
+		# After we've loaded all the sections, check to see if we should map enrollment
 		if check_enrollment_mapped(course):
 			interface.alsoProvides(course, IEnrollmentMappedCourseInstance)
 		else:
 			interface.noLongerProvides(course, IEnrollmentMappedCourseInstance)
-		
-		## mark last sync time	
+
+		# mark last sync time
 		entry = ICourseCatalogEntry(course)
 		course.lastSynchronized = entry.lastSynchronized = time.time()
 
@@ -239,19 +239,19 @@ class _ContentCourseSynchronizer(object):
 		cls.update_instructor_roles(course, bucket)
 		assignment_policies = cls.update_assignment_policies(course, bucket)
 
-		## make sure Discussions are initialized
+		# make sure Discussions are initialized
 		getattr(course, 'Discussions')
 		cls.update_sharing_scopes_friendly_names(course)
 
-		## validate assigment policies
+		# validate assigment policies
 		cls.validate_assigment_policies(course, bucket)
-		
-		## check grading policy. it must be done after validatino assigments
+
+		# check grading policy. it must be done after validatino assigments
 		cls.update_grading_policy(course, bucket, assignment_policies)
-		
-		## update dicussions
+
+		# update dicussions
 		cls.update_course_discussions(course, bucket)
-		
+
 	@classmethod
 	def update_sharing_scopes_friendly_names(cls, course):
 		cce = ICourseCatalogEntry(course)
@@ -290,7 +290,7 @@ class _ContentCourseSynchronizer(object):
 			inputed_avatarURL = sharing_scope_data.get('avatarURL', None)
 			if inputed_avatarURL:
 				if scope_avatarURL != inputed_avatarURL:
-					logger.info("Adjusting scope %s avatar to %s for course %s", 
+					logger.info("Adjusting scope %s avatar to %s for course %s",
 								scope_name, inputed_avatarURL, cce.ntiid)
 					interface.alsoProvides(scope, IAvatarURL)
 					scope.avatarURL = inputed_avatarURL
@@ -331,17 +331,17 @@ class _ContentCourseSynchronizer(object):
 		outline_xml_key = bucket.getChildNamed(COURSE_OUTLINE_NAME)
 		outline_xml_node = None
 		if not outline_xml_key and try_legacy_content_bundle:
-			## Only want to do this for root courses
+			# Only want to do this for root courses
 			if course.ContentPackageBundle:
-				## Just take the first one. That should be all there
-				## is in legacy cases
+				# Just take the first one. That should be all there
+				# is in legacy cases
 				for package in course.ContentPackageBundle.ContentPackages:
 					outline_xml_key = package.index
 					outline_xml_node = 'course'
 					break
 
-		## We actually want to delete anything it has
-		## in case it's a subinstance so the parent can come through again
+		# We actually want to delete anything it has
+		# in case it's a subinstance so the parent can come through again
 		if not outline_xml_key:
 			try:
 				course._delete_Outline()
@@ -401,21 +401,21 @@ class _ContentCourseSynchronizer(object):
 		else:
 			reset_asg_missing_key(course)
 			return None
-		
+
 	@classmethod
 	def update_grading_policy(cls, course, bucket, assignment_policies=None):
 		key = bucket.getChildNamed(GRADING_POLICY_NAME)
 		if key is not None:
 			policy = parse_grading_policy(course, key)
-			if assignment_policies is not None and policy is not None: 
+			if assignment_policies is not None and policy is not None:
 				policy.updateLastModIfGreater(assignment_policies.lastModified)
 		else:
 			reset_grading_policy(course)
-	
+
 	@classmethod
 	def validate_assigment_policies(cls, course, bucket):
 		validate_assigment_policies(course)
-		
+
 	@classmethod
 	def set_deny_open_enrollment(self, course, deny):
 		entry = ICourseCatalogEntry(course)
@@ -430,7 +430,7 @@ class _ContentCourseSynchronizer(object):
 	def update_deny_open_enrollment(cls, course):
 		deny = check_deny_open_enrollment(course)
 		cls.set_deny_open_enrollment(course, deny)
-		
+
 	@classmethod
 	def update_course_discussions(cls, course, bucket):
 		key = bucket.getChildNamed(DISCUSSION_FOLDER_NAME)
@@ -440,17 +440,17 @@ class _ContentCourseSynchronizer(object):
 @component.adapter(ICourseSubInstances, IDelimitedHierarchyBucket)
 class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
 
-	##: We create sub-instances...
+	# We create sub-instances...
 	_COURSE_INSTANCE_FACTORY = ContentCourseSubInstance
 
-	##: and we do not recurse into folders
+	# and we do not recurse into folders
 	_ADMIN_LEVEL_FACTORY = None
 
 	_COURSE_KEY_NAME = None
-			
+
 	def _get_factory_for(self, bucket):
-		## We only support one level, and they must all
-		## be courses if they have one of the known files in it
+		# We only support one level, and they must all
+		# be courses if they have one of the known files in it
 		for possible_key in (ROLE_INFO_NAME, COURSE_OUTLINE_NAME,
 							 VENDOR_INFO_NAME, ASSIGNMENT_DATES_NAME,
 							 CATALOG_INFO_NAME, DISCUSSION_FOLDER_NAME):
@@ -475,21 +475,21 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		pass
 
 	def synchronize(self, subcourse, bucket, **kwargs):
-		__traceback_info__ = subcourse, bucket		
+		__traceback_info__ = subcourse, bucket
 		_ContentCourseSynchronizer.update_common_info(subcourse, bucket)
 
-		## check for open enrollment
+		# check for open enrollment
 		if has_deny_open_enrollment(subcourse):
 			_ContentCourseSynchronizer.update_deny_open_enrollment(subcourse)
 		else:
-			## inherit from parent
+			# inherit from parent
 			deny = check_deny_open_enrollment(subcourse.__parent__.__parent__)
 			_ContentCourseSynchronizer.set_deny_open_enrollment(subcourse, deny)
-			
-		## mark last sync time	
+
+		# mark last sync time
 		entry = ICourseCatalogEntry(subcourse)
 		subcourse.lastSynchronized = entry.lastSynchronized = time.time()
-		
+
 		notify(CourseInstanceAvailableEvent(subcourse, bucket))
 
 def synchronize_catalog_from_root(catalog_folder, root, **kwargs):
@@ -497,6 +497,6 @@ def synchronize_catalog_from_root(catalog_folder, root, **kwargs):
 	Given a :class:`CourseCatalogFolder` and a class:`.IDelimitedHierarchyBucket`,
 	synchronize the course catalog to match.
 	"""
-	synchronizer = component.getMultiAdapter( (catalog_folder, root),
+	synchronizer = component.getMultiAdapter((catalog_folder, root),
 							   				 IObjectEntrySynchronizer)
 	synchronizer.synchronize(catalog_folder, root, **kwargs)
