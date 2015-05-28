@@ -267,8 +267,8 @@ class _ContentCourseSynchronizer(object):
 
 			if sharing_scope_data.get('alias'):
 				alias = sharing_scope_data['alias']
-			elif cce.DisplayName:
-				alias = cce.DisplayName + ' - ' + friendly_title
+			elif cce.ProviderUniqueID:
+				alias = cce.ProviderUniqueID + ' - ' + friendly_title
 			else:
 				alias = friendly_scope.alias
 

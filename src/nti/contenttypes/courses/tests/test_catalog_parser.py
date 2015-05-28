@@ -57,8 +57,7 @@ class TestCatalogParser(CourseLayerTest):
 		fill_entry_from_legacy_key(entry, key)
 
 		assert_that( entry,
-					 has_properties( 'ProviderUniqueID', 'CLC 3403 S014',
-									 'DisplayName', 'CLC 3403',
+					 has_properties( 'ProviderUniqueID', 'CLC 3403',
 									 'Title', 'Law and Justice',
 									 'DisableOverviewCalendar', True) )
 		assert_that(entry, verifiably_provides(ICourseCatalogLegacyEntry))
@@ -69,7 +68,7 @@ class TestCatalogParser(CourseLayerTest):
 		
 		fill_entry_from_legacy_key(entry, key)
 		assert_that( entry,
-					 has_properties( 'ProviderUniqueID', 'CLC 3403 S014',
+					 has_properties( 'ProviderUniqueID', 'CLC 3403',
 									 'Title', 'Law and Justice') )
 		
 	def test_start_and_duration_parse(self):

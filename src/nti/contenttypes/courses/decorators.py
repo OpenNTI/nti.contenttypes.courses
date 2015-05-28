@@ -203,8 +203,8 @@ class _CourseCatalogEntryDecorator(object):
 	__metaclass__ = SingletonDecorator
 	
 	def decorateExternalObject(self, context, result):
-		if context.DisplayName:
-			result['ProviderUniqueID'] = context.DisplayName # replace for legacy purposes
+		result['ProviderDisplayName'] = context.ProviderUniqueID 
+		result.pop('DisplayName', None) # replace for legacy purposes
 	
 @component.adapter(ICourseCatalogEntry)
 @interface.implementer(IExternalObjectDecorator)

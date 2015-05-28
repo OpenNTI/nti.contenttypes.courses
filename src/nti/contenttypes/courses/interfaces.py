@@ -640,8 +640,6 @@ class ICourseCatalogEntry(IDisplayableContent,
 
 	ProviderUniqueID = ValidTextLine(title="The unique id assigned by the provider")
 	
-	DisplayName = ValidTextLine(title="The unique id assigned by the provider", required=False)
-	
 	ProviderDepartmentTitle = ValidTextLine(title="The string assigned to the provider's department offering the course")
 
 	Instructors = ListOrTuple(title="The instuctors. Order might matter",

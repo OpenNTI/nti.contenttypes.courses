@@ -15,14 +15,12 @@ from urlparse import urljoin
 from datetime import datetime
 from datetime import timedelta
 
-from zope import component
 from zope import interface
 
 from zope.interface.common.idatetime import IDateTime
 
 from nti.dataserver.users import Entity
 
-from .interfaces import ICourseCatalog
 from .interfaces import INonPublicCourseInstance
 
 from .legacy_catalog import CourseCreditLegacyInfo
@@ -37,13 +35,6 @@ def _quiet_delattr(o, k):
 		# https://bitbucket.org/pypy/pypy/issue/2039/delattr-and-del-can-raise-typeerror-when
 		pass
 
-def get_provider_unique_ids(entry=None):
-	catalog = component.queryUtility(ICourseCatalog)
-	if catalog is not None:
-		result = {x.ProviderUniqueID for x in catalog.iterCatalogEntries() if x != entry}
-		return result
-	return ()
-	
 def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 	"""
 	Given a course catalog entry, fill in the data
@@ -68,6 +59,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 	for field, key in (('Term', 'term'),  # XXX: non-interface
 					   ('ntiid', 'ntiid'),
 					   ('Title', 'title'),
+					   ('ProviderUniqueID', 'id'),
 					   ('Description', 'description'),
 					   ('ProviderDepartmentTitle', 'school'),
 					   ('InstructorsSignature', 'InstructorsSignature')):
@@ -78,28 +70,6 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		else:
 			# XXX: Does deleting fieldproperties do the right thing?
 			_quiet_delattr(catalog_entry, str(field))
-
-	if 'uid' in info_json_dict: # unique id
-		for field, key in ( ('DisplayName', 'id'), # id is the dislplay name - legacy
-							('ProviderUniqueID', 'uid') ):
-			value = info_json_dict.get(key)
-			__traceback_info__ = field, key, value
-			if value:
-				setattr(catalog_entry, str(field), value)
-			else:
-				_quiet_delattr(catalog_entry, str(field))
-				
-		uid = info_json_dict.get('uid')
-		if uid and uid in get_provider_unique_ids(catalog_entry):
-			raise ValueError("Unique ID has already been used")
-	else:
-		value = info_json_dict.get('id')
-		if value: # DisplayName and ProviderUniqueID are the same - legacy
-			setattr(catalog_entry, str('DisplayName'), value)
-			setattr(catalog_entry, str('ProviderUniqueID'), value)
-		else:
-			_quiet_delattr(catalog_entry, str('DisplayName'))
-			_quiet_delattr(catalog_entry, str('ProviderUniqueID'))
 
 	if 'startDate' in info_json_dict:
 		# parse the date using nti.externalization, which gets us

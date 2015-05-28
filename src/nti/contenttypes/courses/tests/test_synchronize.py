@@ -136,8 +136,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 					 has_entry('OU', has_entry('key', 42)))
 
 		assert_that(ICourseCatalogEntry(gateway),
-					 has_properties('DisplayName', 'CLC 3403',
-									 'ProviderUniqueID', 'CLC 3403 S014',
+					 has_properties( 'ProviderUniqueID', 'CLC 3403',
 									 'Title', 'Law and Justice',
 									 'creators', ('Jason',)))
 		assert_that(ICourseInstance(ICourseCatalogEntry(gateway)),
@@ -181,8 +180,8 @@ class TestFunctionalSynchronize(CourseLayerTest):
 					 is_(legacy_catalog._CourseSubInstanceCatalogLegacyEntry))
 		assert_that(sec1_cat,
 					 has_properties('ProviderUniqueID', 'CLC 3403-01',
-									 'Title', 'Law and Justice',
-									 'creators', ('Steve',)))
+									'Title', 'Law and Justice',
+									'creators', ('Steve',)))
 		assert_that(sec1_cat,
 					 has_property('PlatformPresentationResources',
 								  contains(has_property('root',
