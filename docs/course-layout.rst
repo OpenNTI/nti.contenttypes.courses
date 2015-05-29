@@ -198,7 +198,7 @@ the ``Courses`` directory) containing a ``bundle_meta_info.json`` file
 defines a course instance.
 
 Course directories **SHOULD** be named to match the
-``DisplayName`` (more on that later). For example::
+``ProviderUniqueID`` (more on that later). For example::
 
 	platform.ou.edu/
 	    Courses/
@@ -296,13 +296,9 @@ Other possible keys:
 	  - Example
 	  - Notes
 	* - id
-	  - DisplayName
-	  - CLC 3403
-	  - Should match the directory name. Maps to ProviderUniqueID if uid field is defined
-	* - uid
 	  - ProviderUniqueID
 	  - CLC 3403
-	  - Unique id for the entry.
+	  - Should match the directory name.
 	* - InstructorsSignature
 	  - InstractuorsSignature
 	  - Dr Kyle Harper
