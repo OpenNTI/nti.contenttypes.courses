@@ -30,8 +30,8 @@ from nti.dataserver.authorization_acl import ace_denying
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
-from .interfaces import ES_PUBLIC
 from .interfaces import ES_CREDIT
+from .interfaces import ES_PUBLIC
 from .interfaces import ES_PURCHASED
 from .interfaces import ICourseInstance
 from .interfaces import ICourseEnrollments
@@ -66,7 +66,7 @@ class CourseInstanceACLProvider(object):
 		sharing_scopes = course.SharingScopes
 		sharing_scopes.initScopes()
 		
-		## chose permission scopes
+		# chose permission scopes
 		main_scopes = (sharing_scopes[ES_PUBLIC],)
 		if INonPublicCourseInstance.providedBy(course):
 			main_scopes = (sharing_scopes[ES_CREDIT], sharing_scopes[ES_PURCHASED])
@@ -77,8 +77,8 @@ class CourseInstanceACLProvider(object):
 		aces.extend( ace_allowing( i, ACT_READ, CourseInstanceACLProvider )
 					 for i in course.instructors)
 
-		## JZ: 2015-01-11 Subinstance instructors get the same permissions 
-		## as their students.
+		# JZ: 2015-01-11 Subinstance instructors get the same permissions 
+		# as their students.
 		for subinstance in course.SubInstances.values():
 			aces.extend(ace_allowing( i, ACT_READ, CourseInstanceACLProvider )
 						for i in subinstance.instructors)
