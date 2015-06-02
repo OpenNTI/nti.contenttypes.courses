@@ -16,6 +16,9 @@ from urlparse import urljoin
 from zope import component
 from zope import interface
 
+from zope.security.interfaces import IPrincipal
+from zope.security.management import queryInteraction
+
 # XXX: JAM: Don't like this dependency here. 
 # Refactor for zope.security interaction support
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
@@ -37,6 +40,9 @@ from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
 from nti.contenttypes.courses.sharing import get_default_sharing_scope
 
+from nti.dataserver.users import Entity
+from nti.dataserver.interfaces import IUser
+
 from nti.ntiids.ntiids import make_specific_safe
 
 from nti.traversal.traversal import find_interface
@@ -52,6 +58,26 @@ from .interfaces import ICourseInstanceScopedForum
 
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
+
+def get_current_principal():
+	interaction = queryInteraction()
+	participations = list(getattr(interaction, 'participations', None) or ())
+	participation = participations[0] if participations else None
+	principal = getattr(participation, 'principal', None)
+	return principal
+
+def get_user(user):
+	if user is not None and not IUser.providedBy(user):
+		user = Entity.get_entity(str(user))
+	return user
+
+def get_current_user(user=None):
+	if user is None:
+		user = get_current_principal()
+	if IPrincipal.providedBy(user):
+		user = user.id
+	result = get_user(user)
+	return result
 
 @interface.implementer(IExternalObjectDecorator)
 @component.adapter(ICourseInstance, interface.Interface)
