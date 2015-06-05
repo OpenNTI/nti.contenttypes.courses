@@ -48,6 +48,7 @@ from nti.dataserver.interfaces import ILastModified
 from nti.dataserver.interfaces import ITitledDescribedContent
 from nti.dataserver.interfaces import IShouldHaveTraversablePath
 from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
+from nti.dataserver.users.interfaces import IDisallowHiddenMembership
 
 from nti.dataserver.contenttypes.forums.interfaces import IBoard
 
@@ -70,45 +71,44 @@ from nti.schema.field import UniqueIterable
 
 # Roles defined and used by this package
 
-#: The ID of a role for instructors
+# : The ID of a role for instructors
 RID_INSTRUCTOR = "nti.roles.course_instructor"
 
-#: The ID of a role for teaching assistants
+# : The ID of a role for teaching assistants
 RID_TA = "nti.roles.course_ta"
 
 SECTIONS = 'Sections'
 DISCUSSIONS = 'Discussions'
 
-###
 # Notes:
 #
 # How to determine available courses?
 #  -- Could either enumerate, or we maintain
-#     a zope.catalog.Catalog (probably a catalog long term)
+# 	 a zope.catalog.Catalog (probably a catalog long term)
 #
 # How to tell what a user is enrolled in?
 #  -- We could also use a zope.catalog.Catalog here,
-#     but enrollment status effects permissioning,
-#     not just of UGD (which previously was handled
-#     implicitly through sharing things with a specific
-#     DFL) but also of content. That means that
-#     ACLs and "effective principals" get involved.
-#     This could still be done with a DFL 'owned' by the
-#     CourseInstance object, but a hierarchy can be extremely
-#     useful (e.g., all students, ou students, ou grad students).
-#     A hierarchy is offered by IPrincipal/IGroup and the
-#     use of zope.pluggableauth.plugins.groupfolder,
-#     so that's probably what we'll go with.
+# 	 but enrollment status effects permissioning,
+# 	 not just of UGD (which previously was handled
+# 	 implicitly through sharing things with a specific
+# 	 DFL) but also of content. That means that
+# 	 ACLs and "effective principals" get involved.
+# 	 This could still be done with a DFL 'owned' by the
+# 	 CourseInstance object, but a hierarchy can be extremely
+# 	 useful (e.g., all students, ou students, ou grad students).
+# 	 A hierarchy is offered by IPrincipal/IGroup and the
+# 	 use of zope.pluggableauth.plugins.groupfolder,
+# 	 so that's probably what we'll go with.
 #
-#     The remaining question is where the groupfolders live. pluggableauth
-#     uses IAuthentication utilities, which are usually persistent
-#     and which become active through traversal. If the groupfolder
-#     is local to each ICourseInstance's SiteManager, this is handy
-#     for permissioning and local editing, but not for global
-#     queries. I really like the idea of local groupfolders,
-#     so we may punt on that for now and do some sort of a
-#     (cached) global enumeration when necessary until we
-#     either do a catalog or manually keep a second datastructure.
+# 	 The remaining question is where the groupfolders live. pluggableauth
+# 	 uses IAuthentication utilities, which are usually persistent
+# 	 and which become active through traversal. If the groupfolder
+# 	 is local to each ICourseInstance's SiteManager, this is handy
+# 	 for permissioning and local editing, but not for global
+# 	 queries. I really like the idea of local groupfolders,
+# 	 so we may punt on that for now and do some sort of a
+# 	 (cached) global enumeration when necessary until we
+# 	 either do a catalog or manually keep a second datastructure.
 
 class ICourseAdministrativeLevel(IFolder):
 	"""
@@ -125,9 +125,7 @@ class ICourseAdministrativeLevel(IFolder):
 			 str('.ICourseAdministrativeLevel'))
 	__setitem__.__doc__ = None
 
-###
 # Outlines
-###
 
 class _ICourseOutlineNodeContainer(interface.Interface):
 	"""
@@ -186,7 +184,7 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 		this node is expected to be available and active.
 		As with ``available_for_submission_beginning``,
 		this will typically be relative and converted.""",
-		required=False )
+		required=False)
 
 class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 	"""
@@ -194,7 +192,7 @@ class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 	a content unit.
 	"""
 
-	ContentNTIID =  ValidNTIID(title="The NTIID of the content this node uses")
+	ContentNTIID = ValidNTIID(title="The NTIID of the content this node uses")
 
 class ICourseOutline(ICourseOutlineNode,
 					 ILastModified):
@@ -218,10 +216,7 @@ class ICourseOutline(ICourseOutlineNode,
 	containers(str('.ICourseInstance'))
 	__parent__.required = False
 
-
-###
 # Sharing
-###
 
 # Despite the notes at the top of this file about group-folders,
 # we still stick to a fairly basic Community-derived
@@ -229,6 +224,7 @@ class ICourseOutline(ICourseOutlineNode,
 # and will change.
 
 class ICourseInstanceSharingScope(ICommunity,
+								  IDisallowHiddenMembership,
 								  IUseNTIIDAsExternalUsername):
 	"""
 	A sharing scope within an instance.
@@ -258,9 +254,7 @@ class ICourseInstanceSharingScopes(IContainer):
 		creating them if necessary.
 		"""
 
-###
 # Discussions
-###
 
 from nti.dataserver.contenttypes.forums.interfaces import ICommunityBoard
 from nti.dataserver.contenttypes.forums.interfaces import ICommunityForum
@@ -295,9 +289,7 @@ class ICourseInstanceScopedForum(ICourseInstanceForum):
 	SharingScopeName = interface.Attribute("an optional field that should match the name of a sharing scope;"
 										   "If not found also check the tagged value on this attribute")
 
-###
 # Course instances
-###
 
 class ICourseSubInstances(IContainer):
 	"""
@@ -358,8 +350,8 @@ class ICourseInstance(IFolder,
 						  title="The sub-instances of this course, if any")
 	SubInstances.setTaggedValue('_ext_excluded_out', True)
 
-	## Reflecting instructors, TAs, and other affiliated
-	## people with a special role in the course:
+	# # Reflecting instructors, TAs, and other affiliated
+	# # people with a special role in the course:
 	# This could be done in a couple ways. We could define a generic
 	# "role" object, and have a list of roles and their occupants.
 	# This is flexible, but not particularly high on ease-of-use.
@@ -377,7 +369,7 @@ class ICourseInstance(IFolder,
 	# These are lower-case attributes because someone might be able to
 	# edit them through-the-web?
 
-	## XXX: JAM: 20140716: The above description has now been surpassed,
+	# # XXX: JAM: 20140716: The above description has now been surpassed,
 	# and we are in fact using a structured role model. The use of
 	# this attribute is deprecated. It in fact holds everyone, both
 	# instructors and TAs and others.
@@ -429,7 +421,7 @@ class IContentCourseInstance(ICourseInstance):
 				  required=False)
 	root.setTaggedValue('_ext_excluded_out', True)
 
-class IContentCourseSubInstance(ICourseSubInstance,IContentCourseInstance):
+class IContentCourseSubInstance(ICourseSubInstance, IContentCourseInstance):
 	pass
 
 class IEnrollmentMappedCourseInstance(ICourseInstance):
@@ -439,11 +431,11 @@ class IEnrollmentMappedCourseInstance(ICourseInstance):
 
 	We expect to find vendor info like this::
 
-	    NTI: {
-	        EnrollmentMap: {
-	            scope_name: section_name,
-	        }
-	    }
+		NTI: {
+			EnrollmentMap: {
+				scope_name: section_name,
+			}
+		}
 	"""
 # Don't try to consider this when determining most-derived
 # interfaces. (This one does need to be a kind-of ICourseInstance because
@@ -464,7 +456,7 @@ class ICourseInstanceVendorInfo(IEnumerableMapping,
 	information.
 	"""
 
-ICourseInstanceVenderInfo = ICourseInstanceVendorInfo # both spellings are acceptable
+ICourseInstanceVenderInfo = ICourseInstanceVendorInfo  # both spellings are acceptable
 
 class INonPublicCourseInstance(interface.Interface):
 	"""
@@ -518,9 +510,7 @@ def is_instructed_by_name(context, username):
 
 	return any((username == instructor.id for instructor in course.instructors))
 
-###
 # Catalog
-###
 
 class ICourseCatalog(interface.Interface):
 	"""
@@ -565,7 +555,7 @@ class IPersistentCourseCatalog(ICourseCatalog,
 	course catalog.
 	"""
 
-class IWritableCourseCatalog(ICourseCatalog,IContentContainer):
+class IWritableCourseCatalog(ICourseCatalog, IContentContainer):
 	"""
 	A type of course catalog that is expected to behave like
 	a container and be writable.
@@ -639,24 +629,24 @@ class ICourseCatalogEntry(IDisplayableContent,
 	# The T/D should be aliased in implementations.
 
 	ProviderUniqueID = ValidTextLine(title="The unique id assigned by the provider")
-	
+
 	ProviderDepartmentTitle = ValidTextLine(title="The string assigned to the provider's department offering the course")
 
 	Instructors = ListOrTuple(title="The instuctors. Order might matter",
-									 value_type=Object(ICourseCatalogInstructorInfo) )
+									 value_type=Object(ICourseCatalogInstructorInfo))
 
 	InstructorsSignature = ValidText(title="The sign-off or closing signature of the instructors",
 									 description="As used in an email. If this is not specifically provided, "
 									 "one can be derived from the names and titles of the instructors.")
 	InstructorsSignature.setTaggedValue('_ext_excluded_out', True)
 
-	### Things related to the availability of the course
+	# ## Things related to the availability of the course
 	StartDate = ValidDatetime(title="The date on which the course begins",
 						 description="Currently optional; a missing value means the course already started")
 	Duration = Timedelta(title="The length of the course",
 						 description="Currently optional, may be None")
 	EndDate = ValidDatetime(title="The date on which the course ends",
-					   description="Currently optional; a missing value means the course has no defined end date.")
+					   		description="Currently optional; a missing value means the course has no defined end date.")
 
 	def isCourseCurrentlyActive():
 		"""
@@ -666,9 +656,7 @@ class ICourseCatalogEntry(IDisplayableContent,
 		flags, etc.
 		"""
 
-###
 # Enrollments
-###
 
 OPEN = 'Open'
 PURCHASED = 'Purchased'
@@ -685,29 +673,29 @@ IN_CLASS_PREFIX = 'InClass'
 
 ES_ALL = u'All'
 
-#: The "root" enrollment or sharing scope; everyone enrolled or administrating
-#: is a member of this scope.
-#: sharing scopes are conceptually arranged in a strict hierarchy, and
-#: every enrollment record is within one specific scope. Because
-#: scope objects do not actually nest (are non-transitive), it is implied that
-#: a member of a nested scope will actually also be members of
-#: the parent scopes.
+# : The "root" enrollment or sharing scope; everyone enrolled or administrating
+# : is a member of this scope.
+# : sharing scopes are conceptually arranged in a strict hierarchy, and
+# : every enrollment record is within one specific scope. Because
+# : scope objects do not actually nest (are non-transitive), it is implied that
+# : a member of a nested scope will actually also be members of
+# : the parent scopes.
 ES_PUBLIC = "Public"
 
-#: This scope extends the public scope with people that have purchase the course
+# : This scope extends the public scope with people that have purchase the course
 ES_PURCHASED = "Purchased"
 
-#: This scope extends the public scope with people taking the course
-#: to earn academic credit. They have probably paid money.
+# : This scope extends the public scope with people taking the course
+# : to earn academic credit. They have probably paid money.
 ES_CREDIT = "ForCredit"
 
-#: This scope extends the ForCredit scope to be specific to people who
-#: are engaged in a degree-seeking program.
+# : This scope extends the ForCredit scope to be specific to people who
+# : are engaged in a degree-seeking program.
 ES_CREDIT_DEGREE = "ForCreditDegree"
 
-#: This scope extends the ForCredit scope to be specific to people who
-#: are taking the course for credit, but are not engaged in
-#: seeking a degree.
+# : This scope extends the ForCredit scope to be specific to people who
+# : are taking the course for credit, but are not engaged in
+# : seeking a degree.
 ES_CREDIT_NONDEGREE = "ForCreditNonDegree"
 
 from zope.schema.vocabulary import SimpleTerm
@@ -942,7 +930,7 @@ class CourseInstanceEnrollmentRecordCreatedEvent(ObjectCreatedEvent):
 		super(CourseInstanceEnrollmentRecordCreatedEvent, self).__init__(obj)
 		self.context = context
 
-#### Back to discussions
+# Back to discussions
 
 class ICourseInstancePublicScopedForum(ICourseInstanceScopedForum):
 
@@ -972,7 +960,7 @@ class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
 	SharingScopeName.setTaggedValue('value', ES_PURCHASED)
 
 
-#### Synchronizer
+# Synchronizer
 
 class IObjectEntrySynchronizer(interface.Interface):
 	"""
