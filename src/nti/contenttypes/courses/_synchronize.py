@@ -29,6 +29,7 @@ from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 from nti.contentlibrary.dublincore import read_dublincore_from_named_key
 
 from nti.dataserver.users.interfaces import IAvatarURL
+from nti.dataserver.users.interfaces import IBackgroundURL
 from nti.dataserver.users.interfaces import IFriendlyNamed
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
@@ -47,6 +48,7 @@ from .interfaces import ICourseInstance
 from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseSubInstances
 from .interfaces import IDenyOpenEnrollment
+from .interfaces import CatalogEntrySynchronized
 from .interfaces import INonPublicCourseInstance
 from .interfaces import IContentCourseSubInstance
 from .interfaces import ICourseInstanceVendorInfo
@@ -286,28 +288,34 @@ class _ContentCourseSynchronizer(object):
 				lifecycleevent.modified(friendly_scope)
 				modified_scope = True
 
-			scope_avatarURL = getattr(scope, 'avatarURL', None)
-			inputed_avatarURL = sharing_scope_data.get('avatarURL', None)
-			if inputed_avatarURL:
-				if scope_avatarURL != inputed_avatarURL:
-					logger.info("Adjusting scope %s avatar to %s for course %s",
-								scope_name, inputed_avatarURL, cce.ntiid)
-					interface.alsoProvides(scope, IAvatarURL)
-					scope.avatarURL = inputed_avatarURL
-					modified_scope = True
-			else:
-				removed = False
-				if hasattr(scope, 'avatarURL'):
-					removed = True
-					del scope.avatarURL
-					modified_scope = True
-				if IAvatarURL.providedBy(scope):
-					removed = True
-					interface.noLongerProvides(scope, IAvatarURL)
-					modified_scope = True
-				if removed:
-					logger.warn("Scope %s avatar was removed for course %s",
-								 scope_name, cce.ntiid)
+			def _imageURL(scope, image_iface, image_attr):
+				result = False
+				scope_imageURL = getattr(scope, image_attr, None)
+				inputed_imageURL = sharing_scope_data.get(image_attr, None)
+				if inputed_imageURL:
+					if scope_imageURL != inputed_imageURL:
+						logger.info("Adjusting scope %s %s to %s for course %s",
+									scope_name, image_attr, inputed_imageURL, cce.ntiid)
+						interface.alsoProvides(scope, image_iface)
+						setattr(scope, image_attr, inputed_imageURL)
+						result = True
+				else:
+					removed = False
+					if hasattr(scope, image_attr):
+						removed = True
+						delattr(scope, image_attr)
+						result = True
+					if image_iface.providedBy(scope):
+						removed = True
+						interface.noLongerProvides(scope, image_iface)
+						result = True
+					if removed:
+						logger.warn("Scope %s %s was removed for course %s",
+									 scope_name, image_attr, cce.ntiid)
+				return result
+
+			modified_scope = _imageURL(scope, IAvatarURL, 'avatarURL') or modified_scope
+			modified_scope = _imageURL(scope, IBackgroundURL, 'backgroundURL') or modified_scope
 
 			if modified_scope:
 				lifecycleevent.modified(scope)
@@ -370,20 +378,25 @@ class _ContentCourseSynchronizer(object):
 						catalog_json_key = package.make_sibling_key(CATALOG_INFO_NAME)
 						break
 
+		modified = False
 		catalog_entry = ICourseCatalogEntry(course)
 		if catalog_json_key:
-			fill_entry_from_legacy_key(catalog_entry, catalog_json_key)
+			modified = fill_entry_from_legacy_key(catalog_entry, catalog_json_key)
 			# The catalog entry gets the default dublincore info
 			# file; for the bundle, we use a different name
-			read_dublincore_from_named_key(catalog_entry, bucket)
+			modified = (read_dublincore_from_named_key(catalog_entry, bucket) != None) or modified
 
 		if not getattr(catalog_entry, 'root', None):
 			catalog_entry.root = bucket
+			modified = True
 
 		if INonPublicCourseInstance.providedBy(catalog_entry):
 			interface.alsoProvides(course, INonPublicCourseInstance)
 		elif INonPublicCourseInstance.providedBy(course):
 			interface.noLongerProvides(course, INonPublicCourseInstance)
+
+		if modified:
+			notify(CatalogEntrySynchronized(catalog_entry))
 
 	@classmethod
 	def update_instructor_roles(cls, course, bucket):
