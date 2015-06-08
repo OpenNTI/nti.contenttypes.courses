@@ -972,6 +972,13 @@ class IObjectEntrySynchronizer(interface.Interface):
 		Synchronize the object from the bucket.
 		"""
 
+class ICatalogEntrySynchronized(IObjectEvent):
+	pass
+
+@interface.implementer(ICatalogEntrySynchronized)
+class CatalogEntrySynchronized(ObjectEvent):
+	pass
+
 import zope.deferredimport
 zope.deferredimport.initialize()
 zope.deferredimport.deprecatedFrom(

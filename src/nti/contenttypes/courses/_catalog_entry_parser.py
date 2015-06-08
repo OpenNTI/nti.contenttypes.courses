@@ -179,6 +179,7 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/'):
 
 	:return: The entry
 	"""
+
 	if key.lastModified > catalog_entry.lastModified:
 		__traceback_info__ = key, catalog_entry
 		json = key.readContentsAsYaml()
@@ -186,4 +187,5 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/'):
 		catalog_entry.key = key
 		catalog_entry.root = key.__parent__
 		catalog_entry.lastModified = key.lastModified
-	return catalog_entry
+		return True
+	return False
