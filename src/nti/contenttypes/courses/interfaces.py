@@ -48,6 +48,8 @@ from nti.dataserver.interfaces import ILastModified
 from nti.dataserver.interfaces import ITitledDescribedContent
 from nti.dataserver.interfaces import IShouldHaveTraversablePath
 from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
+
+from nti.dataserver.users.interfaces import IDisallowMembersLink
 from nti.dataserver.users.interfaces import IDisallowHiddenMembership
 
 from nti.dataserver.contenttypes.forums.interfaces import IBoard
@@ -224,6 +226,7 @@ class ICourseOutline(ICourseOutlineNode,
 # and will change.
 
 class ICourseInstanceSharingScope(ICommunity,
+								  IDisallowMembersLink,
 								  IDisallowHiddenMembership,
 								  IUseNTIIDAsExternalUsername):
 	"""
