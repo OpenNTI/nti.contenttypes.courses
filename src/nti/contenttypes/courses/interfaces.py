@@ -50,6 +50,7 @@ from nti.dataserver.interfaces import IShouldHaveTraversablePath
 from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
 
 from nti.dataserver.users.interfaces import IDisallowMembersLink
+from nti.dataserver.users.interfaces import IDisallowActivityLink
 from nti.dataserver.users.interfaces import IDisallowHiddenMembership
 
 from nti.dataserver.contenttypes.forums.interfaces import IBoard
@@ -227,6 +228,7 @@ class ICourseOutline(ICourseOutlineNode,
 
 class ICourseInstanceSharingScope(ICommunity,
 								  IDisallowMembersLink,
+								  IDisallowActivityLink,
 								  IDisallowHiddenMembership,
 								  IUseNTIIDAsExternalUsername):
 	"""
