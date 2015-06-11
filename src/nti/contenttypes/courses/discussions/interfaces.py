@@ -20,8 +20,8 @@ from zope.location.interfaces import IContained
 from nti.coremetadata.interfaces import ITitled
 from nti.coremetadata.interfaces import ILastModified
 
-from nti.dataserver.fragments.interfaces import ITaggedContent
-from nti.dataserver.fragments.schema import CompoundModeledContentBody
+from nti.dataserver_fragments.interfaces import ITaggedContent
+from nti.dataserver_fragments.schema import CompoundModeledContentBody
 
 from nti.schema.field import Choice
 from nti.schema.field import ListOrTuple
