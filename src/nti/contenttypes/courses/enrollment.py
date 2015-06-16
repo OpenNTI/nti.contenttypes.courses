@@ -25,19 +25,20 @@ from zope.interface import ro
 
 from zope import component
 from zope import lifecycleevent
-from zope.mimetype.interfaces import IContentTypeAware
 
 from zope.annotation.factory import factory as an_factory
 
-from zope.event import notify
+from zope.cachedescriptors.method import cachedIn
 
 from zope.container.constraints import contains
 from zope.container.interfaces import IContainer
 from zope.container.interfaces import IContained
 
-from zope.cachedescriptors.method import cachedIn
+from zope.event import notify
 
 from zope.location.location import locate
+
+from zope.mimetype.interfaces import IContentTypeAware
 
 from zope.security.interfaces import IPrincipal
 from zope.security.management import endInteraction
@@ -158,7 +159,7 @@ def DefaultCourseInstanceEnrollmentStorageFactory(course):
 		# (the intid catalog?)
 		try:
 			IConnection(course).add(result)
-		except (TypeError,AttributeError):
+		except (TypeError, AttributeError):
 			pass
 	return result
 
@@ -182,11 +183,11 @@ class CourseEnrollmentList(Persistent):
 		self._set_data = BTrees.OOBTree.TreeSet()
 
 	@Lazy
-	def _set_data(self): #pylint:disable=I0011,E0202
+	def _set_data(self):  # pylint:disable=I0011,E0202
 		# We used to be a subclass of PersistentList, which
 		# stores its contents in a value called `data`, which is-a
 		# list object directly holding references to the CourseEnrollmentRecord
-		data_list = self.data # AttributeError if somehow this migration already happened
+		data_list = self.data  # AttributeError if somehow this migration already happened
 		del self.data
 		# We migrate these at runtime right now because there are likely to be
 		# few of them, and they are likely to be written in many of the scenarios
@@ -208,7 +209,7 @@ class CourseEnrollmentList(Persistent):
 		except NotYet:
 			# The record MUST be in a connection at this time
 			# so we can get an IKeyReference to it
-			IConnection(self).add(record) # may raise TypeError/AttributeError
+			IConnection(self).add(record)  # may raise TypeError/AttributeError
 			ref = IKeyReference(record)
 
 		return self._set_data.add(ref)
@@ -235,11 +236,11 @@ class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedB
 				# store with the principal, not with us
 				jar.add(result)
 
-			## CS/JZ 20141026
-			## We manually add the item and fire the ObjectAddedEvent to
-			## avoid contention in an underlying zope dublincore annotation data structure.
-			## A modified event on the container calls zope.dublincore.creatorannotator
-			## whose data modifications, we currently do not use.
+			# # CS/JZ 20141026
+			# # We manually add the item and fire the ObjectAddedEvent to
+			# # avoid contention in an underlying zope dublincore annotation data structure.
+			# # A modified event on the container calls zope.dublincore.creatorannotator
+			# # whose data modifications, we currently do not use.
 			save_in_container(self, principalid, result)
 
 			# result.__parent__ is self; but depending
@@ -318,7 +319,6 @@ class DefaultCourseEnrollmentManager(object):
 
 	_course = alias('context')
 
-	###
 	# Use of readCurrent:
 	#
 	# Although we are modifying a set of related data structures,
@@ -333,7 +333,6 @@ class DefaultCourseEnrollmentManager(object):
 	#
 	# The first datastructure is always the _inst_enrollment_storage
 	# object.
-	###
 
 	@Lazy
 	def _inst_enrollment_storage_rc(self):
@@ -358,14 +357,14 @@ class DefaultCourseEnrollmentManager(object):
 	def _cat_enrollment_storage(self):
 		return IDefaultCourseCatalogEnrollmentStorage(self._catalog)
 
-	###
+	# ##
 	# NOTE: The enroll/drop methods DO NOT set up any of the scope/sharing
 	# information; that's left to ObjectEvent subscribers. That may
 	# seem like action at a distance, but the rationale is that we
 	# want to, in addition to the Added and Removed events fired here,
 	# support Modified events (e.g., a user starts out open/public
 	# enrolled, then pays for the course, and becomes for-credit-non-degree)
-	###
+	# ##
 
 	def enroll(self, principal, scope=ES_PUBLIC, context=None):
 		principal_id = IPrincipal(principal).id
@@ -388,11 +387,11 @@ class DefaultCourseEnrollmentManager(object):
 		# it's in the IPrincipalEnrollments; that way
 		# event listeners will see consistent data.
 
-		## CS/JZ 20141025
-		## We manually add the item and fire the ObjectAddedEvent to
-		## avoid contention in an underlying zope dublincore annotation data structure.
-		## A modified event on the container calls zope.dublincore.creatorannotator
-		## whose data modifications, we currently do not use.
+		# # CS/JZ 20141025
+		# # We manually add the item and fire the ObjectAddedEvent to
+		# # avoid contention in an underlying zope dublincore annotation data structure.
+		# # A modified event on the container calls zope.dublincore.creatorannotator
+		# # whose data modifications, we currently do not use.
 		save_in_container(self._inst_enrollment_storage, principal_id, record)
 		return record
 
@@ -430,11 +429,11 @@ class DefaultCourseEnrollmentManager(object):
 		# enrollment list then fire the event
 		self._drop_record_for_principal_id(record, principal_id)
 
-		## CS/JZ 201410256
-		## We manually remove the item and fire the ObjectRemovedEvent to
-		## avoid contention in an underlying zope dublincore annotation data structure.
-		## A modified event on the container calls zope.dublincore.creatorannotator
-		## whose data modifications, we currently do not use.
+		# # CS/JZ 201410256
+		# # We manually remove the item and fire the ObjectRemovedEvent to
+		# # avoid contention in an underlying zope dublincore annotation data structure.
+		# # A modified event on the container calls zope.dublincore.creatorannotator
+		# # whose data modifications, we currently do not use.
 		remove_from_container(self._inst_enrollment_storage, principal_id)
 
 		return record
@@ -508,8 +507,8 @@ def check_enrollment_mapped(context):
 
 		return result
 
-@total_ordering
 @WithRepr
+@total_ordering
 @EqHash("section_name")
 class SectionSeat(object):
 
@@ -563,7 +562,7 @@ def _find_mapped_course_for_scope(course, scope):
 				return course.SubInstances[section_name]
 
 		# could not find a section simply pick at random
-		index = random.randint(0, len(items)-1)
+		index = random.randint(0, len(items) - 1)
 		section_name = items[index].section_name
 		section = course.SubInstances[section_name]
 		logger.warn("Seat count exceed for section %s", section_name)
@@ -582,13 +581,13 @@ class EnrollmentMappedCourseEnrollmentManager(DefaultCourseEnrollmentManager):
 	def enroll(self, principal, scope=ES_PUBLIC, context=None):
 		mapped_course = _find_mapped_course_for_scope(self.context, scope)
 		if mapped_course is not self.context:
-			manager = (component.getMultiAdapter( (mapped_course, self.request),
+			manager = (component.getMultiAdapter((mapped_course, self.request),
 												  ICourseEnrollmentManager)
 					   if self.request is not None
 					   else ICourseEnrollmentManager(mapped_course))
 			return manager.enroll(principal, scope=scope, context=context)
 
-		return super(EnrollmentMappedCourseEnrollmentManager,self).enroll(principal,
+		return super(EnrollmentMappedCourseEnrollmentManager, self).enroll(principal,
 																		  scope=scope,
 																		  context=context)
 
@@ -636,9 +635,9 @@ from nti.dataserver.interfaces import IEntity
 from nti.dataserver.interfaces import IEntityContainer
 from nti.dataserver.interfaces import ILengthEnumerableEntityContainer
 
+@NoPickle
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseEnrollments)
-@NoPickle
 class DefaultCourseEnrollments(object):
 
 	def __init__(self, context):
@@ -653,7 +652,7 @@ class DefaultCourseEnrollments(object):
 
 	def iter_principals(self):
 		return self._inst_enrollment_storage.keys()
-	
+
 	def iter_enrollments(self):
 		return self._inst_enrollment_storage.values()
 
@@ -692,8 +691,8 @@ class DefaultCourseEnrollments(object):
 
 		return public_count - credit_count
 
-@interface.implementer(IPrincipalEnrollments)
 @NoPickle
+@interface.implementer(IPrincipalEnrollments)
 class DefaultPrincipalEnrollments(object):
 
 	def __init__(self, principal):
@@ -708,7 +707,7 @@ class DefaultPrincipalEnrollments(object):
 
 	def count_enrollments(self):
 		return len(self._all_enrollments)
-	
+
 	def _query_enrollments(self):
 		iprincipal = IPrincipal(self.principal, None)
 		if iprincipal is None:
@@ -781,8 +780,8 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 	to know how we are stored.
 	"""
 
-	__parent__ = None
 	__name__ = None
+	__parent__ = None
 
 	parameters = {}
 	mime_type = mimeType = 'application/vnd.nextthought.courses.defaultcourseinstanceenrollmentrecord'
@@ -847,7 +846,7 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 # for dependable ordering
 
 def remove_user_enroll_data(principal):
-	pins = component.subscribers( (principal,), IPrincipalEnrollments )
+	pins = component.subscribers((principal,), IPrincipalEnrollments)
 	for enrollments in pins:
 		for record in enrollments.iter_enrollments():
 			course = record.CourseInstance
@@ -880,9 +879,7 @@ def on_course_deletion_unenroll(course, event):
 						 course,
 						 list(enrollments.iter_enrollments()))
 
-###
 # Moving enrollments
-###
 
 from zope.copypastemove.interfaces import IObjectMover
 
@@ -917,7 +914,7 @@ def migrate_enrollments_from_course_to_course(source, dest, verbose=False, resul
 	dest_enrollments = IDefaultCourseInstanceEnrollmentStorage(dest)
 	source_enrollments = IDefaultCourseInstanceEnrollmentStorage(source)
 
-	for source_prin_id in list(source_enrollments): # copy, we're mutating
+	for source_prin_id in list(source_enrollments):  # copy, we're mutating
 		if not source_prin_id or source_prin_id in dest_enrollments:
 			log("Ignoring dup enrollment for %s", source_prin_id)
 			continue

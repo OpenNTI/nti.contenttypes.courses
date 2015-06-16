@@ -14,8 +14,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from zope import interface
 from zope import component
+from zope import interface
 
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import Unset
@@ -25,8 +25,8 @@ from .interfaces import RID_TA
 from .interfaces import RID_INSTRUCTOR
 from .interfaces import ICourseInstance
 
-@interface.implementer(IPrincipalRoleMap)
 @component.adapter(ICourseInstance)
+@interface.implementer(IPrincipalRoleMap)
 class CourseInstancePrincipalRoleMap(object):
 
 	def __init__(self, course):
@@ -52,12 +52,10 @@ class CourseInstancePrincipalRoleMap(object):
 		return ((RID_INSTRUCTOR, self._principals_for_instructor),
 				(RID_TA, self._principals_for_ta))
 
-
 	def getPrincipalsForRole(self, role_id):
 		role_meth = dict(self.__role_meth)
 		if role_id not in role_meth:
 			return []
-
 		return [(x.id, Allow) for x in role_meth[role_id]()]
 
 	def getRolesForPrincipal(self, principal_id):
@@ -79,5 +77,5 @@ class CourseInstancePrincipalRoleMap(object):
 	def getPrincipalsAndRoles(self):
 		result = []
 		for rid, meth in self.__role_meth:
-			result.extend( ((rid, x.id, Allow) for x in meth()))
+			result.extend(((rid, x.id, Allow) for x in meth()))
 		return result

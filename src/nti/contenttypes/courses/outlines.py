@@ -15,9 +15,9 @@ from zope import interface
 
 # We have no need or desire for these nodes to be Persistent (yet)
 # so we cannot extend OrderedContainer:
-#from zope.container.ordered import OrderedContainer
+# from zope.container.ordered import OrderedContainer
 # Instead, we extend a regular OrderedDict and implement the container part ourself
-#from collections import OrderedDict
+# from collections import OrderedDict
 # Also note that the mixin:
 # from nti.dataserver.containers import _CheckObjectOnSetMixin
 # doesn't work with the OrderedContainer, so we have to do that ourself
@@ -46,7 +46,7 @@ class _AbstractCourseOutlineNode(Contained):
 
 	createFieldProperties(ITitledDescribedContent)
 	createDirectFieldProperties(ICourseOutlineNode)
-	
+
 	__external_can_create__ = False
 
 	title = AdaptingFieldProperty(ITitledDescribedContent['title'])
@@ -63,7 +63,7 @@ class _AbstractCourseOutlineNode(Contained):
 		# We inherit an __eq__ from dict, but dict does not
 		# like to be hashed (because mutable cache keys can be bad)
 		# But we have an ACL and need to be hashable
-		return hash( tuple(self.items() ) )
+		return hash(tuple(self.items()))
 
 	def reset(self):
 		keys = list(self)
@@ -85,27 +85,27 @@ class CourseOutlineNode(_AbstractCourseOutlineNode,
 	# able to persist these items. Not sure what the implications are for
 	# alpha, which was the only place that saw this error? I don't remember
 	# the exact details...have to wait and see.
-	#_v_nti_pseudo_broken_replacement_name = str('CourseOutlineNode_BROKEN')
+	# _v_nti_pseudo_broken_replacement_name = str('CourseOutlineNode_BROKEN')
 
 	def __setitem__(self, key, value):
 		checkObject(self, key, value)
-		super(CourseOutlineNode,self).__setitem__(key, value)
+		super(CourseOutlineNode, self).__setitem__(key, value)
 
 	def __delitem__(self, key):
 		uncontained(self[key], self, key)
-		super(CourseOutlineNode,self).__delitem__(key)
+		super(CourseOutlineNode, self).__delitem__(key)
 
 @interface.implementer(ICourseOutlineCalendarNode)
 class CourseOutlineCalendarNode(SchemaConfigured,
 								CourseOutlineNode):
 	createDirectFieldProperties(ICourseOutlineCalendarNode)
 
-	def __init__(self,**kwargs):
-		SchemaConfigured.__init__(self,**kwargs)
-		CourseOutlineNode.__init__(self)
-
 	AvailableEnding = AdaptingFieldProperty(ICourseOutlineCalendarNode['AvailableEnding'])
 	AvailableBeginning = AdaptingFieldProperty(ICourseOutlineCalendarNode['AvailableBeginning'])
+
+	def __init__(self, **kwargs):
+		SchemaConfigured.__init__(self, **kwargs)
+		CourseOutlineNode.__init__(self)
 
 @interface.implementer(ICourseOutlineContentNode)
 class CourseOutlineContentNode(CourseOutlineCalendarNode):

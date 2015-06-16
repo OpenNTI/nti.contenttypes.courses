@@ -19,7 +19,7 @@ from zope import interface
 from zope.security.interfaces import IPrincipal
 from zope.security.management import queryInteraction
 
-# XXX: JAM: Don't like this dependency here. 
+# XXX: JAM: Don't like this dependency here.
 # Refactor for zope.security interaction support
 from nti.app.renderers.decorators import AbstractAuthenticatedRequestAwareDecorator
 
@@ -29,16 +29,9 @@ from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalObjectDecorator
 
-from nti.externalization.externalization import to_external_object
-
 from nti.externalization.oids import to_external_ntiid_oid
-
 from nti.externalization.singleton import SingletonDecorator
-
-from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
-from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
-
-from nti.contenttypes.courses.sharing import get_default_sharing_scope
+from nti.externalization.externalization import to_external_object
 
 from nti.dataserver.users import Entity
 from nti.dataserver.interfaces import IUser
@@ -47,13 +40,18 @@ from nti.ntiids.ntiids import make_specific_safe
 
 from nti.traversal.traversal import find_interface
 
+from .sharing import get_default_sharing_scope
+
 from .interfaces import ES_PUBLIC
 from .interfaces import ES_CREDIT
 from .interfaces import ES_PURCHASED
+from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
+
 from .interfaces import ICourseInstance
 from .interfaces import ICourseSubInstance
 from .interfaces import ICourseCatalogEntry
 from .interfaces import INonPublicCourseInstance
+from .interfaces import ICourseInstanceVendorInfo
 from .interfaces import ICourseInstanceScopedForum
 
 CLASS = StandardExternalFields.CLASS
@@ -86,8 +84,8 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 	def _do_decorate_external(self, context, result):
 		is_section = ICourseSubInstance.providedBy(context)
 
-		default_scope = get_default_sharing_scope( context )
-		default_sharing_scope_ntiid = getattr( default_scope, 'NTIID', None )
+		default_scope = get_default_sharing_scope(context)
+		default_sharing_scope_ntiid = getattr(default_scope, 'NTIID', None)
 
 		if is_section:
 			# conflated, yes, but simpler
@@ -132,9 +130,9 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 			else:
 				public = None
 				parent = context.__parent__
-				if 	(	is_section
+				if 	(is_section
 					 and find_interface(parent, INonPublicCourseInstance, strict=False) is None
-					 and 'public' in result.get('ParentLegacyScopes', ()) ):
+					 and 'public' in result.get('ParentLegacyScopes', ())):
 					public = result['ParentLegacyScopes']['public']
 				elif ES_PUBLIC in scopes:
 					public = scopes[ES_PUBLIC].NTIID
@@ -171,13 +169,13 @@ class _AnnouncementsDecorator(AbstractAuthenticatedRequestAwareDecorator):
 		user = self.remoteUser if self._is_authenticated else None
 		scope = course.SharingScopes[scope_name]
 		# In scope if we have user and they are in scope.
-		return user is not None and user in IEntityContainer( scope )
+		return user is not None and user in IEntityContainer(scope)
 
 	def _get_forum_key(self, forum_types, name, display_key):
-		result = forum_types.get( display_key )
+		result = forum_types.get(display_key)
 		if not result:
 			# Replicate forum key logic used during create time
-			result = make_specific_safe( name + ' ' + 'Announcements' )
+			result = make_specific_safe(name + ' ' + 'Announcements')
 		return result
 
 	def _do_decorate_external(self, context, result):
@@ -195,10 +193,10 @@ class _AnnouncementsDecorator(AbstractAuthenticatedRequestAwareDecorator):
 
 		# A marker interface might make this easier
 		announcements = {}
-		items = { 	ITEMS: announcements,
-					'Class': 'CourseInstanceAnnouncementForums' }
+		items = { ITEMS: announcements,
+				  'Class': 'CourseInstanceAnnouncementForums' }
 
-		vendor_info = ICourseInstanceVendorInfo( context )
+		vendor_info = ICourseInstanceVendorInfo(context)
 		forum_types = vendor_info.get('NTI', {}).get('Forums', {})
 
 		for scope_name, scope_term in ENROLLMENT_SCOPE_VOCABULARY.by_token.iteritems():
@@ -208,14 +206,13 @@ class _AnnouncementsDecorator(AbstractAuthenticatedRequestAwareDecorator):
 			has_key = 'Has' + key_prefix + 'Announcements'
 
 			# They have announcements and we're in the scope
-			if 		forum_types.get( has_key ) \
-				and self._in_scope( scope_name, context ):
+			if forum_types.get(has_key) and self._in_scope(scope_name, context):
 				# Ok, let's find our forum
 				display_key = key_prefix + 'AnnouncementsDisplayName'
 				forum_key = self._get_forum_key(forum_types, name, display_key)
 
 				discussions = context.Discussions
-				found_forum = discussions.get( forum_key )
+				found_forum = discussions.get(forum_key)
 				if found_forum is not None:
 					announcements[ scope_name ] = found_forum
 
@@ -227,11 +224,11 @@ class _AnnouncementsDecorator(AbstractAuthenticatedRequestAwareDecorator):
 class _CourseCatalogEntryDecorator(object):
 
 	__metaclass__ = SingletonDecorator
-	
+
 	def decorateExternalObject(self, context, result):
-		result['ProviderDisplayName'] = context.ProviderUniqueID 
-		result.pop('DisplayName', None) # replace for legacy purposes
-	
+		result['ProviderDisplayName'] = context.ProviderUniqueID
+		result.pop('DisplayName', None)  # replace for legacy purposes
+
 @component.adapter(ICourseCatalogEntry)
 @interface.implementer(IExternalObjectDecorator)
 class _LegacyCCEFieldDecorator(object):
@@ -270,18 +267,18 @@ class _LegacyCCEFieldDecorator(object):
 
 			if package is not None:
 				# Copied wholesale from legacy code
-				purch_id = context.ProviderUniqueID.replace(' ','').split('-')[0]
-				if getattr(context, 'Term', ''): # non interface, briefly seen field
+				purch_id = context.ProviderUniqueID.replace(' ', '').split('-')[0]
+				if getattr(context, 'Term', ''):  # non interface, briefly seen field
 					purch_id += context.Term.replace(' ', '').replace('-', '')
 
 				# We have to externalize the package to get correct URLs
 				# to the course. They need to be absolute because there is no context
 				# in the purchasable.
-				ext_package = to_external_object( package )
-				icon = urljoin( ext_package['href'],
-								'images/' + purch_id + '_promo.png' )
-				thumbnail = urljoin( ext_package['href'],
-									 'images/' + purch_id + '_cover.png' )
+				ext_package = to_external_object(package)
+				icon = urljoin(ext_package['href'],
+							   'images/' + purch_id + '_promo.png')
+				thumbnail = urljoin(ext_package['href'],
+									'images/' + purch_id + '_cover.png')
 				# Temporarily also stash these things on the entry itself too
 				# where they can be externalized in the course catalog;
 				# this should save us a trip through next time

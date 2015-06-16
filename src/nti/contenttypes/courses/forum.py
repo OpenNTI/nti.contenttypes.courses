@@ -14,6 +14,7 @@ logger = __import__('logging').getLogger(__name__)
 from . import MessageFactory as _
 
 from zope import interface
+
 from zope.cachedescriptors.property import cachedIn
 
 from nti.dataserver.contenttypes.forums.board import CommunityBoard
@@ -50,5 +51,4 @@ class CourseInstanceBoard(CommunityBoard):
 		forum.creator = self.creator
 		self[forum.__default_name__] = forum
 		forum.title = _('Forum')
-
 		return forum

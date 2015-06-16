@@ -13,8 +13,8 @@ logger = __import__('logging').getLogger(__name__)
 
 from datetime import datetime
 
-from zope import interface
 from zope import component
+from zope import interface
 
 from nti.common.property import readproperty
 
@@ -28,12 +28,12 @@ from nti.schema.field import ValidTextLine
 from nti.schema.schema import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
 
+from .catalog import CourseCatalogEntry
+from .catalog import CourseCatalogInstructorInfo
+
 from .interfaces import ICourseCatalog
 from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseCatalogInstructorInfo
-
-from .catalog import CourseCatalogEntry
-from .catalog import CourseCatalogInstructorInfo
 
 class ICourseCatalogInstructorLegacyInfo(ICourseCatalogInstructorInfo):
 	"""
@@ -43,12 +43,12 @@ class ICourseCatalogInstructorLegacyInfo(ICourseCatalogInstructorInfo):
 	defaultphoto = ValidTextLine(title="A URL path for an extra copy of the instructor's photo",
 								 description="ideally this should be the profile photo",
 								 default='',
-								 required=False) # TODO: We need a schema field for this
+								 required=False)  # TODO: We need a schema field for this
 
 	username = ValidTextLine(title="A username string that may or may not refer to an actual account.",
 							 default='',
 							 required=True)
-	username.setTaggedValue('_ext_excluded_out', True) # Internal use only
+	username.setTaggedValue('_ext_excluded_out', True)  # Internal use only
 
 class ICourseCreditLegacyInfo(interface.Interface):
 	"""
@@ -77,9 +77,9 @@ class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
 
 	# Legacy. This isn't really part of the course catalog.
 	# Nothing seems to use it anyway
-	#Communities = ListOrTuple(value_type=TextLine(title='The community'),
-	#						  title="Course communities",
-	#						  required=False)
+	# Communities = ListOrTuple(value_type=TextLine(title='The community'),
+	# 						  title="Course communities",
+	# 						  required=False)
 
 	# While this might be a valid part of the course catalog, this
 	# representation of it isn't very informative or flexible
@@ -104,16 +104,16 @@ class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
 	DisableOverviewCalendar = Bool(title="A URL or path of indeterminate type or meaning",
 								   required=False, default=False)
 
-	###
+	# ##
 	# These are being replaced with presentation specific asset bundles
 	# (one path is insufficient to handle things like retina displays
 	# and the various platforms).
-	###
+	# ##
 	LegacyPurchasableIcon = ValidTextLine(title="A URL or path of indeterminate type or meaning",
-									 required=False)
+										  required=False)
 
 	LegacyPurchasableThumbnail = ValidTextLine(title="A URL or path of indeterminate type or meaning",
-										  required=False)
+										  	   required=False)
 
 # Legacy extensions
 
@@ -126,6 +126,7 @@ class CourseCreditLegacyInfo(SchemaConfigured):
 class CourseCatalogInstructorLegacyInfo(CourseCatalogInstructorInfo):
 	defaultphoto = None
 	__external_can_create__ = False
+
 	createDirectFieldProperties(ICourseCatalogInstructorLegacyInfo)
 
 def _derive_preview(self):
@@ -136,12 +137,13 @@ def _derive_preview(self):
 class CourseCatalogLegacyEntry(CourseCatalogEntry):
 	DisableOverviewCalendar = False
 	__external_can_create__ = False
+
 	createDirectFieldProperties(ICourseCatalogLegacyEntry)
 
-	#: For legacy catalog entries created from a content package,
-	#: this will be that package (an implementation of
-	#: :class:`.ILegacyCourseConflatedContentPackage`)
-	#legacy_content_package = None
+	# : For legacy catalog entries created from a content package,
+	# : this will be that package (an implementation of
+	# : :class:`.ILegacyCourseConflatedContentPackage`)
+	# legacy_content_package = None
 
 	@readproperty
 	def EndDate(self):
@@ -246,11 +248,11 @@ from nti.links.links import Link
 
 from .interfaces import ICourseSubInstance
 
-@component.adapter(ICourseSubInstance)
-@interface.implementer(ICourseCatalogLegacyEntry)
 @WithRepr
 @total_ordering
 @EqHash('ntiid')
+@component.adapter(ICourseSubInstance)
+@interface.implementer(ICourseCatalogLegacyEntry)
 class _CourseSubInstanceCatalogLegacyEntry(Contained,
 										   DisplayableContentMixin,
 										   PersistentCreatedAndModifiedTimeObject):
@@ -264,7 +266,7 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 	__external_class_name__ = 'CourseCatalogLegacyEntry'
 	__external_can_create__ = False
 
-	_SET_CREATED_MODTIME_ON_INIT = False # default to 0
+	_SET_CREATED_MODTIME_ON_INIT = False  # default to 0
 
 	def __lt__(self, other):
 		return self.ntiid < other.ntiid
@@ -282,12 +284,12 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 		result = ()
 		instance = ICourseInstance(self, None)
 		if instance is not None:
-			result = [Link( instance, rel="CourseInstance" )]
+			result = [Link(instance, rel="CourseInstance")]
 		return result
 
 	@property
 	def PlatformPresentationResources(self):
-		ours = super(_CourseSubInstanceCatalogLegacyEntry,self).PlatformPresentationResources
+		ours = super(_CourseSubInstanceCatalogLegacyEntry, self).PlatformPresentationResources
 		if ours:
 			return ours
 		return self._next_entry.PlatformPresentationResources
@@ -300,9 +302,8 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 		# inherit as normal
 		self._p_activate()
 
-		if 'StartDate' in self.__dict__: # whether or not its None
+		if 'StartDate' in self.__dict__:  # whether or not its None
 			return _derive_preview(self)
-
 		return getattr(self._next_entry, 'Preview', None)
 
 	def isCourseCurrentlyActive(self):
@@ -342,7 +343,6 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 			# TODO: would really like to use the actual
 			# acquisition policy
 			raise AttributeError(key)
-
 		return getattr(self._next_entry, key)
 
 

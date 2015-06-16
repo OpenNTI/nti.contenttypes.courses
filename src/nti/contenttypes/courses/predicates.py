@@ -40,7 +40,7 @@ def outline_nodes_collector(course):
 	except AttributeError:
 		pass
 	return result
-			
+
 @component.adapter(ISystemUserPrincipal)
 class _CoursePrincipalObjects(BasePrincipalObjects):
 
@@ -57,12 +57,12 @@ class _CoursePrincipalObjects(BasePrincipalObjects):
 
 @component.adapter(IUser)
 class _EnrollmentPrincipalObjects(BasePrincipalObjects):
-	
+
 	def iter_objects(self):
 		result = []
 		user = self.user
 		def _collector():
-			for enrollments in component.subscribers( (user,), IPrincipalEnrollments):
+			for enrollments in component.subscribers((user,), IPrincipalEnrollments):
 				for enrollment in enrollments.iter_enrollments():
 					result.append(enrollment)
 		run_job_in_all_host_sites(_collector)

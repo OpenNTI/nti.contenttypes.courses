@@ -16,8 +16,9 @@ logger = __import__('logging').getLogger(__name__)
 # object for sharing purposes. This is largely for compatibility
 # and will change.
 
-from zope import interface
 from zope import component
+from zope import interface
+
 from zope.cachedescriptors.property import cachedIn
 
 from nti.dataserver.users import Community
@@ -29,10 +30,11 @@ from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
+
 from .interfaces import ICourseInstanceVendorInfo
 from .interfaces import ICourseInstanceSharingScope
 from .interfaces import ICourseInstanceSharingScopes
-from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
 @interface.implementer(ICourseInstanceSharingScope)
 class CourseInstanceSharingScope(Community):
@@ -105,7 +107,7 @@ class _CourseInstanceSharingScopePrincipal(_CommunityGroup):
 		_CommunityGroup.__init__(self, context)
 		# Overwrite id, which defaults to username, with ntiid
 		self.id = context.NTIID
-		self.NTIID = self.id # also externalize this way
+		self.NTIID = self.id  # also externalize this way
 
 @interface.implementer(ICourseInstanceSharingScopes)
 class CourseInstanceSharingScopes(CheckingLastModifiedBTreeContainer):
@@ -123,7 +125,7 @@ class CourseInstanceSharingScopes(CheckingLastModifiedBTreeContainer):
 	def __setitem__(self, key, value):
 		if key not in self._vocabulary():
 			raise KeyError("Unsupported scope kind", key)
-		super(CourseInstanceSharingScopes,self).__setitem__(key, value)
+		super(CourseInstanceSharingScopes, self).__setitem__(key, value)
 
 	def initScopes(self):
 		"""
@@ -177,9 +179,7 @@ class CourseSubInstanceSharingScopes(CourseInstanceSharingScopes):
 				for i in scopes:
 					yield i
 
-###
 # Event handling to get sharing correct.
-###
 
 from zope.lifecycleevent import IObjectMovedEvent
 from zope.lifecycleevent import IObjectModifiedEvent
@@ -206,7 +206,7 @@ def _adjust_scope_membership(record, course,
 		follow = getattr(principal, follow)
 	else:
 		join = follow = None
-		
+
 	scopes = course.SharingScopes
 
 	if relevant_scopes is None:
@@ -300,8 +300,8 @@ def _principal_is_enrolled_in_related_course(principal, course):
 def add_principal_to_course_content_roles(principal, course):
 	if get_principal(principal) is None:
 		return
-	
-	membership = component.getAdapter(principal, IMutableGroupMember, 
+
+	membership = component.getAdapter(principal, IMutableGroupMember,
 									  CONTENT_ROLE_PREFIX)
 	orig_groups = set(membership.groups)
 	new_groups = _content_roles_for_course_instance(course)
@@ -314,9 +314,9 @@ def add_principal_to_course_content_roles(principal, course):
 def remove_principal_from_course_content_roles(principal, course):
 	if get_principal(principal) is None:
 		return
-	
+
 	roles_to_remove = _content_roles_for_course_instance(course)
-	membership = component.getAdapter(principal, IMutableGroupMember, 
+	membership = component.getAdapter(principal, IMutableGroupMember,
 									  CONTENT_ROLE_PREFIX)
 	groups = set(membership.groups)
 	new_groups = groups - roles_to_remove
@@ -331,9 +331,9 @@ def on_enroll_record_scope_membership(record, event, course=None):
 	"""
 	_adjust_scope_membership(record, course,
 							 'record_dynamic_membership',
-							 'follow' )
+							 'follow')
 	# Add the content roles
-	add_principal_to_course_content_roles(record.Principal, 
+	add_principal_to_course_content_roles(record.Principal,
 										  course or record.CourseInstance)
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IIntIdRemovedEvent)
@@ -353,15 +353,15 @@ def on_drop_exit_scope_membership(record, event, course=None):
 	# the sharing scopes may already have been deleted, which
 	# shouldn't be a problem: the removal listeners for those
 	# events should have cleaned up
-	_adjust_scope_membership( record, course,
-							  'record_no_longer_dynamic_member',
-							  'stop_following',
-							  # Depending on the order, we may have already
-							  # cleaned this up (e.g, deleting a principal
-							  # fires events twice due to various cleanups)
-							  # So the entity may no longer have an intid -> KeyError
-							  ignored_exceptions=(KeyError,),
-							  related_enrolled_courses=related_enrolled_courses)
+	_adjust_scope_membership(record, course,
+							 'record_no_longer_dynamic_member',
+							 'stop_following',
+							 # Depending on the order, we may have already
+							 # cleaned this up (e.g, deleting a principal
+							 # fires events twice due to various cleanups)
+							 # So the entity may no longer have an intid -> KeyError
+							 ignored_exceptions=(KeyError,),
+							 related_enrolled_courses=related_enrolled_courses)
 
 	if not related_enrolled_courses:
 		remove_principal_from_course_content_roles(principal, course)
@@ -382,12 +382,12 @@ def on_modified_update_scope_membership(record, event):
 	principal = get_principal(record.Principal)
 	if principal is None:
 		return
-	
+
 	sharing_scopes = record.CourseInstance.SharingScopes
-	
+
 	scopes_i_should_be_in = sharing_scopes.getAllScopesImpliedbyScope(record.Scope)
 	scopes_i_should_be_in = list(scopes_i_should_be_in)
-	
+
 	drop_from = []
 	currently_in = []
 	for scope in sharing_scopes.values():
@@ -399,17 +399,17 @@ def on_modified_update_scope_membership(record, event):
 				drop_from.append(scope)
 
 	# First, the drops
-	_adjust_scope_membership( record, None,
-							  'record_no_longer_dynamic_member',
-							  'stop_following',
-							  relevant_scopes=drop_from)
+	_adjust_scope_membership(record, None,
+							 'record_no_longer_dynamic_member',
+							 'stop_following',
+							 relevant_scopes=drop_from)
 
 	# Now any adds
-	_adjust_scope_membership( record, None,
-							  'record_dynamic_membership',
-							  'follow',
-							  currently_in=currently_in,
-							  relevant_scopes=scopes_i_should_be_in)
+	_adjust_scope_membership(record, None,
+							 'record_dynamic_membership',
+							 'follow',
+							 currently_in=currently_in,
+							 relevant_scopes=scopes_i_should_be_in)
 
 from nti.traversal.traversal import find_interface
 
@@ -437,7 +437,7 @@ def on_moved_between_courses_update_scope_membership(record, event):
 	on_drop_exit_scope_membership(record, event, old_course)
 	on_enroll_record_scope_membership(record, event, new_course)
 
-def get_default_sharing_scope( context ):
+def get_default_sharing_scope(context):
 	"""
 	Returns the configured default scope for the context.
 	"""
@@ -450,14 +450,14 @@ def get_default_sharing_scope( context ):
 		pass
 	else:
 		# Could have ntiid or special string
-		if is_valid_ntiid_string( result ):
-			result = find_object_with_ntiid( result )
+		if is_valid_ntiid_string(result):
+			result = find_object_with_ntiid(result)
 		else:
 			# Ex: Parent/Public or Public
-			parts = result.split( '/' )
+			parts = result.split('/')
 			scope = parts[0]
 
-			if len( parts ) > 1:
+			if len(parts) > 1:
 				# We reference a scope in our parent.
 				scope = parts[1]
 				assert ICourseSubInstance.providedBy(context), \

@@ -12,6 +12,7 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 from zope import component
+
 from zope.interface.interfaces import IRegistered
 from zope.interface.interfaces import IUnregistered
 
@@ -20,7 +21,7 @@ from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
 
-### XXX: This is very similar to nti.contentlibrary.subscribers
+# XXX: This is very similar to nti.contentlibrary.subscribers
 
 from zope.component.hooks import site
 
@@ -28,6 +29,7 @@ from nti.site.localutility import install_utility
 from nti.site.localutility import uninstall_utility_on_unregistration
 
 from .catalog import CourseCatalogFolder
+
 from .interfaces import IPersistentCourseCatalog
 
 COURSE_CATALOG_NAME = 'Courses'
@@ -101,7 +103,7 @@ def uninstall_site_course_catalog(library, event):
 										IPersistentCourseCatalog,
 										event)
 
-### Sync-related subscribers
+# Sync-related subscribers
 
 from .interfaces import IObjectEntrySynchronizer
 
@@ -136,15 +138,15 @@ def sync_catalog_when_library_synched(library, event):
 	courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
 	if courses_bucket is None:
 		logger.info("Not synchronizing: no directory named %s in %s for catalog %s",
-					catalog.__name__, 
+					catalog.__name__,
 					getattr(enumeration_root, 'absolute_path', enumeration_root),
 					catalog)
 		return
 
-	logger.info( "Synchronizing course catalog %s in site %s from directory %s",
+	logger.info("Synchronizing course catalog %s in site %s from directory %s",
 				 catalog, site_manager.__parent__.__name__,
-				 getattr(courses_bucket, 'absolute_path', courses_bucket) )
+				 getattr(courses_bucket, 'absolute_path', courses_bucket))
 
-	synchronizer = component.getMultiAdapter( (catalog, courses_bucket),
+	synchronizer = component.getMultiAdapter((catalog, courses_bucket),
 							   				  IObjectEntrySynchronizer)
 	synchronizer.synchronize(catalog, courses_bucket, params=params, results=results)
