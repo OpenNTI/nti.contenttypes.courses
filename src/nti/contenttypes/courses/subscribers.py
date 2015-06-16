@@ -114,9 +114,10 @@ def sync_catalog_when_library_synched(library, event):
 	change independently and in unknown ways)
 	"""
 
-	# packages synched
-	packages = event.packages
-	
+	# sync params/results
+	params = event.params
+	results = event.results
+
 	# Find the local site manager
 	site_manager = component.getSiteManager(library)
 	if library.__parent__ is not site_manager:
@@ -135,7 +136,8 @@ def sync_catalog_when_library_synched(library, event):
 	courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
 	if courses_bucket is None:
 		logger.info("Not synchronizing: no directory named %s in %s for catalog %s",
-					catalog.__name__, getattr(enumeration_root, 'absolute_path', enumeration_root),
+					catalog.__name__, 
+					getattr(enumeration_root, 'absolute_path', enumeration_root),
 					catalog)
 		return
 
@@ -145,4 +147,4 @@ def sync_catalog_when_library_synched(library, event):
 
 	synchronizer = component.getMultiAdapter( (catalog, courses_bucket),
 							   				  IObjectEntrySynchronizer)
-	synchronizer.synchronize(catalog, courses_bucket, packages=packages)
+	synchronizer.synchronize(catalog, courses_bucket, params=params, results=results)

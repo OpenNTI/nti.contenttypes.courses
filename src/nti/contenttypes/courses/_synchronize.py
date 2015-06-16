@@ -157,7 +157,8 @@ class _ContentCourseSynchronizer(object):
 	def synchronize(self, course, bucket, **kwargs):
 		__traceback_info__ = course, bucket
 
-		packages = kwargs.get('packages') or ()
+		params = kwargs.get('params') # sync params
+		packages = params.packages if params is not None else ()
 		packages = packages if isinstance(packages, set) else set(packages)
 
 		# First, synchronize the bundle
