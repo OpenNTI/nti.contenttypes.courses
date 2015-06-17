@@ -41,6 +41,7 @@ from zope.container.constraints import containers
 from nti.contentlibrary.interfaces import IDisplayableContent
 from nti.contentlibrary.interfaces import IContentPackageBundle
 from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
+from nti.contentlibrary.interfaces import IGenericSynchronizationResults
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
 from nti.dataserver.interfaces import ICommunity
@@ -966,6 +967,9 @@ class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
 
 
 # Synchronizer
+
+class ICourseSynchronizationResults(IGenericSynchronizationResults):
+	pass
 
 class IObjectEntrySynchronizer(interface.Interface):
 	"""

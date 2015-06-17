@@ -16,8 +16,13 @@ import time
 
 from zope import interface
 from zope import component
-from zope.event import notify
 from zope import lifecycleevent
+
+from zope.container.contained import Contained
+
+from zope.event import notify
+
+from nti.common.representation import WithRepr
 
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
@@ -32,6 +37,9 @@ from nti.dataserver.users.interfaces import IAvatarURL
 from nti.dataserver.users.interfaces import IBackgroundURL
 from nti.dataserver.users.interfaces import IFriendlyNamed
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
+
+from nti.schema.field import SchemaConfigured
+from nti.schema.fieldproperty import createDirectFieldProperties
 
 from .interfaces import ES_CREDIT
 from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
@@ -75,6 +83,7 @@ from .grading import reset_grading_policy
 from .discussions import parse_discussions
 
 from .interfaces import IObjectEntrySynchronizer
+from .interfaces import ICourseSynchronizationResults
 from .interfaces import SECTIONS as SECTION_FOLDER_NAME
 from .interfaces import DISCUSSIONS as DISCUSSION_FOLDER_NAME
 
@@ -85,6 +94,11 @@ COURSE_OUTLINE_NAME = 'course_outline.xml'
 GRADING_POLICY_NAME = 'grading_policy.json'
 INSTRUCTOR_INFO_NAME = 'instructor_info.json'
 ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
+
+@WithRepr
+@interface.implementer(ICourseSynchronizationResults)
+class CourseSynchronizationResults(SchemaConfigured, Contained):
+	createDirectFieldProperties(ICourseSynchronizationResults)
 
 @interface.implementer(IObjectEntrySynchronizer)
 class _GenericFolderSynchronizer(object):
@@ -157,7 +171,7 @@ class _ContentCourseSynchronizer(object):
 	def synchronize(self, course, bucket, **kwargs):
 		__traceback_info__ = course, bucket
 
-		params = kwargs.get('params') # sync params
+		params = kwargs.get('params')  # sync params
 		packages = params.packages if params is not None else ()
 		packages = packages if isinstance(packages, set) else set(packages)
 

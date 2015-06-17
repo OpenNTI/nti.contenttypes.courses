@@ -36,8 +36,9 @@
 		root_interfaces=".interfaces.ICourseInstance
 						 .interfaces.ICourseOutlineNode
 						 .interfaces.ICourseCatalogEntry
-						 .interfaces.ICourseCatalogInstructorInfo"
-		modules=".courses .outlines .catalog .sharing" />
+						 .interfaces.ICourseCatalogInstructorInfo
+						 .interfaces.ICourseSynchronizationResults"
+		modules=".courses .outlines .catalog .sharing ._synchronize" />
 
 	<ext:registerAutoPackageIO
 		root_interfaces=".legacy_catalog.ICourseCatalogLegacyEntry
