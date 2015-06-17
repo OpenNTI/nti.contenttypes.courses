@@ -182,10 +182,16 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/'):
 
 	if key.lastModified > catalog_entry.lastModified:
 		__traceback_info__ = key, catalog_entry
+		logger.info(
+			"Updating catalog entry %s with [legacy] json %s. (dates: key=%s, ce=%s)",
+			catalog_entry.ntiid, key, key.lastModified, catalog_entry.lastModified)
 		json = key.readContentsAsYaml()
 		fill_entry_from_legacy_json(catalog_entry, json, base_href=base_href)
 		catalog_entry.key = key
 		catalog_entry.root = key.__parent__
 		catalog_entry.lastModified = key.lastModified
 		return True
+	else:
+		logger.info("Skipping catalog entry %s update. (dates: key=%s, ce=%s)", 
+					catalog_entry.ntiid, key.lastModified, catalog_entry.lastModified)
 	return False
