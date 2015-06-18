@@ -977,6 +977,8 @@ class ICourseSynchronizationResults(IGenericSynchronizationResults):
 	NTIID = ValidTextLine(title="Course NTIID", required=False)
 
 	CatalogEntryUpdated = Bool(title="CatalogEntry updated", required=False, default=False)
+	SharingScopesUpdated = Bool(title="Sharing scopes updated", required=False, default=False)
+	CourseDiscussionsUpdated = Bool(title="Sharing scopes updated", required=False, default=False)
 	
 	BundleCreated = Bool(title="Bundle created", required=False, default=False)
 	BundleUpdated = Bool(title="Bundle updated", required=False, default=False)

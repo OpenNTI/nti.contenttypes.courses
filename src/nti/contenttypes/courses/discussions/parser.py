@@ -46,6 +46,7 @@ def parse_discussions(course, bucket, intids=None):
 	__traceback_info__ = bucket, course
 	discussions = ICourseDiscussions(course)
 
+	result = False
 	child_files = dict()
 	for item in bucket.enumerateChildren():
 		if IDelimitedHierarchyKey.providedBy(item):
@@ -57,6 +58,7 @@ def parse_discussions(course, bucket, intids=None):
 			logger.info("Removing discussion %s (%r)", child_name,
 						 discussions[child_name])
 			del discussions[child_name]
+			result = True
 
 	intids = component.queryUtility(zope.intid.IIntIds) if intids is None else intids
 	for name, key  in child_files.items():
@@ -81,3 +83,5 @@ def parse_discussions(course, bucket, intids=None):
 
 		# set to key last modified
 		new_discussion.lastModified = key.lastModified
+		result = True
+	return result

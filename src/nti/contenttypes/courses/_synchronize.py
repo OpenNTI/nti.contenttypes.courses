@@ -290,7 +290,7 @@ class _ContentCourseSynchronizer(object):
 
 		# make sure Discussions are initialized
 		getattr(course, 'Discussions')
-		cls.update_sharing_scopes_friendly_names(course)
+		cls.update_sharing_scopes_friendly_names(course, sync_results=sync_results)
 
 		# validate assigment policies
 		cls.validate_assigment_policies(course, bucket)
@@ -302,7 +302,8 @@ class _ContentCourseSynchronizer(object):
 		cls.update_course_discussions(course, bucket)
 
 	@classmethod
-	def update_sharing_scopes_friendly_names(cls, course):
+	def update_sharing_scopes_friendly_names(cls, course, sync_results=None):
+		sync_results = _get_sync_results(course, sync_results)
 		cce = ICourseCatalogEntry(course)
 		sharing_scopes_data = (ICourseInstanceVendorInfo(course)
 							   .get('NTI', {})
@@ -366,6 +367,7 @@ class _ContentCourseSynchronizer(object):
 
 			if modified_scope:
 				lifecycleevent.modified(scope)
+				sync_results.SharingScopesUpdated = True
 
 	@classmethod
 	def update_vendor_info(cls, course, bucket, sync_results=None):
@@ -511,10 +513,12 @@ class _ContentCourseSynchronizer(object):
 		cls.set_deny_open_enrollment(course, deny)
 
 	@classmethod
-	def update_course_discussions(cls, course, bucket):
+	def update_course_discussions(cls, course, bucket, sync_results=None):
+		sync_results = _get_sync_results(course, sync_results)
 		key = bucket.getChildNamed(DISCUSSION_FOLDER_NAME)
-		if key is not None and IDelimitedHierarchyBucket.providedBy(key):
-			parse_discussions(course, key)
+		if 	key is not None and IDelimitedHierarchyBucket.providedBy(key) and \
+			parse_discussions(course, key):
+			sync_results.CourseDiscussionsUpdated = True
 
 @component.adapter(ICourseSubInstances, IDelimitedHierarchyBucket)
 class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
