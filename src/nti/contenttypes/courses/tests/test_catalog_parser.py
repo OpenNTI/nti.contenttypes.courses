@@ -7,6 +7,7 @@ __docformat__ = "restructuredtext en"
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
+from hamcrest import is_
 from hamcrest import none
 from hamcrest import is_not
 from hamcrest import equal_to
@@ -83,9 +84,9 @@ class TestCatalogParser(CourseLayerTest):
 		
 		fill_entry_from_legacy_json(entry, json)
 		
-		assert_that(entry.StartDate, is_not(none))
-		assert_that(entry.Duration, none)
-		assert_that(entry.EndDate, is_not(none))
+		assert_that(entry.StartDate, is_not(none()))
+		assert_that(entry.Duration, is_(none()))
+		assert_that(entry.EndDate, is_(none()))
 		
 		json['duration'] = '1 Weeks'
 		fill_entry_from_legacy_json(entry, json)

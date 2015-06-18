@@ -59,7 +59,6 @@ from nti.dataserver.contenttypes.forums.interfaces import IBoard
 from nti.ntiids.schema import ValidNTIID
 
 from nti.schema.field import Bool
-from nti.schema.field import Dict
 from nti.schema.field import Choice
 from nti.schema.field import Object
 from nti.schema.field import Number
@@ -69,7 +68,6 @@ from nti.schema.field import ListOrTuple
 from nti.schema.field import ValidDatetime
 from nti.schema.field import ValidTextLine
 from nti.schema.field import UniqueIterable
-from nti.schema.field import IndexedIterable
 
 # Permissions defined for courses here should also be
 # registered in ZCML:
@@ -642,20 +640,24 @@ class ICourseCatalogEntry(IDisplayableContent,
 	ProviderDepartmentTitle = ValidTextLine(title="The string assigned to the provider's department offering the course")
 
 	Instructors = ListOrTuple(title="The instuctors. Order might matter",
-									 value_type=Object(ICourseCatalogInstructorInfo))
+							  value_type=Object(ICourseCatalogInstructorInfo))
 
 	InstructorsSignature = ValidText(title="The sign-off or closing signature of the instructors",
 									 description="As used in an email. If this is not specifically provided, "
 									 "one can be derived from the names and titles of the instructors.")
 	InstructorsSignature.setTaggedValue('_ext_excluded_out', True)
 
-	# ## Things related to the availability of the course
+	# Things related to the availability of the course
 	StartDate = ValidDatetime(title="The date on which the course begins",
-						 description="Currently optional; a missing value means the course already started")
+						 	  description="Currently optional; a missing value means the course already started")
+
 	Duration = Timedelta(title="The length of the course",
-						 description="Currently optional, may be None")
+						 description="Currently optional, may be None",
+						 required=False)
+
 	EndDate = ValidDatetime(title="The date on which the course ends",
-					   		description="Currently optional; a missing value means the course has no defined end date.")
+					   		description="Currently optional; a missing value means the course has no defined end date.",
+					   		required=False)
 
 	def isCourseCurrentlyActive():
 		"""
