@@ -980,8 +980,8 @@ class ICourseSynchronizationResults(IGenericSynchronizationResults):
 	SharingScopesUpdated = Bool(title="Sharing scopes updated", required=False, default=False)
 	CourseDiscussionsUpdated = Bool(title="Sharing scopes updated", required=False, default=False)
 	
-	BundleCreated = Bool(title="Bundle created", required=False, default=False)
-	BundleUpdated = Bool(title="Bundle updated", required=False, default=False)
+	ContentBundleCreated = Bool(title="Bundle created", required=False, default=False)
+	ContentBundleUpdated = Bool(title="Bundle updated", required=False, default=False)
 	
 	VendorInfoReseted = Bool(title="Vendor info reseted", required=False, default=False)
 	VendorInfoUpdated = Bool(title="Vendor info updated", required=False, default=False)

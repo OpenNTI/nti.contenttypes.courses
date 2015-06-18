@@ -202,7 +202,7 @@ class _ContentCourseSynchronizer(object):
 		if course.ContentPackageBundle is None:
 			# mark results
 			created_bundle = True
-			sync_results.BundleCreated = True
+			sync_results.ContentBundleCreated = True
 			# create bundle
 			bundle = PersistentContentPackageBundle()
 			bundle.root = bucket
@@ -225,7 +225,7 @@ class _ContentCourseSynchronizer(object):
 								  			 dc_meta_name='bundle_dc_metadata.xml',
 								  			 excluded_keys=('ntiid',))
 		if modified:
-			sync_results.BundleUpdated = True
+			sync_results.ContentBundleUpdated = True
 	
 		if created_bundle:
 			lifecycleevent.added(bundle)
