@@ -40,12 +40,12 @@ def _fill_roles_from_json(course, manager, json):
 	"""
 	A json dict that looks like::
 
-	    {'role_id':
-	         {
-	          'allow': ['p1', 'p2'],
-	           'deny':  ['p3', 'p4']
-	         },
-	     ... }
+		{'role_id':
+			 {
+			  'allow': ['p1', 'p2'],
+			   'deny':  ['p3', 'p4']
+			 },
+		 ... }
 
 	"""
 
@@ -63,16 +63,15 @@ def _fill_roles_from_json(course, manager, json):
 def reset_roles_missing_key(course):
 	role_manager = IPrincipalRoleManager(course)
 	# We totally cheat here and clear the role manager.
-	# this is much easier than trying to actually sync
-	# it
+	# this is much easier than trying to actually sync it
 	if isinstance(role_manager.map, PersistentSecurityMap):
 		role_manager.map._byrow.clear()
 		role_manager.map._bycol.clear()
 		role_manager.map._p_changed = True
 
 def _check_scopes(course):
-	## CS: In alpha we have seen scopes missing its intids
-	## Let's try to give it an intid
+	# CS: In alpha we have seen scopes missing its intids
+	# Let's try to give it an intid
 	intids = component.queryUtility(zope.intid.IIntIds)
 	if intids is None:
 		return
@@ -80,8 +79,8 @@ def _check_scopes(course):
 		uid = intids.queryId(scope)
 		obj = intids.queryObject(uid) if uid is not None else None
 		if uid is None or obj != scope:
-			if getattr( scope, '_p_jar', None ) is None:
-				IConnection( course ).add( scope )
+			if getattr(scope, '_p_jar', None) is None:
+				IConnection(course).add(scope)
 
 			if uid is not None and obj is None:
 				logger.warn("Reregistering scope %s in course %r with intid facility",
@@ -111,7 +110,7 @@ def fill_roles_from_key(course, key):
 	_check_scopes(course)
 
 	role_manager = IPrincipalRoleManager(course)
-	role_last_mod = getattr(role_manager, 'lastModified', 0)
+	role_last_mod = getattr(course, '__principalRoleslastModified__', 0)
 
 	if key.lastModified <= role_last_mod:
 		# JAM: XXX: We had some environments that got set up
@@ -123,14 +122,15 @@ def fill_roles_from_key(course, key):
 		for instructor in course.instructors:
 			user = IUser(instructor)
 			add_principal_to_course_content_roles(user, course)
-		return role_manager
+		return False
 
 	reset_roles_missing_key(role_manager)
 
 	__traceback_info__ = key, course
 	json = key.readContentsAsYaml()
 	_fill_roles_from_json(course, role_manager, json)
-	role_manager.lastModified = key.lastModified
+	# save it on the course as roles managers are not always persistent
+	course.__principalRoleslastModified__ = key.lastModified 
 
 	# We must update the instructor list too, it's still used internally
 	# in a few places...plus it's how we know who to remove from the scopes
@@ -138,14 +138,12 @@ def fill_roles_from_key(course, key):
 	# Any instructors that were present but aren't present
 	# anymore need to lose access to the sharing scopes
 	orig_instructors = course.instructors
-
 	course.instructors = ()
 
 	# For any of these that exist as users, we need to make sure they
 	# are in the appropriate sharing scopes too...
 	# NOTE: We only take care of addition, we do not handle removal,
 	# (that could be done with some extra work)
-
 	for role_id, pid, setting in role_manager.getPrincipalsAndRoles():
 		if setting is not Allow or role_id not in (RID_INSTRUCTOR, RID_TA):
 			continue
@@ -153,7 +151,7 @@ def fill_roles_from_key(course, key):
 		try:
 			user = User.get_user(pid)
 			course.instructors += (IPrincipal(user),)
-		except (LookupError,TypeError):
+		except (LookupError, TypeError):
 			# lookuperror if we're not in a ds context,
 			# TypeError if no named user was found and none was returned
 			# and the adaptation failed
@@ -172,12 +170,11 @@ def fill_roles_from_key(course, key):
 
 			# If they're an instructor of a section, give them
 			# access to the public community of the main course.
-			if ICourseSubInstance.providedBy( course ):
+			if ICourseSubInstance.providedBy(course):
 				parent_course = course.__parent__.__parent__
 				public_scope = parent_course.SharingScopes[ES_PUBLIC]
 				user.record_dynamic_membership(public_scope)
 				user.follow(public_scope)
-
 
 	for orig_instructor in orig_instructors:
 		if orig_instructor not in course.instructors:
@@ -190,10 +187,10 @@ def fill_roles_from_key(course, key):
 				user.stop_following(scope)
 
 			# And remove access to the parent public scope.
-			if ICourseSubInstance.providedBy( course ):
+			if ICourseSubInstance.providedBy(course):
 				parent_course = course.__parent__.__parent__
 				public_scope = parent_course.SharingScopes[ES_PUBLIC]
 				user.record_no_longer_dynamic_member(public_scope)
 				user.stop_following(public_scope)
 
-	return role_manager
+	return True

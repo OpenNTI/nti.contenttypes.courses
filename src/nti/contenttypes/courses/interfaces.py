@@ -983,6 +983,9 @@ class ICourseSynchronizationResults(IGenericSynchronizationResults):
 	OutlineDeleted = Bool(title="Outline deleted", required=False, default=False)
 	OutlineUpdated = Bool(title="Outline updated", required=False, default=False)
 	
+	InstructorRolesDeleted = Bool(title="Instructor Roles deleted", required=False, default=False)
+	InstructorRolesUpdated = Bool(title="Instructor Roles updated", required=False, default=False)
+	
 # 	Added = Dict(title="Attribute/Field added",
 # 				 key_type=ValidTextLine(title="The key"),
 # 				 value_type=IndexedIterable(title="An iterable keys", 

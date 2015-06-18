@@ -302,7 +302,7 @@ class _ContentCourseSynchronizer(object):
 								 bucket=bucket,
 								 try_legacy_content_bundle=try_legacy_content_bundle)
 
-		cls.update_instructor_roles(course, bucket)
+		cls.update_instructor_roles(course, bucket, sync_results=sync_results)
 		assignment_policies = cls.update_assignment_policies(course, bucket)
 
 		# make sure Discussions are initialized
@@ -473,12 +473,15 @@ class _ContentCourseSynchronizer(object):
 			notify(CatalogEntrySynchronized(catalog_entry))
 
 	@classmethod
-	def update_instructor_roles(cls, course, bucket):
+	def update_instructor_roles(cls, course, bucket, sync_results):
+		sync_results = _get_sync_results(course, sync_results)
 		role_json_key = bucket.getChildNamed(ROLE_INFO_NAME)
 		if role_json_key:
-			fill_roles_from_key(course, role_json_key)
+			if fill_roles_from_key(course, role_json_key):
+				sync_results.InstructorRolesUpdated = True
 		else:
 			reset_roles_missing_key(course)
+			sync_results.InstructorRolesDeleted = True
 
 	@classmethod
 	def update_assignment_policies(cls, course, bucket):
