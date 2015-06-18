@@ -246,10 +246,14 @@ class CourseCatalogEntry(SchemaConfigured,
 						 CreatedAndModifiedTimeMixin):
 	# shut up pylint
 	ntiid = None
+	title = None
 	EndDate = None
 	Duration = None
 	StartDate = None
 	DisplayName = None
+	description = None
+	ProviderUniqueID = None
+	
 	lastSynchronized = 0
 	
 	_SET_CREATED_MODTIME_ON_INIT = False

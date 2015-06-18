@@ -27,8 +27,10 @@ from .legacy_catalog import CourseCreditLegacyInfo
 from .legacy_catalog import CourseCatalogInstructorLegacyInfo
 
 def _quiet_delattr(o, k):
+	result = False
 	try:
 		delattr(o, k)
+		result = True
 	except AttributeError:
 		# we have seen cases of an attribute error in python 2.7 even if the attribute
 		# is in the object __dict__
@@ -36,11 +38,13 @@ def _quiet_delattr(o, k):
 			o._p_activate()
 			o.__dict__.pop(k, None)
 			o._p_changed = 1
+			result = True
 	except TypeError:
 		# TypeError is raised when pure-python persistence on PyPy
 		# tries to delete a non-data-descriptor like a FieldProperty
 		# https://bitbucket.org/pypy/pypy/issue/2039/delattr-and-del-can-raise-typeerror-when
 		pass
+	return result
 
 def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 	"""
@@ -154,6 +158,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		catalog_entry.Video = info_json_dict.get('video').encode('utf-8')
 	else:
 		_quiet_delattr(catalog_entry, 'Video')
+
 	if 'credit' in info_json_dict:
 		catalog_entry.Credit = \
 			 [	CourseCreditLegacyInfo(Hours=d['hours'], Enrollment=d['enrollment'])
@@ -199,6 +204,6 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/'):
 		catalog_entry.lastModified = key.lastModified
 		return True
 	else:
-		logger.info("Skipping catalog entry %s update. (dates: key=%s, ce=%s)", 
+		logger.info("Skipping catalog entry %s update. (dates: key=%s, ce=%s)",
 					catalog_entry.ntiid, key.lastModified, catalog_entry.lastModified)
 	return False
