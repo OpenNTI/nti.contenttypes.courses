@@ -58,6 +58,8 @@ from nti.dataserver.contenttypes.forums.interfaces import IBoard
 
 from nti.ntiids.schema import ValidNTIID
 
+from nti.schema.field import Bool
+from nti.schema.field import Dict
 from nti.schema.field import Choice
 from nti.schema.field import Object
 from nti.schema.field import Number
@@ -67,6 +69,7 @@ from nti.schema.field import ListOrTuple
 from nti.schema.field import ValidDatetime
 from nti.schema.field import ValidTextLine
 from nti.schema.field import UniqueIterable
+from nti.schema.field import IndexedIterable
 
 # Permissions defined for courses here should also be
 # registered in ZCML:
@@ -969,7 +972,52 @@ class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
 # Synchronizer
 
 class ICourseSynchronizationResults(IGenericSynchronizationResults):
-	pass
+	NTIID = ValidTextLine(title="Course NTIID", required=False)
+
+	BundleCreated = Bool(title="Bundle created", required=False, default=False)
+	BundleUpdated = Bool(title="Bundle updated", required=False, default=False)
+	
+	VendorInfoDeleted = Bool(title="Vendor info deleted", required=False, default=False)
+	VendorInfoUpdated = Bool(title="Vendor info updated", required=False, default=False)
+
+	OutlineDeleted = Bool(title="Outline deleted", required=False, default=False)
+	OutlineUpdated = Bool(title="Outline updated", required=False, default=False)
+	
+# 	Added = Dict(title="Attribute/Field added",
+# 				 key_type=ValidTextLine(title="The key"),
+# 				 value_type=IndexedIterable(title="An iterable keys", 
+# 											value_type=ValidTextLine(title="The keys"),
+# 											unique=True),
+# 				 required=False)
+# 			
+# 	Modified = Dict(title="Attribute/Field modified",
+# 				 	key_type=ValidTextLine(title="The key"),
+# 				 	value_type=IndexedIterable(title="An iterable keys", 
+# 											   value_type=ValidTextLine(title="The NTIID"),
+# 											   unique=True),
+# 				 	required=False)
+# 
+# 	Removed = Dict(title="Attribute/Field dropped",
+# 				   key_type=ValidTextLine(title="The key"),
+# 				   value_type=IndexedIterable(title="An iterable keys", 
+# 											  value_type=ValidTextLine(title="The NTIID"),
+# 											  unique=True),
+# 				   required=False)
+# 	
+# 	def added(key, attr_type):
+# 		"""
+# 		Mark the attribute/field with specified key as addded
+# 		"""
+# 		
+# 	def modified(key, attr_type):
+# 		"""
+# 		Mark the attribute/field  with specified key as modified
+# 		"""
+# 
+# 	def removed(key, attr_type):
+# 		"""
+# 		Mark the attribute/field  with specified key as dropped
+# 		"""
 
 class IObjectEntrySynchronizer(interface.Interface):
 	"""

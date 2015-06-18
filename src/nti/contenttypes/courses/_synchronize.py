@@ -38,6 +38,7 @@ from nti.dataserver.users.interfaces import IBackgroundURL
 from nti.dataserver.users.interfaces import IFriendlyNamed
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
+from nti.schema.schema import EqHash
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
 
@@ -96,9 +97,42 @@ INSTRUCTOR_INFO_NAME = 'instructor_info.json'
 ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
 
 @WithRepr
+@EqHash('NTIID')
 @interface.implementer(ICourseSynchronizationResults)
 class CourseSynchronizationResults(SchemaConfigured, Contained):
 	createDirectFieldProperties(ICourseSynchronizationResults)
+
+# 	def _register(self, m, key, attr_type):
+# 		m.setdefault(attr_type, [])
+# 		m[attr_type].append(key)
+# 
+# 	def added(self, key, attr_type='ContentPacakge'):
+# 		self.Added = {} if self.Added is None else self.Added
+# 		self._register(self.Added, key, attr_type)
+# 	
+# 	def modified(self, key, attr_type='ContentPacakge'):
+# 		self.Modified = {} if self.Modified is None else self.Modified
+# 		self._register(self.Modified, key, attr_type)
+# 	updated = modified
+# 
+# 	def removed(self, key, attr_type='ContentPacakge'):
+# 		self.Removed = {} if self.Removed is None else self.Removed
+# 		self._register(self.Removed, key, attr_type)
+# 	dropped = removed
+
+def _get_sync_packages(**kwargs):
+	params = kwargs.get('params')  # sync params
+	packages = params.packages if params is not None else ()
+	packages = packages if isinstance(packages, set) else set(packages)
+	return packages
+
+def _get_sync_results(context, sync_results=None, **kwargs):
+	if sync_results is None:
+		entry = ICourseCatalogEntry(context)
+		results = kwargs.get('results') or []
+		sync_results = CourseSynchronizationResults(NTIID=entry.ntiid)
+		results.append(sync_results) 
+	return sync_results
 
 @interface.implementer(IObjectEntrySynchronizer)
 class _GenericFolderSynchronizer(object):
@@ -170,10 +204,11 @@ class _ContentCourseSynchronizer(object):
 
 	def synchronize(self, course, bucket, **kwargs):
 		__traceback_info__ = course, bucket
-
-		params = kwargs.get('params')  # sync params
-		packages = params.packages if params is not None else ()
-		packages = packages if isinstance(packages, set) else set(packages)
+		entry = ICourseCatalogEntry(course)
+		
+		# gather/prepare sync params/results
+		packages = _get_sync_packages(**kwargs)
+		sync_results = _get_sync_results(entry, **kwargs)
 
 		# First, synchronize the bundle
 		bundle_json_key = bucket.getChildNamed(BUNDLE_META_NAME)
@@ -183,14 +218,18 @@ class _ContentCourseSynchronizer(object):
 		bundle = None
 		created_bundle = False
 		if course.ContentPackageBundle is None:
+			# mark results
+			created_bundle = True
+			sync_results.BundleCreated = True
+			# create bundle
 			bundle = PersistentContentPackageBundle()
 			bundle.root = bucket
 			bundle.__parent__ = course
-			course.ContentPackageBundle = bundle
 			bundle.createdTime = bundle.lastModified = 0
 			bundle.ntiid = _ntiid_from_entry(bundle, 'Bundle:CourseBundle')
+			# register w/ course and notify
+			course.ContentPackageBundle = bundle
 			lifecycleevent.created(bundle)
-			created_bundle = True
 		elif packages:  # check if underlying library was updated
 			ntiids = {x.ntiid for x in course.ContentPackageBundle.ContentPackages}
 			# if none of the bundle pacakges were updated return
@@ -200,13 +239,19 @@ class _ContentCourseSynchronizer(object):
 		# The catalog entry gets the default DublinCore metadata file name,
 		# in this bucket, since it really describes the data.
 		# The content bundle, on the other hand, gets a custom file
-		sync_bundle_from_json_key(bundle_json_key, course.ContentPackageBundle,
-								  dc_meta_name='bundle_dc_metadata.xml',
-								  excluded_keys=('ntiid',))
+		modified = sync_bundle_from_json_key(bundle_json_key, course.ContentPackageBundle,
+								  			 dc_meta_name='bundle_dc_metadata.xml',
+								  			 excluded_keys=('ntiid',))
+		if modified:
+			sync_results.BundleUpdated = True
+	
 		if created_bundle:
 			lifecycleevent.added(bundle)
 
-		self.update_common_info(course, bucket, try_legacy_content_bundle=True)
+		self.update_common_info(course, bucket, 
+								sync_results=sync_results,
+								try_legacy_content_bundle=True)
+
 		self.update_deny_open_enrollment(course)
 
 		notify(CourseInstanceAvailableEvent(course, bucket))
@@ -222,11 +267,14 @@ class _ContentCourseSynchronizer(object):
 			interface.noLongerProvides(course, IEnrollmentMappedCourseInstance)
 
 		# mark last sync time
-		entry = ICourseCatalogEntry(course)
 		course.lastSynchronized = entry.lastSynchronized = time.time()
 
 	@classmethod
-	def update_common_info(cls, course, bucket, try_legacy_content_bundle=False):
+	def update_common_info(cls, course, bucket,
+						   sync_results=None,
+						   try_legacy_content_bundle=False):
+		sync_results = _get_sync_results(course, sync_results)
+
 		course.SharingScopes.initScopes()
 		if ES_CREDIT in course.SharingScopes:
 			# Make sure the credit scope, which is usually the smaller
@@ -244,9 +292,10 @@ class _ContentCourseSynchronizer(object):
 				interface.alsoProvides(course.SharingScopes[ES_CREDIT],
 									   ISharingTargetEntityIterable)
 
-		cls.update_vendor_info(course, bucket)
+		cls.update_vendor_info(course, bucket, sync_results)
 		cls.update_outline(course=course,
 						   bucket=bucket,
+						   sync_results=sync_results,
 						   try_legacy_content_bundle=try_legacy_content_bundle)
 
 		cls.update_catalog_entry(course=course,
@@ -336,23 +385,30 @@ class _ContentCourseSynchronizer(object):
 				lifecycleevent.modified(scope)
 
 	@classmethod
-	def update_vendor_info(cls, course, bucket):
+	def update_vendor_info(cls, course, bucket, sync_results=None):
+		sync_results = _get_sync_results(course, sync_results)
 		vendor_json_key = bucket.getChildNamed(VENDOR_INFO_NAME)
 		vendor_info = ICourseInstanceVendorInfo(course)
 		if not vendor_json_key:
 			vendor_info.clear()
-			vendor_info.lastModified = 0
 			vendor_info.createdTime = 0
+			vendor_info.lastModified = 0
+			sync_results.VendorInfoDeleted = True
 		elif vendor_json_key.lastModified > vendor_info.lastModified:
 			vendor_info.clear()
 			vendor_info.update(vendor_json_key.readContentsAsJson())
-			vendor_info.lastModified = vendor_json_key.lastModified
 			vendor_info.createdTime = vendor_json_key.createdTime
+			vendor_info.lastModified = vendor_json_key.lastModified
+			sync_results.VendorInfoUpdated = True
 
 	@classmethod
-	def update_outline(cls, course, bucket, try_legacy_content_bundle=False):
-		outline_xml_key = bucket.getChildNamed(COURSE_OUTLINE_NAME)
+	def update_outline(cls, course, bucket,
+					   try_legacy_content_bundle=False,
+					   sync_results=None):
+		sync_results = _get_sync_results(course, sync_results)
+		
 		outline_xml_node = None
+		outline_xml_key = bucket.getChildNamed(COURSE_OUTLINE_NAME)
 		if not outline_xml_key and try_legacy_content_bundle:
 			# Only want to do this for root courses
 			if course.ContentPackageBundle:
@@ -368,9 +424,11 @@ class _ContentCourseSynchronizer(object):
 		if not outline_xml_key:
 			try:
 				course._delete_Outline()
+				sync_results.OutlineDeleted = True
 			except AttributeError:
 				try:
 					del course.Outline
+					sync_results.OutlineDeleted = True
 				except AttributeError:
 					pass
 		else:
@@ -378,9 +436,10 @@ class _ContentCourseSynchronizer(object):
 				course.prepare_own_outline()
 			except AttributeError:
 				pass
-			fill_outline_from_key(course.Outline,
-								  outline_xml_key,
-								  xml_parent_name=outline_xml_node)
+			if fill_outline_from_key(course.Outline,
+								  	 outline_xml_key,
+								  	 xml_parent_name=outline_xml_node):
+				sync_results.OutlineUpdated = True
 
 	@classmethod
 	def update_catalog_entry(cls, course, bucket, try_legacy_content_bundle=False):
