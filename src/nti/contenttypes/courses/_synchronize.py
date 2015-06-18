@@ -78,8 +78,8 @@ from ._catalog_entry_parser import fill_entry_from_legacy_key
 from ._assignment_override_parser import reset_asg_missing_key
 from ._assignment_policy_validator import validate_assigment_policies
 
-from .grading import parse_grading_policy
 from .grading import reset_grading_policy
+from .grading import fill_grading_policy_from_key
 
 from .discussions import parse_discussions
 
@@ -101,24 +101,6 @@ ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
 @interface.implementer(ICourseSynchronizationResults)
 class CourseSynchronizationResults(SchemaConfigured, Contained):
 	createDirectFieldProperties(ICourseSynchronizationResults)
-
-# 	def _register(self, m, key, attr_type):
-# 		m.setdefault(attr_type, [])
-# 		m[attr_type].append(key)
-# 
-# 	def added(self, key, attr_type='ContentPacakge'):
-# 		self.Added = {} if self.Added is None else self.Added
-# 		self._register(self.Added, key, attr_type)
-# 	
-# 	def modified(self, key, attr_type='ContentPacakge'):
-# 		self.Modified = {} if self.Modified is None else self.Modified
-# 		self._register(self.Modified, key, attr_type)
-# 	updated = modified
-# 
-# 	def removed(self, key, attr_type='ContentPacakge'):
-# 		self.Removed = {} if self.Removed is None else self.Removed
-# 		self._register(self.Removed, key, attr_type)
-# 	dropped = removed
 
 def _get_sync_packages(**kwargs):
 	params = kwargs.get('params')  # sync params
@@ -300,10 +282,11 @@ class _ContentCourseSynchronizer(object):
 
 		cls.update_catalog_entry(course=course,
 								 bucket=bucket,
+								 sync_results=sync_results,
 								 try_legacy_content_bundle=try_legacy_content_bundle)
 
 		cls.update_instructor_roles(course, bucket, sync_results=sync_results)
-		assignment_policies = cls.update_assignment_policies(course, bucket)
+		cls.update_assignment_policies(course, bucket, sync_results=sync_results)
 
 		# make sure Discussions are initialized
 		getattr(course, 'Discussions')
@@ -312,8 +295,8 @@ class _ContentCourseSynchronizer(object):
 		# validate assigment policies
 		cls.validate_assigment_policies(course, bucket)
 
-		# check grading policy. it must be done after validatino assigments
-		cls.update_grading_policy(course, bucket, assignment_policies)
+		# check grading policy. it must be done after validating assigments
+		cls.update_grading_policy(course, bucket, sync_results=sync_results)
 
 		# update dicussions
 		cls.update_course_discussions(course, bucket)
@@ -393,7 +376,7 @@ class _ContentCourseSynchronizer(object):
 			vendor_info.clear()
 			vendor_info.createdTime = 0
 			vendor_info.lastModified = 0
-			sync_results.VendorInfoDeleted = True
+			sync_results.VendorInfoReseted = True
 		elif vendor_json_key.lastModified > vendor_info.lastModified:
 			vendor_info.clear()
 			vendor_info.update(vendor_json_key.readContentsAsJson())
@@ -402,9 +385,8 @@ class _ContentCourseSynchronizer(object):
 			sync_results.VendorInfoUpdated = True
 
 	@classmethod
-	def update_outline(cls, course, bucket,
-					   try_legacy_content_bundle=False,
-					   sync_results=None):
+	def update_outline(cls, course, bucket, sync_results=None,
+					   try_legacy_content_bundle=False):
 		sync_results = _get_sync_results(course, sync_results)
 		
 		outline_xml_node = None
@@ -442,7 +424,9 @@ class _ContentCourseSynchronizer(object):
 				sync_results.OutlineUpdated = True
 
 	@classmethod
-	def update_catalog_entry(cls, course, bucket, try_legacy_content_bundle=False):
+	def update_catalog_entry(cls, course, bucket, sync_results=None,
+							 try_legacy_content_bundle=False):
+		sync_results = _get_sync_results(course, sync_results)
 		catalog_json_key = bucket.getChildNamed(CATALOG_INFO_NAME)
 		if not catalog_json_key and try_legacy_content_bundle:
 			# Only want to do this for root courses
@@ -471,9 +455,10 @@ class _ContentCourseSynchronizer(object):
 
 		if modified:
 			notify(CatalogEntrySynchronized(catalog_entry))
+			sync_results.CatalogEntryUpdated = True
 
 	@classmethod
-	def update_instructor_roles(cls, course, bucket, sync_results):
+	def update_instructor_roles(cls, course, bucket, sync_results=None):
 		sync_results = _get_sync_results(course, sync_results)
 		role_json_key = bucket.getChildNamed(ROLE_INFO_NAME)
 		if role_json_key:
@@ -481,27 +466,30 @@ class _ContentCourseSynchronizer(object):
 				sync_results.InstructorRolesUpdated = True
 		else:
 			reset_roles_missing_key(course)
-			sync_results.InstructorRolesDeleted = True
+			sync_results.InstructorRolesReseted = True
 
 	@classmethod
-	def update_assignment_policies(cls, course, bucket):
+	def update_assignment_policies(cls, course, bucket, sync_results=None):
+		sync_results = _get_sync_results(course, sync_results)
 		key = bucket.getChildNamed(ASSIGNMENT_DATES_NAME)
 		if key is not None:
-			return fill_asg_from_key(course, key)
+			if fill_asg_from_key(course, key):
+				sync_results.AssignmentPoliciesUpdated = True
 		else:
 			reset_asg_missing_key(course)
-			return None
+			sync_results.AssignmentPoliciesReseted = True
 
 	@classmethod
-	def update_grading_policy(cls, course, bucket, assignment_policies=None):
+	def update_grading_policy(cls, course, bucket, sync_results=None):
+		sync_results = _get_sync_results(course, sync_results)
 		key = bucket.getChildNamed(GRADING_POLICY_NAME)
 		if key is not None:
-			policy = parse_grading_policy(course, key)
-			if assignment_policies is not None and policy is not None:
-				policy.updateLastModIfGreater(assignment_policies.lastModified)
+			if fill_grading_policy_from_key(course, key):
+				sync_results.GradingPolicyUpdated = True
 		else:
 			reset_grading_policy(course)
-
+			sync_results.GradingPolicyDeleted = True
+			
 	@classmethod
 	def validate_assigment_policies(cls, course, bucket):
 		validate_assigment_policies(course)
@@ -510,8 +498,9 @@ class _ContentCourseSynchronizer(object):
 	def set_deny_open_enrollment(self, course, deny):
 		entry = ICourseCatalogEntry(course)
 		if deny:
-			interface.alsoProvides(entry, IDenyOpenEnrollment)
-			interface.alsoProvides(course, IDenyOpenEnrollment)
+			if not IDenyOpenEnrollment.providedBy(course):
+				interface.alsoProvides(entry, IDenyOpenEnrollment)
+				interface.alsoProvides(course, IDenyOpenEnrollment)
 		elif IDenyOpenEnrollment.providedBy(course):
 			interface.noLongerProvides(entry, IDenyOpenEnrollment)
 			interface.noLongerProvides(course, IDenyOpenEnrollment)
@@ -566,7 +555,10 @@ class _ContentCourseSubInstanceSynchronizer(object):
 
 	def synchronize(self, subcourse, bucket, **kwargs):
 		__traceback_info__ = subcourse, bucket
-		_ContentCourseSynchronizer.update_common_info(subcourse, bucket)
+
+		sync_results = _get_sync_results(subcourse, **kwargs)
+		_ContentCourseSynchronizer.update_common_info(subcourse, bucket, 
+													  sync_results=sync_results)
 
 		# check for open enrollment
 		if has_deny_open_enrollment(subcourse):

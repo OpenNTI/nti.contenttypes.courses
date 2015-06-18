@@ -976,53 +976,25 @@ class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
 class ICourseSynchronizationResults(IGenericSynchronizationResults):
 	NTIID = ValidTextLine(title="Course NTIID", required=False)
 
+	CatalogEntryUpdated = Bool(title="CatalogEntry updated", required=False, default=False)
+	
 	BundleCreated = Bool(title="Bundle created", required=False, default=False)
 	BundleUpdated = Bool(title="Bundle updated", required=False, default=False)
 	
-	VendorInfoDeleted = Bool(title="Vendor info deleted", required=False, default=False)
+	VendorInfoReseted = Bool(title="Vendor info reseted", required=False, default=False)
 	VendorInfoUpdated = Bool(title="Vendor info updated", required=False, default=False)
 
 	OutlineDeleted = Bool(title="Outline deleted", required=False, default=False)
 	OutlineUpdated = Bool(title="Outline updated", required=False, default=False)
 	
-	InstructorRolesDeleted = Bool(title="Instructor Roles deleted", required=False, default=False)
+	InstructorRolesReseted = Bool(title="Instructor Roles reseted", required=False, default=False)
 	InstructorRolesUpdated = Bool(title="Instructor Roles updated", required=False, default=False)
 	
-# 	Added = Dict(title="Attribute/Field added",
-# 				 key_type=ValidTextLine(title="The key"),
-# 				 value_type=IndexedIterable(title="An iterable keys", 
-# 											value_type=ValidTextLine(title="The keys"),
-# 											unique=True),
-# 				 required=False)
-# 			
-# 	Modified = Dict(title="Attribute/Field modified",
-# 				 	key_type=ValidTextLine(title="The key"),
-# 				 	value_type=IndexedIterable(title="An iterable keys", 
-# 											   value_type=ValidTextLine(title="The NTIID"),
-# 											   unique=True),
-# 				 	required=False)
-# 
-# 	Removed = Dict(title="Attribute/Field dropped",
-# 				   key_type=ValidTextLine(title="The key"),
-# 				   value_type=IndexedIterable(title="An iterable keys", 
-# 											  value_type=ValidTextLine(title="The NTIID"),
-# 											  unique=True),
-# 				   required=False)
-# 	
-# 	def added(key, attr_type):
-# 		"""
-# 		Mark the attribute/field with specified key as addded
-# 		"""
-# 		
-# 	def modified(key, attr_type):
-# 		"""
-# 		Mark the attribute/field  with specified key as modified
-# 		"""
-# 
-# 	def removed(key, attr_type):
-# 		"""
-# 		Mark the attribute/field  with specified key as dropped
-# 		"""
+	AssignmentPoliciesReseted = Bool(title="Assignment Policies reseted", required=False, default=False)
+	AssignmentPoliciesUpdated = Bool(title="Assignment Policies updated", required=False, default=False)
+
+	GradingPolicyDeleted = Bool(title="Grading Policy deleted", required=False, default=False)
+	GradingPolicyUpdated = Bool(title="Grading Policy updated", required=False, default=False)
 
 class IObjectEntrySynchronizer(interface.Interface):
 	"""

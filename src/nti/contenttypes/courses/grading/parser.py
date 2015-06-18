@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from nti.assessment.interfaces import IQAssignmentPolicies
+
 from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
 
@@ -25,7 +27,7 @@ def parse_grading_policy(course, key):
 
 	policy = ICourseGradingPolicy(course, None)
 	if policy is not None and key.lastModified <= policy.lastModified:
-		return policy
+		return False
 
 	json = key.readContentsAsYaml()
 	factory = find_factory_for(json)
@@ -36,4 +38,13 @@ def parse_grading_policy(course, key):
 	policy.synchronize()
 	policy.lastModified = key.lastModified
 
-	return policy
+	return True
+
+def fill_grading_policy_from_key(course, key):
+	result = parse_grading_policy(course, key)
+	if not result:
+		policy = ICourseGradingPolicy(course, None)
+		assignment_policies = IQAssignmentPolicies(course, None)
+		if policy is not None and assignment_policies is not None:
+			policy.updateLastModIfGreater(assignment_policies.lastModified)
+	return result
