@@ -421,8 +421,8 @@ class _ContentCourseSynchronizer(object):
 		# in case it's a subinstance so the parent can come through again
 		if not outline_xml_key:
 			try:
-				course._delete_Outline()
-				sync_results.OutlineDeleted = True
+				if course._delete_Outline():
+					sync_results.OutlineDeleted = True
 			except AttributeError:
 				try:
 					del course.Outline

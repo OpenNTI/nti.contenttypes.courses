@@ -81,11 +81,14 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		return board
 
 	def _delete_Outline(self):
+		result = False
 		for m in (self.__dict__, self):
 			try:
 				del m['Outline']
+				result = True
 			except KeyError:
 				pass
+		return result
 
 	def _make_Outline(self):
 		"""
