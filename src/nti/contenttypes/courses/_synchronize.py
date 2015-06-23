@@ -8,6 +8,7 @@ defines the on-disk layout.
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.contentlibrary.synchronize import SynchronizationExeception
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -24,10 +25,13 @@ from zope.event import notify
 
 from nti.common.representation import WithRepr
 
+from nti.contentlibrary import ContentRemovalException
+
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
 from nti.contentlibrary.bundle import PersistentContentPackageBundle
 
+from nti.contentlibrary.interfaces import ISynchronizationParams
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
 from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 
@@ -139,6 +143,12 @@ class _GenericFolderSynchronizer(object):
 		return self._ADMIN_LEVEL_FACTORY
 
 	def synchronize(self, folder, bucket, **kwargs):
+		params = kwargs.get('params')
+		if params and ISynchronizationParams.providedBy(params):
+			allowRemoval = params.allowRemoval
+		else:
+			allowRemoval = True
+		
 		# Find the things in the filesystem
 		child_buckets = dict()
 		for item in bucket.enumerateChildren():
@@ -149,9 +159,14 @@ class _GenericFolderSynchronizer(object):
 		# filesystem
 		for folder_child_name in list(folder):
 			if folder_child_name not in child_buckets:
-				logger.info("Removing child %s (%r)",
-							folder_child_name, folder[folder_child_name])
-				del folder[folder_child_name]
+				child_folder = folder[folder_child_name]
+				if 	not allowRemoval and self._COURSE_INSTANCE_FACTORY is not None and \
+					isinstance(child_folder, self._COURSE_INSTANCE_FACTORY):
+					raise ContentRemovalException(
+							"Cannot remove course without explicitly allowing it")
+				else:
+					logger.info("Removing child %s (%r)", folder_child_name, child_folder)
+					del folder[folder_child_name]
 
 		# Create anything the folder is missing if we
 		# have a factory for it
