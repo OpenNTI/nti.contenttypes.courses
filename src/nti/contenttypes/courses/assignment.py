@@ -99,8 +99,7 @@ CourseSubInstanceAssignmentDateContextFactory = an_factory(MappingAssignmentDate
 
 @component.adapter(ICourseInstance)
 @interface.implementer(IQAssignmentPolicies)
-class MappingAssignmentPolicies(Contained,
-								PersistentCreatedAndModifiedTimeObject):
+class MappingAssignmentPolicies(Contained, PersistentCreatedAndModifiedTimeObject):
 	"""
 	A persistent mapping of assessment ids to policy information,
 	that is uninterpreted by this module.
@@ -116,8 +115,13 @@ class MappingAssignmentPolicies(Contained,
 		return list(self._mapping.keys())
 	assignments = assessments  # BWC
 
+	def size(self):
+		return len(self._mapping)
+
 	def clear(self):
+		size = self.size()
 		self._mapping.clear()
+		return size > 0
 
 	def __setitem__(self, key, value):
 		self._mapping[key] = value
@@ -125,6 +129,9 @@ class MappingAssignmentPolicies(Contained,
 	def getPolicyForAssessment(self, key):
 		return self._mapping.get(key, {})
 	getPolicyForAssignment = getPolicyForAssessment  # BWC
+
+	def __len__(self):
+		return self.size()
 
 	def __bool__(self):
 		return bool(self._mapping)

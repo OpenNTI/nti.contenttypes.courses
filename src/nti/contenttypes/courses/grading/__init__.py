@@ -35,11 +35,14 @@ def set_grading_policy_for_course(course, policy=None):
 	if policy is None:
 		if GRADING_POLICY_KEY in annotations:
 			del annotations[GRADING_POLICY_KEY]
+		else:
+			return False
 	else:
 		assert ICourseGradingPolicy.providedBy(policy)
 		annotations[GRADING_POLICY_KEY] = policy
 		policy.__parent__ = course  # take ownership
 		policy.__name__ = policy.__name__ or GRADING_POLICY_KEY
+	return True
 
 # re-export
 from .parser import parse_grading_policy

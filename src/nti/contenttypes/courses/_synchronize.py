@@ -491,8 +491,7 @@ class _ContentCourseSynchronizer(object):
 		if key is not None:
 			if fill_asg_from_key(course, key):
 				sync_results.AssignmentPoliciesUpdated = True
-		else:
-			reset_asg_missing_key(course)
+		elif reset_asg_missing_key(course):
 			sync_results.AssignmentPoliciesReseted = True
 
 	@classmethod
@@ -502,8 +501,7 @@ class _ContentCourseSynchronizer(object):
 		if key is not None:
 			if fill_grading_policy_from_key(course, key):
 				sync_results.GradingPolicyUpdated = True
-		else:
-			reset_grading_policy(course)
+		elif reset_grading_policy(course):
 			sync_results.GradingPolicyDeleted = True
 			
 	@classmethod

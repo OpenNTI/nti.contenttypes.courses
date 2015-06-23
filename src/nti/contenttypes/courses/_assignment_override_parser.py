@@ -19,8 +19,9 @@ from nti.externalization.datetime import datetime_from_string
 from nti.ntiids.ntiids import validate_ntiid_string
 
 def reset_asg_missing_key(course):
-	IQAssignmentPolicies(course).clear()
 	IQAssignmentDateContext(course).clear()
+	result = IQAssignmentPolicies(course).clear()
+	return result
 
 def fill_asg_from_key(course, key):
 	"""

@@ -19,7 +19,7 @@ from .interfaces import ICourseGradingPolicy
 from . import set_grading_policy_for_course
 
 def reset_grading_policy(course):
-	set_grading_policy_for_course(course, None)
+	return set_grading_policy_for_course(course, None)
 
 def parse_grading_policy(course, key):
 	
