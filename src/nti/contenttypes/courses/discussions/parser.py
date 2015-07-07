@@ -61,7 +61,7 @@ def parse_discussions(course, bucket, intids=None):
 			result = True
 
 	intids = component.queryUtility(zope.intid.IIntIds) if intids is None else intids
-	for name, key  in child_files.items():
+	for name, key in child_files.items():
 		discussion = discussions.get(name)
 		if discussion is not None and key.lastModified <= discussion.lastModified:
 			continue
