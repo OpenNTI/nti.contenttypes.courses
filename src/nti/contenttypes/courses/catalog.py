@@ -21,6 +21,7 @@ from zope.cachedescriptors.method import cachedIn
 from nti.common.property import alias
 from nti.common.property import LazyOnClass
 from nti.common.property import readproperty
+from nti.common.property import CachedProperty
 
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
 
@@ -253,9 +254,9 @@ class CourseCatalogEntry(SchemaConfigured,
 	DisplayName = None
 	description = None
 	ProviderUniqueID = None
-	
+
 	lastSynchronized = 0
-	
+
 	_SET_CREATED_MODTIME_ON_INIT = False
 
 	createDirectFieldProperties(ICourseCatalogEntry)
@@ -366,7 +367,7 @@ class CourseCatalogEntry(SchemaConfigured,
 		parents.reverse()
 		result = '/'.join(parents) if parents and None not in parents else None
 		return result
-	
+
 @interface.implementer(IPersistentCourseCatalog)
 class CourseCatalogFolder(_AbstractCourseCatalogMixin,
 						  CheckingLastModifiedBTreeFolder):
