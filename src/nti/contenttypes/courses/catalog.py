@@ -11,6 +11,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import os
 from datetime import datetime
 from functools import total_ordering
 
@@ -365,7 +366,7 @@ class CourseCatalogEntry(SchemaConfigured,
 			parents.append(o.__name__)
 			o = getattr(o, '__parent__', None)
 		parents.reverse()
-		result = '/'.join(parents) if parents and None not in parents else None
+		result = os.path.sep.join(parents) if parents and None not in parents else None
 		return result
 
 @interface.implementer(IPersistentCourseCatalog)
