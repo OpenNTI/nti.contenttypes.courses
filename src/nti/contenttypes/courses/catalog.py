@@ -356,6 +356,17 @@ class CourseCatalogEntry(SchemaConfigured,
 		# we're active
 		return True
 
+	@CachedProperty('__parent__')
+	def relative_path(self):
+		parents = []
+		o = self.__parent__
+		while o is not None and not ICourseCatalog.providedBy(o):
+			parents.append(o.__name__)
+			o = getattr(o, '__parent__', None)
+		parents.reverse()
+		result = '/'.join(parents) if parents and None not in parents else None
+		return result
+	
 @interface.implementer(IPersistentCourseCatalog)
 class CourseCatalogFolder(_AbstractCourseCatalogMixin,
 						  CheckingLastModifiedBTreeFolder):
