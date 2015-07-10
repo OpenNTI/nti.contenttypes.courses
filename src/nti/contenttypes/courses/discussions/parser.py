@@ -20,12 +20,18 @@ from zope import lifecycleevent
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
 from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
+from nti.contentlibrary.synchronize import SynchronizationException
 
 from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
 
 from .interfaces import NTI_COURSE_BUNDLE
 from .interfaces import ICourseDiscussions
+
+INVALID_DISCUSSION_CODE = 300
+
+class InvalidDiscussionException(SynchronizationException):
+	code = INVALID_DISCUSSION_CODE
 
 def path_to_course(resource):
 	result = []
@@ -68,6 +74,8 @@ def parse_discussions(course, bucket, intids=None):
 
 		json = key.readContentsAsYaml()
 		factory = find_factory_for(json)
+		if factory is None:
+			raise InvalidDiscussionException("Cannot find factory for discussion in json file. Check MimeType")
 		new_discussion = factory() if discussion is None else discussion
 		update_from_external_object(new_discussion, json, notify=False)
 
