@@ -27,8 +27,8 @@ from ..interfaces import ICourseCatalog
 from ..interfaces import ICourseInstance
 from ..interfaces import ICourseEnrollments
 
+from ..index import IndexRecord
 from ..index import install_enrollment_catalog
-from ..index import IX_COURSE, IX_SCOPE, IX_USERNAME
 
 def do_evolve(context, generation=generation):
 
@@ -55,9 +55,8 @@ def do_evolve(context, generation=generation):
 				if doc_id is not None:
 					for instructor in course.instructors or ():
 						pid = IPrincipal(instructor).id
-						catalog[IX_USERNAME].index_doc(doc_id, pid)
-						catalog[IX_SCOPE].index_doc(doc_id, INSTRUCTOR)
-						catalog[IX_COURSE].index_doc(doc_id, entry.ntiid)
+						record = IndexRecord(pid, entry.ntiid, INSTRUCTOR)
+						catalog.index_doc(doc_id, record)
 
 				# index enrollment records
 				enrollments = ICourseEnrollments(course, None)

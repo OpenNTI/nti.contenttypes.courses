@@ -160,7 +160,8 @@ from .interfaces import ICourseInstance
 from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseRolesSynchronized
 
-from .index import IX_COURSE, IX_SCOPE, IX_USERNAME
+from .index import IndexRecord
+from .index import IX_COURSE, IX_SCOPE
 
 from . import get_enrollment_catalog
 
@@ -175,7 +176,7 @@ def roles_sync_on_course_instance(course, event):
 	doc_id = intids.queryId(course)
 	if doc_id is None:
 		return
-	from IPython.core.debugger import Tracer; Tracer()()
+
 	if ntiid: # remove all instructors
 		query = { IX_COURSE: {'any_of':(ntiid,)},
 				  IX_SCOPE : {'any_of':(INSTRUCTOR,)}}
@@ -185,6 +186,5 @@ def roles_sync_on_course_instance(course, event):
 	# reset instructors
 	for instructor in course.instructors or ():
 		pid = IPrincipal(instructor).id
-		catalog[IX_USERNAME].index_doc(doc_id, pid)
-		catalog[IX_COURSE].index_doc(doc_id, ntiid)
-		catalog[IX_SCOPE].index_doc(doc_id, INSTRUCTOR)
+		record = IndexRecord(pid, ntiid, INSTRUCTOR)
+		catalog.index_doc(doc_id, record)
