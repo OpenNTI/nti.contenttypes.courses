@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from zc.intid import IIntIds
+import six
 
 from zope import interface
 
@@ -18,14 +18,14 @@ from zope.catalog.interfaces import ICatalogIndex
 
 from zope.location import locate
 
+from zc.intid import IIntIds
+
+from nti.common.string import safestr
+
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.zope_catalog.catalog import Catalog
-from nti.zope_catalog.index import NormalizationWrapper
-from nti.zope_catalog.index import ValueIndex as RawValueIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
-
-from nti.zope_catalog.string import StringTokenNormalizer
 
 from .interfaces import ICourseInstanceEnrollmentRecord
 
@@ -40,7 +40,9 @@ class ValidatingUsernameID(object):
 	__slots__ = (b'username',)
 
 	def __init__(self, obj, default=None):
-		if ICourseInstanceEnrollmentRecord.providedBy(obj):
+		if isinstance(obj, six.string_types):
+			self.username = safestr(obj)
+		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
 			self.username = obj.Principal.id
 
 	def __reduce__(self):
@@ -50,21 +52,31 @@ class UsernameIndex(ValueIndex):
 	default_field_name = 'username'
 	default_interface = ValidatingUsernameID
 
-class ScopeRawIndex(RawValueIndex):
-	pass
+class ValidatingScope(object):
 
-def ScopeIndex(family=None):
-	return NormalizationWrapper(field_name='Scope',
-								interface=ICourseInstanceEnrollmentRecord,
-								index=ScopeRawIndex(family=family),
-								normalizer=StringTokenNormalizer())
+	__slots__ = (b'scope',)
+
+	def __init__(self, obj, default=None):
+		if isinstance(obj. six.string_types):
+			self.scope = safestr(obj)
+		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
+			self.scope = obj.Scope
+
+	def __reduce__(self):
+		raise TypeError()
+
+class ScopeIndex(ValueIndex):
+	default_field_name = 'scope'
+	default_interface = ValidatingScope
 
 class ValidatingCatalogEntryID(object):
 
 	__slots__ = (b'ntiid',)
 
 	def __init__(self, obj, default=None):
-		if ICourseInstanceEnrollmentRecord.providedBy(obj):
+		if isinstance(obj. six.string_types):
+			self.ntiid = safestr(obj)
+		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
 			entry = ICourseCatalogEntry(obj.CourseInstance, None)
 			if entry is not None:
 				self.ntiid = unicode(entry.ntiid)

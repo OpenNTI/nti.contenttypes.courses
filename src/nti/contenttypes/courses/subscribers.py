@@ -165,7 +165,7 @@ from .index import IX_COURSE, IX_SCOPE, IX_USERNAME
 from . import get_enrollment_catalog
 
 @component.adapter(ICourseInstance, ICourseRolesSynchronized)
-def _index_instructors_on_course_instance(course, event):
+def roles_sync_on_course_instance(course, event):
 	catalog = get_enrollment_catalog()
 	intids = component.queryUtility(IIntIds)
 	if catalog is None or intids is None:
@@ -175,7 +175,14 @@ def _index_instructors_on_course_instance(course, event):
 	doc_id = intids.queryId(course)
 	if doc_id is None:
 		return
+	from IPython.core.debugger import Tracer; Tracer()()
+	if ntiid: # remove all instructors
+		query = { IX_COURSE: {'any_of':(ntiid,)},
+				  IX_SCOPE : {'any_of':(INSTRUCTOR,)}}
+		for uid in catalog.apply(query) or ():
+			catalog.unindex_doc(uid)
 	
+	# reset instructors
 	for instructor in course.instructors or ():
 		pid = IPrincipal(instructor).id
 		catalog[IX_USERNAME].index_doc(doc_id, pid)
