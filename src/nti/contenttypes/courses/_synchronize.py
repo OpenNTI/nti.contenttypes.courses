@@ -45,9 +45,6 @@ from nti.schema.schema import EqHash
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
 
-from .interfaces import ES_CREDIT
-from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
-
 from .courses import ContentCourseInstance
 from .courses import ContentCourseSubInstance
 from .courses import CourseAdministrativeLevel
@@ -56,10 +53,14 @@ from .enrollment import check_enrollment_mapped
 from .enrollment import has_deny_open_enrollment
 from .enrollment import check_deny_open_enrollment
 
+from .interfaces import ES_CREDIT
+from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
+
 from .interfaces import ICourseInstance
 from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseSubInstances
 from .interfaces import IDenyOpenEnrollment
+from .interfaces import CourseRolesSynchronized
 from .interfaces import CatalogEntrySynchronized
 from .interfaces import INonPublicCourseInstance
 from .interfaces import IContentCourseSubInstance
@@ -479,9 +480,11 @@ class _ContentCourseSynchronizer(object):
 		role_json_key = bucket.getChildNamed(ROLE_INFO_NAME)
 		if role_json_key:
 			if fill_roles_from_key(course, role_json_key):
+				notify(CourseRolesSynchronized(course))
 				sync_results.InstructorRolesUpdated = True
 		else:
 			reset_roles_missing_key(course)
+			notify(CourseRolesSynchronized(course))
 			sync_results.InstructorRolesReseted = True
 
 	@classmethod

@@ -158,13 +158,13 @@ from zope.security.interfaces import IPrincipal
 from .interfaces import INSTRUCTOR
 from .interfaces import ICourseInstance
 from .interfaces import ICourseCatalogEntry
-from .interfaces import ICourseInstanceAvailableEvent
+from .interfaces import ICourseRolesSynchronized
 
 from .index import IX_COURSE, IX_SCOPE, IX_USERNAME
 
 from . import get_enrollment_catalog
 
-@component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
+@component.adapter(ICourseInstance, ICourseRolesSynchronized)
 def _index_instructors_on_course_instance(course, event):
 	catalog = get_enrollment_catalog()
 	intids = component.queryUtility(IIntIds)
@@ -175,6 +175,7 @@ def _index_instructors_on_course_instance(course, event):
 	doc_id = intids.queryId(course)
 	if doc_id is None:
 		return
+	
 	for instructor in course.instructors or ():
 		pid = IPrincipal(instructor).id
 		catalog[IX_USERNAME].index_doc(doc_id, pid)

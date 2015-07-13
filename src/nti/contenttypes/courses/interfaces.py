@@ -1036,6 +1036,13 @@ class ICatalogEntrySynchronized(IObjectEvent):
 class CatalogEntrySynchronized(ObjectEvent):
 	pass
 
+class ICourseRolesSynchronized(IObjectEvent):
+	pass
+
+@interface.implementer(ICourseRolesSynchronized)
+class CourseRolesSynchronized(ObjectEvent):
+	pass
+
 import zope.deferredimport
 zope.deferredimport.initialize()
 zope.deferredimport.deprecatedFrom(
