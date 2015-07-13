@@ -57,7 +57,7 @@ class ValidatingScope(object):
 	__slots__ = (b'scope',)
 
 	def __init__(self, obj, default=None):
-		if isinstance(obj. six.string_types):
+		if isinstance(obj, six.string_types):
 			self.scope = safestr(obj)
 		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
 			self.scope = obj.Scope
@@ -74,7 +74,7 @@ class ValidatingCatalogEntryID(object):
 	__slots__ = (b'ntiid',)
 
 	def __init__(self, obj, default=None):
-		if isinstance(obj. six.string_types):
+		if isinstance(obj, six.string_types):
 			self.ntiid = safestr(obj)
 		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
 			entry = ICourseCatalogEntry(obj.CourseInstance, None)
