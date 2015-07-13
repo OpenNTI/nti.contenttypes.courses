@@ -889,6 +889,29 @@ class ICourseEnrollments(interface.Interface):
 		If the principal is not enrolled, return None.
 		"""
 
+class IDefaultCourseInstanceEnrollmentStorage(ICourseInstanceEnrollmentRecordContainer,
+											  IContained):
+	"""
+	Maps from principal ids to their enrollment record.
+	"""
+	contains(ICourseInstanceEnrollmentRecord)
+
+class IDefaultCourseCatalogEnrollmentStorage(IContainer, IContained):
+	"""
+	Maps from principal IDs to a persistent list of their
+	enrollments. Intended to be installed on the course catalog that
+	contains the courses referenced.
+	"""
+
+	def enrollments_for_id(principalid, principal):
+		"""
+		Return the mutable list/set-like object to hold record references
+		for the principal.
+
+		:param principal: If this has a non-None `_p_jar`, the enrollment
+			list will be stored in this jar.
+		"""
+
 class IEnrollmentException(interface.Interface):
 	"""
 	marker interface for enrollment exception"

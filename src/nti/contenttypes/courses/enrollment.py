@@ -30,11 +30,12 @@ from zope.annotation.factory import factory as an_factory
 
 from zope.cachedescriptors.method import cachedIn
 
-from zope.container.constraints import contains
-from zope.container.interfaces import IContainer
 from zope.container.interfaces import IContained
 
 from zope.event import notify
+
+from zope.keyreference.interfaces import NotYet
+from zope.keyreference.interfaces import IKeyReference
 
 from zope.location.location import locate
 
@@ -46,11 +47,17 @@ from zope.security.management import restoreInteraction
 
 from ZODB.interfaces import IConnection
 
+import BTrees
+
+from persistent import Persistent
+
 from nti.common.property import Lazy
 from nti.common.property import alias
 from nti.common.property import CachedProperty
 
 from nti.contentlibrary.bundle import _readCurrent
+
+from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
@@ -78,39 +85,11 @@ from .interfaces import IGlobalCourseCatalog
 from .interfaces import IPrincipalEnrollments
 from .interfaces import ICourseEnrollmentManager
 from .interfaces import ICourseInstanceEnrollmentRecord
+from .interfaces import IDefaultCourseCatalogEnrollmentStorage
+from .interfaces import IDefaultCourseInstanceEnrollmentStorage
 from .interfaces import ICourseInstanceEnrollmentRecordContainer
 
-class IDefaultCourseInstanceEnrollmentStorage(ICourseInstanceEnrollmentRecordContainer,
-											  IContained):
-	"""
-	Maps from principal ids to their enrollment record.
-	"""
-	contains(ICourseInstanceEnrollmentRecord)
-
-class IDefaultCourseCatalogEnrollmentStorage(IContainer, IContained):
-	"""
-	Maps from principal IDs to a persistent list of their
-	enrollments. Intended to be installed on the course catalog that
-	contains the courses referenced.
-	"""
-
-	def enrollments_for_id(principalid, principal):
-		"""
-		Return the mutable list/set-like object to hold record references
-		for the principal.
-
-		:param principal: If this has a non-None `_p_jar`, the enrollment
-			list will be stored in this jar.
-		"""
-
-import BTrees
-
-from zope.keyreference.interfaces import NotYet
-from zope.keyreference.interfaces import IKeyReference
-
-from persistent import Persistent
-
-from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
+ICourseInstanceEnrollmentRecordContainer = ICourseInstanceEnrollmentRecordContainer # BWC
 
 def save_in_container(container, key, value, event=False):
 	if event:
@@ -236,11 +215,11 @@ class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedB
 				# store with the principal, not with us
 				jar.add(result)
 
-			# # CS/JZ 20141026
-			# # We manually add the item and fire the ObjectAddedEvent to
-			# # avoid contention in an underlying zope dublincore annotation data structure.
-			# # A modified event on the container calls zope.dublincore.creatorannotator
-			# # whose data modifications, we currently do not use.
+			# CS/JZ 20141026
+			# We manually add the item and fire the ObjectAddedEvent to
+			# avoid contention in an underlying zope dublincore annotation data structure.
+			# A modified event on the container calls zope.dublincore.creatorannotator
+			# whose data modifications, we currently do not use.
 			save_in_container(self, principalid, result)
 
 			# result.__parent__ is self; but depending
@@ -357,15 +336,14 @@ class DefaultCourseEnrollmentManager(object):
 	def _cat_enrollment_storage(self):
 		return IDefaultCourseCatalogEnrollmentStorage(self._catalog)
 
-	# ##
+	
 	# NOTE: The enroll/drop methods DO NOT set up any of the scope/sharing
 	# information; that's left to ObjectEvent subscribers. That may
 	# seem like action at a distance, but the rationale is that we
 	# want to, in addition to the Added and Removed events fired here,
 	# support Modified events (e.g., a user starts out open/public
 	# enrolled, then pays for the course, and becomes for-credit-non-degree)
-	# ##
-
+	
 	def enroll(self, principal, scope=ES_PUBLIC, context=None):
 		principal_id = IPrincipal(principal).id
 		if principal_id in self._inst_enrollment_storage:
@@ -429,11 +407,11 @@ class DefaultCourseEnrollmentManager(object):
 		# enrollment list then fire the event
 		self._drop_record_for_principal_id(record, principal_id)
 
-		# # CS/JZ 201410256
-		# # We manually remove the item and fire the ObjectRemovedEvent to
-		# # avoid contention in an underlying zope dublincore annotation data structure.
-		# # A modified event on the container calls zope.dublincore.creatorannotator
-		# # whose data modifications, we currently do not use.
+		# CS/JZ 201410256
+		# We manually remove the item and fire the ObjectRemovedEvent to
+		# avoid contention in an underlying zope dublincore annotation data structure.
+		# A modified event on the container calls zope.dublincore.creatorannotator
+		# whose data modifications, we currently do not use.
 		remove_from_container(self._inst_enrollment_storage, principal_id)
 
 		return record
