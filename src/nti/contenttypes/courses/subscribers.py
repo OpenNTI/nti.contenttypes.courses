@@ -13,6 +13,8 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import component
 
+from zope.intid import IIntIds
+
 from zope.interface.interfaces import IRegistered
 from zope.interface.interfaces import IUnregistered
 
@@ -150,3 +152,31 @@ def sync_catalog_when_library_synched(library, event):
 	synchronizer = component.getMultiAdapter((catalog, courses_bucket),
 							   				  IObjectEntrySynchronizer)
 	synchronizer.synchronize(catalog, courses_bucket, params=params, results=results)
+
+from zope.security.interfaces import IPrincipal
+
+from .interfaces import INSTRUCTOR
+from .interfaces import ICourseInstance
+from .interfaces import ICourseCatalogEntry
+from .interfaces import ICourseInstanceAvailableEvent
+
+from .index import IX_COURSE, IX_SCOPE, IX_USERNAME
+
+from . import get_enrollment_catalog
+
+@component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
+def _index_instructors_on_course_instance(course, event):
+	catalog = get_enrollment_catalog()
+	intids = component.queryUtility(IIntIds)
+	if catalog is None or intids is None:
+		return
+	entry = ICourseCatalogEntry(course, None)
+	ntiid = getattr(entry, 'ntiid', None)
+	doc_id = intids.queryId(course)
+	if doc_id is None:
+		return
+	for instructor in course.instructors or ():
+		pid = IPrincipal(instructor).id
+		catalog[IX_USERNAME].index_doc(doc_id, pid)
+		catalog[IX_COURSE].index_doc(doc_id, ntiid)
+		catalog[IX_SCOPE].index_doc(doc_id, INSTRUCTOR)

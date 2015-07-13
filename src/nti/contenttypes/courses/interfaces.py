@@ -83,6 +83,8 @@ RID_TA = "nti.roles.course_ta"
 SECTIONS = 'Sections'
 DISCUSSIONS = 'Discussions'
 
+INSTRUCTOR = "Instructor"
+
 # Notes:
 #
 # How to determine available courses?
