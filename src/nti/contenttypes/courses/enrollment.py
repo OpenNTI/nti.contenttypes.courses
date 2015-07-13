@@ -365,11 +365,11 @@ class DefaultCourseEnrollmentManager(object):
 		# it's in the IPrincipalEnrollments; that way
 		# event listeners will see consistent data.
 
-		# # CS/JZ 20141025
-		# # We manually add the item and fire the ObjectAddedEvent to
-		# # avoid contention in an underlying zope dublincore annotation data structure.
-		# # A modified event on the container calls zope.dublincore.creatorannotator
-		# # whose data modifications, we currently do not use.
+		# CS/JZ 20141025
+		# We manually add the item and fire the ObjectAddedEvent to
+		# avoid contention in an underlying zope dublincore annotation data structure.
+		# A modified event on the container calls zope.dublincore.creatorannotator
+		# whose data modifications, we currently do not use.
 		save_in_container(self._inst_enrollment_storage, principal_id, record)
 		return record
 
