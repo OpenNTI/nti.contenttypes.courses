@@ -24,6 +24,7 @@ from zope.event import notify
 
 from zope.site.interfaces import ILocalSiteManager
 
+from nti.common.string import safestr
 from nti.common.representation import WithRepr
 
 from nti.contentlibrary import ContentRemovalException
@@ -105,8 +106,10 @@ ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
 def _site_name(registry=None):
 	registry = component.getSiteManager() if registry is None else registry
 	if ILocalSiteManager.providedBy(registry):
-		return registry.__parent__.__name__
-	return getattr(registry, '__name__', None)
+		result = registry.__parent__.__name__
+	else:
+		result = getattr(registry, '__name__', None)
+	return safestr(result)
 
 @WithRepr
 @EqHash('NTIID')
