@@ -22,6 +22,8 @@ from zope.container.contained import Contained
 
 from zope.event import notify
 
+from zope.site.interfaces import ILocalSiteManager
+
 from nti.common.representation import WithRepr
 
 from nti.contentlibrary import ContentRemovalException
@@ -100,6 +102,12 @@ GRADING_POLICY_NAME = 'grading_policy.json'
 INSTRUCTOR_INFO_NAME = 'instructor_info.json'
 ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
 
+def _site_name(registry=None):
+	registry = component.getSiteManager() if registry is None else registry
+	if ILocalSiteManager.providedBy(registry):
+		return registry.__parent__.__name__
+	return getattr(registry, '__name__', None)
+
 @WithRepr
 @EqHash('NTIID')
 @interface.implementer(ICourseSynchronizationResults)
@@ -116,7 +124,7 @@ def _get_sync_results(context, sync_results=None, **kwargs):
 	if sync_results is None:
 		entry = ICourseCatalogEntry(context)
 		results = kwargs.get('results') or []
-		sync_results = CourseSynchronizationResults(NTIID=entry.ntiid)
+		sync_results = CourseSynchronizationResults(NTIID=entry.ntiid, Site=_site_name())
 		results.append(sync_results) 
 	return sync_results
 

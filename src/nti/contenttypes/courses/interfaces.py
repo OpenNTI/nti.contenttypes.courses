@@ -1019,6 +1019,8 @@ class ICourseSynchronizationResults(IGenericSynchronizationResults):
 	GradingPolicyDeleted = Bool(title="Grading Policy deleted", required=False, default=False)
 	GradingPolicyUpdated = Bool(title="Grading Policy updated", required=False, default=False)
 
+	Site = ValidTextLine(title="Site Name", required=False)
+
 class IObjectEntrySynchronizer(interface.Interface):
 	"""
 	Something to synchronize one object and possibly its children.
