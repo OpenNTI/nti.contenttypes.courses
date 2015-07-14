@@ -37,15 +37,14 @@ def do_evolve(context, generation=generation):
 
 	lsm = dataserver_folder.getSiteManager()
 	intids = lsm.getUtility(zope.intid.IIntIds)
-
 	catalog = install_enrollment_catalog(dataserver_folder)
 
 	total = 0
 	sites = dataserver_folder['++etc++hostsites']
 	for site in sites.values():
 		with current_site(site):
-			catalog = component.getUtility(ICourseCatalog)
-			for entry in catalog.iterCatalogEntries():
+			course_catalog = component.getUtility(ICourseCatalog)
+			for entry in course_catalog.iterCatalogEntries():
 				course = ICourseInstance(entry, None)
 				if not course:
 					continue
@@ -57,6 +56,7 @@ def do_evolve(context, generation=generation):
 						pid = IPrincipal(instructor).id
 						record = IndexRecord(pid, entry.ntiid, INSTRUCTOR)
 						catalog.index_doc(doc_id, record)
+						total += 1
 
 				# index enrollment records
 				enrollments = ICourseEnrollments(course, None)
@@ -67,6 +67,7 @@ def do_evolve(context, generation=generation):
 					if uid is not None:
 						try:
 							catalog.index_doc(uid, e)
+							total += 1
 						except (TypeError, POSError):
 							pass
 

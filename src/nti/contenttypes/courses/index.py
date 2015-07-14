@@ -44,7 +44,7 @@ class ValidatingUsernameID(object):
 	def __init__(self, obj, default=None):
 		if isinstance(obj, IndexRecord):
 			self.username = safestr(obj.username)
-		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
+		elif ICourseInstanceEnrollmentRecord.providedBy(obj) and obj.Principal is not None:
 			self.username = obj.Principal.id
 
 	def __reduce__(self):
