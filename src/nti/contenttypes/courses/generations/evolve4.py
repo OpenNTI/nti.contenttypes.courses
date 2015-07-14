@@ -51,7 +51,7 @@ def do_evolve(context, generation=generation):
 					continue
 
 				# index instructor roles
-				doc_id = intids.queryId(entry)
+				doc_id = intids.queryId(course)
 				if doc_id is not None:
 					for instructor in course.instructors or ():
 						pid = IPrincipal(instructor).id
