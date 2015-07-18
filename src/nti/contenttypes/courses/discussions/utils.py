@@ -85,7 +85,7 @@ def get_discussion_for_path(path, context):
 	parent = get_parent_course(context)
 	if parent is not None:
 		splits = path.split(os.path.sep)
-		if SECTIONS in splits and splits[1] == SECTIONS:  # e.g. /Sections/02/Discussions/p.json
+		if SECTIONS in splits and len(splits) >= 2 and splits[1] == SECTIONS:  # e.g. /Sections/02/Discussions/p.json
 			course = parent.SubInstances.get(splits[2]) if len(splits) >= 3 else None
 			course = None if len(splits) < 3 or DISCUSSIONS != splits[3] else course
 			name = splits[4] if len(splits) >= 5 else None
