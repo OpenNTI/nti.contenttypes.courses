@@ -94,6 +94,9 @@ def get_discussion_for_path(path, context):
 
 		if course is not None and name:
 			discussions = ICourseDiscussions(course, None) or {}
-			result = discussions.get(name) or discussions.get(name + '.json')
+			for prefix in (name, name.replace(' ', '_')):
+				result = discussions.get(prefix) or discussions.get(prefix + '.json')
+				if result is not None:
+					break
 			return result
 	return None
