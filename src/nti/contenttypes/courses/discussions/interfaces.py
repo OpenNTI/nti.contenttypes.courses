@@ -21,7 +21,6 @@ from nti.coremetadata.interfaces import ITitled
 from nti.coremetadata.interfaces import ILastModified
 
 from nti.dataserver_fragments.interfaces import ITaggedContent
-from nti.dataserver_fragments.schema import CompoundModeledContentBody
 
 from nti.schema.field import Choice
 from nti.schema.field import ListOrTuple
@@ -29,6 +28,8 @@ from nti.schema.field import ValidTextLine
 
 from ..interfaces import ES_ALL
 from ..interfaces import ENROLLMENT_SCOPE_VOCABULARY
+
+from .schema import DiscussionModeledContentBody
 
 NTI_COURSE_BUNDLE = u'nti-course-bundle'
 NTI_COURSE_BUNDLE_REF = "%s://" % NTI_COURSE_BUNDLE
@@ -39,7 +40,7 @@ class ICourseDiscussion(ITitled, ITaggedContent, ILastModified, IContained):
 	title = ValidTextLine(title="Discussion title", required=True)
 	icon = ValidTextLine(title="Discussion icon href", required=False)
 	label = ValidTextLine(title="The label", required=False, default=u'')
-	body = CompoundModeledContentBody(required=False)
+	body = DiscussionModeledContentBody(required=False)
 	scopes = ListOrTuple(Choice(vocabulary=ALL_SCOPES_VOCABULARY),
 						 title='scopes', required=True, min_length=1)
 
