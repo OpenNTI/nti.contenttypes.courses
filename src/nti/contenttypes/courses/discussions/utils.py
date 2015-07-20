@@ -62,10 +62,8 @@ def get_discussion_mapped_scopes(discussion):
 def get_parent_course(context):
 	context = ICourseInstance(context, None)
 	if ICourseSubInstance.providedBy(context):
-		parent = context.__parent__.__parent__
-	elif context is not None:
-		parent = context
-	return parent
+		context = context.__parent__.__parent__
+	return context
 
 def get_course_for_discussion(discussion, context):
 	iden = get_discussion_id(discussion)
