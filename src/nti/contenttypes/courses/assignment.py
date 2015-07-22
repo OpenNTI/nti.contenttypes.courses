@@ -11,8 +11,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from zope import interface
 from zope import component
+from zope import interface
 
 from zope.annotation.factory import factory as an_factory
 
@@ -20,8 +20,8 @@ from zope.container.contained import Contained
 
 from persistent.mapping import PersistentMapping
 
-from nti.assessment.interfaces import IQAssignmentPolicies
-from nti.assessment.interfaces import IQAssignmentDateContext
+from nti.assessment.interfaces import IQAssessmentPolicies
+from nti.assessment.interfaces import IQAssessmentDateContext
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
@@ -29,8 +29,8 @@ from nti.externalization.persistence import NoPickle
 
 from .interfaces import ICourseInstance
 
-@interface.implementer(IQAssignmentDateContext)
-class EmptyAssignmentDateContext(object):
+@interface.implementer(IQAssessmentDateContext)
+class EmptyAssessmentDateContext(object):
 	"""
 	Used when there is no context to adjust the dates.
 
@@ -52,6 +52,7 @@ class EmptyAssignmentDateContext(object):
 
 	def __setitem__(self, key, valu):
 		pass
+EmptyAssignmentDateContext = EmptyAssessmentDateContext # BWC
 
 @NoPickle
 class _Dates(object):
@@ -66,9 +67,9 @@ class _Dates(object):
 		except KeyError:
 			return getattr(self._asg, name)
 
-@interface.implementer(IQAssignmentDateContext)
 @component.adapter(ICourseInstance)
-class MappingAssignmentDateContext(Contained,
+@interface.implementer(IQAssessmentDateContext)
+class MappingAssessmentDateContext(Contained,
 								   PersistentCreatedAndModifiedTimeObject):
 	"""
 	A persistent mapping of assessment_ntiid -> {'available_for_submission_beginning': datetime}
@@ -94,12 +95,15 @@ class MappingAssignmentDateContext(Contained,
 
 	def __setitem__(self, key, value):
 		self._mapping[key] = value
+MappingAssignmentDateContext = MappingAssessmentDateContext # BWC
 
-CourseSubInstanceAssignmentDateContextFactory = an_factory(MappingAssignmentDateContext)
+COURSE_SUBINSTANCE_DATE_CONTEXT_KEY = 'nti.contenttypes.courses.assignment.MappingAssignmentDateContext'
+CourseSubInstanceAssignmentDateContextFactory = an_factory(MappingAssignmentDateContext,
+														   key=COURSE_SUBINSTANCE_DATE_CONTEXT_KEY)
 
 @component.adapter(ICourseInstance)
-@interface.implementer(IQAssignmentPolicies)
-class MappingAssignmentPolicies(Contained, PersistentCreatedAndModifiedTimeObject):
+@interface.implementer(IQAssessmentPolicies)
+class MappingAssessmentPolicies(Contained, PersistentCreatedAndModifiedTimeObject):
 	"""
 	A persistent mapping of assessment ids to policy information,
 	that is uninterpreted by this module.
@@ -136,5 +140,8 @@ class MappingAssignmentPolicies(Contained, PersistentCreatedAndModifiedTimeObjec
 	def __bool__(self):
 		return bool(self._mapping)
 	__nonzero__ = __bool__
+MappingAssignmentPolicies = MappingAssessmentPolicies # BWC
 
-CourseInstanceAssignmentPoliciesFactory = an_factory(MappingAssignmentPolicies)
+COURSE_DATE_CONTEXT_KEY = 'nti.contenttypes.courses.assignment.MappingAssignmentPolicies'
+CourseInstanceAssignmentPoliciesFactory = an_factory(MappingAssignmentPolicies,
+													 key=COURSE_DATE_CONTEXT_KEY)
