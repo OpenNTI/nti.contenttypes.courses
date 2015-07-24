@@ -15,15 +15,15 @@ from zope import interface
 from ZODB import loglevels
 
 from nti.assessment.interfaces import IQAssignment
-from nti.assessment.interfaces import IQAssignmentPolicies
-from nti.assessment.interfaces import IQAssignmentPolicyValidator
+from nti.assessment.interfaces import IQAssessmentPolicies
+from nti.assessment.interfaces import IQAssessmentPolicyValidator
 
 from nti.ntiids.ntiids import is_valid_ntiid_string
 
 from .interfaces import ICourseCatalogEntry
 
-@interface.implementer(IQAssignmentPolicyValidator)
-class DefaultAssignmentPolicyValidator(object):
+@interface.implementer(IQAssessmentPolicyValidator)
+class DefaultAssessmentPolicyValidator(object):
 
 	def question_points(self, auto_grade, ntiid):
 		question_map = auto_grade.get('questions') or auto_grade
@@ -68,21 +68,23 @@ class DefaultAssignmentPolicyValidator(object):
 		assignment = component.queryUtility(IQAssignment, name=ntiid)
 		if assignment is None:
 			logger.log(loglevels.TRACE,
-						"Could not find assessment with ntiid %s", ntiid)
+					   "Could not find assessment with ntiid %s", ntiid)
 		auto_grade = self.valid_auto_grade(policy, assignment, ntiid)
 		self.validate_pointbased_policy(auto_grade, assignment, ntiid)
 
+DefaultAssignmentPolicyValidator = DefaultAssessmentPolicyValidator # BWC
+
 def validate_assigment_policies(course):
-	course_policies = IQAssignmentPolicies(course, None)
+	course_policies = IQAssessmentPolicies(course, None)
 	if not course_policies:
 		return
 
-	assignments = course_policies.assignments()
-	policies = {a:course_policies.getPolicyForAssignment(a) for a in assignments}
+	assessments = course_policies.assignments()
+	policies = {a:course_policies.getPolicyForAssessment(a) for a in assessments}
 
 	# let's try the course
 	registry = component
-	validator = IQAssignmentPolicyValidator(course, None)
+	validator = IQAssessmentPolicyValidator(course, None)
 	if validator is None:
 		# Courses may be ISites
 		try:
@@ -95,14 +97,14 @@ def validate_assigment_policies(course):
 
 		for name in names:
 			try:
-				validator = registry.getUtility(IQAssignmentPolicyValidator, name=name)
+				validator = registry.getUtility(IQAssessmentPolicyValidator, name=name)
 				break
 			except LookupError:
 				validator = None
 
 	if validator is None:
 		# # let's try default validator
-		validator = DefaultAssignmentPolicyValidator()
+		validator = DefaultAssessmentPolicyValidator()
 
 	# go through policies
 	for k, v in policies.items():

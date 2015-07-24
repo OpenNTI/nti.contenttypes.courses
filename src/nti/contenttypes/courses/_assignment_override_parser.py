@@ -11,16 +11,16 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from nti.assessment.interfaces import IQAssignmentPolicies
-from nti.assessment.interfaces import IQAssignmentDateContext
+from nti.assessment.interfaces import IQAssessmentPolicies
+from nti.assessment.interfaces import IQAssessmentDateContext
 
 from nti.externalization.datetime import datetime_from_string
 
 from nti.ntiids.ntiids import validate_ntiid_string
 
 def reset_asg_missing_key(course):
-	IQAssignmentDateContext(course).clear()
-	result = IQAssignmentPolicies(course).clear()
+	IQAssessmentDateContext(course).clear()
+	result = IQAssessmentPolicies(course).clear()
 	return result
 
 def fill_asg_from_key(course, key):
@@ -40,8 +40,8 @@ def fill_asg_from_key(course, key):
 
 	__traceback_info__ = key, course
 	
-	dates = IQAssignmentDateContext(course)
-	policies = IQAssignmentPolicies(course)
+	dates = IQAssessmentDateContext(course)
+	policies = IQAssessmentPolicies(course)
 	if key.lastModified <= policies.lastModified:
 		return False
 
