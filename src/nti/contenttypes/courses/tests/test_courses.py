@@ -21,6 +21,8 @@ from hamcrest import same_instance
 from hamcrest import has_properties
 from hamcrest import is_not as does_not
 
+from nti.testing.matchers import verifiably_provides
+
 import fudge
 
 from zope import interface
@@ -40,8 +42,6 @@ from nti.contenttypes.courses.decorators import _SharingScopesAndDiscussionDecor
 from nti.externalization.tests import externalizes
 
 from nti.contenttypes.courses.tests import CourseLayerTest
-
-from nti.testing.matchers import verifiably_provides
 
 import nti.dataserver.tests.mock_dataserver as mock_dataserver
 from nti.dataserver.tests.mock_dataserver import WithMockDSTrans

@@ -19,6 +19,8 @@ from hamcrest import assert_that
 from hamcrest import has_property
 from hamcrest import is_not as does_not
 
+from nti.testing.matchers import validly_provides
+
 import os.path
 
 from nti.contentlibrary.filesystem import FilesystemKey
@@ -28,8 +30,6 @@ from nti.contenttypes.courses._outline_parser import fill_outline_from_key
 from nti.contenttypes.courses.outlines import PersistentCourseOutline as CourseOutline
 
 from nti.contenttypes.courses.tests import CourseLayerTest
-
-from nti.testing.matchers import validly_provides
 
 from nti.externalization.tests import externalizes
 

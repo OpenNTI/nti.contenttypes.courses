@@ -78,12 +78,12 @@ from ._role_parser import reset_roles_missing_key
 
 from ._outline_parser import fill_outline_from_key
 
-from ._assignment_override_parser import fill_asg_from_key
+from ._assessment_override_parser import fill_asg_from_key
 
 from ._catalog_entry_parser import fill_entry_from_legacy_key
 
-from ._assignment_override_parser import reset_asg_missing_key
-from ._assignment_policy_validator import validate_assigment_policies
+from ._assessment_override_parser import reset_asg_missing_key
+from ._assessment_policy_validator import validate_assigment_policies
 
 from .grading import reset_grading_policy
 from .grading import fill_grading_policy_from_key

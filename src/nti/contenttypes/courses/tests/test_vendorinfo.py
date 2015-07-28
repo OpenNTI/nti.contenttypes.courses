@@ -7,7 +7,6 @@ __docformat__ = "restructuredtext en"
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
-
 from hamcrest import is_
 from hamcrest import assert_that
 from hamcrest import has_property
@@ -16,11 +15,11 @@ from nti.testing.matchers import validly_provides
 
 import unittest
 
-from .. import courses
-from .. import vendorinfo
-from .. import interfaces
+from nti.contenttypes.courses import courses
+from nti.contenttypes.courses import vendorinfo
+from nti.contenttypes.courses import interfaces
 
-from . import CourseLayerTest
+from nti.contenttypes.courses.tests import CourseLayerTest
 
 class TestVendorInfo(unittest.TestCase):
 

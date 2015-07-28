@@ -10,6 +10,9 @@ __docformat__ = "restructuredtext en"
 from hamcrest import has_entries
 from hamcrest import assert_that
 
+from nti.testing.matchers import validly_provides
+from nti.testing.matchers import verifiably_provides
+
 from datetime import datetime
 
 from nti.contenttypes.courses import courses
@@ -17,9 +20,6 @@ from nti.contenttypes.courses import outlines
 from nti.contenttypes.courses import interfaces
 
 from nti.externalization.tests import externalizes
-
-from nti.testing.matchers import validly_provides
-from nti.testing.matchers import verifiably_provides
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 

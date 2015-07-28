@@ -23,16 +23,17 @@ from hamcrest import assert_that
 from hamcrest import has_property
 from hamcrest import same_instance
 
+from nti.testing.matchers import is_empty
+from nti.testing.matchers import is_false
+from nti.testing.matchers import validly_provides
+
 import unittest
 
 from zope import component
 from zope import interface
 from zope import lifecycleevent
-from zope.schema.interfaces import ConstraintNotSatisfied
 
-from nti.testing.matchers import is_empty
-from nti.testing.matchers import is_false
-from nti.testing.matchers import validly_provides
+from zope.schema.interfaces import ConstraintNotSatisfied
 
 from nti.contenttypes.courses import courses
 from nti.contenttypes.courses import enrollment

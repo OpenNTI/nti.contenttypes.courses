@@ -12,6 +12,8 @@ from hamcrest import empty
 from hamcrest import contains
 from hamcrest import assert_that
 
+from nti.testing.matchers import validly_provides
+
 import unittest
 
 from zope.securitypolicy.interfaces import Allow
@@ -22,13 +24,12 @@ from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 from nti.contenttypes.courses.principalrole import CourseInstancePrincipalRoleMap
 
-from nti.testing.matchers import validly_provides
-
 class _PhonyPrincipal(object):
+
 	id = None
 
-	def __init__(self, id):
-		self.id = id
+	def __init__(self, pid):
+		self.id = pid
 
 class _PhonyCourse(object):
 
@@ -37,8 +38,8 @@ class _PhonyCourse(object):
 	def __init__(self):
 		self.instructors = []
 
-	def _add_instructor(self, id):
-		self.instructors.append(_PhonyPrincipal(id))
+	def _add_instructor(self, pid):
+		self.instructors.append(_PhonyPrincipal(pid))
 
 class TestCourseInstancePrincipalRoleMap(unittest.TestCase):
 

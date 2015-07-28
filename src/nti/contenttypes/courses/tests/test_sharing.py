@@ -17,13 +17,13 @@ from hamcrest import has_property
 from hamcrest import same_instance
 from hamcrest import contains_inanyorder
 
+from nti.testing.matchers import is_empty
+from nti.testing.matchers import validly_provides
+
 import unittest
 
 from nti.contenttypes.courses import sharing
 from nti.contenttypes.courses import interfaces
-
-from nti.testing.matchers import is_empty
-from nti.testing.matchers import validly_provides
 
 class TestSharing(unittest.TestCase):
 
@@ -47,18 +47,28 @@ class TestSharing(unittest.TestCase):
 						 has_property('__name__', interfaces.ES_CREDIT_NONDEGREE )
 					 ))
 
+import functools
 
 from zope import interface
 from zope import component
-from zope.copypastemove import IObjectMover
-from zope.security.interfaces import IPrincipal
-from zope.container.interfaces import IContained
+from zope import lifecycleevent
+
 from zope.annotation.interfaces import IAttributeAnnotatable
-from nti.wref.interfaces import IWeakRef
-from nti.dataserver.interfaces import IUser
+
 from zope.component import eventtesting
 
+from zope.container.interfaces import IContained
+
+from zope.copypastemove import IObjectMover
+
+from zope.security.interfaces import IPrincipal
+
+from nti.contenttypes.courses import courses
+from nti.contenttypes.courses.interfaces import ES_PUBLIC, ES_PURCHASED
+from nti.contenttypes.courses.interfaces import ES_CREDIT, ES_CREDIT_NONDEGREE, ES_CREDIT_DEGREE
+
 from nti.dataserver.users import User
+from nti.dataserver.interfaces import IUser
 from nti.dataserver.sharing import SharingSourceMixin
 from nti.dataserver import interfaces as nti_interfaces
 from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
@@ -66,15 +76,9 @@ from nti.dataserver.authorization import role_for_providers_content
 
 from nti.ntiids import ntiids
 
+from nti.wref.interfaces import IWeakRef
+
 from persistent import Persistent
-
-import functools
-
-from nti.contenttypes.courses.interfaces import ES_PUBLIC, ES_PURCHASED
-from nti.contenttypes.courses.interfaces import ES_CREDIT, ES_CREDIT_NONDEGREE, ES_CREDIT_DEGREE
-from nti.contenttypes.courses import courses
-
-from zope import lifecycleevent
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 

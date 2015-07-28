@@ -23,6 +23,9 @@ from hamcrest import has_properties
 from hamcrest import contains_string
 from hamcrest import contains_inanyorder
 
+from nti.testing.matchers import is_empty
+from nti.testing.matchers import verifiably_provides
+
 import fudge
 import os.path
 import datetime
@@ -67,11 +70,8 @@ from nti.contenttypes.courses._synchronize import synchronize_catalog_from_root
 
 from nti.externalization.tests import externalizes
 
-from nti.dataserver.tests.test_authorization_acl import permits
 from nti.dataserver.tests.test_authorization_acl import denies
-
-from nti.testing.matchers import is_empty
-from nti.testing.matchers import verifiably_provides
+from nti.dataserver.tests.test_authorization_acl import permits
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 

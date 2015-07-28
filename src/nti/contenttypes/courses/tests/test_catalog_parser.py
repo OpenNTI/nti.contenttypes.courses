@@ -16,6 +16,8 @@ from hamcrest import has_entries
 from hamcrest import has_properties
 does_not = is_not
 
+from nti.testing.matchers import verifiably_provides
+
 import os.path
 
 from datetime import timedelta
@@ -36,8 +38,6 @@ from nti.contenttypes.courses.legacy_catalog import PersistentCourseCatalogLegac
 from nti.externalization.tests import externalizes
 
 from nti.contenttypes.courses.tests import CourseLayerTest
-
-from nti.testing.matchers import verifiably_provides
 
 class TestCatalogParser(CourseLayerTest):
 

@@ -12,6 +12,9 @@ from hamcrest import none
 from hamcrest import assert_that
 from hamcrest import has_property
 
+from nti.testing.matchers import validly_provides
+from nti.testing.matchers import verifiably_provides
+
 import isodate
 import unittest
 
@@ -27,9 +30,6 @@ from nti.contenttypes.courses.legacy_catalog import _CourseSubInstanceCatalogLeg
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IGlobalCourseCatalog
-
-from nti.testing.matchers import validly_provides
-from nti.testing.matchers import verifiably_provides
 
 class TestCatalog(unittest.TestCase):
 

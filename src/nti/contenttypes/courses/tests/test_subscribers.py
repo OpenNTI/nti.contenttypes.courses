@@ -1,41 +1,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-
-
-.. $Id$
-"""
 
 from __future__ import print_function, unicode_literals, absolute_import, division
 __docformat__ = "restructuredtext en"
 
-logger = __import__('logging').getLogger(__name__)
+# disable: accessing protected members, too many methods
+# pylint: disable=W0212,R0904
 
-#disable: accessing protected members, too many methods
-#pylint: disable=W0212,R0904
-
-from hamcrest import assert_that
 from hamcrest import is_
 from hamcrest import is_not
-from hamcrest import same_instance
 from hamcrest import has_entry
+from hamcrest import assert_that
+from hamcrest import same_instance
 
 import os
+
 from zope import component
 
-from nti.contentlibrary.interfaces import IContentPackageLibrary
-from nti.contentlibrary import filesystem
-from nti.contentlibrary import subscribers as lib_subscribers
-from nti.contentlibrary import interfaces as lib_interfaces
-
-from . import CourseLayerTest
-
-from zope.site.interfaces import NewLocalSite
 from zope.site.folder import Folder
 from zope.site.site import LocalSiteManager
+from zope.site.interfaces import NewLocalSite
 
-from ..interfaces import ICourseCatalog
-from ..interfaces import ICourseInstanceVendorInfo
+from nti.contentlibrary import filesystem
+from nti.contentlibrary import interfaces as lib_interfaces
+from nti.contentlibrary import subscribers as lib_subscribers
+from nti.contentlibrary.interfaces import IContentPackageLibrary
+
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
+
+from nti.contenttypes.courses.tests import CourseLayerTest
 
 class TestFunctionalSubscribers(CourseLayerTest):
 
