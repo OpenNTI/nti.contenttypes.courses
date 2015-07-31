@@ -18,6 +18,8 @@ from zope.intid import IIntIds
 from zope.interface.interfaces import IRegistered
 from zope.interface.interfaces import IUnregistered
 
+from zope.lifecycleevent.interfaces import IObjectRemovedEvent
+
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
@@ -177,14 +179,26 @@ def roles_sync_on_course_instance(course, event):
 	if doc_id is None:
 		return
 
-	if ntiid: # remove all instructors
+	if ntiid:  # remove all instructors
 		query = { IX_COURSE: {'any_of':(ntiid,)},
 				  IX_SCOPE : {'any_of':(INSTRUCTOR,)}}
 		for uid in catalog.apply(query) or ():
 			catalog.unindex_doc(uid)
-	
+
 	# reset instructors
 	for instructor in course.instructors or ():
 		pid = IPrincipal(instructor).id
 		record = IndexRecord(pid, ntiid, INSTRUCTOR)
 		catalog.index_doc(doc_id, record)
+
+@component.adapter(ICourseInstance, IObjectRemovedEvent)
+def on_course_instance_removed(course, event):
+	catalog = get_enrollment_catalog()
+	entry = ICourseCatalogEntry(course, None)
+	ntiid = getattr(entry, 'ntiid', None)
+	if catalog is None or not ntiid:
+		return
+
+	query = { IX_COURSE: {'any_of':(ntiid,)} }
+	for uid in catalog.apply(query) or ():
+		catalog.unindex_doc(uid)

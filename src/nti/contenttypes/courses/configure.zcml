@@ -77,6 +77,7 @@
 				provides="nti.externalization.interfaces.IExternalObjectDecorator" />
 
 	<!-- Events -->
+	<subscriber handler=".subscribers.on_course_instance_removed" />
 	<subscriber handler=".subscribers.install_site_course_catalog" />
 	<subscriber handler=".subscribers.roles_sync_on_course_instance" />
 	<subscriber handler=".subscribers.uninstall_site_course_catalog" />
