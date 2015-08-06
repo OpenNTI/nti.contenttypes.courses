@@ -20,5 +20,23 @@ from zope.catalog.interfaces import ICatalog
 
 from .index import CATALOG_NAME
 
+from .vendorinfo import VENDOR_INFO_KEY
+
+from .interfaces import ICourseInstance
+from .interfaces import ICourseInstanceVendorInfo
+
 def get_enrollment_catalog():
 	return component.queryUtility(ICatalog, name=CATALOG_NAME)
+
+def get_vendor_info(context, create=True):
+	result = None
+	course = ICourseInstance(context, None)
+	if create:
+		result = ICourseInstanceVendorInfo(context, None)
+	elif course is not None:
+		try:
+			annotations = course.__annotations__
+			result = annotations.get(VENDOR_INFO_KEY, None)
+		except AttributeError:
+			pass
+	return result

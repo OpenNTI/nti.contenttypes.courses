@@ -39,7 +39,8 @@ class DefaultCourseInstanceVendorInfo(PersistentMapping,
 	_SET_CREATED_MODTIME_ON_INIT = False
 
 	def __init__(self):
-		super(DefaultCourseInstanceVendorInfo,self).__init__()
+		super(DefaultCourseInstanceVendorInfo, self).__init__()
 
+VENDOR_INFO_KEY = 'CourseInstanceVendorInfo'
 CourseInstanceVendorInfo = an_factory(DefaultCourseInstanceVendorInfo,
-									  'CourseInstanceVendorInfo')
+									  VENDOR_INFO_KEY)
