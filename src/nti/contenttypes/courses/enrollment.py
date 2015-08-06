@@ -429,12 +429,16 @@ class DefaultCourseEnrollmentManager(object):
 
 		return records
 
-from .interfaces import ICourseInstanceVendorInfo
 from .interfaces import IEnrollmentMappedCourseInstance
 
+from . import get_course_vendor_info
+
+def get_vendor_info(context):
+	result =  get_course_vendor_info(context, False) or {}
+	return result
+
 def has_deny_open_enrollment(context):
-	course = ICourseInstance(context, None)
-	vendor_info = ICourseInstanceVendorInfo(course, {})
+	vendor_info = get_vendor_info(context)
 	nti_info = vendor_info.get('NTI', {})
 	for name in ('deny_open_enrollment', 'DenyOpenEnrollment'):
 		result = nti_info.get(name, None)
@@ -446,8 +450,7 @@ def check_deny_open_enrollment(context):
 	"""
 	Returns a true value if the course disallows open enrollemnt
 	"""
-	course = ICourseInstance(context, None)
-	vendor_info = ICourseInstanceVendorInfo(course, {})
+	vendor_info = get_vendor_info(context)
 	nti_info = vendor_info.get('NTI', {})
 	for name in ('deny_open_enrollment', 'DenyOpenEnrollment'):
 		result = nti_info.get(name, None)
@@ -462,7 +465,7 @@ def check_enrollment_mapped(context):
 	mapped, but fails the tests.
 	"""
 	course = ICourseInstance(context, None)
-	vendor_info = ICourseInstanceVendorInfo(course, {})
+	vendor_info = get_vendor_info(context)
 	if 'NTI' in vendor_info and 'EnrollmentMap' in vendor_info['NTI']:
 		result = False
 		for scope, data in vendor_info['NTI']['EnrollmentMap'].items():
