@@ -28,7 +28,7 @@ from .interfaces import ICourseInstanceVendorInfo
 def get_enrollment_catalog():
 	return component.queryUtility(ICatalog, name=CATALOG_NAME)
 
-def get_vendor_info(context, create=True):
+def get_course_vendor_info(context, create=True):
 	result = None
 	course = ICourseInstance(context, None)
 	if create:
