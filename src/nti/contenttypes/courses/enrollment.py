@@ -511,8 +511,7 @@ class SectionSeat(object):
 
 def _get_enrollment_map(context):
 	result = {}
-	course = ICourseInstance(context, None)
-	vendor_info = ICourseInstanceVendorInfo(course, {})
+	vendor_info = get_vendor_info(context)
 	if 'NTI' in vendor_info and 'EnrollmentMap' in vendor_info['NTI']:
 		for scope, data in vendor_info['NTI']['EnrollmentMap'].items():
 			if isinstance(data, six.string_types):
