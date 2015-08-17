@@ -54,7 +54,7 @@ class UsernameIndex(RawSetIndex):
 		if isinstance(value, IndexRecord):
 			result = (safestr(value.username),)
 		elif ICourseInstanceEnrollmentRecord.providedBy(value):
-			result = (value.Principal.id,)
+			result = (value.Principal.id,) if value.Principal is not None else ()
 		else:
 			result = ()
 		return result
