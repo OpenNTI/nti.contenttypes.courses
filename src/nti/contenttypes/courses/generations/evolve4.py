@@ -31,17 +31,8 @@ from ..interfaces import ICourseEnrollments
 from ..index import IndexRecord
 from ..index import install_enrollment_catalog
 
-def do_evolve(context, generation=generation):
-
-	conn = context.connection
-	dataserver_folder = conn.root()['nti.dataserver']
-
-	lsm = dataserver_folder.getSiteManager()
-	intids = lsm.getUtility(IIntIds)
-	catalog = install_enrollment_catalog(dataserver_folder)
-
+def do_reindex(sites, catalog, intids):
 	total = 0
-	sites = dataserver_folder['++etc++hostsites']
 	for site in sites.values():
 		with current_site(site):
 			course_catalog = component.getUtility(ICourseCatalog)
@@ -73,6 +64,19 @@ def do_evolve(context, generation=generation):
 							total += 1
 						except (TypeError, POSError):
 							pass
+	return total
+
+def do_evolve(context, generation=generation):
+
+	conn = context.connection
+	dataserver_folder = conn.root()['nti.dataserver']
+
+	lsm = dataserver_folder.getSiteManager()
+	intids = lsm.getUtility(IIntIds)
+	catalog = install_enrollment_catalog(dataserver_folder)
+
+	sites = dataserver_folder['++etc++hostsites']
+	total = do_reindex(sites, catalog, intids)
 
 	logger.info('contenttypes.courses evolution %s done; %s object(s) indexed',
 				generation, total)

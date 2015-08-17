@@ -16,6 +16,8 @@ from zope import interface
 from zope.catalog.interfaces import ICatalog
 from zope.catalog.interfaces import ICatalogIndex
 
+from zope.deprecation import deprecated
+
 from zope.location import locate
 
 from zc.intid import IIntIds
@@ -25,6 +27,7 @@ from nti.common.string import safestr
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.zope_catalog.catalog import Catalog
+from nti.zope_catalog.index import SetIndex as RawSetIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
 
 from .interfaces import ICourseInstanceEnrollmentRecord
@@ -33,26 +36,47 @@ CATALOG_NAME = 'nti.dataserver.++etc++enrollment-catalog'
 
 IX_SCOPE = 'scope'
 IX_ENTRY = IX_COURSE = 'course'
-IX_STUDENT = IX_USERNAME = 'username'
+IX_USERNAME = IX_STUDENT = IX_INSTRUCTOR = 'username'
 
 IndexRecord = namedtuple('IndexRecord', 'username ntiid Scope')
 
+deprecated('ValidatingUsernameID', 'Use lastest index implementation')
 class ValidatingUsernameID(object):
 
-	__slots__ = (b'username',)
+	def __init__(self, *args, **kwargs):
+		pass
+	
+class UsernameIndex(RawSetIndex):
 
-	def __init__(self, obj, default=None):
-		if isinstance(obj, IndexRecord):
-			self.username = safestr(obj.username)
-		elif ICourseInstanceEnrollmentRecord.providedBy(obj) and obj.Principal is not None:
-			self.username = obj.Principal.id
+	empty_set = set()
 
-	def __reduce__(self):
-		raise TypeError()
+	def to_iterable(self, value):
+		if isinstance(value, IndexRecord):
+			result = (safestr(value.username),)
+		elif ICourseInstanceEnrollmentRecord.providedBy(value):
+			result = (value.Principal.id,)
+		else:
+			result = ()
+		return result
 
-class UsernameIndex(ValueIndex):
-	default_field_name = 'username'
-	default_interface = ValidatingUsernameID
+	def index_doc(self, doc_id, value):
+		value = {v for v in self.to_iterable(value) if v is not None}
+		old = self.documents_to_values.get(doc_id) or self.empty_set
+		if value.difference(old):
+			value.update(old or ())
+			result = super(UsernameIndex, self).index_doc(doc_id, value)
+			return result
+
+	def remove(self, doc_id, value):
+		old = set(self.documents_to_values.get(doc_id) or ())
+		if not old:
+			return
+		for v in self.to_iterable(value):
+			old.discard(v)
+		if old:
+			super(UsernameIndex, self).index_doc(doc_id, old)
+		else:
+			super(UsernameIndex, self).unindex_doc(doc_id)
 
 class ValidatingScope(object):
 
