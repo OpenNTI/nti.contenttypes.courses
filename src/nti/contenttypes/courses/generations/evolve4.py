@@ -17,8 +17,6 @@ from zope import component
 
 from zope.component.hooks import site as current_site
 
-from zope.intid import IIntIds
-
 from zope.security.interfaces import IPrincipal
 
 from ZODB.POSException import POSError
@@ -29,7 +27,6 @@ from ..interfaces import ICourseInstance
 from ..interfaces import ICourseEnrollments
 
 from ..index import IndexRecord
-from ..index import install_enrollment_catalog
 
 def do_reindex(sites, catalog, intids):
 	total = 0
@@ -66,23 +63,8 @@ def do_reindex(sites, catalog, intids):
 							pass
 	return total
 
-def do_evolve(context, generation=generation):
-
-	conn = context.connection
-	dataserver_folder = conn.root()['nti.dataserver']
-
-	lsm = dataserver_folder.getSiteManager()
-	intids = lsm.getUtility(IIntIds)
-	catalog = install_enrollment_catalog(dataserver_folder)
-
-	sites = dataserver_folder['++etc++hostsites']
-	total = do_reindex(sites, catalog, intids)
-
-	logger.info('contenttypes.courses evolution %s done; %s object(s) indexed',
-				generation, total)
-
 def evolve(context):
 	"""
 	Evolve to generation 4 by indexing all enrollment records
 	"""
-	do_evolve(context, generation)
+	pass

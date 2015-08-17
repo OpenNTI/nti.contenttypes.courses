@@ -15,6 +15,8 @@ generation = 6
 
 from zope.intid import IIntIds
 
+from nti.zope_catalog.interfaces import ISetIndex
+
 from ..index import IX_USERNAME
 from ..index import UsernameIndex
 from ..index import install_enrollment_catalog
@@ -32,17 +34,18 @@ def do_evolve(context, generation=generation):
 
 	# remove old index
 	index = catalog[IX_USERNAME]
-	index.clear()
-	intids.unregister(index)
-	index.__name__ = None
-	index.__parent__ = None
-	del catalog[IX_USERNAME]
-	
-	# recreate new index
-	index = catalog[IX_USERNAME] = UsernameIndex(family=intids.family)
-	intids.register(index)
-	index.__parent__ = catalog
-	index.__name__ = IX_USERNAME
+	if not ISetIndex.providedBy(index):
+		index.clear()
+		intids.unregister(index)
+		index.__name__ = None
+		index.__parent__ = None
+		del catalog[IX_USERNAME]
+		
+		# recreate new index
+		index = catalog[IX_USERNAME] = UsernameIndex(family=intids.family)
+		intids.register(index)
+		index.__parent__ = catalog
+		index.__name__ = IX_USERNAME
 	
 	sites = dataserver_folder['++etc++hostsites']
 	total = do_reindex(sites, catalog, intids)
