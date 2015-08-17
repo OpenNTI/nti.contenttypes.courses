@@ -13,10 +13,11 @@ logger = __import__('logging').getLogger(__name__)
 
 generation = 4
 
-import zope.intid
-
 from zope import component
+
 from zope.component.hooks import site as current_site
+
+from zope.intid import IIntIds
 
 from zope.security.interfaces import IPrincipal
 
@@ -36,7 +37,7 @@ def do_evolve(context, generation=generation):
 	dataserver_folder = conn.root()['nti.dataserver']
 
 	lsm = dataserver_folder.getSiteManager()
-	intids = lsm.getUtility(zope.intid.IIntIds)
+	intids = lsm.getUtility(IIntIds)
 	catalog = install_enrollment_catalog(dataserver_folder)
 
 	total = 0
@@ -53,8 +54,10 @@ def do_evolve(context, generation=generation):
 				doc_id = intids.queryId(course)
 				if doc_id is not None:
 					for instructor in course.instructors or ():
-						pid = IPrincipal(instructor).id
-						record = IndexRecord(pid, entry.ntiid, INSTRUCTOR)
+						principal = IPrincipal(instructor, None)
+						if principal is None:
+							continue
+						record = IndexRecord(principal.id, entry.ntiid, INSTRUCTOR)
 						catalog.index_doc(doc_id, record)
 						total += 1
 
@@ -73,7 +76,6 @@ def do_evolve(context, generation=generation):
 
 	logger.info('contenttypes.courses evolution %s done; %s object(s) indexed',
 				generation, total)
-
 
 def evolve(context):
 	"""

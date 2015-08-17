@@ -12,6 +12,7 @@ logger = __import__('logging').getLogger(__name__)
 generation = 5
 
 from zope import component
+
 from zope.component.hooks import site as current_site
 
 from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
@@ -62,7 +63,6 @@ def do_evolve(context, generation=generation):
 
 	logger.info('contenttypes.courses evolution %s done',
 				generation)
-
 
 def evolve(context):
 	"""
