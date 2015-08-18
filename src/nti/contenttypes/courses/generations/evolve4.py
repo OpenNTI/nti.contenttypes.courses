@@ -30,10 +30,14 @@ from ..index import IndexRecord
 
 def do_reindex(sites, catalog, intids):
 	total = 0
+	seen = set()
 	for site in sites.values():
 		with current_site(site):
 			course_catalog = component.getUtility(ICourseCatalog)
 			for entry in course_catalog.iterCatalogEntries():
+				if entry.ntiid in seen:
+					continue
+				seen.add(entry.ntiid)
 				course = ICourseInstance(entry, None)
 				if not course:
 					continue
