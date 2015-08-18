@@ -14,33 +14,16 @@ logger = __import__('logging').getLogger(__name__)
 generation = 6
 
 from zope import component
-from zope import interface
 
 from zope.component.hooks import site, setHooks
 
 from zope.intid import IIntIds
-
-from nti.dataserver.interfaces import IDataserver
-from nti.dataserver.interfaces import IOIDResolver
 
 from ..index import IX_USERNAME
 from ..index import UsernameIndex
 from ..index import install_enrollment_catalog
 
 from .evolve4 import do_reindex
-
-@interface.implementer(IDataserver)
-class MockDataserver(object):
-
-	root = None
-
-	def get_by_oid(self, oid, ignore_creator=False):
-		resolver = component.queryUtility(IOIDResolver)
-		if resolver is None:
-			logger.warn("Using dataserver without a proper ISiteManager configuration.")
-		else:
-			return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
-		return None
 	
 def do_evolve(context, generation=generation):
 
@@ -48,10 +31,6 @@ def do_evolve(context, generation=generation):
 	conn = context.connection
 	root = conn.root()
 	dataserver_folder = root['nti.dataserver']
-
-	mock_ds = MockDataserver()
-	mock_ds.root = dataserver_folder
-	component.provideUtility(mock_ds, IDataserver)
 
 	with site(dataserver_folder):
 		assert	component.getSiteManager() == dataserver_folder.getSiteManager(), \
@@ -70,11 +49,12 @@ def do_evolve(context, generation=generation):
 		del catalog[IX_USERNAME]
 			
 		# recreate new index
-		index = catalog[IX_USERNAME] = UsernameIndex(family=intids.family)
+		index =  UsernameIndex(family=intids.family)
 		intids.register(index)
 		index.__parent__ = catalog
 		index.__name__ = IX_USERNAME
-		
+		catalog._setitemf(IX_USERNAME, index)
+
 		sites = dataserver_folder['++etc++hostsites']
 		total = do_reindex(sites, catalog, intids)
 	
