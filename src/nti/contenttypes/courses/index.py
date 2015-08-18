@@ -14,7 +14,6 @@ from collections import namedtuple
 from zope import interface
 
 from zope.catalog.interfaces import ICatalog
-from zope.catalog.interfaces import ICatalogIndex
 
 from zope.deprecation import deprecated
 
@@ -136,7 +135,6 @@ def install_enrollment_catalog(site_manager_container, intids=None):
 						(IX_USERNAME, UsernameIndex),
 						(IX_ENTRY, CatalogEntryIDIndex)):
 		index = clazz(family=intids.family)
-		assert ICatalogIndex.providedBy(index)
 		intids.register(index)
 		locate(index, catalog, name)
 		catalog[name] = index
