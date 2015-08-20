@@ -17,16 +17,13 @@ from zope import component
 
 from zope.component.hooks import site as current_site
 
-from zope.security.interfaces import IPrincipal
-
 from ZODB.POSException import POSError
 
-from ..interfaces import INSTRUCTOR
 from ..interfaces import ICourseCatalog
 from ..interfaces import ICourseInstance
 from ..interfaces import ICourseEnrollments
 
-from ..index import IndexRecord
+from ..utils import index_course_instructors
 
 def do_reindex(sites, catalog, intids):
 	total = 0
@@ -42,16 +39,7 @@ def do_reindex(sites, catalog, intids):
 				if not course:
 					continue
 
-				# index instructor roles
-				doc_id = intids.queryId(course)
-				if doc_id is not None:
-					for instructor in course.instructors or ():
-						principal = IPrincipal(instructor, None)
-						if principal is None:
-							continue
-						record = IndexRecord(principal.id, entry.ntiid, INSTRUCTOR)
-						catalog.index_doc(doc_id, record)
-						total += 1
+				total += index_course_instructors(course, catalog=catalog, intids=intids)
 
 				# index enrollment records
 				enrollments = ICourseEnrollments(course, None)

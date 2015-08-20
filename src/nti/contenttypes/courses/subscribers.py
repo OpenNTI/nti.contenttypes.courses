@@ -155,17 +155,15 @@ def sync_catalog_when_library_synched(library, event):
 							   				  IObjectEntrySynchronizer)
 	synchronizer.synchronize(catalog, courses_bucket, params=params, results=results)
 
-from zope.security.interfaces import IPrincipal
-
 from .interfaces import INSTRUCTOR
 from .interfaces import ICourseInstance
 from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseRolesSynchronized
 
-from .index import IndexRecord
 from .index import IX_COURSE, IX_SCOPE
 
 from . import get_enrollment_catalog
+from .utils import index_course_instructors
 
 @component.adapter(ICourseInstance, ICourseRolesSynchronized)
 def roles_sync_on_course_instance(course, event):
@@ -175,21 +173,14 @@ def roles_sync_on_course_instance(course, event):
 		return
 	entry = ICourseCatalogEntry(course, None)
 	ntiid = getattr(entry, 'ntiid', None)
-	doc_id = intids.queryId(course)
-	if doc_id is None:
-		return
-
 	if ntiid:  # remove all instructors
 		query = { IX_COURSE: {'any_of':(ntiid,)},
 				  IX_SCOPE : {'any_of':(INSTRUCTOR,)}}
 		for uid in catalog.apply(query) or ():
 			catalog.unindex_doc(uid)
 
-	# reset instructors
-	for instructor in course.instructors or ():
-		pid = IPrincipal(instructor).id
-		record = IndexRecord(pid, ntiid, INSTRUCTOR)
-		catalog.index_doc(doc_id, record)
+	# reindex
+	index_course_instructors(course, catalog=catalog, intids=intids)
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def on_course_instance_removed(course, event):
