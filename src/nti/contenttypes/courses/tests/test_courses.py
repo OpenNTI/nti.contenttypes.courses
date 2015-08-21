@@ -111,18 +111,15 @@ class TestCourseInstance(CourseLayerTest):
 											'action', 'Allow',
 											'permission', is_([ACT_READ]) )))
 
-		# non public
+		# Non public is same ACL
 		interface.alsoProvides(inst, interfaces.INonPublicCourseInstance)
 		provider = acl.CourseInstanceACLProvider(inst)
 		inst_acl = provider.__acl__
 
-		assert_that(inst_acl, has_length(2))
+		inst_acl = provider.__acl__
+		assert_that(inst_acl, has_length(1))
 		assert_that(inst_acl,
-					has_item(has_properties('actor', is_(credit),
-											'action', 'Allow',
-											'permission', is_([ACT_READ]) )))
-		assert_that(inst_acl,
-					has_item(has_properties('actor', is_(purchased),
+					has_item(has_properties('actor', is_(public),
 											'action', 'Allow',
 											'permission', is_([ACT_READ]) )))
 
@@ -135,13 +132,9 @@ class TestCourseInstance(CourseLayerTest):
 
 		provider = acl.CourseInstanceACLProvider(inst)
 		inst_acl = provider.__acl__
-		assert_that(inst_acl, has_length(3))
+		assert_that(inst_acl, has_length(2))
 		assert_that(inst_acl,
-					has_item(has_properties('actor', is_(credit),
-											'action', 'Allow',
-											'permission', is_([ACT_READ]) )))
-		assert_that(inst_acl,
-					has_item(has_properties('actor', is_(purchased),
+					has_item(has_properties('actor', is_(public),
 											'action', 'Allow',
 											'permission', is_([ACT_READ]) )))
 		assert_that(inst_acl,
@@ -153,7 +146,7 @@ class TestCourseInstance(CourseLayerTest):
 				 'nti.app.renderers.decorators.get_remote_user')
 	def test_course_sharing_scopes_externalizes(self, mock_container, mock_rem_user):
 		class Container(object):
-			def __contains__(self, o): return True
+			def __contains__(self, _): return True
 		mock_container.is_callable().returns(Container())
 		mock_rem_user.is_callable()
 
