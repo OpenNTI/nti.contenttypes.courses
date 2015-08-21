@@ -30,15 +30,11 @@ from nti.dataserver.authorization_acl import ace_denying
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
-from .index import IX_SCOPE
-from .index import IX_COURSE
-
 from .interfaces import ES_PUBLIC
 from .interfaces import ICourseInstance
+from .interfaces import ICourseEnrollments
 from .interfaces import ICourseCatalogEntry
 from .interfaces import INonPublicCourseInstance
-
-from . import get_enrollment_catalog
 
 @component.adapter(ICourseInstance)
 @interface.implementer(IACLProvider)
@@ -169,12 +165,12 @@ class CourseCatalogEntryACLProvider(object):
 		)
 		return acl
 
-def has_open_enrollments(context):
-	entry = ICourseCatalogEntry(context, None)
-	if entry is not None:
-		catalog = get_enrollment_catalog()
-		query = { IX_COURSE: {'any_of':(entry.ntiid,)},
-				  IX_SCOPE : {'any_of':(ES_PUBLIC,)}}
-		for _ in catalog.apply(query) or ():
-			return True
+def has_open_enrollments(course):
+	if course is not None:
+		try:
+			for record in ICourseEnrollments(course).iter_enrollments():
+				if record.Scope == ES_PUBLIC:
+					return True
+		except StandardError:
+			logger.exception("Cannot get course enrollments")
 	return False
