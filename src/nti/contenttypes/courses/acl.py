@@ -32,7 +32,6 @@ from nti.dataserver.authorization_acl import acl_from_aces
 
 from .interfaces import ES_PUBLIC
 from .interfaces import ICourseInstance
-from .interfaces import ICourseEnrollments
 from .interfaces import ICourseCatalogEntry
 from .interfaces import INonPublicCourseInstance
 
@@ -128,17 +127,8 @@ class CourseCatalogEntryACLProvider(object):
 			# case
 			course = course_in_lineage or ICourseInstance(cce, None)
 			if course is not None:
+				# Use our course ACL to give enrolled students access.
 				acl = IACLProvider(course).__acl__
-				# check if there are open enrollments. we still want to be able to give
-				# them access to this course entry (e.g 2014 - chem of beer 100)
-				if has_open_enrollments(course):
-					# we only give them readaccess
-					sharing_scopes = course.SharingScopes
-					main_scope = sharing_scopes[ES_PUBLIC]
-					acl = acl_from_aces(
-						ace_allowing(IPrincipal(main_scope), ACT_READ,
-									 CourseCatalogEntryACLProvider)
-					)
 				acl.append(
 					# Nobody can 'create' (enroll)
 					# Nobody else can view it either
@@ -164,13 +154,3 @@ class CourseCatalogEntryACLProvider(object):
 						  CourseCatalogEntryACLProvider)
 		)
 		return acl
-
-def has_open_enrollments(course):
-	if course is not None:
-		try:
-			for record in ICourseEnrollments(course).iter_enrollments():
-				if record.Scope == ES_PUBLIC:
-					return True
-		except StandardError:
-			logger.exception("Cannot get course enrollments")
-	return False
