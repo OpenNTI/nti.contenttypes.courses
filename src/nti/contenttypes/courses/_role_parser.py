@@ -11,9 +11,9 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import zope.intid
-
 from zope import component
+
+from zope.intid import IIntIds
 
 from zope.security.interfaces import IPrincipal
 
@@ -72,7 +72,7 @@ def reset_roles_missing_key(course):
 def _check_scopes(course):
 	# CS: In alpha we have seen scopes missing its intids
 	# Let's try to give it an intid
-	intids = component.queryUtility(zope.intid.IIntIds)
+	intids = component.queryUtility(IIntIds)
 	if intids is None:
 		return
 	for scope in course.SharingScopes.values():
@@ -129,8 +129,9 @@ def fill_roles_from_key(course, key):
 	__traceback_info__ = key, course
 	json = key.readContentsAsYaml()
 	_fill_roles_from_json(course, role_manager, json)
+
 	# save it on the course as roles managers are not always persistent
-	course.__principalRoleslastModified__ = key.lastModified 
+	course.__principalRoleslastModified__ = key.lastModified
 
 	# We must update the instructor list too, it's still used internally
 	# in a few places...plus it's how we know who to remove from the scopes
