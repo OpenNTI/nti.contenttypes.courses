@@ -79,7 +79,8 @@ class SiteIndex(KeepSetIndex):
 
 	def to_iterable(self, value=None):
 		value = value if IHostPolicyFolder.providedBy(value) else None
-		return get_component_hierarchy_names(value)
+		result = get_component_hierarchy_names(value)
+		return result or ('base',)
 	
 class UsernameIndex(KeepSetIndex):
 
