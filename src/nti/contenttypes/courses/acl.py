@@ -11,8 +11,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from zope import interface
 from zope import component
+from zope import interface
 
 from zope.security.interfaces import IPrincipal
 
@@ -30,11 +30,15 @@ from nti.dataserver.authorization_acl import ace_denying
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
+from .index import IX_SCOPE
+from .index import IX_COURSE
+
 from .interfaces import ES_PUBLIC
 from .interfaces import ICourseInstance
-from .interfaces import ICourseEnrollments
 from .interfaces import ICourseCatalogEntry
 from .interfaces import INonPublicCourseInstance
+
+from . import get_enrollment_catalog
 
 @component.adapter(ICourseInstance)
 @interface.implementer(IACLProvider)
@@ -69,23 +73,23 @@ class CourseInstanceACLProvider(object):
 		public_scope = sharing_scopes[ES_PUBLIC]
 
 		aces = []
-		aces.append( ace_allowing( IPrincipal( public_scope ), ACT_READ, CourseInstanceACLProvider) )
-		aces.extend( ace_allowing( i, ACT_READ, CourseInstanceACLProvider )
-					 for i in course.instructors)
+		aces.append(ace_allowing(IPrincipal(public_scope), ACT_READ, CourseInstanceACLProvider))
+		aces.extend(ace_allowing(i, ACT_READ, CourseInstanceACLProvider)
+					for i in course.instructors)
 
 		# JZ: 2015-01-11 Subinstance instructors get the same permissions
 		# as their students.
 		for subinstance in course.SubInstances.values():
-			aces.extend(ace_allowing( i, ACT_READ, CourseInstanceACLProvider )
+			aces.extend(ace_allowing(i, ACT_READ, CourseInstanceACLProvider)
 						for i in subinstance.instructors)
 
-		result = acl_from_aces( aces )
+		result = acl_from_aces(aces)
 		return result
 
 from nti.traversal.traversal import find_interface
 
-@component.adapter(ICourseCatalogEntry)
 @interface.implementer(IACLProvider)
+@component.adapter(ICourseCatalogEntry)
 class CourseCatalogEntryACLProvider(object):
 	"""
 	Provides the ACL for course catalog entries.
@@ -142,15 +146,15 @@ class CourseCatalogEntryACLProvider(object):
 				acl.append(
 					# Nobody can 'create' (enroll)
 					# Nobody else can view it either
-					ace_denying( IPrincipal(AUTHENTICATED_GROUP_NAME),
-								 (ACT_CREATE, ACT_READ),
-								 CourseCatalogEntryACLProvider ),
+					ace_denying(IPrincipal(AUTHENTICATED_GROUP_NAME),
+								(ACT_CREATE, ACT_READ),
+								CourseCatalogEntryACLProvider),
 				)
 				acl.append(
 					# use both everyone and authenticated for belt-and-suspenders
-					ace_denying( IPrincipal(EVERYONE_GROUP_NAME),
-								 (ACT_CREATE, ACT_READ),
-								 CourseCatalogEntryACLProvider ),
+					ace_denying(IPrincipal(EVERYONE_GROUP_NAME),
+								(ACT_CREATE, ACT_READ),
+								CourseCatalogEntryACLProvider),
 				)
 
 				return acl
@@ -159,18 +163,18 @@ class CourseCatalogEntryACLProvider(object):
 			return [ACE_DENY_ALL]
 
 		acl = acl_from_aces(
-			ace_allowing( IPrincipal(AUTHENTICATED_GROUP_NAME),
+			ace_allowing(IPrincipal(AUTHENTICATED_GROUP_NAME),
 						  (ACT_CREATE, ACT_READ),
 						  CourseCatalogEntryACLProvider)
 		)
 		return acl
 
-def has_open_enrollments(course):
-	if course is not None:
-		try:
-			for record in ICourseEnrollments(course).iter_enrollments():
-				if record.Scope == ES_PUBLIC:
-					return True
-		except StandardError:
-			logger.exception("Cannot get course enrollments")
+def has_open_enrollments(context):
+	entry = ICourseCatalogEntry(context, None)
+	if entry is not None:
+		catalog = get_enrollment_catalog()
+		query = { IX_COURSE: {'any_of':(entry.ntiid,)},
+				  IX_SCOPE : {'any_of':(ES_PUBLIC,)}}
+		for _ in catalog.apply(query) or ():
+			return True
 	return False
