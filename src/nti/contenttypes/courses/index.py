@@ -77,10 +77,15 @@ class KeepSetIndex(RawSetIndex):
 
 class SiteIndex(KeepSetIndex):
 
-	def to_iterable(self, value=None):
-		value = value if IHostPolicyFolder.providedBy(value) else None
-		result = get_component_hierarchy_names(value)
-		return result or ('base',)
+	def to_iterable(self, value):
+		if 	isinstance(value, IndexRecord) or \
+			ICourseInstanceEnrollmentRecord.providedBy(value):
+			result = get_component_hierarchy_names()
+		elif IHostPolicyFolder.providedBy(value):
+			result = get_component_hierarchy_names(value)
+		else:
+			result = ()
+		return result
 	
 class UsernameIndex(KeepSetIndex):
 
