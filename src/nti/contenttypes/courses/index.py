@@ -25,6 +25,9 @@ from nti.common.string import safestr
 
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
+from nti.site.interfaces import IHostPolicyFolder
+from nti.site.site import get_component_hierarchy_names
+
 from nti.zope_catalog.catalog import Catalog
 from nti.zope_catalog.index import SetIndex as RawSetIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
@@ -33,6 +36,7 @@ from .interfaces import ICourseInstanceEnrollmentRecord
 
 CATALOG_NAME = 'nti.dataserver.++etc++enrollment-catalog'
 
+IX_SITE = 'site'
 IX_SCOPE = 'scope'
 IX_ENTRY = IX_COURSE = 'course'
 IX_USERNAME = IX_STUDENT = IX_INSTRUCTOR = 'username'
@@ -45,18 +49,12 @@ class ValidatingUsernameID(object):
 	def __init__(self, *args, **kwargs):
 		pass
 	
-class UsernameIndex(RawSetIndex):
+class KeepSetIndex(RawSetIndex):
 
 	empty_set = set()
 
 	def to_iterable(self, value):
-		if isinstance(value, IndexRecord):
-			result = (safestr(value.username),)
-		elif ICourseInstanceEnrollmentRecord.providedBy(value):
-			result = (value.Principal.id,) if value.Principal is not None else ()
-		else:
-			result = ()
-		return result
+		return value
 
 	def index_doc(self, doc_id, value):
 		value = {v for v in self.to_iterable(value) if v is not None}
@@ -76,6 +74,23 @@ class UsernameIndex(RawSetIndex):
 			super(UsernameIndex, self).index_doc(doc_id, old)
 		else:
 			super(UsernameIndex, self).unindex_doc(doc_id)
+
+class SiteIndex(KeepSetIndex):
+
+	def to_iterable(self, value=None):
+		value = value if IHostPolicyFolder.providedBy(value) else None
+		return get_component_hierarchy_names(value)
+	
+class UsernameIndex(KeepSetIndex):
+
+	def to_iterable(self, value):
+		if isinstance(value, IndexRecord):
+			result = (safestr(value.username),)
+		elif ICourseInstanceEnrollmentRecord.providedBy(value):
+			result = (value.Principal.id,) if value.Principal is not None else ()
+		else:
+			result = ()
+		return result
 
 class ValidatingScope(object):
 
@@ -131,7 +146,8 @@ def install_enrollment_catalog(site_manager_container, intids=None):
 	intids.register(catalog)
 	lsm.registerUtility(catalog, provided=ICatalog, name=CATALOG_NAME)
 
-	for name, clazz in ((IX_SCOPE, ScopeIndex),
+	for name, clazz in ((IX_SITE, SiteIndex),
+						(IX_SCOPE, ScopeIndex),
 						(IX_USERNAME, UsernameIndex),
 						(IX_ENTRY, CatalogEntryIDIndex)):
 		index = clazz(family=intids.family)
