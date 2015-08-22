@@ -542,9 +542,9 @@ class _ContentCourseSynchronizer(object):
 	def update_course_discussions(cls, course, bucket, sync_results=None):
 		sync_results = _get_sync_results(course, sync_results)
 		key = bucket.getChildNamed(DISCUSSION_FOLDER_NAME)
-		if 	key is not None and IDelimitedHierarchyBucket.providedBy(key) and \
-			parse_discussions(course, key):
-			sync_results.CourseDiscussionsUpdated = True
+		if key is not None and IDelimitedHierarchyBucket.providedBy(key):
+			result = parse_discussions(course, key)
+			sync_results.CourseDiscussionsUpdated = result
 
 @component.adapter(ICourseSubInstances, IDelimitedHierarchyBucket)
 class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
