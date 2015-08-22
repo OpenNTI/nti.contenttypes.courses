@@ -61,7 +61,7 @@ class KeepSetIndex(RawSetIndex):
 		old = self.documents_to_values.get(doc_id) or self.empty_set
 		if value.difference(old):
 			value.update(old or ())
-			result = super(UsernameIndex, self).index_doc(doc_id, value)
+			result = super(KeepSetIndex, self).index_doc(doc_id, value)
 			return result
 
 	def remove(self, doc_id, value):
@@ -71,9 +71,9 @@ class KeepSetIndex(RawSetIndex):
 		for v in self.to_iterable(value):
 			old.discard(v)
 		if old:
-			super(UsernameIndex, self).index_doc(doc_id, old)
+			super(KeepSetIndex, self).index_doc(doc_id, old)
 		else:
-			super(UsernameIndex, self).unindex_doc(doc_id)
+			super(KeepSetIndex, self).unindex_doc(doc_id)
 
 class SiteIndex(KeepSetIndex):
 
