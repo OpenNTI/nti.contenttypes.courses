@@ -155,7 +155,7 @@ def sync_catalog_when_library_synched(library, event):
 							   				  IObjectEntrySynchronizer)
 	synchronizer.synchronize(catalog, courses_bucket, params=params, results=results)
 
-from zope.component.hooks import getSite
+from nti.site.site import get_component_hierarchy_names
 
 from .interfaces import INSTRUCTOR
 from .interfaces import ICourseInstance
@@ -164,8 +164,9 @@ from .interfaces import ICourseRolesSynchronized
 
 from .index import IX_COURSE, IX_SCOPE, IX_SITE
 
-from . import get_enrollment_catalog
 from .utils import index_course_instructors
+
+from . import get_enrollment_catalog
 
 @component.adapter(ICourseInstance, ICourseRolesSynchronized)
 def roles_sync_on_course_instance(course, event):
@@ -176,8 +177,8 @@ def roles_sync_on_course_instance(course, event):
 	entry = ICourseCatalogEntry(course, None)
 	ntiid = getattr(entry, 'ntiid', None)
 	if ntiid:  # remove all instructors
-		site = getSite().__name__
-		query = { IX_SITE: {'any_of':(site,)},
+		sites = get_component_hierarchy_names()
+		query = { IX_SITE: {'any_of':sites},
 				  IX_COURSE: {'any_of':(ntiid,)},
 				  IX_SCOPE : {'any_of':(INSTRUCTOR,)}}
 		for uid in catalog.apply(query) or ():
