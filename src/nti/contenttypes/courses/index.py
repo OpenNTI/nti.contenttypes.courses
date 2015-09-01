@@ -17,9 +17,9 @@ from zope.catalog.interfaces import ICatalog
 
 from zope.deprecation import deprecated
 
-from zope.location import locate
+from zope.intid import IIntIds
 
-from zc.intid import IIntIds
+from zope.location import locate
 
 from nti.common.string import safestr
 
