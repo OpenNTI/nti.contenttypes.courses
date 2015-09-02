@@ -117,6 +117,8 @@ class CourseInstanceSharingScopes(CheckingLastModifiedBTreeContainer):
 
 	__external_can_create__ = False
 
+	mime_type = mimeType = 'application/vnd.nextthought.courseinstancesharingscopes'
+
 	def _vocabulary(self):
 		# Could/should also use the vocabulary registry
 		# and dispatch to adapters based on context
