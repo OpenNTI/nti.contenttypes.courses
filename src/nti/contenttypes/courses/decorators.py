@@ -56,6 +56,7 @@ from .interfaces import ICourseInstanceScopedForum
 
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
+MIMETYPE = StandardExternalFields.MIMETYPE
 
 def get_current_principal():
 	interaction = queryInteraction()
@@ -102,6 +103,7 @@ class _SharingScopesAndDiscussionDecorator(AbstractAuthenticatedRequestAwareDeco
 		ext_scopes = LocatedExternalDict()
 		ext_scopes.__name__ = scopes.__name__
 		ext_scopes.__parent__ = scopes.__parent__
+		ext_scopes[MIMETYPE] = scopes.mime_type
 
 		ext_scopes[CLASS] = 'CourseInstanceSharingScopes'
 		items = ext_scopes[ITEMS] = {}
