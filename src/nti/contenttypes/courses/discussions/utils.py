@@ -13,12 +13,13 @@ import os
 from urllib import unquote
 from urlparse import urlparse
 
+from nti.ntiids.ntiids import make_specific_safe
+
 from ..interfaces import SECTIONS
 from ..interfaces import DISCUSSIONS
 from ..interfaces import ENROLLMENT_LINEAGE_MAP
 
-from ..interfaces import ICourseInstance
-from ..interfaces import ICourseSubInstance
+from ..utils import get_parent_course
 
 from .interfaces import NTI_COURSE_BUNDLE
 from .interfaces import NTI_COURSE_BUNDLE_REF
@@ -59,12 +60,6 @@ def get_discussion_mapped_scopes(discussion):
 		result.update(ENROLLMENT_LINEAGE_MAP.get(scope) or ())
 	return result
 
-def get_parent_course(context):
-	context = ICourseInstance(context, None)
-	if ICourseSubInstance.providedBy(context):
-		context = context.__parent__.__parent__
-	return context
-
 def get_course_for_discussion(discussion, context):
 	iden = get_discussion_id(discussion)
 	if is_nti_course_bundle(iden) and context is not None:
@@ -100,3 +95,12 @@ def get_discussion_for_path(path, context):
 					break
 			return result
 	return None
+
+def get_topic_key(discussion):
+	title = discussion.title
+	title = title.decode('utf-8', 'ignore') if title else u''
+	name = discussion.id  # use id so title can be changed
+	if is_nti_course_bundle(discussion):
+		name = get_discussion_path(name)
+	name = make_specific_safe(name or title)
+	return name
