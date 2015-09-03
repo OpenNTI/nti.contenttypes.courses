@@ -22,7 +22,9 @@ logger = __import__('logging').getLogger(__name__)
 
 from . import MessageFactory as _
 
+from zope import component
 from zope import interface
+
 from zope.interface.common.mapping import IEnumerableMapping
 
 from zope.security.interfaces import IPrincipal
@@ -1045,6 +1047,42 @@ class ICourseRolesSynchronized(IObjectEvent):
 @interface.implementer(ICourseRolesSynchronized)
 class CourseRolesSynchronized(ObjectEvent):
 	pass
+
+# assesments
+
+class ICourseAssessmentUserFilter(interface.Interface):
+	"""
+	A filter to determine if a user should be able to see
+	an assessment.
+
+	These will typically be registered as subscription adapters
+	from the user and the course.
+	"""
+
+	def allow_assessment_for_user_in_course(assignment, user, course):
+		"""
+		Given a user and an :class:`.ICourseInstance` the user is enrolled in, return a
+		callable that takes an assessment and returns True if the
+		assignment should be visible to the user and False otherwise.
+		"""
+
+def get_course_assessment_predicate_for_user(user, course):
+	"""
+	Given a user and an :class:`.ICourseInstance` the user is enrolled in, return a
+	callable that takes an assessment and returns True if the
+	assignment should be visible to the user and False otherwise.
+
+	Delegates to :class:`.ICourseAssessmentUserFilter` subscribers.
+
+	.. note:: Those subscribers probably implicitly assume that
+		the assessment passed to them is actually hosted within the
+		course.
+	"""
+	filters = component.subscribers((user, course), ICourseAssessmentUserFilter)
+	filters = list(filters)  # Does that return a generator? We need to use it many times
+	def uber_filter(asg):
+		return all((f.allow_assessment_for_user_in_course(asg, user, course) for f in filters))
+	return uber_filter
 
 import zope.deferredimport
 zope.deferredimport.initialize()
