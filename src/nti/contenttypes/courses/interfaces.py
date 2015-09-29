@@ -678,35 +678,35 @@ FOR_CREDIT_NON_DEGREE = 'For Credit (Non-degree)'
 IN_CLASS = 'In-Class'
 IN_CLASS_PREFIX = 'InClass'
 
-# Now we list the scopes and create a vocabulary
-# for them. In the future, we can use a vocabularyregistry
-# to have these be site-specific.
+#: Now we list the scopes and create a vocabulary
+#: for them. In the future, we can use a vocabularyregistry
+#: to have these be site-specific.
 
 ES_ALL = u'All'
 
-# The "root" enrollment or sharing scope; everyone enrolled or administrating
-# is a member of this scope.
-# sharing scopes are conceptually arranged in a strict hierarchy, and
-# every enrollment record is within one specific scope. Because
-# scope objects do not actually nest (are non-transitive), it is implied that
-# a member of a nested scope will actually also be members of
-# the parent scopes.
+#: The "root" enrollment or sharing scope; everyone enrolled or administrating
+#: is a member of this scope.
+#: sharing scopes are conceptually arranged in a strict hierarchy, and
+#: every enrollment record is within one specific scope. Because
+#: scope objects do not actually nest (are non-transitive), it is implied that
+#: a member of a nested scope will actually also be members of
+#: the parent scopes.
 ES_PUBLIC = "Public"
 
-# This scope extends the public scope with people that have purchase the course
+#: This scope extends the public scope with people that have purchase the course
 ES_PURCHASED = "Purchased"
 
-# This scope extends the public scope with people taking the course
-# to earn academic credit. They have probably paid money.
+#: This scope extends the public scope with people taking the course
+#: to earn academic credit. They have probably paid money.
 ES_CREDIT = "ForCredit"
 
-# This scope extends the ForCredit scope to be specific to people who
-# are engaged in a degree-seeking program.
+#: This scope extends the ForCredit scope to be specific to people who
+#: are engaged in a degree-seeking program.
 ES_CREDIT_DEGREE = "ForCreditDegree"
 
-# This scope extends the ForCredit scope to be specific to people who
-# are taking the course for credit, but are not engaged in
-# seeking a degree.
+#: This scope extends the ForCredit scope to be specific to people who
+#: are taking the course for credit, but are not engaged in
+#: seeking a degree.
 ES_CREDIT_NONDEGREE = "ForCreditNonDegree"
 
 from zope.schema.vocabulary import SimpleTerm
