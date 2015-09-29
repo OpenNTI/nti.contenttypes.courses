@@ -611,7 +611,20 @@ class ICourseCatalogInstructorInfo(interface.Interface):
 	Suffix = ValidTextLine(title="The instructor's suffix such as PhD or Jr",
 							 required=False)
 
-class ICourseCatalogEntry(IDisplayableContent,
+class ICatalogFamily(IDisplayableContent):
+
+	ProviderUniqueID = ValidTextLine(title="The unique id assigned by the provider")
+
+	ProviderDepartmentTitle = ValidTextLine(title="The string assigned to the provider's department offering the course")
+
+	StartDate = ValidDatetime(title="The date on which the course begins",
+							  description="Currently optional; a missing value means the course already started")
+	
+	EndDate = ValidDatetime(title="The date on which the course ends",
+					   		description="Currently optional; a missing value means the course has no defined end date.",
+					   		required=False)
+
+class ICourseCatalogEntry(ICatalogFamily,
 						  ILastModified,
 						  IShouldHaveTraversablePath,
 						  IContained,
@@ -635,10 +648,6 @@ class ICourseCatalogEntry(IDisplayableContent,
 	# Used to have Title/Description, now the lower case versions.
 	# The T/D should be aliased in implementations.
 
-	ProviderUniqueID = ValidTextLine(title="The unique id assigned by the provider")
-
-	ProviderDepartmentTitle = ValidTextLine(title="The string assigned to the provider's department offering the course")
-
 	Instructors = ListOrTuple(title="The instuctors. Order might matter",
 							  value_type=Object(ICourseCatalogInstructorInfo))
 
@@ -647,17 +656,9 @@ class ICourseCatalogEntry(IDisplayableContent,
 									 "one can be derived from the names and titles of the instructors.")
 	InstructorsSignature.setTaggedValue('_ext_excluded_out', True)
 
-	# Things related to the availability of the course
-	StartDate = ValidDatetime(title="The date on which the course begins",
-						 	  description="Currently optional; a missing value means the course already started")
-
 	Duration = Timedelta(title="The length of the course",
 						 description="Currently optional, may be None",
 						 required=False)
-
-	EndDate = ValidDatetime(title="The date on which the course ends",
-					   		description="Currently optional; a missing value means the course has no defined end date.",
-					   		required=False)
 
 	def isCourseCurrentlyActive():
 		"""
