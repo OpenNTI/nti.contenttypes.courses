@@ -51,7 +51,6 @@ class CourseInstanceACLProvider(object):
 	def __init__(self, context):
 		self.context = context
 
-
 	@property
 	def __parent__(self):
 		# See comments in nti.dataserver.authorization_acl:has_permission
@@ -150,7 +149,7 @@ class CourseCatalogEntryACLProvider(object):
 
 		acl = acl_from_aces(
 			ace_allowing(IPrincipal(AUTHENTICATED_GROUP_NAME),
-						  (ACT_CREATE, ACT_READ),
-						  CourseCatalogEntryACLProvider)
+						 (ACT_CREATE, ACT_READ),
+						 CourseCatalogEntryACLProvider)
 		)
 		return acl

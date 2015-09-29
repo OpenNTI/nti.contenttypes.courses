@@ -20,10 +20,8 @@ from functools import partial
 from collections import Mapping
 from functools import total_ordering
 
-from zope import interface
-from zope.interface import ro
-
 from zope import component
+from zope import interface
 from zope import lifecycleevent
 
 from zope.annotation.factory import factory as an_factory
@@ -33,6 +31,8 @@ from zope.cachedescriptors.method import cachedIn
 from zope.container.interfaces import IContained
 
 from zope.event import notify
+
+from zope.interface import ro
 
 from zope.keyreference.interfaces import NotYet
 from zope.keyreference.interfaces import IKeyReference

@@ -33,7 +33,8 @@
 	<include package="nti.externalization" />
 
 	<ext:registerAutoPackageIO
-		root_interfaces=".interfaces.ICourseInstance
+		root_interfaces=".interfaces.ICatalogFamily
+						 .interfaces.ICourseInstance
 						 .interfaces.ICourseOutlineNode
 						 .interfaces.ICourseCatalogEntry
 						 .interfaces.ICourseCatalogInstructorInfo

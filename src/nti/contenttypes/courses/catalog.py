@@ -15,8 +15,9 @@ import os
 from datetime import datetime
 from functools import total_ordering
 
-from zope import interface
 from zope import component
+from zope import interface
+
 from zope.cachedescriptors.method import cachedIn
 
 from nti.common.property import alias
@@ -48,6 +49,7 @@ from nti.schema.schema import PermissiveSchemaConfigured as SchemaConfigured
 
 from nti.site.localutility import queryNextUtility
 
+from .interfaces import ICatalogFamily
 from .interfaces import ICourseCatalog
 from .interfaces import ICourseInstance
 from .interfaces import ICourseCatalogEntry
@@ -239,22 +241,36 @@ class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
 class CourseCatalogInstructorInfo(SchemaConfigured):
 	createDirectFieldProperties(ICourseCatalogInstructorInfo)
 
-@interface.implementer(ICourseCatalogEntry)
+@interface.implementer(ICatalogFamily)
 @WithRepr
-@total_ordering
-@EqHash('ntiid')
-class CourseCatalogEntry(SchemaConfigured,
-						 DisplayableContentMixin,
-						 CreatedAndModifiedTimeMixin):
+@EqHash('ProviderUniqueID')
+class CatalogFamily(SchemaConfigured,
+					DisplayableContentMixin):
 	# shut up pylint
-	ntiid = None
 	title = None
 	EndDate = None
-	Duration = None
 	StartDate = None
 	DisplayName = None
 	description = None
 	ProviderUniqueID = None
+	
+	createDirectFieldProperties(ICatalogFamily)
+	
+	# legacy compatibility
+	Title = alias('title')
+	Description = alias('description')
+
+	def __init__(self, *args, **kwargs):
+		SchemaConfigured.__init__(self, *args, **kwargs) # not cooperative
+
+@interface.implementer(ICourseCatalogEntry)
+@total_ordering
+@EqHash('ntiid')
+class CourseCatalogEntry(CatalogFamily,
+						 CreatedAndModifiedTimeMixin):
+	# shut up pylint
+	ntiid = None
+	Duration = None
 
 	lastSynchronized = 0
 
@@ -265,12 +281,8 @@ class CourseCatalogEntry(SchemaConfigured,
 	__name__ = alias('ntiid')
 	__parent__ = None
 
-	# legacy compatibility
-	Title = alias('title')
-	Description = alias('description')
-
 	def __init__(self, *args, **kwargs):
-		SchemaConfigured.__init__(self, *args, **kwargs) # not cooperative
+		CatalogFamily.__init__(self, *args, **kwargs)
 		CreatedAndModifiedTimeMixin.__init__(self)
 
 	def __lt__(self, other):

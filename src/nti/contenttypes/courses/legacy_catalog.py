@@ -64,7 +64,6 @@ class ICourseCreditLegacyInfo(interface.Interface):
 					  key_type=ValidTextLine(title="A key"),
 					  value_type=ValidTextLine(title="A value"))
 
-
 class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
 	"""
 	Adds information used by or provided from legacy sources.
@@ -140,9 +139,9 @@ class CourseCatalogLegacyEntry(CourseCatalogEntry):
 
 	createDirectFieldProperties(ICourseCatalogLegacyEntry)
 
-	# : For legacy catalog entries created from a content package,
-	# : this will be that package (an implementation of
-	# : :class:`.ILegacyCourseConflatedContentPackage`)
+	# For legacy catalog entries created from a content package,
+	# this will be that package (an implementation of
+	# :class:`.ILegacyCourseConflatedContentPackage`)
 	# legacy_content_package = None
 
 	@readproperty
