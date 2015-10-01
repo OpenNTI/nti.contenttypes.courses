@@ -493,6 +493,9 @@ def check_enrollment_mapped(context):
 @EqHash("section_name")
 class SectionSeat(object):
 
+	name = alias('section_name')
+	count = alias('seat_count')
+	
 	def __init__(self, section_name, seat_count):
 		self.seat_count = seat_count
 		self.section_name = section_name
