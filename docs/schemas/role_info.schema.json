@@ -1,0 +1,44 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "/",
+    "type": "object",
+    "properties": {
+        "nti.roles.course_instructor": {
+            "id": "nti.roles.course_instructor",
+            "type": "object",
+            "properties": {
+                "allow": {
+                    "id": "allow",
+                    "type": "array",
+                    "items": {
+                        "id": "0",
+                        "type": "string"
+                    }
+                },
+                "deny": {
+                    "id": "deny",
+                    "type": "array",
+                    "items": {
+                        "id": "0",
+                        "type": "string"
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "nti.roles.course_ta": {
+            "id": "nti.roles.course_ta",
+            "type": "object",
+            "properties": {"allow": {
+                "id": "allow",
+                "type": "array",
+                "items": {
+                    "id": "0",
+                    "type": "string"
+                }
+            }},
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}
