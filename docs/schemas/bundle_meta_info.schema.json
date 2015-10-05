@@ -1,0 +1,26 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "/",
+    "properties": {
+        "ContentPackages": {
+            "id": "ContentPackages",
+            "items": {
+                "id": "0",
+                "type": "string"
+            },
+            "required": [
+                "0"
+            ],
+            "type": "array"
+        },
+        "title": {
+            "id": "title",
+            "type": "string"
+        }
+    },
+    "required": [
+        "ContentPackages",
+        "title"
+    ],
+    "type": "object"
+}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified"> 
+    <xs:complexType name="lesson">
+        <xs:attribute name="title" use="required"/>
+        <xs:attribute name="isOutlineStubOnly" type="xs:boolean" use="optional"/>
+        <xs:attribute name="topic-ntiid" type="xs:string" use="optional"/>
+        <xs:attribute name="src" type="xs:string" use="optional"/>
+        <xs:attribute name="date" type="xs:string" use="optional"/>
+        <xs:attribute name="description" type="xs:string" use="optional"/>
+    </xs:complexType>
+    <xs:complexType name="unit">
+        <xs:sequence maxOccurs="unbounded" minOccurs="0">
+            <xs:element name="lesson" type="lesson"/>
+        </xs:sequence>
+        <xs:attribute name="label" type="xs:string" use="required"/>
+        <xs:attribute name="src" type="xs:string" use="optional"/>
+    </xs:complexType>
+    <xs:element name="course">
+        <xs:complexType>
+            <xs:sequence maxOccurs="unbounded" minOccurs="0">
+                <xs:element name="unit" type="unit"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

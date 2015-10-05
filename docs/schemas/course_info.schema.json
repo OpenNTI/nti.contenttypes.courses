@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "/",
+  "type": "object",
+  "properties": {
+    "id": {
+      "id": "id",
+      "type": "string",
+      "description": "Should match folder"
+    },
+    "school": {
+      "id": "school",
+      "type": "string"
+    },
+    "title": {
+      "id": "title",
+      "type": "string"
+    },
+    "startDate": {
+      "id": "startDate",
+      "type": "string"
+    },
+    "endDate": {
+      "id": "endDate",
+      "type": "string"
+    },
+    "duration": {
+      "id": "duration",
+      "type": "string"
+    },
+    "video": {
+      "id": "video",
+      "type": "string"
+    },
+    "isPreview": {
+      "id": "isPreview",
+      "type": "boolean"
+    },
+    "is_non_public": {
+      "id": "is_non_public",
+      "type": "boolean"
+    },
+    "credit": {
+      "id": "credit",
+      "type": "array",
+      "items": {
+        "id": "0",
+        "type": "object",
+        "properties": {
+          "hours": {
+            "id": "hours",
+            "type": "integer"
+          },
+          "enrollment": {
+            "id": "enrollment",
+            "type": "object",
+            "properties": {
+              "label": {
+                "id": "label",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "description": {
+      "id": "description",
+      "type": "string"
+    },
+    "instructors": {
+      "id": "instructors",
+      "type": "array",
+      "items": {
+        "id": "0",
+        "type": "object",
+        "properties": {
+          "name": {
+            "id": "name",
+            "type": "string"
+          },
+          "title": {
+            "id": "title",
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+       "id"
+  ]
+}
