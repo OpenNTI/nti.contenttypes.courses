@@ -72,7 +72,7 @@ class DefaultAssessmentPolicyValidator(object):
 		auto_grade = self.valid_auto_grade(policy, assignment, ntiid)
 		self.validate_pointbased_policy(auto_grade, assignment, ntiid)
 
-DefaultAssignmentPolicyValidator = DefaultAssessmentPolicyValidator # BWC
+DefaultAssignmentPolicyValidator = DefaultAssessmentPolicyValidator  # BWC
 
 def validate_assigment_policies(course):
 	course_policies = IQAssessmentPolicies(course, None)

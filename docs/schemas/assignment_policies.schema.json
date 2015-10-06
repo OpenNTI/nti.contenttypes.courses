@@ -1,43 +1,59 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "/",
+	"id": "/",
     "type": "object",
-    "patternProperties": {
+	"patternProperties": {
         "tag:nextthought.com,.+": {
-        "type": "object",
-        "properties": {
-            "Title": {
-                "id": "Title",
-                "type": "string"
-            },
-            "auto_grade": {
-                "id": "auto_grade",
-                "type": "object",
-                "properties": {"total_points": {
-                    "id": "total_points",
-                    "type": "integer"
-                }},
-                "additionalProperties": false
-            },
-            "available_for_submission_beginning": {
-                "id": "available_for_submission_beginning",
-                "type": "string"
-            },
-            "available_for_submission_ending": {
-                "id": "available_for_submission_ending",
-                "type": "string"
-            },
-            "excluded": {
-                "id": "excluded",
-                "type": "boolean"
-            },
-            "student_nuclear_reset_capable": {
-                "id": "student_nuclear_reset_capable",
-                "type": "boolean"
+            "additionalProperties": false,
+            "type": "object",
+            "properties": {
+                "Title": {
+                    "type": "string",
+                    "id": "Title"
+                },
+                "available_for_submission_beginning": {
+                    "type": "string",
+                    "id": "available_for_submission_beginning"
+                },
+                "available_for_submission_ending": {
+                    "type": "string",
+                    "id": "available_for_submission_ending"
+                },
+                "student_nuclear_reset_capable": {
+                    "type": "boolean",
+                    "id": "student_nuclear_reset_capable"
+                },
+                "excluded": {
+                    "type": "boolean",
+                    "id": "excluded"
+                },
+                "auto_grade": {
+                    "type": "object",
+                    "id": "auto_grade",
+                    "properties": {
+                        "total_points": {
+                            "type": "integer",
+                            "id": "total_points"
+                        },
+                        "name": {
+                            "type": "string",
+                            "id": "name"
+                        },
+                        "questions": {
+                            "default": {
+                                "type": "integer",
+                                "id": "default"
+                            },
+                            "{question-ntiid}": {
+                                "type": "integer",
+                                "id": "default"
+                            }
+                        }
+                    },
+					"additionalProperties": false
+                }
             }
-        },
-        "additionalProperties": false
         }
     },
-    "additionalProperties": false
+	"additionalProperties": false
 }
