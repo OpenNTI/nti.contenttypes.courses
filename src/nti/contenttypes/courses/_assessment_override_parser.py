@@ -39,7 +39,7 @@ def fill_asg_from_key(course, key):
 	# we do the comparison of dates based on the policies
 
 	__traceback_info__ = key, course
-	
+
 	dates = IQAssessmentDateContext(course)
 	policies = IQAssessmentPolicies(course)
 	if key.lastModified <= policies.lastModified:
@@ -48,9 +48,10 @@ def fill_asg_from_key(course, key):
 	reset_asg_missing_key(course)
 	json = key.readContentsAsYaml()
 	dates.lastModified = key.lastModified
+	policies.lastModified = key.lastModified
 
 	supported_pve_int_keys = ('maximum_time_allowed',)
-	
+
 	supported_date_keys = ('available_for_submission_beginning',
 						   'available_for_submission_ending')
 	dropped_policies_keys = supported_date_keys + ('Title',)
@@ -68,7 +69,7 @@ def fill_asg_from_key(course, key):
 
 		# data policy is stored in its own map
 		dates[key] = stored_dates
-		
+
 		for k in supported_pve_int_keys:
 			if k not in val:
 				continue
@@ -82,7 +83,7 @@ def fill_asg_from_key(course, key):
 
 		# Policies stores it directly, with the exception
 		# of things we know we don't want/need
-		policies[key] = {k: v for k,v in val.items()
+		policies[key] = {k: v for k, v in val.items()
 						 if k not in dropped_policies_keys}
 
 	return True
