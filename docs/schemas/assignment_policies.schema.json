@@ -27,8 +27,23 @@
                     "type": "boolean",
                     "id": "excluded"
                 },
+                "grader": {
+                    "additionalProperties": false,
+                    "type": ["object", "null"],
+                    "id": "grader",
+                    "properties": {
+                        "group": {
+                            "type": "string",
+                            "id": "group"
+                        },
+                        "points": {
+                            "type": "integer",
+                            "id": "points"
+                        }
+                    }
+                },
                 "auto_grade": {
-                    "type": "object",
+                    "type": ["object", "null"],
                     "id": "auto_grade",
                     "properties": {
                         "total_points": {
@@ -40,13 +55,18 @@
                             "id": "name"
                         },
                         "questions": {
-                            "default": {
-                                "type": "integer",
-                                "id": "default"
+                            "type": "object",
+                            "id": "questions",
+                            "properties": {
+                                "default": {
+                                    "type": "integer",
+                                    "id": "default"
+                                }
                             },
-                            "{question-ntiid}": {
-                                "type": "integer",
-                                "id": "default"
+                            "patternProperties": {
+                               "tag:nextthought.com,.+": {
+                                    "type": "integer"
+                                } 
                             }
                         }
                     },
@@ -57,3 +77,4 @@
     },
 	"additionalProperties": false
 }
+
