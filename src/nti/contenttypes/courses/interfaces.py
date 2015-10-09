@@ -25,6 +25,8 @@ from . import MessageFactory as _
 from zope import component
 from zope import interface
 
+from zope.annotation.interfaces import IAttributeAnnotatable
+
 from zope.interface.common.mapping import IEnumerableMapping
 
 from zope.security.interfaces import IPrincipal
@@ -141,7 +143,8 @@ class _ICourseOutlineNodeContainer(interface.Interface):
 	Internal container for outline nodes.
 	"""
 
-class ICourseOutlineNode(ITitledDescribedContent,
+class ICourseOutlineNode(IAttributeAnnotatable, 
+						 ITitledDescribedContent,
 						 IOrderedContainer,
 						 IContainerNamesContainer,
 						 _ICourseOutlineNodeContainer):
