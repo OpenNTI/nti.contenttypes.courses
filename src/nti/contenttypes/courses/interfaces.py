@@ -27,6 +27,7 @@ from zope import interface
 
 from zope.annotation.interfaces import IAttributeAnnotatable
 
+from zope.interface.interfaces import IMethod
 from zope.interface.common.mapping import IEnumerableMapping
 
 from zope.security.interfaces import IPrincipal
@@ -1135,6 +1136,16 @@ def get_course_assessment_predicate_for_user(user, course):
 	def uber_filter(asg):
 		return all((f.allow_assessment_for_user_in_course(asg, user, course) for f in filters))
 	return uber_filter
+
+def _set_ifaces():
+	for iSchema in (ICourseOutlineNode, ICourseOutlineCalendarNode):
+		for k, v in iSchema.namesAndDescriptions(all=True):
+			if IMethod.providedBy(v) or v.queryTaggedValue(TAG_HIDDEN_IN_UI) is not None:
+				continue
+			iSchema[k].setTaggedValue(TAG_HIDDEN_IN_UI, True)
+
+_set_ifaces()
+del _set_ifaces
 
 import zope.deferredimport
 zope.deferredimport.initialize()
