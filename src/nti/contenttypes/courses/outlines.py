@@ -21,7 +21,6 @@ from zope.container.contained import Contained, uncontained
 
 from nti.dataserver.interfaces import ITitledDescribedContent
 
-from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
 
 from nti.schema.field import SchemaConfigured
@@ -35,7 +34,7 @@ from .interfaces import ICourseOutlineContentNode
 from .interfaces import ICourseOutlineCalendarNode
 
 @interface.implementer(IAttributeAnnotatable)
-class _AbstractCourseOutlineNode(CreatedAndModifiedTimeMixin, Contained):
+class _AbstractCourseOutlineNode(Contained):
 
 	createFieldProperties(ITitledDescribedContent)
 	createDirectFieldProperties(ICourseOutlineNode)
@@ -66,6 +65,7 @@ class _AbstractCourseOutlineNode(CreatedAndModifiedTimeMixin, Contained):
 
 @interface.implementer(ICourseOutlineNode)
 class CourseOutlineNode(_AbstractCourseOutlineNode,
+						PersistentCreatedModDateTrackingObject, # order mattters
 						OrderedContainer):
 	# XXX This class used to be persistent. Although there were
 	# never any references explicitly stored to them, because it
