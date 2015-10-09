@@ -3,7 +3,7 @@
 """
 Implementation of the course outline structure.
 
-$Id$
+.. $Id$
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
@@ -13,24 +13,16 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
 
-# We have no need or desire for these nodes to be Persistent (yet)
-# so we cannot extend OrderedContainer:
-# from zope.container.ordered import OrderedContainer
-# Instead, we extend a regular OrderedDict and implement the container part ourself
-# from collections import OrderedDict
-# Also note that the mixin:
-# from nti.dataserver.containers import _CheckObjectOnSetMixin
-# doesn't work with the OrderedContainer, so we have to do that ourself
+from zope.annotation.interfaces import IAttributeAnnotatable
+
 from zope.container.constraints import checkObject
-from zope.container.ordered import OrderedContainer
+from zope.container.ordered import OrderedContainer # this is persistent
 from zope.container.contained import Contained, uncontained
 
 from nti.dataserver.interfaces import ITitledDescribedContent
 
+from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
-
-# The exception to persistence is the top-level object, which
-# we expect to modify in place, and possible store references to
 
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import AdaptingFieldProperty
@@ -42,7 +34,8 @@ from .interfaces import ICourseOutlineNode
 from .interfaces import ICourseOutlineContentNode
 from .interfaces import ICourseOutlineCalendarNode
 
-class _AbstractCourseOutlineNode(Contained):
+@interface.implementer(IAttributeAnnotatable)
+class _AbstractCourseOutlineNode(CreatedAndModifiedTimeMixin, Contained):
 
 	createFieldProperties(ITitledDescribedContent)
 	createDirectFieldProperties(ICourseOutlineNode)
@@ -95,6 +88,8 @@ class CourseOutlineNode(_AbstractCourseOutlineNode,
 		uncontained(self[key], self, key)
 		super(CourseOutlineNode, self).__delitem__(key)
 
+PersistentCourseOutlineNode = CourseOutlineNode
+
 @interface.implementer(ICourseOutlineCalendarNode)
 class CourseOutlineCalendarNode(SchemaConfigured,
 								CourseOutlineNode):
@@ -103,13 +98,17 @@ class CourseOutlineCalendarNode(SchemaConfigured,
 	AvailableEnding = AdaptingFieldProperty(ICourseOutlineCalendarNode['AvailableEnding'])
 	AvailableBeginning = AdaptingFieldProperty(ICourseOutlineCalendarNode['AvailableBeginning'])
 
-	def __init__(self, **kwargs):
-		SchemaConfigured.__init__(self, **kwargs)
+	def __init__(self, *args, **kwargs):
+		SchemaConfigured.__init__(self, *args, **kwargs)
 		CourseOutlineNode.__init__(self)
+
+PersistentCourseOutlineCalendarNode = CourseOutlineCalendarNode
 
 @interface.implementer(ICourseOutlineContentNode)
 class CourseOutlineContentNode(CourseOutlineCalendarNode):
 	createDirectFieldProperties(ICourseOutlineContentNode)
+
+PersistentCourseOutlineContentNode = CourseOutlineContentNode
 
 @interface.implementer(ICourseOutline)
 class CourseOutline(CourseOutlineNode,
