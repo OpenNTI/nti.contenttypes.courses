@@ -68,6 +68,8 @@ from nti.schema.field import ListOrTuple
 from nti.schema.field import ValidDatetime
 from nti.schema.field import ValidTextLine
 from nti.schema.field import UniqueIterable
+from nti.schema.jsonschema import TAG_HIDDEN_IN_UI
+from nti.schema.jsonschema import TAG_REQUIRED_IN_UI
 
 # Permissions defined for courses here should also be
 # registered in ZCML:
@@ -161,6 +163,11 @@ class ICourseOutlineNode(ITitledDescribedContent,
 	def append(node):
 		"A synonym for __setitem__ that automatically handles naming."
 
+ICourseOutlineNode['title'].setTaggedValue(TAG_HIDDEN_IN_UI, False)
+ICourseOutlineNode['title'].setTaggedValue(TAG_REQUIRED_IN_UI, False)
+ICourseOutlineNode['description'].setTaggedValue(TAG_HIDDEN_IN_UI, False)
+ICourseOutlineNode['description'].setTaggedValue(TAG_REQUIRED_IN_UI, False)
+
 class ICourseOutlineCalendarNode(ICourseOutlineNode):
 	"""
 	A part of the course outline that may have specific calendar dates
@@ -192,6 +199,15 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 		As with ``available_for_submission_beginning``,
 		this will typically be relative and converted.""",
 		required=False)
+
+ICourseOutlineCalendarNode['title'].setTaggedValue(TAG_HIDDEN_IN_UI, False)
+ICourseOutlineCalendarNode['title'].setTaggedValue(TAG_REQUIRED_IN_UI, False)
+ICourseOutlineCalendarNode['description'].setTaggedValue(TAG_HIDDEN_IN_UI, False)
+ICourseOutlineCalendarNode['description'].setTaggedValue(TAG_REQUIRED_IN_UI, False)
+ICourseOutlineCalendarNode['AvailableEnding'].setTaggedValue(TAG_HIDDEN_IN_UI, False)
+ICourseOutlineCalendarNode['AvailableEnding'].setTaggedValue(TAG_REQUIRED_IN_UI, False)
+ICourseOutlineCalendarNode['AvailableBeginning'].setTaggedValue(TAG_HIDDEN_IN_UI, False)
+ICourseOutlineCalendarNode['AvailableBeginning'].setTaggedValue(TAG_REQUIRED_IN_UI, False)
 
 class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 	"""
