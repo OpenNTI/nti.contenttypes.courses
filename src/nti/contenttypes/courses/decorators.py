@@ -17,7 +17,8 @@ from zope import component
 from zope import interface
 
 from zope.security.interfaces import IPrincipal
-from zope.security.management import queryInteraction
+from zope.security.interfaces import NoInteraction
+from zope.security.management import getInteraction
 
 # XXX: JAM: Don't like this dependency here.
 # Refactor for zope.security interaction support
@@ -59,11 +60,10 @@ ITEMS = StandardExternalFields.ITEMS
 MIMETYPE = StandardExternalFields.MIMETYPE
 
 def get_current_principal():
-	interaction = queryInteraction()
-	participations = list(getattr(interaction, 'participations', None) or ())
-	participation = participations[0] if participations else None
-	principal = getattr(participation, 'principal', None)
-	return principal
+	try:
+		return getInteraction().participations[0].principal
+	except (NoInteraction, IndexError, AttributeError):
+		return None
 
 def get_user(user):
 	if user is not None and not IUser.providedBy(user):
