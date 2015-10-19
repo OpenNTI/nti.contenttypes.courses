@@ -49,6 +49,8 @@ from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 from nti.contentlibrary.interfaces import IGenericSynchronizationResults
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
+from nti.coremetadata.interfaces import IRecordable
+
 from nti.dataserver.interfaces import ICommunity
 from nti.dataserver.interfaces import ILastModified
 from nti.dataserver.interfaces import ITitledDescribedContent
@@ -81,10 +83,10 @@ from nti.schema.jsonschema import TAG_REQUIRED_IN_UI
 
 # Roles defined and used by this package
 
-# : The ID of a role for instructors
+#: The ID of a role for instructors
 RID_INSTRUCTOR = "nti.roles.course_instructor"
 
-# : The ID of a role for teaching assistants
+#: The ID of a role for teaching assistants
 RID_TA = "nti.roles.course_ta"
 
 SECTIONS = 'Sections'
@@ -144,7 +146,8 @@ class _ICourseOutlineNodeContainer(interface.Interface):
 	Internal container for outline nodes.
 	"""
 
-class ICourseOutlineNode(IAttributeAnnotatable, 
+class ICourseOutlineNode(IRecordable,
+						 IAttributeAnnotatable, 
 						 ITitledDescribedContent,
 						 IOrderedContainer,
 						 IContainerNamesContainer,
@@ -165,7 +168,9 @@ class ICourseOutlineNode(IAttributeAnnotatable,
 						required=False)
 
 	def append(node):
-		"A synonym for __setitem__ that automatically handles naming."
+		"""
+		A synonym for __setitem__ that automatically handles naming.
+		"""
 
 ICourseOutlineNode['title'].setTaggedValue(TAG_HIDDEN_IN_UI, False)
 ICourseOutlineNode['title'].setTaggedValue(TAG_REQUIRED_IN_UI, False)
