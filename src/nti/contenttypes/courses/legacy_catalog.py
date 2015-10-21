@@ -364,12 +364,12 @@ class _LegacyCatalogAutoPackageSearchingScopedInterfaceObjectIO(object):
 	
 # legacy course
 
-class ILegacyCourseCatalogEntry(interface.Interface):
+class ILegacyCourseCatalogEntry(ICourseCatalogLegacyEntry):
 	"""
 	Marker interface for a legacy course catalog entry
 	"""
 
-class ILegacyCourseInstance(interface.Interface):
+class ILegacyCourseInstance(ICourseInstance):
 	"""
 	Marker interface for a legacy course instance
 	"""
