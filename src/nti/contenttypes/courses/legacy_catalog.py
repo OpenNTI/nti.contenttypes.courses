@@ -364,20 +364,12 @@ class _LegacyCatalogAutoPackageSearchingScopedInterfaceObjectIO(object):
 	
 # legacy course
 
-from nti.ntiids.schema import ValidNTIID
-
-class ICourseCatalogLegacyContentEntry(ICourseCatalogLegacyEntry):
+class ILegacyCourseCatalogEntry(interface.Interface):
 	"""
 	Marker interface for a legacy course catalog entry
 	"""
-	ContentPackageNTIID = ValidNTIID(title="The NTIID of the root content package")
 
-class ILegacyCommunityBasedCourseInstance(ICourseInstance):
+class ILegacyCourseInstance(interface.Interface):
 	"""
 	Marker interface for a legacy course instance
 	"""
-
-	LegacyScopes = Dict(title="'public' and 'restricted' entity ids",
-						readonly=True)
-
-	ContentPackageBundle = interface.Attribute("A mock bundle, having a ContentPackages iterable")
