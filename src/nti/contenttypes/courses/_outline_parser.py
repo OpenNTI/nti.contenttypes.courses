@@ -125,7 +125,7 @@ def fill_outline_from_node(outline, course_element):
 
 	return outline
 
-def fill_outline_from_key(outline, key, xml_parent_name=None):
+def fill_outline_from_key(outline, key, xml_parent_name=None, force=False):
 	"""
 	Given a course outline node and a :class:`.IDelimitedHierarchyKey`,
 	read the XML from the key's contents
@@ -143,7 +143,7 @@ def fill_outline_from_key(outline, key, xml_parent_name=None):
 	:return: The outline node.
 	"""
 
-	if key.lastModified <= outline.lastModified:
+	if not force and key.lastModified <= outline.lastModified:
 		return False
 
 	__traceback_info__ = key, outline
