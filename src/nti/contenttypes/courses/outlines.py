@@ -121,12 +121,3 @@ class CourseOutline(CourseOutlineNode,
 	__external_can_create__ = False
 
 PersistentCourseOutline = CourseOutline
-
-def iface_of_node(node):
-	for node_interface in (ICourseOutlineContentNode, 
-				  		   ICourseOutlineCalendarNode,
-				  		   ICourseOutlineCalendarNode,
-				  		   ICourseOutline): # orden matters
-		if node_interface.providedBy(node):
-			return node_interface
-	return None

@@ -13,6 +13,8 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import component
 
+from zope.component.hooks import site
+
 from zope.intid import IIntIds
 
 from zope.interface.interfaces import IRegistered
@@ -25,18 +27,29 @@ from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
 
-# XXX: This is very similar to nti.contentlibrary.subscribers
-
-from zope.component.hooks import site
-
 from nti.site.localutility import install_utility
+from nti.site.site import get_component_hierarchy_names
 from nti.site.localutility import uninstall_utility_on_unregistration
 
 from .catalog import CourseCatalogFolder
 
+from .index import IX_COURSE, IX_SCOPE, IX_SITE
+
+from .interfaces import INSTRUCTOR
+
+from .interfaces import ICourseInstance
+from .interfaces import ICourseCatalogEntry
+from .interfaces import IObjectEntrySynchronizer
 from .interfaces import IPersistentCourseCatalog
+from .interfaces import ICourseRolesSynchronized
+
+from .utils import index_course_instructors
+
+from . import get_enrollment_catalog
 
 COURSE_CATALOG_NAME = 'Courses'
+
+# XXX: This is very similar to nti.contentlibrary.subscribers
 
 @component.adapter(IPersistentContentPackageLibrary, IRegistered)
 def install_site_course_catalog(local_library, _=None):
@@ -109,8 +122,6 @@ def uninstall_site_course_catalog(library, event):
 
 # Sync-related subscribers
 
-from .interfaces import IObjectEntrySynchronizer
-
 @component.adapter(IPersistentContentPackageLibrary, IContentPackageLibraryDidSyncEvent)
 def sync_catalog_when_library_synched(library, event):
 	"""
@@ -154,19 +165,6 @@ def sync_catalog_when_library_synched(library, event):
 	synchronizer = component.getMultiAdapter((catalog, courses_bucket),
 							   				  IObjectEntrySynchronizer)
 	synchronizer.synchronize(catalog, courses_bucket, params=params, results=results)
-
-from nti.site.site import get_component_hierarchy_names
-
-from .interfaces import INSTRUCTOR
-from .interfaces import ICourseInstance
-from .interfaces import ICourseCatalogEntry
-from .interfaces import ICourseRolesSynchronized
-
-from .index import IX_COURSE, IX_SCOPE, IX_SITE
-
-from .utils import index_course_instructors
-
-from . import get_enrollment_catalog
 
 @component.adapter(ICourseInstance, ICourseRolesSynchronized)
 def roles_sync_on_course_instance(course, event):

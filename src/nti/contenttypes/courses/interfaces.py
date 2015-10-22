@@ -1151,6 +1151,15 @@ def get_course_assessment_predicate_for_user(user, course):
 		return all((f.allow_assessment_for_user_in_course(asg, user, course) for f in filters))
 	return uber_filter
 
+def iface_of_node(node):
+	for node_interface in (ICourseOutlineContentNode, 
+				  		   ICourseOutlineCalendarNode,
+				  		   ICourseOutlineCalendarNode,
+				  		   ICourseOutline): # orden matters
+		if node_interface.providedBy(node):
+			return node_interface
+	return None
+
 def _set_ifaces():
 	for iSchema in (ICourseOutlineNode, ICourseOutlineCalendarNode):
 		for k, v in iSchema.namesAndDescriptions(all=True):
