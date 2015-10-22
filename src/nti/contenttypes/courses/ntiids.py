@@ -17,6 +17,7 @@ from zope import interface
 from nti.ntiids.interfaces import INTIIDResolver
 
 from .interfaces import ICourseCatalog
+from .interfaces import ICourseOutlineNode
 
 @interface.implementer(INTIIDResolver)
 class _CourseInfoNTIIDResolver(object):
@@ -32,3 +33,13 @@ class _CourseInfoNTIIDResolver(object):
 			except KeyError:
 				pass
 		return None
+
+@interface.implementer(ICourseOutlineNode)
+class _CourseOutlineNodeNTIIDResolver(object):
+	"""
+	Resolves outline nodes 
+	"""
+
+	def resolve(self, ntiid):
+		result = component.queryUtility(ICourseOutlineNode, name=ntiid)
+		return result
