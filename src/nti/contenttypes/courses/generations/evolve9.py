@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-generation 3.
+generation 9.
 
 .. $Id$
 """
@@ -11,7 +11,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 3
+generation = 9
 
 from zope import component
 
@@ -20,12 +20,15 @@ from zope.component.hooks import site as current_site
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_specific
 
-from ..interfaces import NTI_COURSE_UNIT
-from ..interfaces import NTI_COURSE_LESSON
+from nti.site.utils import registerUtility
+
+from ..interfaces import NTI_COURSE_OUTLINE_NODE
 
 from ..interfaces import ICourseCatalog
 from ..interfaces import ICourseOutline
 from ..interfaces import ICourseInstance
+
+from ..interfaces import iface_of_node
 
 from ..legacy_catalog import ILegacyCourseCatalogEntry
 
@@ -42,14 +45,29 @@ def _outline_nodes(outline):
 	_recur(outline)
 	return result
 
+def _replace(container, node):
+	old_key = node.__name__
+	data = container._data
+	order = container._order
+	
+	# replace from ordered container
+	data.pop(old_key, None)
+	data[node.ntiid] = node
+	idx = order.index(old_key)
+	order[idx] = node.ntiid
+
+	# set new name
+	node.__name__ = node.ntiid
+	
 def do_evolve(context, generation=generation):
 	conn = context.connection
 	dataserver_folder = conn.root()['nti.dataserver']
 
-	seen = ()
+	seen = set()
 	sites = dataserver_folder['++etc++hostsites']
 	for site in sites.values():
 		with current_site(site):
+			registry = component.getSiteManager()
 			catalog = component.getUtility(ICourseCatalog)
 			for entry in catalog.iterCatalogEntries():
 				if ILegacyCourseCatalogEntry.providedBy(entry) or entry.ntiid in seen:
@@ -60,18 +78,25 @@ def do_evolve(context, generation=generation):
 					continue
 				base_specific = get_specific(entry.ntiid)
 				for node, idx in _outline_nodes(course.Outline):
-					if node.__parent__ == course.Outline:
+					parent = node.__parent__
+					if parent == course.Outline:
 						base = base_specific
-						nttype = NTI_COURSE_UNIT
 						specific = base_specific + ".%s" % idx
 					else:
-						base = node.__parent__.ntiid
-						nttype = NTI_COURSE_LESSON
+						base = parent.ntiid
 						specific = get_specific(base) + '.%s' % idx
-					ntiid = make_ntiid(nttype=nttype, base=base, specific=specific)
+					ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
+									   base=base,
+									   specific=specific)
 					node.ntiid = ntiid
+					_replace(parent, node)
+					registerUtility(registry, 
+									component=node, 
+									provided=iface_of_node(node),
+									name=node.ntiid,
+									event=False)
 
-	logger.info('contenttypes.courses evolution %s done')
+	logger.info('contenttypes.courses evolution %s done', generation)
 
 def evolve(context):
 	"""
