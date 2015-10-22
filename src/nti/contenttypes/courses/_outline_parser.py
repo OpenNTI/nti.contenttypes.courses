@@ -18,13 +18,54 @@ from zope import component
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
+from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import get_specific
+
+from nti.traversal.traversal import find_interface
+
 from .outlines import CourseOutlineNode
 from .outlines import CourseOutlineContentNode
 from .outlines import CourseOutlineCalendarNode
 
+from .interfaces import NTI_COURSE_UNIT
+from .interfaces import NTI_COURSE_LESSON
+
+from .interfaces import ICourseInstance
+from .interfaces import ICourseCatalogEntry
+
 # too many branches
 # pylint:disable=I0011,R0912
 
+def _catalog_entry(outline):
+	course = find_interface(outline, ICourseInstance, strict=False)
+	result = ICourseCatalogEntry(course, None)
+	return result
+
+def _attr_val(node, name):
+	# Under Py2, lxml will produce byte strings if it is
+	# ascii text, otherwise it will already decode it
+	# to using utf-8. Because decoding a unicode object first
+	# *encodes* it to bytes (using the default encoding, often ascii),
+	# exotic chars would throw a UnicodeEncodeError...so watch for that
+	# https://mailman-mail5.webfaction.com/pipermail/lxml/2011-December/006239.html
+	val = node.get(bytes(name))
+	return val.decode('utf-8') if isinstance(val, bytes) else val
+	
+def _set_unit_ntiid(outline, node, unit, idx):
+	ntiid = _attr_val(unit, str('ntiid'))
+	if not ntiid:
+		entry = _catalog_entry(outline)
+		specific = get_specific(entry.ntiid) + ".unit.%s" % idx
+		ntiid = make_ntiid(nttype=NTI_COURSE_UNIT, base=entry.ntiid, specific=specific)
+	node.ntiid = ntiid
+
+def _set_lesson_ntiid(unit, node, lesson, idx):
+	ntiid = _attr_val(lesson, str('ntiid'))
+	if not ntiid:
+		specific = get_specific(unit.ntiid) + ".lesson.%s" % idx
+		ntiid = make_ntiid(nttype=NTI_COURSE_LESSON, base=unit.ntiid, specific=specific)
+	node.ntiid = ntiid
+	
 def fill_outline_from_node(outline, course_element):
 	"""
 	Given a CourseOutline object and an eTree element object containing its
@@ -43,34 +84,21 @@ def fill_outline_from_node(outline, course_element):
 	outline.reset()
 	library = component.queryUtility(IContentPackageLibrary)
 
-	# TODO: Why do units in the toc have an NTIID?
-	# and then, why do lessons NOT have an NTIID?
-
-	def _attr_val(node, name):
-		# Under Py2, lxml will produce byte strings if it is
-		# ascii text, otherwise it will already decode it
-		# to using utf-8. Because decoding a unicode object first
-		# *encodes* it to bytes (using the default encoding, often ascii),
-		# exotic chars would throw a UnicodeEncodeError...so watch for that
-		# https://mailman-mail5.webfaction.com/pipermail/lxml/2011-December/006239.html
-		val = node.get(bytes(name))
-		return val.decode('utf-8') if isinstance(val, bytes) else val
-
 	def _handle_node(parent_lxml, parent_node):
-		for lesson in parent_lxml.iterchildren(tag='lesson'):
+		for idx, lesson in enumerate(parent_lxml.iterchildren(tag='lesson')):
 			node_factory = CourseOutlineContentNode
 			# We want to begin divorcing the syllabus/structure of a course
 			# from the content that is available. We currently do this
 			# by stubbing out the content, and setting flags to be extracted
 			# to the ToC so that we don't give the UI back the NTIID.
-			if lesson.get( bytes( 'isOutlineStubOnly' ) ) == 'true':
+			if lesson.get(bytes('isOutlineStubOnly')) == 'true':
 				# We query for the node factory we use to "hide"
 				# content from the UI so that we can enable/disable
 				# hiding in certain site policies.
 				# (TODO: Be sure this works as expected with the caching)
 				node_factory = component.queryUtility(component.IFactory,
-													  name='course outline stub node', # not valid Class or MimeType value
-													  default=CourseOutlineCalendarNode )
+													  name='course outline stub node',  # not valid Class or MimeType value
+													  default=CourseOutlineCalendarNode)
 
 			lesson_node = node_factory()
 			topic_ntiid = _attr_val(lesson, 'topic-ntiid')
@@ -100,7 +128,8 @@ def fill_outline_from_node(outline, course_element):
 			if topic_ntiid:
 				lesson_node.ContentNTIID = topic_ntiid
 
-			lesson_node.src = _attr_val(lesson, str( 'src' ) )
+			lesson_node.src = _attr_val(lesson, str('src'))
+			_set_lesson_ntiid(parent_node, lesson_node, lesson, idx)
 
 			parent_node.append(lesson_node)
 			# Sigh. It looks like date is optionally a comma-separated
@@ -116,12 +145,13 @@ def fill_outline_from_node(outline, course_element):
 				lesson_node.AvailableEnding = dates[1]
 			_handle_node(lesson, lesson_node)
 
-	for unit in course_element.iterchildren(tag='unit'):
+	for idx, unit in enumerate(course_element.iterchildren(tag='unit')):
 		unit_node = CourseOutlineNode()
-		unit_node.title = _attr_val(unit, str( 'label' ) )
-		unit_node.src = _attr_val(unit, str( 'src' ) )
+		unit_node.title = _attr_val(unit, str('label'))
+		unit_node.src = _attr_val(unit, str('src'))
+		_set_unit_ntiid(outline, unit_node, unit, idx)
 		outline.append(unit_node)
-		_handle_node( unit, unit_node )
+		_handle_node(unit, unit_node)
 
 	return outline
 
@@ -153,7 +183,7 @@ def fill_outline_from_key(outline, key, xml_parent_name=None, force=False):
 			node = next(node.iterchildren(tag=xml_parent_name))
 		except StopIteration:
 			raise ValueError("No outline child in key", key, xml_parent_name)
-	fill_outline_from_node( outline, node )
+	fill_outline_from_node(outline, node)
 
 	outline.lastModified = key.lastModified
 	return True
