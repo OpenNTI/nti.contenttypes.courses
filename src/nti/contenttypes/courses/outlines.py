@@ -19,6 +19,8 @@ from zope.container.constraints import checkObject
 from zope.container.ordered import OrderedContainer # this is persistent
 from zope.container.contained import Contained, uncontained
 
+from nti.coremetadata.mixins import RecordableMixin
+
 from nti.dataserver.interfaces import ITitledDescribedContent
 
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
@@ -34,7 +36,7 @@ from .interfaces import ICourseOutlineContentNode
 from .interfaces import ICourseOutlineCalendarNode
 
 @interface.implementer(IAttributeAnnotatable)
-class _AbstractCourseOutlineNode(Contained):
+class _AbstractCourseOutlineNode(Contained, RecordableMixin):
 
 	createFieldProperties(ITitledDescribedContent)
 	createDirectFieldProperties(ICourseOutlineNode)
