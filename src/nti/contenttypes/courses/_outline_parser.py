@@ -38,7 +38,7 @@ from .interfaces import ICourseCatalogEntry
 
 def _catalog_entry(outline):
 	course = find_interface(outline, ICourseInstance, strict=False)
-	result = ICourseCatalogEntry(course, None)
+	result = ICourseCatalogEntry(course)
 	return result
 
 def _attr_val(node, name):
