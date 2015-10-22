@@ -27,8 +27,7 @@ from .outlines import CourseOutlineNode
 from .outlines import CourseOutlineContentNode
 from .outlines import CourseOutlineCalendarNode
 
-from .interfaces import NTI_COURSE_UNIT
-from .interfaces import NTI_COURSE_LESSON
+from .interfaces import NTI_COURSE_OUTLINE_NODE
 
 from .interfaces import ICourseInstance
 from .interfaces import ICourseCatalogEntry
@@ -56,7 +55,7 @@ def _set_unit_ntiid(outline, node, unit, idx):
 	base = entry.ntiid if entry is not None else None
 	if base:
 		specific = get_specific(base) + ".%s" % idx
-		ntiid = make_ntiid(nttype=NTI_COURSE_UNIT, base=base, specific=specific)
+		ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE, base=base, specific=specific)
 	else:
 		ntiid = _attr_val(unit, str('ntiid'))
 	node.ntiid = ntiid
@@ -64,7 +63,7 @@ def _set_unit_ntiid(outline, node, unit, idx):
 def _set_lesson_ntiid(parent, node, lesson, idx):
 	base = parent.ntiid
 	specific = get_specific(base) + ".%s" % idx
-	ntiid = make_ntiid(nttype=NTI_COURSE_LESSON, base=base, specific=specific)
+	ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE, base=base, specific=specific)
 	node.ntiid = ntiid
 	
 def fill_outline_from_node(outline, course_element):

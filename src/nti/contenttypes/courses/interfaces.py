@@ -79,11 +79,8 @@ from nti.schema.jsonschema import TAG_REQUIRED_IN_UI
 #: NTIID Type for outline
 NTI_COURSE_OUTLINE = 'NTICourseOutline'
 
-#: NTIID Type for outline unit node
-NTI_COURSE_UNIT = 'NTICourseUnit'
-
-#: NTIID Type for outline lesson node
-NTI_COURSE_LESSON = 'NTICourseLesson'
+#: NTIID Type for outline node
+NTI_COURSE_OUTLINE_NODE = 'NTICourseOutlineNode'
 
 # Permissions defined for courses here should also be
 # registered in ZCML:
