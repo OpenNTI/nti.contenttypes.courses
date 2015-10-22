@@ -47,7 +47,10 @@ class _AbstractCourseOutlineNode(Contained, RecordableMixin):
 	description = AdaptingFieldProperty(ITitledDescribedContent['description'])
 
 	def append(self, node):
-		name = unicode(len(self))
+		try:
+			name = node.ntiid
+		except AttributeError:
+			name = unicode(len(self))
 		self[name] = node
 
 	def updateOrder(self, order):

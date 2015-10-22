@@ -155,6 +155,11 @@ class _ICourseOutlineNodeContainer(interface.Interface):
 	Internal container for outline nodes.
 	"""
 
+def _tag_iface_fields(iface, *fields):
+	for name in fields:
+		iface[name].setTaggedValue(TAG_HIDDEN_IN_UI, False)
+		iface[name].setTaggedValue(TAG_REQUIRED_IN_UI, False)
+
 class ICourseOutlineNode(IRecordable,
 						 IAttributeAnnotatable, 
 						 ITitledDescribedContent,
@@ -180,11 +185,7 @@ class ICourseOutlineNode(IRecordable,
 		"""
 		A synonym for __setitem__ that automatically handles naming.
 		"""
-
-ICourseOutlineNode['title'].setTaggedValue(TAG_HIDDEN_IN_UI, False)
-ICourseOutlineNode['title'].setTaggedValue(TAG_REQUIRED_IN_UI, False)
-ICourseOutlineNode['description'].setTaggedValue(TAG_HIDDEN_IN_UI, False)
-ICourseOutlineNode['description'].setTaggedValue(TAG_REQUIRED_IN_UI, False)
+_tag_iface_fields(ICourseOutlineNode, 'title', 'description')
 
 class ICourseOutlineCalendarNode(ICourseOutlineNode):
 	"""
@@ -218,14 +219,7 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 		this will typically be relative and converted.""",
 		required=False)
 
-ICourseOutlineCalendarNode['title'].setTaggedValue(TAG_HIDDEN_IN_UI, False)
-ICourseOutlineCalendarNode['title'].setTaggedValue(TAG_REQUIRED_IN_UI, False)
-ICourseOutlineCalendarNode['description'].setTaggedValue(TAG_HIDDEN_IN_UI, False)
-ICourseOutlineCalendarNode['description'].setTaggedValue(TAG_REQUIRED_IN_UI, False)
-ICourseOutlineCalendarNode['AvailableEnding'].setTaggedValue(TAG_HIDDEN_IN_UI, False)
-ICourseOutlineCalendarNode['AvailableEnding'].setTaggedValue(TAG_REQUIRED_IN_UI, False)
-ICourseOutlineCalendarNode['AvailableBeginning'].setTaggedValue(TAG_HIDDEN_IN_UI, False)
-ICourseOutlineCalendarNode['AvailableBeginning'].setTaggedValue(TAG_REQUIRED_IN_UI, False)
+_tag_iface_fields(ICourseOutlineCalendarNode, 'title', 'description', 'AvailableEnding', 'AvailableBeginning')
 
 class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 	"""
@@ -234,6 +228,8 @@ class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 	"""
 
 	ContentNTIID = ValidNTIID(title="The NTIID of the content this node uses")
+
+_tag_iface_fields(ICourseOutlineContentNode, 'title', 'description', 'AvailableEnding', 'AvailableBeginning')
 
 class ICourseOutline(ICourseOutlineNode,
 					 ILastModified):
@@ -1169,6 +1165,7 @@ def _set_ifaces():
 
 _set_ifaces()
 del _set_ifaces
+del _tag_iface_fields
 
 import zope.deferredimport
 zope.deferredimport.initialize()

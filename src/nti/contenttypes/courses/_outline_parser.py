@@ -36,9 +36,9 @@ from .interfaces import ICourseCatalogEntry
 # too many branches
 # pylint:disable=I0011,R0912
 
-def _catalog_entry(outline):
+def _get_catalog_entry(outline):
 	course = find_interface(outline, ICourseInstance, strict=False)
-	result = ICourseCatalogEntry(course)
+	result = ICourseCatalogEntry(course, None)
 	return result
 
 def _attr_val(node, name):
@@ -52,18 +52,19 @@ def _attr_val(node, name):
 	return val.decode('utf-8') if isinstance(val, bytes) else val
 	
 def _set_unit_ntiid(outline, node, unit, idx):
-	ntiid = _attr_val(unit, str('ntiid'))
-	if not ntiid:
-		entry = _catalog_entry(outline)
-		specific = get_specific(entry.ntiid) + ".unit.%s" % idx
-		ntiid = make_ntiid(nttype=NTI_COURSE_UNIT, base=entry.ntiid, specific=specific)
+	entry = _get_catalog_entry(outline)
+	base = entry.ntiid if entry is not None else None
+	if base:
+		specific = get_specific(base) + ".%s" % idx
+		ntiid = make_ntiid(nttype=NTI_COURSE_UNIT, base=base, specific=specific)
+	else:
+		ntiid = _attr_val(unit, str('ntiid'))
 	node.ntiid = ntiid
 
-def _set_lesson_ntiid(unit, node, lesson, idx):
-	ntiid = _attr_val(lesson, str('ntiid'))
-	if not ntiid:
-		specific = get_specific(unit.ntiid) + ".lesson.%s" % idx
-		ntiid = make_ntiid(nttype=NTI_COURSE_LESSON, base=unit.ntiid, specific=specific)
+def _set_lesson_ntiid(parent, node, lesson, idx):
+	base = parent.ntiid
+	specific = get_specific(base) + ".%s" % idx
+	ntiid = make_ntiid(nttype=NTI_COURSE_LESSON, base=base, specific=specific)
 	node.ntiid = ntiid
 	
 def fill_outline_from_node(outline, course_element):

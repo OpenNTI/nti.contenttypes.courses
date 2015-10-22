@@ -23,11 +23,6 @@ from zope.intid import IIntIds
 
 from ZODB.POSException import POSError
 
-try:
-	from nti.app.products.courseware.interfaces import ICourseCatalogLegacyContentEntry
-except ImportError:
-	ICourseCatalogLegacyContentEntry = None
-
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
 from nti.dataserver.interfaces import IDataserver
@@ -40,6 +35,8 @@ from ..interfaces import ICourseEnrollments
 
 from ..index import IndexRecord
 from ..index import install_enrollment_catalog
+
+from ..legacy_catalog import ILegacyCourseCatalogEntry
 
 @interface.implementer(IDataserver)
 class MockDataserver(object):
@@ -79,7 +76,7 @@ def do_reindex(sites, catalog, intids):
 		with current_site(site):
 			course_catalog = component.getUtility(ICourseCatalog)
 			for entry in course_catalog.iterCatalogEntries():
-				if entry.ntiid in seen or not ICourseCatalogLegacyContentEntry.providedBy(entry):
+				if entry.ntiid in seen or not ILegacyCourseCatalogEntry.providedBy(entry):
 					continue
 				seen.add(entry.ntiid)
 				course = ICourseInstance(entry, None)
@@ -129,5 +126,4 @@ def evolve(context):
 	"""
 	Evolve to generation 8 by indexing all enrollment records for legacy courses
 	"""
-	if ICourseCatalogLegacyContentEntry is not None:
-		do_evolve(context, generation)
+	do_evolve(context, generation)

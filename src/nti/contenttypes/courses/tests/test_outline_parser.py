@@ -49,16 +49,16 @@ class TestOutlineParser(CourseLayerTest):
 		fill_outline_from_key(outline, key)
 		assert_that(outline, validly_provides(ICourseOutline))
 
-		unit_1 = outline['0']
+		unit_1 = outline['tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.1']
 		assert_that(unit_1, has_property('title', 'Introduction'))
 		assert_that(unit_1, has_property('ntiid', 'tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.1'))
 
-		lesson_1 = unit_1["0"]
+		lesson_1 = unit_1['tag:nextthought.com,2011-10:OU-NTICourseLesson-CLC3403_LawAndJustice.course.unit.1.0']
 		assert_that(lesson_1.AvailableBeginning, is_(not_none()))
 		assert_that(lesson_1.AvailableEnding, is_(not_none()))
 		assert_that(lesson_1, has_property('title', '1. Defining Law and Justice'))
 		assert_that(lesson_1, has_property('AvailableEnding', has_property('tzinfo', none())))
-		assert_that(lesson_1, has_property('ntiid', 'tag:nextthought.com,2011-10:OU-NTICourseLesson-CLC3403_LawAndJustice.course.unit.1.lesson.0'))
+		assert_that(lesson_1, has_property('ntiid', 'tag:nextthought.com,2011-10:OU-NTICourseLesson-CLC3403_LawAndJustice.course.unit.1.0'))
 		assert_that(lesson_1, externalizes(has_entries(	'AvailableEnding', '2013-08-22T04:59:59Z',
 														'title', '1. Defining Law and Justice',
 														'NTIID', is_not(none()),
@@ -66,19 +66,20 @@ class TestOutlineParser(CourseLayerTest):
 
 		# Sub-lessons
 		assert_that(lesson_1, has_length(1))
-		assert_that(lesson_1["0"], has_property('ContentNTIID', "tag:nextthought.com,2011-10:OU-HTML-DNE"))
+		assert_that(lesson_1["tag:nextthought.com,2011-10:OU-NTICourseLesson-CLC3403_LawAndJustice.course.unit.1.0.0"],
+					has_property('ContentNTIID', "tag:nextthought.com,2011-10:OU-HTML-DNE"))
 
 		# This one is a stub
-		lesson_2 = unit_1["1"]
+		lesson_2 = unit_1["tag:nextthought.com,2011-10:OU-NTICourseLesson-CLC3403_LawAndJustice.course.unit.1.1"]
 		assert_that(lesson_2,
 					 externalizes(
 						 all_of(
 							 does_not(has_key('ContentNTIID')),
 							 has_entry('Class', 'CourseOutlineCalendarNode'))))
 
-		unit_7 = outline['6']
+		unit_7 = outline['tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.7']
 		assert_that(unit_7, has_property('title', 'Dateless Resources'))
-		lesson_1 = unit_7["0"]
+		lesson_1 = unit_7["tag:nextthought.com,2011-10:OU-NTICourseLesson-CLC3403_LawAndJustice.course.unit.7.0"]
 		assert_that(lesson_1, has_property('AvailableEnding', is_(none())))
 		assert_that(lesson_1, has_property('AvailableBeginning', is_(none())))
 

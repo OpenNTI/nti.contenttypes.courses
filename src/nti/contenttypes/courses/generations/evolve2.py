@@ -13,10 +13,11 @@ logger = __import__('logging').getLogger(__name__)
 
 generation = 2
 
-import zope.intid
-
 from zope import component
+
 from zope.component.hooks import site as current_site
+
+from zope.intid import IIntIds
 
 from ..interfaces import ICourseCatalog
 from ..interfaces import ICourseInstance
@@ -27,13 +28,13 @@ def do_evolve(context, generation=generation):
 		from nti.metadata import metadata_queue
 	except ImportError:
 		return
-	
+
 	conn = context.connection
 	dataserver_folder = conn.root()['nti.dataserver']
-	
+
 	lsm = dataserver_folder.getSiteManager()
-	intids = lsm.getUtility(zope.intid.IIntIds)
-	
+	intids = lsm.getUtility(IIntIds)
+
 	total = 0
 	sites = dataserver_folder['++etc++hostsites']
 	for site in sites.values():
@@ -41,7 +42,7 @@ def do_evolve(context, generation=generation):
 			queue = metadata_queue()
 			if queue is None:
 				continue
-			
+
 			catalog = component.getUtility(ICourseCatalog)
 			for entry in catalog.iterCatalogEntries():
 				course = ICourseInstance(entry, None)
@@ -55,12 +56,12 @@ def do_evolve(context, generation=generation):
 					if uid is not None:
 						try:
 							queue.add(uid)
-							total +=1
+							total += 1
 						except TypeError:
 							pass
-						
+
 	logger.info('contenttypes.courses evolution %s done; %s object(s) put in queue',
 				generation, total)
-			
+
 def evolve(context):
 	pass
