@@ -20,7 +20,6 @@ from zope.component.hooks import site as current_site
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
-from nti.ntiids.ntiids import is_valid_ntiid_string
 
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
@@ -30,6 +29,7 @@ from ..interfaces import NTI_COURSE_OUTLINE_NODE
 from ..interfaces import ICourseCatalog
 from ..interfaces import ICourseOutline
 from ..interfaces import ICourseInstance
+from ..interfaces import ICourseOutlineNode
 
 from ..interfaces import iface_of_node
 
@@ -62,12 +62,23 @@ def _replace(container, node):
 	# set new name
 	node.__name__ = node.ntiid
 	
+def _unregister_old(sites):
+	for site in sites.values():
+		with current_site(site):
+			registry = component.getSiteManager()
+			for name, _ in list(registry.getUtilitiesFor(ICourseOutlineNode)):
+				unregisterUtility(registry=registry,
+								  provided=ICourseOutlineNode,
+								  name=name)
+
 def do_evolve(context, generation=generation):
 	conn = context.connection
 	dataserver_folder = conn.root()['nti.dataserver']
 
 	seen = set()
 	sites = dataserver_folder['++etc++hostsites']
+	_unregister_old(sites)
+	
 	for site in sites.values():
 		with current_site(site):
 			registry = component.getSiteManager()
@@ -82,7 +93,10 @@ def do_evolve(context, generation=generation):
 				for node, idx in _outline_nodes(course.Outline):
 					parent = node.__parent__
 					# generate new ntiid
-					base = entry.ntiid
+					if parent == course.Outline:
+						base = entry.ntiid
+					else:
+						base = parent.ntiid
 					provider = get_provider(base)
 					specific = get_specific(base) + '.%s' % idx
 					ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
@@ -91,17 +105,10 @@ def do_evolve(context, generation=generation):
 									   specific=specific)
 					node.ntiid = ntiid
 
-					# unregister just in case
-					if is_valid_ntiid_string(node.__name__):
-						unregisterUtility(registry, 
-										  provided=iface_of_node(node),
-										  name=node.__name__,
-										  event=False)
-					
 					# replace in container
 					_replace(parent, node)
 					
-					# register again
+					# register
 					registerUtility(registry, 
 									component=node, 
 									provided=iface_of_node(node),
