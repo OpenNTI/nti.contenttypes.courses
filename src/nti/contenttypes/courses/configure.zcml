@@ -137,8 +137,7 @@
 	<utility factory=".ntiids._CourseInfoNTIIDResolver" name="CourseInfo" />
 
 	<!-- outline nodes can be resolved by ntiid -->
-	<utility factory=".ntiids._CourseOutlineNodeNTIIDResolver" name="NTICourseUnit" />
-	<utility factory=".ntiids._CourseOutlineNodeNTIIDResolver" name="NTICourseLesson" />
+	<utility factory=".ntiids._CourseOutlineNodeNTIIDResolver" name="NTICourseOutlineNode" />
 
 	<!-- Enrollment -->
 	<adapter factory=".enrollment.DefaultCourseEnrollmentManager" />

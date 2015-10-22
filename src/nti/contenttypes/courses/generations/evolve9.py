@@ -18,9 +18,12 @@ from zope import component
 from zope.component.hooks import site as current_site
 
 from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
+from nti.ntiids.ntiids import is_valid_ntiid_string
 
 from nti.site.utils import registerUtility
+from nti.site.utils import unregisterUtility
 
 from ..interfaces import NTI_COURSE_OUTLINE_NODE
 
@@ -76,20 +79,29 @@ def do_evolve(context, generation=generation):
 				course = ICourseInstance(entry, None)
 				if not course:
 					continue
-				base_specific = get_specific(entry.ntiid)
 				for node, idx in _outline_nodes(course.Outline):
 					parent = node.__parent__
-					if parent == course.Outline:
-						base = base_specific
-						specific = base_specific + ".%s" % idx
-					else:
-						base = parent.ntiid
-						specific = get_specific(base) + '.%s' % idx
+					# generate new ntiid
+					base = entry.ntiid
+					provider = get_provider(base)
+					specific = get_specific(base) + '.%s' % idx
 					ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
 									   base=base,
+									   provider=provider,
 									   specific=specific)
 					node.ntiid = ntiid
+
+					# unregister just in case
+					if is_valid_ntiid_string(node.__name__):
+						unregisterUtility(registry, 
+										  provided=iface_of_node(node),
+										  name=node.__name__,
+										  event=False)
+					
+					# replace in container
 					_replace(parent, node)
+					
+					# register again
 					registerUtility(registry, 
 									component=node, 
 									provided=iface_of_node(node),

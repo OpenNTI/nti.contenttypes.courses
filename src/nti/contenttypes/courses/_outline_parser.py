@@ -19,6 +19,7 @@ from zope import component
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
 from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 
 from nti.traversal.traversal import find_interface
@@ -54,16 +55,24 @@ def _set_unit_ntiid(outline, node, unit, idx):
 	entry = _get_catalog_entry(outline)
 	base = entry.ntiid if entry is not None else None
 	if base:
+		provider = get_provider(base) or 'NTI'
 		specific = get_specific(base) + ".%s" % idx
-		ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE, base=base, specific=specific)
+		ntiid = make_ntiid(	nttype=NTI_COURSE_OUTLINE_NODE, 
+							base=base,
+							provider=provider,
+							specific=specific)
 	else:
 		ntiid = _attr_val(unit, str('ntiid'))
 	node.ntiid = ntiid
 
 def _set_lesson_ntiid(parent, node, lesson, idx):
 	base = parent.ntiid
+	provider = get_provider(base) or 'NTI'
 	specific = get_specific(base) + ".%s" % idx
-	ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE, base=base, specific=specific)
+	ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
+					   base=base, 
+					   provider=provider,
+					   specific=specific)
 	node.ntiid = ntiid
 	
 def fill_outline_from_node(outline, course_element):

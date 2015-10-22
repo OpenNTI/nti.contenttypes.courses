@@ -34,7 +34,7 @@ class _CourseInfoNTIIDResolver(object):
 				pass
 		return None
 
-@interface.implementer(ICourseOutlineNode)
+@interface.implementer(INTIIDResolver)
 class _CourseOutlineNodeNTIIDResolver(object):
 	"""
 	Resolves outline nodes 
