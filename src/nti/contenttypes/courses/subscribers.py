@@ -20,6 +20,7 @@ from zope.intid import IIntIds
 from zope.interface.interfaces import IRegistered
 from zope.interface.interfaces import IUnregistered
 
+from zope.lifecycleevent.interfaces import IObjectAddedEvent
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
@@ -27,17 +28,24 @@ from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
 
+from nti.site.utils import registerUtility
+from nti.site.utils import unregisterUtility
+
 from nti.site.localutility import install_utility
-from nti.site.site import get_component_hierarchy_names
 from nti.site.localutility import uninstall_utility_on_unregistration
+
+from nti.site.site import get_component_hierarchy_names
 
 from .catalog import CourseCatalogFolder
 
 from .index import IX_COURSE, IX_SCOPE, IX_SITE
 
 from .interfaces import INSTRUCTOR
+from .interfaces import iface_of_node
 
+from .interfaces import ICourseOutline
 from .interfaces import ICourseInstance
+from .interfaces import ICourseOutlineNode
 from .interfaces import ICourseCatalogEntry
 from .interfaces import IObjectEntrySynchronizer
 from .interfaces import IPersistentCourseCatalog
@@ -196,3 +204,28 @@ def on_course_instance_removed(course, event):
 	query = { IX_COURSE: {'any_of':(ntiid,)} }
 	for uid in catalog.apply(query) or ():
 		catalog.unindex_doc(uid)
+
+@component.adapter(ICourseOutlineNode, IObjectAddedEvent)
+def on_outline_node_added(node, event):
+	if ICourseOutline.providedBy(node):
+		return
+	try:
+		provided = iface_of_node(node)
+		registry = component.getSiteManager()
+		registerUtility(registry,
+						component=node,
+						provided=provided,
+						name=node.ntiid)
+	except AttributeError:
+		pass
+
+@component.adapter(ICourseOutlineNode, IObjectRemovedEvent)
+def on_outline_node_removed(node, event):
+	if ICourseOutline.providedBy(node):
+		return
+	try:
+		provided = iface_of_node(node)
+		registry = component.getSiteManager()
+		unregisterUtility(registry, provided=provided, name=node.ntiid)
+	except AttributeError:
+		pass

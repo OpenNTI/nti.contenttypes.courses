@@ -1154,7 +1154,7 @@ def get_course_assessment_predicate_for_user(user, course):
 def iface_of_node(node):
 	for node_interface in (ICourseOutlineContentNode, 
 				  		   ICourseOutlineCalendarNode,
-				  		   ICourseOutlineCalendarNode,
+				  		   ICourseOutlineNode,
 				  		   ICourseOutline): # orden matters
 		if node_interface.providedBy(node):
 			return node_interface
