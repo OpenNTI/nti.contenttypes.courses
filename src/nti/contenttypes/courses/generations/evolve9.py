@@ -52,7 +52,7 @@ def _replace(container, node):
 	old_key = node.__name__
 	data = container._data
 	order = container._order
-	
+
 	# replace from ordered container
 	data.pop(old_key, None)
 	data[node.ntiid] = node
@@ -61,7 +61,7 @@ def _replace(container, node):
 
 	# set new name
 	node.__name__ = node.ntiid
-	
+
 def _unregister_old(sites):
 	for site in sites.values():
 		with current_site(site):
@@ -78,7 +78,7 @@ def do_evolve(context, generation=generation):
 	seen = set()
 	sites = dataserver_folder['++etc++hostsites']
 	_unregister_old(sites)
-	
+
 	for site in sites.values():
 		with current_site(site):
 			registry = component.getSiteManager()
@@ -107,10 +107,10 @@ def do_evolve(context, generation=generation):
 
 					# replace in container
 					_replace(parent, node)
-					
+
 					# register
-					registerUtility(registry, 
-									component=node, 
+					registerUtility(registry,
+									component=node,
 									provided=iface_of_node(node),
 									name=node.ntiid,
 									event=False)
@@ -122,4 +122,3 @@ def evolve(context):
 	Evolve to generation 9 by setting ntiids to outline nodes
 	"""
 	do_evolve(context, generation)
-
