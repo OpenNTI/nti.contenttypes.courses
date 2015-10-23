@@ -22,6 +22,9 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 
+from nti.site.utils import registerUtility
+from nti.site.utils import unregisterUtility
+
 from nti.traversal.traversal import find_interface
 
 from .outlines import CourseOutlineNode
@@ -30,6 +33,9 @@ from .outlines import CourseOutlineCalendarNode
 
 from .interfaces import NTI_COURSE_OUTLINE_NODE
 
+from .interfaces import iface_of_node
+
+from .interfaces import ICourseOutline
 from .interfaces import ICourseInstance
 from .interfaces import ICourseCatalogEntry
 
@@ -41,6 +47,34 @@ def _get_catalog_entry(outline):
 	result = ICourseCatalogEntry(course, None)
 	return result
 
+def _outline_nodes(outline):
+	result = []
+	def _recur(node):
+		if not ICourseOutline.providedBy(node):
+			result.append(node)
+
+		# parse children
+		for child in node.values():
+			_recur(child)
+
+	_recur(outline)
+	return result
+
+def _unregister_nodes(outline):
+	registry = component.getSiteManager()
+	for node in _outline_nodes(outline):
+		unregisterUtility(registry,
+						  name=node.ntiid,
+						  provided=iface_of_node(node))
+
+def _register_nodes(outline):
+	registry = component.getSiteManager()
+	for node in _outline_nodes(outline):
+		registerUtility(registry,
+						component=node,
+					    name=node.ntiid,
+					    provided=iface_of_node(node))
+	
 def _attr_val(node, name):
 	# Under Py2, lxml will produce byte strings if it is
 	# ascii text, otherwise it will already decode it
@@ -90,6 +124,7 @@ def fill_outline_from_node(outline, course_element):
 	:return: The outline node.
 	"""
 
+	_unregister_nodes(outline)
 	outline.reset()
 	library = component.queryUtility(IContentPackageLibrary)
 
@@ -162,6 +197,7 @@ def fill_outline_from_node(outline, course_element):
 		outline.append(unit_node)
 		_handle_node(unit, unit_node)
 
+	_register_nodes(outline)
 	return outline
 
 def fill_outline_from_key(outline, key, xml_parent_name=None, force=False):
