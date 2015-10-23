@@ -24,9 +24,12 @@ from nti.testing.matchers import validly_provides
 
 import os.path
 
+from zope import component
+
 from nti.contentlibrary.filesystem import FilesystemKey
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses._outline_parser import fill_outline_from_key
 from nti.contenttypes.courses.outlines import PersistentCourseOutline as CourseOutline
 
@@ -35,6 +38,10 @@ from nti.contenttypes.courses.tests import CourseLayerTest
 from nti.externalization.tests import externalizes
 
 class TestOutlineParser(CourseLayerTest):
+
+	def _as_utils(self):
+		registry = component.getSiteManager()
+		return sorted(list(registry.getUtilitiesFor(ICourseOutlineNode)))
 
 	def test_parse(self):
 		path = os.path.join(os.path.dirname(__file__),
@@ -45,10 +52,13 @@ class TestOutlineParser(CourseLayerTest):
 		key = FilesystemKey()
 		key.absolute_path = path
 
+		assert_that(self._as_utils(), has_length(0))
+		
 		outline = CourseOutline()
 		fill_outline_from_key(outline, key)
 		assert_that(outline, validly_provides(ICourseOutline))
-
+		assert_that(self._as_utils(), has_length(40))
+		
 		unit_1 = outline['tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.1']
 		assert_that(unit_1, has_property('title', 'Introduction'))
 		assert_that(unit_1, has_property('ntiid', 'tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.1'))
@@ -86,15 +96,18 @@ class TestOutlineParser(CourseLayerTest):
 
 		# Doing it again does nothing...
 		assert_that(outline, has_length(7))
-
+		assert_that(self._as_utils(), has_length(40))
+		
 		fill_outline_from_key(outline, key)
 		assert_that(outline, has_length(7))
+		assert_that(self._as_utils(), has_length(40))
 
 		# ...even if we set modification back
 		outline.lastModified = -1
 
 		fill_outline_from_key(outline, key)
 		assert_that(outline, has_length(7))
+		assert_that(self._as_utils(), has_length(40))
 
 	def test_parse_empty(self):
 
