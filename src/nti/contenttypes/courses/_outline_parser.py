@@ -50,8 +50,8 @@ def _get_catalog_entry(outline):
 def _outline_nodes(outline):
 	result = []
 	def _recur(node):
-		if 	not ICourseOutline.providedBy(node) and \
-			getattr(node, 'ntiid', None):
+		# XXX: Check ntiid attribute in case of global courses
+		if not ICourseOutline.providedBy(node) and getattr(node, 'ntiid', None):
 			result.append(node)
 
 		# parse children
