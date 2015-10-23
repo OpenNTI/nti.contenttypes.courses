@@ -69,11 +69,14 @@ def unregister_nodes():
 	for site in sites:
 		with current_site(site):
 			registry = component.getSiteManager()
-			for name, _ in list(registry.getUtilitiesFor(ICourseOutlineNode)):
-				result += 1
-				unregisterUtility(registry=registry,
-								  provided=ICourseOutlineNode,
-								  name=name)
+			for name, obj in list(component.getUtilitiesFor(ICourseOutlineNode)):
+				provided=iface_of_node(obj)
+				if unregisterUtility(registry=registry,
+								  	 component=obj,
+								  	 provided=provided,
+								  	 name=name,
+								  	 event=False):
+					result+=1
 	logger.info('%s node(s) unregistered', result)
 	return result
 
@@ -90,6 +93,7 @@ def do_evolve(context, generation=generation):
 		sites = get_all_host_sites()
 		for site in sites:
 			with current_site(site):
+				site_total = 0
 				registry = component.getSiteManager()
 				catalog = component.getUtility(ICourseCatalog)
 				for entry in catalog.iterCatalogEntries():
@@ -119,11 +123,16 @@ def do_evolve(context, generation=generation):
 						_replace(parent, node)
 	
 						# register
-						registerUtility(registry,
-										component=node,
-										provided=iface_of_node(node),
-										name=node.ntiid)
-						total += 1
+						if registerUtility(registry=registry,
+										   component=node,
+										   provided=iface_of_node(node),
+										   name=node.ntiid,
+										   event=False):
+							site_total +=1
+				total += site_total
+				if site_total:
+					logger.info("%s node(s) registered in site %s", site_total,
+								site.__name__)
 
 	logger.info('contenttypes.courses evolution %s done. %s node(s) updated',
 				generation, total)
