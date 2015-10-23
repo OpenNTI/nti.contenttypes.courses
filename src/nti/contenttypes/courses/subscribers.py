@@ -15,21 +15,18 @@ from zope import component
 
 from zope.component.hooks import site
 
-from zope.intid import IIntIds
+from zope.intid.interfaces import IIntIds
+from zope.intid.interfaces import IntIdAddedEvent
 
 from zope.interface.interfaces import IRegistered
 from zope.interface.interfaces import IUnregistered
 
-from zope.lifecycleevent.interfaces import IObjectAddedEvent
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
-
-from nti.site.utils import registerUtility
-from nti.site.utils import unregisterUtility
 
 from nti.site.localutility import install_utility
 from nti.site.localutility import uninstall_utility_on_unregistration
@@ -205,17 +202,16 @@ def on_course_instance_removed(course, event):
 	for uid in catalog.apply(query) or ():
 		catalog.unindex_doc(uid)
 
-@component.adapter(ICourseOutlineNode, IObjectAddedEvent)
+@component.adapter(ICourseOutlineNode, IntIdAddedEvent)
 def on_outline_node_added(node, event):
 	if ICourseOutline.providedBy(node):
 		return
 	try:
 		provided = iface_of_node(node)
 		registry = component.getSiteManager()
-		registerUtility(registry,
-						component=node,
-						provided=provided,
-						name=node.ntiid)
+		registry.registerUtility(node,
+								 provided=provided,
+								 name=node.ntiid)
 	except AttributeError:
 		pass
 
@@ -226,6 +222,6 @@ def on_outline_node_removed(node, event):
 	try:
 		provided = iface_of_node(node)
 		registry = component.getSiteManager()
-		unregisterUtility(registry, provided=provided, name=node.ntiid)
+		registry.unregisterUtility(node, provided=provided, name=node.ntiid)
 	except AttributeError:
 		pass
