@@ -23,6 +23,7 @@ from nti.ntiids.ntiids import get_specific
 
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
+from nti.site.site import get_component_hierarchy_names
 
 from ..interfaces import NTI_COURSE_OUTLINE_NODE
 
@@ -73,6 +74,7 @@ def _unregister_old(dataserver_folder):
 				unregisterUtility(registry=registry,
 								  provided=ICourseOutlineNode,
 								  name=name)
+	logger.info('%s node(s) unregistered', result)
 	return result
 
 def do_evolve(context, generation=generation):
@@ -82,16 +84,16 @@ def do_evolve(context, generation=generation):
 	_unregister_old(dataserver_folder)
 	
 	total = 0
-	seen = set()
 	sites = dataserver_folder['++etc++hostsites']
 	for site in sites.values():
 		with current_site(site):
+			if len(get_component_hierarchy_names()) != 1:
+				continue
 			registry = component.getSiteManager()
 			catalog = component.getUtility(ICourseCatalog)
 			for entry in catalog.iterCatalogEntries():
-				if ILegacyCourseCatalogEntry.providedBy(entry) or entry.ntiid in seen:
+				if ILegacyCourseCatalogEntry.providedBy(entry):
 					continue
-				seen.add(entry.ntiid)
 				course = ICourseInstance(entry, None)
 				if not course:
 					continue
@@ -117,8 +119,7 @@ def do_evolve(context, generation=generation):
 					registerUtility(registry,
 									component=node,
 									provided=iface_of_node(node),
-									name=node.ntiid,
-									event=False)
+									name=node.ntiid)
 					total += 1
 
 	logger.info('contenttypes.courses evolution %s done. %s node(s) updated',
