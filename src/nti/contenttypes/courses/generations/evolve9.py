@@ -23,7 +23,7 @@ from nti.ntiids.ntiids import get_specific
 
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
-from nti.site.site import get_component_hierarchy_names
+from nti.site.hostpolicy import get_all_host_sites
 
 from ..interfaces import NTI_COURSE_OUTLINE_NODE
 
@@ -63,10 +63,10 @@ def _replace(container, node):
 	# set new name
 	node.__name__ = node.ntiid
 
-def _unregister_old(dataserver_folder):
+def unregister_nodes():
 	result = 0
-	sites = dataserver_folder['++etc++hostsites']
-	for site in sites.values():
+	sites = get_all_host_sites()
+	for site in sites:
 		with current_site(site):
 			registry = component.getSiteManager()
 			for name, _ in list(registry.getUtilitiesFor(ICourseOutlineNode)):
@@ -79,48 +79,51 @@ def _unregister_old(dataserver_folder):
 
 def do_evolve(context, generation=generation):
 	conn = context.connection
-	dataserver_folder = conn.root()['nti.dataserver']
-
-	_unregister_old(dataserver_folder)
+	ds_folder = conn.root()['nti.dataserver']
+	with current_site(ds_folder):
+		assert	component.getSiteManager() == ds_folder.getSiteManager(), \
+				"Hooks not installed?"
+				
+		total = 0
+		seen = set()
+		unregister_nodes()
+		sites = get_all_host_sites()
+		for site in sites:
+			with current_site(site):
+				registry = component.getSiteManager()
+				catalog = component.getUtility(ICourseCatalog)
+				for entry in catalog.iterCatalogEntries():
+					ntiid = entry.ntiid
+					if ILegacyCourseCatalogEntry.providedBy(entry) or ntiid in seen:
+						continue
+					seen.add(ntiid)
+					course = ICourseInstance(entry, None)
+					if not course:
+						continue
+					for node, idx in _outline_nodes(course.Outline):
+						parent = node.__parent__
+						# generate new ntiid
+						if parent == course.Outline:
+							base = entry.ntiid
+						else:
+							base = parent.ntiid
+						provider = get_provider(base)
+						specific = get_specific(base) + '.%s' % idx
+						ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
+										   base=base,
+										   provider=provider,
+										   specific=specific)
+						node.ntiid = ntiid
 	
-	total = 0
-	sites = dataserver_folder['++etc++hostsites']
-	for site in sites.values():
-		with current_site(site):
-			if len(get_component_hierarchy_names()) != 1:
-				continue
-			registry = component.getSiteManager()
-			catalog = component.getUtility(ICourseCatalog)
-			for entry in catalog.iterCatalogEntries():
-				if ILegacyCourseCatalogEntry.providedBy(entry):
-					continue
-				course = ICourseInstance(entry, None)
-				if not course:
-					continue
-				for node, idx in _outline_nodes(course.Outline):
-					parent = node.__parent__
-					# generate new ntiid
-					if parent == course.Outline:
-						base = entry.ntiid
-					else:
-						base = parent.ntiid
-					provider = get_provider(base)
-					specific = get_specific(base) + '.%s' % idx
-					ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
-									   base=base,
-									   provider=provider,
-									   specific=specific)
-					node.ntiid = ntiid
-
-					# replace in container
-					_replace(parent, node)
-
-					# register
-					registerUtility(registry,
-									component=node,
-									provided=iface_of_node(node),
-									name=node.ntiid)
-					total += 1
+						# replace in container
+						_replace(parent, node)
+	
+						# register
+						registerUtility(registry,
+										component=node,
+										provided=iface_of_node(node),
+										name=node.ntiid)
+						total += 1
 
 	logger.info('contenttypes.courses evolution %s done. %s node(s) updated',
 				generation, total)
