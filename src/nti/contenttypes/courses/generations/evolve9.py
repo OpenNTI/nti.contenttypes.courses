@@ -62,23 +62,28 @@ def _replace(container, node):
 	# set new name
 	node.__name__ = node.ntiid
 
-def _unregister_old(sites):
+def _unregister_old(dataserver_folder):
+	result = 0
+	sites = dataserver_folder['++etc++hostsites']
 	for site in sites.values():
 		with current_site(site):
 			registry = component.getSiteManager()
 			for name, _ in list(registry.getUtilitiesFor(ICourseOutlineNode)):
+				result += 1
 				unregisterUtility(registry=registry,
 								  provided=ICourseOutlineNode,
 								  name=name)
+	return result
 
 def do_evolve(context, generation=generation):
 	conn = context.connection
 	dataserver_folder = conn.root()['nti.dataserver']
 
+	_unregister_old(dataserver_folder)
+	
+	total = 0
 	seen = set()
 	sites = dataserver_folder['++etc++hostsites']
-	_unregister_old(sites)
-
 	for site in sites.values():
 		with current_site(site):
 			registry = component.getSiteManager()
@@ -114,8 +119,10 @@ def do_evolve(context, generation=generation):
 									provided=iface_of_node(node),
 									name=node.ntiid,
 									event=False)
+					total += 1
 
-	logger.info('contenttypes.courses evolution %s done', generation)
+	logger.info('contenttypes.courses evolution %s done. %s node(s) updated',
+				generation, total)
 
 def evolve(context):
 	"""
