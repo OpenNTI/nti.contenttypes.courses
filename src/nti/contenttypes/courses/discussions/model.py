@@ -18,6 +18,8 @@ from zope.container.contained import Contained
 
 from zope.mimetype.interfaces import IContentTypeAware
 
+from ZODB.POSException import ConnectionStateError
+
 from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
@@ -31,8 +33,8 @@ from ..interfaces import ICourseInstance
 from .interfaces import ICourseDiscussion
 from .interfaces import ICourseDiscussions
 
-@interface.implementer(ICourseDiscussion, IContentTypeAware)
 @EqHash('id')
+@interface.implementer(ICourseDiscussion, IContentTypeAware)
 class CourseDiscussion(SchemaConfigured,
 					   PersistentCreatedModDateTrackingObject,
 					   Contained):
@@ -50,11 +52,14 @@ class CourseDiscussion(SchemaConfigured,
 		PersistentCreatedModDateTrackingObject.__init__(self, *args, **kwargs)
 
 	def __str__(self, *args, **kwargs):
-		if self.id:
-			result = "%s(id=%s)" % (self.__class__.__name__, self.id)
-		else:
-			result = super(CourseDiscussion, self).__str__(self, *args, **kwargs)
-		return result
+		try:
+			if self.id:
+				result = "%s(id=%s)" % (self.__class__.__name__, self.id)
+			else:
+				result = super(CourseDiscussion, self).__str__(self, *args, **kwargs)
+			return result
+		except ConnectionStateError:
+			return"<%s object at %s>" % (type(self).__name__, hex(id(self)))
 
 	__repr__ = __str__
 
