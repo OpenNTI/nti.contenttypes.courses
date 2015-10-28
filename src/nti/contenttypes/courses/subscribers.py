@@ -209,4 +209,4 @@ def on_course_outline_node_removed(node, event):
 		registry = component.getSiteManager()
 		unregisterUtility(registry,
 						  provided=iface_of_node(node),
-					 	  name=node.ntiid)
+					 	  name=ntiid)
