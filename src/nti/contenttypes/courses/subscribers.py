@@ -204,8 +204,10 @@ def on_course_instance_removed(course, event):
 
 @component.adapter(ICourseOutlineNode, IIntIdRemovedEvent)
 def on_course_outline_node_removed(node, event):
-	registry = component.getSiteManager()
-	unregisterUtility(registry,
-					  component=node, 
-					  provided=iface_of_node(node),
-					  name=node.ntiid)
+	ntiid = getattr(node, 'ntiid', None)
+	if ntiid:
+		registry = component.getSiteManager()
+		unregisterUtility(registry,
+						  component=node, 
+						  provided=iface_of_node(node),
+					 	  name=node.ntiid)
