@@ -16,6 +16,7 @@ from zope import component
 from zope.component.hooks import site
 
 from zope.intid.interfaces import IIntIds
+from zope.intid.interfaces import IIntIdRemovedEvent
 
 from zope.interface.interfaces import IRegistered
 from zope.interface.interfaces import IUnregistered
@@ -27,6 +28,7 @@ from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
 
+from nti.site.utils import unregisterUtility
 from nti.site.localutility import install_utility
 from nti.site.localutility import uninstall_utility_on_unregistration
 
@@ -37,8 +39,10 @@ from .catalog import CourseCatalogFolder
 from .index import IX_COURSE, IX_SCOPE, IX_SITE
 
 from .interfaces import INSTRUCTOR
+from .interfaces import iface_of_node
 
 from .interfaces import ICourseInstance
+from .interfaces import ICourseOutlineNode
 from .interfaces import ICourseCatalogEntry
 from .interfaces import IObjectEntrySynchronizer
 from .interfaces import IPersistentCourseCatalog
@@ -197,3 +201,11 @@ def on_course_instance_removed(course, event):
 	query = { IX_COURSE: {'any_of':(ntiid,)} }
 	for uid in catalog.apply(query) or ():
 		catalog.unindex_doc(uid)
+
+@component.adapter(ICourseOutlineNode, IIntIdRemovedEvent)
+def on_course_outline_node_removed(node, event):
+	registry = component.getSiteManager()
+	unregisterUtility(registry,
+					  component=node, 
+					  provided=iface_of_node(node),
+					  name=node.ntiid)

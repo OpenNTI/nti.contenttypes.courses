@@ -82,6 +82,7 @@
 	<subscriber handler=".subscribers.install_site_course_catalog" />
 	<subscriber handler=".subscribers.roles_sync_on_course_instance" />
 	<subscriber handler=".subscribers.uninstall_site_course_catalog" />
+	<subscriber handler=".subscribers.on_course_outline_node_removed" />
 	<subscriber handler=".subscribers.sync_catalog_when_library_synched" />
 
 	<!-- Roles and permissions -->
