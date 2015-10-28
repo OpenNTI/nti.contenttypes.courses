@@ -1154,7 +1154,7 @@ def iface_of_node(node):
 	return None
 
 def _set_ifaces():
-	for iSchema in (ICourseOutlineNode, ICourseOutlineCalendarNode):
+	for iSchema in (ICourseOutlineNode, ICourseOutlineCalendarNode, ICourseOutlineContentNode):
 		for k, v in iSchema.namesAndDescriptions(all=True):
 			if IMethod.providedBy(v) or v.queryTaggedValue(TAG_HIDDEN_IN_UI) is not None:
 				continue
