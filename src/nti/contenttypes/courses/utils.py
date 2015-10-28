@@ -62,7 +62,7 @@ def index_course_instructors(context, catalog=None, intids=None):
 	return result
 
 def get_parent_course(context):
-	course = ICourseInstance(context)
+	course = ICourseInstance(context, None)
 	if ICourseSubInstance.providedBy(course):
 		course = course.__parent__.__parent__
 	return course
