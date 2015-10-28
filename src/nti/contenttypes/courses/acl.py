@@ -19,6 +19,7 @@ from zope.security.interfaces import IPrincipal
 from nti.common.property import Lazy
 
 from nti.dataserver.interfaces import ACE_DENY_ALL
+from nti.dataserver.interfaces import ALL_PERMISSIONS
 from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
 from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 
@@ -26,12 +27,16 @@ from nti.dataserver.interfaces import IACLProvider
 
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ACT_CREATE
+from nti.dataserver.authorization import ROLE_ADMIN
 from nti.dataserver.authorization_acl import ace_denying
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
+from nti.traversal.traversal import find_interface
+
 from .interfaces import ES_PUBLIC
 from .interfaces import ICourseInstance
+from .interfaces import ICourseOutlineNode
 from .interfaces import ICourseCatalogEntry
 from .interfaces import INonPublicCourseInstance
 
@@ -79,8 +84,6 @@ class CourseInstanceACLProvider(object):
 
 		result = acl_from_aces(aces)
 		return result
-
-from nti.traversal.traversal import find_interface
 
 @interface.implementer(IACLProvider)
 @component.adapter(ICourseCatalogEntry)
@@ -153,3 +156,24 @@ class CourseCatalogEntryACLProvider(object):
 						 CourseCatalogEntryACLProvider)
 		)
 		return acl
+
+@component.adapter(ICourseOutlineNode)
+@interface.implementer(IACLProvider)
+class CourseOutlineNodeACLProvider(object):
+	"""
+	Provides the basic ACL for a course outline.
+	"""
+
+	def __init__(self, context):
+		self.context = context
+
+	@property
+	def __parent__(self):
+		# See comments in nti.dataserver.authorization_acl:has_permission
+		return self.context.__parent__
+
+	@Lazy
+	def __acl__(self):
+		aces = [ ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, self) ]
+		result = acl_from_aces(aces)
+		return result

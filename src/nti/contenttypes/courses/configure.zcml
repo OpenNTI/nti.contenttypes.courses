@@ -107,6 +107,7 @@
 					 instructor" />
 
 	<adapter factory=".acl.CourseInstanceACLProvider" />
+	<adapter factory=".acl.CourseOutlineNodeACLProvider" />
 	<adapter factory=".acl.CourseCatalogEntryACLProvider" />
 	<adapter factory=".principalrole.CourseInstancePrincipalRoleMap" />
 
