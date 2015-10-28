@@ -8,7 +8,9 @@ __docformat__ = "restructuredtext en"
 # pylint: disable=W0212,R0904
 
 from hamcrest import is_
+from hamcrest import none
 from hamcrest import all_of
+from hamcrest import is_not
 from hamcrest import has_key
 from hamcrest import has_item
 from hamcrest import not_none
@@ -19,7 +21,7 @@ from hamcrest import has_entries
 from hamcrest import has_property
 from hamcrest import same_instance
 from hamcrest import has_properties
-from hamcrest import is_not as does_not
+does_not = is_not
 
 from nti.testing.matchers import verifiably_provides
 
@@ -88,6 +90,8 @@ class TestCourseInstance(CourseLayerTest):
 						 does_not( has_key('SubInstances')),
 						 # No sharing scopes, no request
 						 does_not( has_key('SharingScopes'))) ) )
+		
+		assert_that(hash(inst), is_not(none()))
 
 	@WithMockDSTrans
 	def test_course_acl(self):
@@ -99,8 +103,8 @@ class TestCourseInstance(CourseLayerTest):
 		sharing_scopes.initScopes()
 
 		public = IPrincipal(sharing_scopes[ES_PUBLIC])
-		credit = IPrincipal(sharing_scopes[ES_CREDIT])
-		purchased =  IPrincipal(sharing_scopes[ES_PURCHASED])
+		IPrincipal(sharing_scopes[ES_CREDIT])
+		IPrincipal(sharing_scopes[ES_PURCHASED])
 
 		provider = acl.CourseInstanceACLProvider(inst)
 
