@@ -67,7 +67,7 @@ def _can_be_removed(registered, force=False):
 	result = registered is not None and \
 			 (	force or
 			 	not IRecordable.providedBy(registered) or
-				not registered.locked )
+				not registered.locked)
 	return result
 can_be_removed = _can_be_removed
 
@@ -75,21 +75,26 @@ def _unregister_nodes(outline):
 	registry = component.getSiteManager()
 	removed = []
 	for node in _outline_nodes(outline):
-		if _can_be_removed( node ):
-			removed.append( node )
+		if _can_be_removed(node):
+			removed.append(node)
 			unregisterUtility(registry,
 							  name=node.ntiid,
 							  provided=iface_of_node(node))
 	return removed
 
+def _get_node(node_ntiid, obj):
+	registry = component.getSiteManager()
+	result = registry.queryUtility(iface_of_node(obj), name=node_ntiid)
+	return result
+
 def _register_nodes(outline):
 	registry = component.getSiteManager()
 	for node in _outline_nodes(outline):
-		if not _get_node( node.ntiid, node ):
+		if _get_node(node.ntiid, node) is None:
 			registerUtility(registry,
 							component=node,
-						    name=node.ntiid,
-						    provided=iface_of_node(node))
+							name=node.ntiid,
+							provided=iface_of_node(node))
 
 def _attr_val(node, name):
 	# Under Py2, lxml will produce byte strings if it is
@@ -107,7 +112,7 @@ def _get_unit_ntiid(outline, unit, idx):
 	if base:
 		provider = get_provider(base) or 'NTI'
 		specific = get_specific(base) + ".%s" % idx
-		ntiid = make_ntiid(	nttype=NTI_COURSE_OUTLINE_NODE,
+		ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
 							base=base,
 							provider=provider,
 							specific=specific)
@@ -125,12 +130,7 @@ def _get_lesson_ntiid(parent, idx):
 					   specific=specific)
 	return ntiid
 
-def _get_node( node_ntiid, obj ):
-	registry = component.getSiteManager()
-	result = registry.queryUtility( iface_of_node(obj), name=node_ntiid )
-	return result
-
-def _build_outline_node( node_factory, lesson, lesson_ntiid, library ):
+def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 	lesson_node = node_factory()
 	topic_ntiid = _attr_val(lesson, 'topic-ntiid')
 
@@ -192,7 +192,7 @@ def fill_outline_from_node(outline, course_element):
 	removed_nodes = _unregister_nodes(outline)
 	removed_ntiids = {x.ntiid for x in removed_nodes}
 	# Clear our removed entries
-	outline.clear_entries( removed_ntiids )
+	outline.clear_entries(removed_ntiids)
 	library = component.queryUtility(IContentPackageLibrary)
 
 	def _handle_node(parent_lxml, parent_node):
@@ -212,10 +212,10 @@ def fill_outline_from_node(outline, course_element):
 													  default=CourseOutlineCalendarNode)
 
 			lesson_ntiid = _get_lesson_ntiid(parent_node, idx)
-			lesson_node =  _get_node( lesson_ntiid, node_factory() )
+			lesson_node = _get_node(lesson_ntiid, node_factory())
 			if lesson_node is None:
-				lesson_node = _build_outline_node( node_factory, lesson,
-												lesson_ntiid, library )
+				lesson_node = _build_outline_node(node_factory, lesson,
+												lesson_ntiid, library)
 			# This node may exist and be sync-locked.  Do we want to permit
 			# the sync process to change this node's children? For now, we
 			# do, but this may change later.  If this changes, we may have
@@ -227,7 +227,7 @@ def fill_outline_from_node(outline, course_element):
 
 	for idx, unit in enumerate(course_element.iterchildren(tag='unit')):
 		unit_ntiid = _get_unit_ntiid(outline, unit, idx)
-		unit_node =  _get_node( unit_ntiid, CourseOutlineNode() )
+		unit_node = _get_node(unit_ntiid, CourseOutlineNode())
 		if unit_node is None:
 			unit_node = CourseOutlineNode()
 			unit_node.title = _attr_val(unit, str('label'))
