@@ -128,7 +128,7 @@ def _get_sync_results(context, sync_results=None, **kwargs):
 		entry = ICourseCatalogEntry(context)
 		results = kwargs.get('results') or []
 		sync_results = CourseSynchronizationResults(NTIID=entry.ntiid, Site=_site_name())
-		results.append(sync_results) 
+		results.append(sync_results)
 	return sync_results
 
 @interface.implementer(IObjectEntrySynchronizer)
@@ -159,7 +159,7 @@ class _GenericFolderSynchronizer(object):
 			allowRemoval = params.allowRemoval
 		else:
 			allowRemoval = True
-		
+
 		# Find the things in the filesystem
 		child_buckets = dict()
 		for item in bucket.enumerateChildren():
@@ -213,7 +213,7 @@ class _ContentCourseSynchronizer(object):
 	def synchronize(self, course, bucket, **kwargs):
 		__traceback_info__ = course, bucket
 		entry = ICourseCatalogEntry(course)
-		
+
 		# gather/prepare sync params/results
 		packages = _get_sync_packages(**kwargs)
 		sync_results = _get_sync_results(entry, **kwargs)
@@ -252,11 +252,11 @@ class _ContentCourseSynchronizer(object):
 								  			 excluded_keys=('ntiid',))
 		if modified:
 			sync_results.ContentBundleUpdated = True
-	
+
 		if created_bundle:
 			lifecycleevent.added(bundle)
 
-		self.update_common_info(course, bucket, 
+		self.update_common_info(course, bucket,
 								sync_results=sync_results,
 								try_legacy_content_bundle=True)
 
@@ -416,7 +416,7 @@ class _ContentCourseSynchronizer(object):
 	def update_outline(cls, course, bucket, sync_results=None,
 					   try_legacy_content_bundle=False):
 		sync_results = _get_sync_results(course, sync_results)
-		
+
 		outline_xml_node = None
 		outline_xml_key = bucket.getChildNamed(COURSE_OUTLINE_NAME)
 		if not outline_xml_key and try_legacy_content_bundle:
@@ -517,7 +517,7 @@ class _ContentCourseSynchronizer(object):
 				sync_results.GradingPolicyUpdated = True
 		elif reset_grading_policy(course):
 			sync_results.GradingPolicyDeleted = True
-			
+
 	@classmethod
 	def validate_assigment_policies(cls, course, bucket):
 		validate_assigment_policies(course)
@@ -587,7 +587,7 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		__traceback_info__ = subcourse, bucket
 
 		sync_results = _get_sync_results(subcourse, **kwargs)
-		_ContentCourseSynchronizer.update_common_info(subcourse, bucket, 
+		_ContentCourseSynchronizer.update_common_info(subcourse, bucket,
 													  sync_results=sync_results)
 
 		# check for open enrollment

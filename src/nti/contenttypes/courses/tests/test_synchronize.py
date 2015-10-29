@@ -489,7 +489,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		# But the CCE for the course is not public
 		assert_that(cat, denies(AUTHENTICATED_GROUP_NAME, ACT_READ))
 		assert_that(cat, denies(AUTHENTICATED_GROUP_NAME, ACT_CREATE))
-		
+
 		# and as joint, just because
 		assert_that(cat, denies([EVERYONE_GROUP_NAME, AUTHENTICATED_GROUP_NAME],
 								ACT_READ))

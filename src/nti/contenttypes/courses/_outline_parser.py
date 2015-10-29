@@ -130,7 +130,7 @@ def _get_node( node_ntiid, obj ):
 	result = registry.queryUtility( iface_of_node(obj), name=node_ntiid )
 	return result
 
-def _build_outline_node( node_factory, lesson, parent_node, lesson_ntiid, library ):
+def _build_outline_node( node_factory, lesson, lesson_ntiid, library ):
 	lesson_node = node_factory()
 	topic_ntiid = _attr_val(lesson, 'topic-ntiid')
 
@@ -162,7 +162,6 @@ def _build_outline_node( node_factory, lesson, parent_node, lesson_ntiid, librar
 	lesson_node.src = _attr_val(lesson, str('src'))
 	lesson_node.ntiid = lesson_ntiid
 
-	parent_node.append(lesson_node)
 	# Sigh. It looks like date is optionally a comma-separated
 	# list of datetimes. If there is only one, that looks like
 	# the end date, not the beginning date.
@@ -190,7 +189,6 @@ def fill_outline_from_node(outline, course_element):
 
 	:return: The outline node.
 	"""
-
 	removed_nodes = _unregister_nodes(outline)
 	removed_ntiids = {x.ntiid for x in removed_nodes}
 	# Clear our removed entries
@@ -217,8 +215,15 @@ def fill_outline_from_node(outline, course_element):
 			lesson_node =  _get_node( lesson_ntiid, node_factory() )
 			if lesson_node is None:
 				lesson_node = _build_outline_node( node_factory, lesson,
-											parent_node, lesson_ntiid, library )
-				_handle_node(lesson, lesson_node)
+												lesson_ntiid, library )
+			# This node may exist and be sync-locked.  Do we want to permit
+			# the sync process to change this node's children? For now, we
+			# do, but this may change later.  If this changes, we may have
+			# to respect lock status from a node's parent lineage.
+			if lesson_ntiid not in parent_node:
+				# Our parent may or may not be new.
+				parent_node.append(lesson_node)
+			_handle_node(lesson, lesson_node)
 
 	for idx, unit in enumerate(course_element.iterchildren(tag='unit')):
 		unit_ntiid = _get_unit_ntiid(outline, unit, idx)
@@ -228,8 +233,10 @@ def fill_outline_from_node(outline, course_element):
 			unit_node.title = _attr_val(unit, str('label'))
 			unit_node.src = _attr_val(unit, str('src'))
 			unit_node.ntiid = unit_ntiid
+
+		if unit_ntiid not in outline:
 			outline.append(unit_node)
-			_handle_node(unit, unit_node)
+		_handle_node(unit, unit_node)
 
 	_register_nodes(outline)
 	return outline
