@@ -31,8 +31,11 @@ from ..interfaces import ICourseCatalog
 from ..interfaces import ICourseOutline
 from ..interfaces import ICourseInstance
 from ..interfaces import ICourseOutlineNode
+from ..interfaces import ICourseSubInstance
 
 from ..interfaces import iface_of_node
+
+from ..utils import get_parent_course
 
 from ..legacy_catalog import ILegacyCourseCatalogEntry
 
@@ -101,9 +104,14 @@ def do_evolve(context, generation=generation):
 					if ILegacyCourseCatalogEntry.providedBy(entry) or ntiid in seen:
 						continue
 					seen.add(ntiid)
-					course = ICourseInstance(entry, None)
-					if not course:
-						continue
+					course = ICourseInstance(entry)
+					
+					# check for shared outlines
+					if ICourseSubInstance.providedBy(course):
+						parent = get_parent_course(course)
+						if parent.Outline == course.Outline:
+							continue
+
 					for node, idx in _outline_nodes(course.Outline):
 						parent = node.__parent__
 						# generate new ntiid
