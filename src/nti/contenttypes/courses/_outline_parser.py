@@ -207,15 +207,16 @@ def fill_outline_from_node(outline, course_element):
 				# content from the UI so that we can enable/disable
 				# hiding in certain site policies.
 				# (TODO: Be sure this works as expected with the caching)
+				ivalid_name='course outline stub node' # not valid Class or MimeType value
 				node_factory = component.queryUtility(component.IFactory,
-													  name='course outline stub node',  # not valid Class or MimeType value
+													  name=ivalid_name,  
 													  default=CourseOutlineCalendarNode)
 
 			lesson_ntiid = _get_lesson_ntiid(parent_node, idx)
 			lesson_node = _get_node(lesson_ntiid, node_factory())
 			if lesson_node is None:
 				lesson_node = _build_outline_node(node_factory, lesson,
-												lesson_ntiid, library)
+												  lesson_ntiid, library)
 			# This node may exist and be sync-locked.  Do we want to permit
 			# the sync process to change this node's children? For now, we
 			# do, but this may change later.  If this changes, we may have
