@@ -51,7 +51,7 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 	createDirectFieldProperties(ICourseInstance)
 
 	lastSynchronized = 0
-	
+
 	def __init__(self):
 		super(CourseInstance,self).__init__()
 

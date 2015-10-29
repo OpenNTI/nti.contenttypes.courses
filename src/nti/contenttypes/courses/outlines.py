@@ -66,6 +66,17 @@ class _AbstractCourseOutlineNode(Contained, RecordableMixin):
 		keys = list(self)
 		for k in keys:
 			del self[k]
+
+	def clear_entries(self, nodes_to_remove):
+		# Clear our children first
+		for node in self.values():
+			node.clear_entries( nodes_to_remove )
+
+		# Then ourselves
+		for key in nodes_to_remove:
+			if key in self:
+				del self[key]
+
 	clear = reset
 
 @interface.implementer(ICourseOutlineNode)

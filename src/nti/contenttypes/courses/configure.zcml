@@ -52,7 +52,7 @@
 			 for=".interfaces.ICourseInstanceEnrollmentRecord"
 			 provides="nti.externalization.interfaces.IInternalObjectExternalizer"
 			 name="summary" />
-			 
+
 	<!-- Externalize the CourseInstanceSharingScope like the 'community'
 	it appears to be. -->
 	<adapter factory="nti.dataserver.users.users_external._EntitySummaryExternalObject"
@@ -251,7 +251,7 @@
 	<configure zcml:condition="installed nti.metadata">
 		<subscriber	factory=".predicates._CoursePrincipalObjects"
 					provides="nti.dataserver.interfaces.IPrincipalMetadataObjects" />
-					
+
 		<subscriber	factory=".predicates._EnrollmentPrincipalObjects"
 					provides="nti.dataserver.interfaces.IPrincipalMetadataObjects" />
 	</configure>
@@ -272,5 +272,5 @@
 
 	<!-- Discussions -->
 	<include package=".discussions" />
-	
+
 </configure>

@@ -468,3 +468,4 @@ def get_default_sharing_scope(context):
 				course = context.__parent__.__parent__
 			result = course.SharingScopes[ scope ]
 	return result
+

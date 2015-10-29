@@ -18,6 +18,8 @@ from zope import component
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
+from nti.coremetadata.interfaces import IRecordable
+
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
@@ -61,21 +63,34 @@ def _outline_nodes(outline):
 	_recur(outline)
 	return result
 
+def _can_be_removed(registered, force=False):
+	result = registered is not None and \
+			 (	force or
+			 	not IRecordable.providedBy(registered) or
+				not registered.locked )
+	return result
+can_be_removed = _can_be_removed
+
 def _unregister_nodes(outline):
 	registry = component.getSiteManager()
+	removed = []
 	for node in _outline_nodes(outline):
-		unregisterUtility(registry,
-						  name=node.ntiid,
-						  provided=iface_of_node(node))
+		if _can_be_removed( node ):
+			removed.append( node )
+			unregisterUtility(registry,
+							  name=node.ntiid,
+							  provided=iface_of_node(node))
+	return removed
 
 def _register_nodes(outline):
 	registry = component.getSiteManager()
 	for node in _outline_nodes(outline):
-		registerUtility(registry,
-						component=node,
-					    name=node.ntiid,
-					    provided=iface_of_node(node))
-	
+		if not _get_node( node.ntiid, node ):
+			registerUtility(registry,
+							component=node,
+						    name=node.ntiid,
+						    provided=iface_of_node(node))
+
 def _attr_val(node, name):
 	# Under Py2, lxml will produce byte strings if it is
 	# ascii text, otherwise it will already decode it
@@ -85,31 +100,82 @@ def _attr_val(node, name):
 	# https://mailman-mail5.webfaction.com/pipermail/lxml/2011-December/006239.html
 	val = node.get(bytes(name))
 	return val.decode('utf-8') if isinstance(val, bytes) else val
-	
-def _set_unit_ntiid(outline, node, unit, idx):
+
+def _get_unit_ntiid(outline, unit, idx):
 	entry = _get_catalog_entry(outline)
 	base = entry.ntiid if entry is not None else None
 	if base:
 		provider = get_provider(base) or 'NTI'
 		specific = get_specific(base) + ".%s" % idx
-		ntiid = make_ntiid(	nttype=NTI_COURSE_OUTLINE_NODE, 
+		ntiid = make_ntiid(	nttype=NTI_COURSE_OUTLINE_NODE,
 							base=base,
 							provider=provider,
 							specific=specific)
 	else:
 		ntiid = _attr_val(unit, str('ntiid'))
-	node.ntiid = ntiid
+	return ntiid
 
-def _set_lesson_ntiid(parent, node, lesson, idx):
+def _get_lesson_ntiid(parent, idx):
 	base = parent.ntiid
 	provider = get_provider(base) or 'NTI'
 	specific = get_specific(base) + ".%s" % idx
 	ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
-					   base=base, 
+					   base=base,
 					   provider=provider,
 					   specific=specific)
-	node.ntiid = ntiid
-	
+	return ntiid
+
+def _get_node( node_ntiid, obj ):
+	registry = component.getSiteManager()
+	result = registry.queryUtility( iface_of_node(obj), name=node_ntiid )
+	return result
+
+def _build_outline_node( node_factory, lesson, parent_node, lesson_ntiid, library ):
+	lesson_node = node_factory()
+	topic_ntiid = _attr_val(lesson, 'topic-ntiid')
+
+	__traceback_info__ = topic_ntiid
+
+	# Now give it the title and description of the content node,
+	# if they have them (they may not, but we require them, even if blank).
+	# If the XML itself has a value, that overrides
+
+	content_units = library.pathToNTIID(topic_ntiid, skip_cache=True) if library else None
+	if not content_units:
+		logger.warn("Unable to find referenced course node %s", topic_ntiid)
+		content_unit = None
+	else:
+		content_unit = content_units[-1]
+
+	for attr in 'title', 'description':
+		val = _attr_val(lesson, attr) or getattr(content_unit, attr, None)
+		if val:
+			setattr(lesson_node, attr, val)
+
+	# Now, if our node is supposed to have the NTIID, expose it.
+	# Even if it doesn't (and won't be in the schema and won't be
+	# externalized) go ahead and put it there for convenience.
+	# See the ICourseOutlineCalendarNode for information.
+	if topic_ntiid:
+		lesson_node.ContentNTIID = topic_ntiid
+
+	lesson_node.src = _attr_val(lesson, str('src'))
+	lesson_node.ntiid = lesson_ntiid
+
+	parent_node.append(lesson_node)
+	# Sigh. It looks like date is optionally a comma-separated
+	# list of datetimes. If there is only one, that looks like
+	# the end date, not the beginning date.
+	dates = lesson.get('date', ())
+	if dates:
+		dates = dates.split(',')
+	if len(dates) == 1:
+		lesson_node.AvailableEnding = dates[0]
+	elif len(dates) == 2:
+		lesson_node.AvailableBeginning = dates[0]
+		lesson_node.AvailableEnding = dates[1]
+	return lesson_node
+
 def fill_outline_from_node(outline, course_element):
 	"""
 	Given a CourseOutline object and an eTree element object containing its
@@ -125,8 +191,10 @@ def fill_outline_from_node(outline, course_element):
 	:return: The outline node.
 	"""
 
-	_unregister_nodes(outline)
-	outline.reset()
+	removed_nodes = _unregister_nodes(outline)
+	removed_ntiids = {x.ntiid for x in removed_nodes}
+	# Clear our removed entries
+	outline.clear_entries( removed_ntiids )
 	library = component.queryUtility(IContentPackageLibrary)
 
 	def _handle_node(parent_lxml, parent_node):
@@ -145,58 +213,23 @@ def fill_outline_from_node(outline, course_element):
 													  name='course outline stub node',  # not valid Class or MimeType value
 													  default=CourseOutlineCalendarNode)
 
-			lesson_node = node_factory()
-			topic_ntiid = _attr_val(lesson, 'topic-ntiid')
-
-			__traceback_info__ = topic_ntiid
-
-			# Now give it the title and description of the content node,
-			# if they have them (they may not, but we require them, even if blank).
-			# If the XML itself has a value, that overrides
-
-			content_units = library.pathToNTIID(topic_ntiid, skip_cache=True) if library else None
-			if not content_units:
-				logger.warn("Unable to find referenced course node %s", topic_ntiid)
-				content_unit = None
-			else:
-				content_unit = content_units[-1]
-
-			for attr in 'title', 'description':
-				val = _attr_val(lesson, attr) or getattr(content_unit, attr, None)
-				if val:
-					setattr(lesson_node, attr, val)
-
-			# Now, if our node is supposed to have the NTIID, expose it.
-			# Even if it doesn't (and won't be in the schema and won't be
-			# externalized) go ahead and put it there for convenience.
-			# See the ICourseOutlineCalendarNode for information.
-			if topic_ntiid:
-				lesson_node.ContentNTIID = topic_ntiid
-
-			lesson_node.src = _attr_val(lesson, str('src'))
-			_set_lesson_ntiid(parent_node, lesson_node, lesson, idx)
-
-			parent_node.append(lesson_node)
-			# Sigh. It looks like date is optionally a comma-separated
-			# list of datetimes. If there is only one, that looks like
-			# the end date, not the beginning date.
-			dates = lesson.get('date', ())
-			if dates:
-				dates = dates.split(',')
-			if len(dates) == 1:
-				lesson_node.AvailableEnding = dates[0]
-			elif len(dates) == 2:
-				lesson_node.AvailableBeginning = dates[0]
-				lesson_node.AvailableEnding = dates[1]
-			_handle_node(lesson, lesson_node)
+			lesson_ntiid = _get_lesson_ntiid(parent_node, idx)
+			lesson_node =  _get_node( lesson_ntiid, node_factory() )
+			if lesson_node is None:
+				lesson_node = _build_outline_node( node_factory, lesson,
+											parent_node, lesson_ntiid, library )
+				_handle_node(lesson, lesson_node)
 
 	for idx, unit in enumerate(course_element.iterchildren(tag='unit')):
-		unit_node = CourseOutlineNode()
-		unit_node.title = _attr_val(unit, str('label'))
-		unit_node.src = _attr_val(unit, str('src'))
-		_set_unit_ntiid(outline, unit_node, unit, idx)
-		outline.append(unit_node)
-		_handle_node(unit, unit_node)
+		unit_ntiid = _get_unit_ntiid(outline, unit, idx)
+		unit_node =  _get_node( unit_ntiid, CourseOutlineNode() )
+		if unit_node is None:
+			unit_node = CourseOutlineNode()
+			unit_node.title = _attr_val(unit, str('label'))
+			unit_node.src = _attr_val(unit, str('src'))
+			unit_node.ntiid = unit_ntiid
+			outline.append(unit_node)
+			_handle_node(unit, unit_node)
 
 	_register_nodes(outline)
 	return outline
