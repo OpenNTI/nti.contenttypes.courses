@@ -16,11 +16,12 @@ from zope import interface
 from zope.annotation.interfaces import IAttributeAnnotatable
 
 from zope.container.constraints import checkObject
-from zope.container.ordered import OrderedContainer # this is persistent
+from zope.container.ordered import OrderedContainer  # this is persistent
 from zope.container.contained import Contained, uncontained
 
 from nti.coremetadata.mixins import RecordableMixin
 
+from nti.dataserver.interfaces import SYSTEM_USER_ID
 from nti.dataserver.interfaces import ITitledDescribedContent
 
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
@@ -42,6 +43,8 @@ class _AbstractCourseOutlineNode(Contained, RecordableMixin):
 	createDirectFieldProperties(ICourseOutlineNode)
 
 	__external_can_create__ = False
+
+	creator = SYSTEM_USER_ID
 
 	title = AdaptingFieldProperty(ITitledDescribedContent['title'])
 	description = AdaptingFieldProperty(ITitledDescribedContent['description'])
@@ -70,7 +73,7 @@ class _AbstractCourseOutlineNode(Contained, RecordableMixin):
 	def clear_entries(self, nodes_to_remove):
 		# Clear our children first
 		for node in self.values():
-			node.clear_entries( nodes_to_remove )
+			node.clear_entries(nodes_to_remove)
 
 		# Then ourselves
 		for key in nodes_to_remove:
@@ -81,7 +84,7 @@ class _AbstractCourseOutlineNode(Contained, RecordableMixin):
 
 @interface.implementer(ICourseOutlineNode)
 class CourseOutlineNode(_AbstractCourseOutlineNode,
-						PersistentCreatedModDateTrackingObject, # order mattters
+						PersistentCreatedModDateTrackingObject,  # order mattters
 						OrderedContainer):
 	# XXX This class used to be persistent. Although there were
 	# never any references explicitly stored to them, because it
