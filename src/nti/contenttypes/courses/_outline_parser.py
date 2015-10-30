@@ -65,6 +65,7 @@ def _outline_nodes(outline):
 
 	_recur(outline)
 	return result
+outline_nodes = _outline_nodes
 
 def _can_be_removed(registered, force=False):
 	result = registered is not None and \
@@ -74,9 +75,9 @@ def _can_be_removed(registered, force=False):
 	return result
 can_be_removed = _can_be_removed
 
-def _unregister_nodes(outline, force=False):
+def _unregister_nodes(outline, registry=None, force=False):
 	removed = []
-	registry = component.getSiteManager()
+	registry = component.getSiteManager() if registry is None else registry
 	for node in _outline_nodes(outline):
 		if _can_be_removed(node, force=force):
 			removed.append(node)
@@ -84,20 +85,23 @@ def _unregister_nodes(outline, force=False):
 							  name=node.ntiid,
 							  provided=iface_of_node(node))
 	return removed
+unregister_nodes = _unregister_nodes
 
 def _get_node(node_ntiid, obj):
 	registry = component.getSiteManager()
 	result = registry.queryUtility(iface_of_node(obj), name=node_ntiid)
 	return result
+get_node = _get_node
 
-def _register_nodes(outline):
-	registry = component.getSiteManager()
+def _register_nodes(outline, registry=None):
+	registry = component.getSiteManager() if registry is None else registry
 	for node in _outline_nodes(outline):
 		if _get_node(node.ntiid, node) is None:
 			registerUtility(registry,
 							component=node,
 							name=node.ntiid,
 							provided=iface_of_node(node))
+register_nodes = _register_nodes
 
 def _copy_remove_transactions(removed_nodes):
 	registry = component.getSiteManager()
