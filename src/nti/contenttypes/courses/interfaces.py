@@ -95,19 +95,9 @@ RID_INSTRUCTOR = "nti.roles.course_instructor"
 #: The ID of a role for teaching assistants
 RID_TA = "nti.roles.course_ta"
 
-#: Sections folder
 SECTIONS = 'Sections'
-
-#: Discussions folder
 DISCUSSIONS = 'Discussions'
 
-#: Courses folder
-COURSE_CATALOG_NAME = 'Courses'
-
-#: Course outline file name
-COURSE_OUTLINE_NAME = 'course_outline.xml'
-
-#: Instructor role
 INSTRUCTOR = "Instructor"
 
 # Notes:
