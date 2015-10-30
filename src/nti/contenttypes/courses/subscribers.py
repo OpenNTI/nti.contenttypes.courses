@@ -50,9 +50,9 @@ from .interfaces import ICourseRolesSynchronized
 
 from .utils import index_course_instructors
 
-from . import get_enrollment_catalog
+from . import COURSE_CATALOG_NAME
 
-COURSE_CATALOG_NAME = 'Courses'
+from . import get_enrollment_catalog
 
 # XXX: This is very similar to nti.contentlibrary.subscribers
 

@@ -414,7 +414,8 @@ class _ContentCourseSynchronizer(object):
 
 	@classmethod
 	def update_outline(cls, course, bucket, sync_results=None,
-					   try_legacy_content_bundle=False):
+					   try_legacy_content_bundle=False,
+					   force=False):
 		sync_results = _get_sync_results(course, sync_results)
 
 		outline_xml_node = None
@@ -448,7 +449,8 @@ class _ContentCourseSynchronizer(object):
 				pass
 			if fill_outline_from_key(course.Outline,
 								  	 outline_xml_key,
-								  	 xml_parent_name=outline_xml_node):
+								  	 xml_parent_name=outline_xml_node,
+								  	 force=force):
 				sync_results.OutlineUpdated = True
 
 	@classmethod
