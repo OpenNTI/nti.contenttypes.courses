@@ -69,9 +69,7 @@ outline_nodes = _outline_nodes
 
 def _can_be_removed(registered, force=False):
 	result = registered is not None and \
-			 (force or
-			 	not IRecordable.providedBy(registered) or
-				not registered.locked)
+			 (force or not IRecordable.providedBy(registered) or not registered.locked)
 	return result
 can_be_removed = _can_be_removed
 
@@ -103,8 +101,8 @@ def _register_nodes(outline, registry=None):
 							provided=iface_of_node(node))
 register_nodes = _register_nodes
 
-def _copy_remove_transactions(removed_nodes):
-	registry = component.getSiteManager()
+def _copy_remove_transactions(removed_nodes, registry=None):
+	registry = component.getSiteManager() if registry is None else registry
 	for node_ntiid, node in removed_nodes.items():
 		provided = iface_of_node(node)
 		new_node = registry.queryUtility(provided, name=node_ntiid)
@@ -112,6 +110,7 @@ def _copy_remove_transactions(removed_nodes):
 			remove_transaction_history(node)
 		else:
 			copy_transaction_history(node, new_node)
+copy_remove_transactions = _copy_remove_transactions
 
 def _attr_val(node, name):
 	# Under Py2, lxml will produce byte strings if it is
