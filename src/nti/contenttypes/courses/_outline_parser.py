@@ -209,7 +209,7 @@ def fill_outline_from_node(outline, course_element):
 				# (TODO: Be sure this works as expected with the caching)
 				ivalid_name='course outline stub node' # not valid Class or MimeType value
 				node_factory = component.queryUtility(component.IFactory,
-													  name=ivalid_name,  
+													  name=ivalid_name,
 													  default=CourseOutlineCalendarNode)
 
 			lesson_ntiid = _get_lesson_ntiid(parent_node, idx)
@@ -217,6 +217,9 @@ def fill_outline_from_node(outline, course_element):
 			if lesson_node is None:
 				lesson_node = _build_outline_node(node_factory, lesson,
 												  lesson_ntiid, library)
+			else:
+				logger.info( 'Lesson node not syncing due to sync lock (%s)', lesson_ntiid )
+
 			# This node may exist and be sync-locked.  Do we want to permit
 			# the sync process to change this node's children? For now, we
 			# do, but this may change later.  If this changes, we may have
@@ -234,6 +237,8 @@ def fill_outline_from_node(outline, course_element):
 			unit_node.title = _attr_val(unit, str('label'))
 			unit_node.src = _attr_val(unit, str('src'))
 			unit_node.ntiid = unit_ntiid
+		else:
+			logger.info( 'Unit node not syncing due to sync lock (%s)', unit_ntiid )
 
 		if unit_ntiid not in outline:
 			outline.append(unit_node)
