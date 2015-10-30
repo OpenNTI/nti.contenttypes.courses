@@ -24,6 +24,9 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 
+from nti.recorder.record import copy_transaction_history
+from nti.recorder.record import remove_transaction_history
+
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
 
@@ -95,6 +98,16 @@ def _register_nodes(outline):
 							component=node,
 							name=node.ntiid,
 							provided=iface_of_node(node))
+
+def _copy_remove_transactions( removed_nodes ):
+	registry = component.getSiteManager()
+	for node_ntiid, node in removed_nodes.items():
+		provided = iface_of_node( node )
+		new_node = registry.queryUtility(provided, name=node_ntiid)
+		if new_node is None:
+			remove_transaction_history( node )
+		else:
+			copy_transaction_history( node, new_node )
 
 def _attr_val(node, name):
 	# Under Py2, lxml will produce byte strings if it is
@@ -189,11 +202,10 @@ def fill_outline_from_node(outline, course_element):
 
 	:return: The outline node.
 	"""
-	removed_nodes = _unregister_nodes(outline)
-	removed_ntiids = {x.ntiid for x in removed_nodes}
+	removed_nodes = {x.ntiid:x for x in _unregister_nodes(outline)}
 	# Clear our removed entries
-	outline.clear_entries(removed_ntiids)
-	library = component.queryUtility(IContentPackageLibrary)
+	outline.clear_entries( removed_nodes.keys() )
+	library = component.queryUtility( IContentPackageLibrary )
 
 	def _handle_node(parent_lxml, parent_node):
 		for idx, lesson in enumerate(parent_lxml.iterchildren(tag='lesson')):
@@ -245,6 +257,8 @@ def fill_outline_from_node(outline, course_element):
 		_handle_node(unit, unit_node)
 
 	_register_nodes(outline)
+	# After registering, copy tx history
+	_copy_remove_transactions( removed_nodes )
 	return outline
 
 def fill_outline_from_key(outline, key, xml_parent_name=None, force=False):
