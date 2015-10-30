@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 from hamcrest import is_
 from hamcrest import empty
+from hamcrest import is_in
 from hamcrest import contains
 from hamcrest import assert_that
 
@@ -22,6 +23,7 @@ from zope.securitypolicy.interfaces import IPrincipalRoleMap
 
 from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
+from nti.contenttypes.courses.utils import get_instructors_in_roles
 from nti.contenttypes.courses.principalrole import CourseInstancePrincipalRoleMap
 
 class _PhonyPrincipal(object):
@@ -65,6 +67,9 @@ class TestCourseInstancePrincipalRoleMap(unittest.TestCase):
 		assert_that( self.rolemap.getPrincipalsForRole(RID_TA), is_(empty()))
 		assert_that( self.rolemap.getPrincipalsForRole(RID_INSTRUCTOR),
 					 contains( ('foo', Allow) ) )
+		
+		instructors = get_instructors_in_roles(self.rolemap)
+		assert_that('foo', is_in(instructors))
 
 	def test_roles_for_principal(self):
 		assert_that( self.rolemap.getRolesForPrincipal('foo'), is_(empty()))

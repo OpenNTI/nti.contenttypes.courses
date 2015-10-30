@@ -111,6 +111,22 @@ def drop_any_other_enrollments(context, user, ignore_existing=True):
 				result.append(instance)
 	return result
 
+def get_instructors_in_roles(roles, setting=Allow):
+	result = set()
+	instructors = chain(roles.getPrincipalsForRole(RID_TA) or (), 
+		  				roles.getPrincipalsForRole(RID_INSTRUCTOR) or ())
+	for principal, stored in instructors:
+		if stored == setting:
+			pid = getattr(principal, 'id', str(principal))
+			result.add(pid)
+	return result
+
+def get_course_instructors(context, setting=Allow):
+	course = ICourseInstance(context, None)
+	roles = IPrincipalRoleMap(course, None)
+	result = get_instructors_in_roles(roles, setting) if roles else ()
+	return result
+
 def is_course_instructor(context, user):
 	result = False
 	prin = IPrincipal(user, None)
