@@ -68,17 +68,17 @@ def _outline_nodes(outline):
 
 def _can_be_removed(registered, force=False):
 	result = registered is not None and \
-			 (	force or
+			 (force or
 			 	not IRecordable.providedBy(registered) or
 				not registered.locked)
 	return result
 can_be_removed = _can_be_removed
 
-def _unregister_nodes(outline):
-	registry = component.getSiteManager()
+def _unregister_nodes(outline, force=False):
 	removed = []
+	registry = component.getSiteManager()
 	for node in _outline_nodes(outline):
-		if _can_be_removed(node):
+		if _can_be_removed(node, force=force):
 			removed.append(node)
 			unregisterUtility(registry,
 							  name=node.ntiid,
@@ -99,15 +99,15 @@ def _register_nodes(outline):
 							name=node.ntiid,
 							provided=iface_of_node(node))
 
-def _copy_remove_transactions( removed_nodes ):
+def _copy_remove_transactions(removed_nodes):
 	registry = component.getSiteManager()
 	for node_ntiid, node in removed_nodes.items():
-		provided = iface_of_node( node )
+		provided = iface_of_node(node)
 		new_node = registry.queryUtility(provided, name=node_ntiid)
 		if new_node is None:
-			remove_transaction_history( node )
+			remove_transaction_history(node)
 		else:
-			copy_transaction_history( node, new_node )
+			copy_transaction_history(node, new_node)
 
 def _attr_val(node, name):
 	# Under Py2, lxml will produce byte strings if it is
@@ -204,8 +204,8 @@ def fill_outline_from_node(outline, course_element):
 	"""
 	removed_nodes = {x.ntiid:x for x in _unregister_nodes(outline)}
 	# Clear our removed entries
-	outline.clear_entries( removed_nodes.keys() )
-	library = component.queryUtility( IContentPackageLibrary )
+	outline.clear_entries(removed_nodes.keys())
+	library = component.queryUtility(IContentPackageLibrary)
 
 	def _handle_node(parent_lxml, parent_node):
 		for idx, lesson in enumerate(parent_lxml.iterchildren(tag='lesson')):
@@ -219,7 +219,7 @@ def fill_outline_from_node(outline, course_element):
 				# content from the UI so that we can enable/disable
 				# hiding in certain site policies.
 				# (TODO: Be sure this works as expected with the caching)
-				ivalid_name='course outline stub node' # not valid Class or MimeType value
+				ivalid_name = 'course outline stub node'  # not valid Class or MimeType value
 				node_factory = component.queryUtility(component.IFactory,
 													  name=ivalid_name,
 													  default=CourseOutlineCalendarNode)
@@ -230,7 +230,7 @@ def fill_outline_from_node(outline, course_element):
 				lesson_node = _build_outline_node(node_factory, lesson,
 												  lesson_ntiid, library)
 			else:
-				logger.info( 'Lesson node not syncing due to sync lock (%s)', lesson_ntiid )
+				logger.info('Lesson node not syncing due to sync lock (%s)', lesson_ntiid)
 
 			# This node may exist and be sync-locked.  Do we want to permit
 			# the sync process to change this node's children? For now, we
@@ -250,7 +250,7 @@ def fill_outline_from_node(outline, course_element):
 			unit_node.src = _attr_val(unit, str('src'))
 			unit_node.ntiid = unit_ntiid
 		else:
-			logger.info( 'Unit node not syncing due to sync lock (%s)', unit_ntiid )
+			logger.info('Unit node not syncing due to sync lock (%s)', unit_ntiid)
 
 		if unit_ntiid not in outline:
 			outline.append(unit_node)
@@ -258,7 +258,7 @@ def fill_outline_from_node(outline, course_element):
 
 	_register_nodes(outline)
 	# After registering, copy tx history
-	_copy_remove_transactions( removed_nodes )
+	_copy_remove_transactions(removed_nodes)
 	return outline
 
 def fill_outline_from_key(outline, key, xml_parent_name=None, force=False):
