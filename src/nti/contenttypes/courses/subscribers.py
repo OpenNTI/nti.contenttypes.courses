@@ -38,8 +38,10 @@ from .catalog import CourseCatalogFolder
 
 from .index import IX_COURSE, IX_SCOPE, IX_SITE
 
-from .interfaces import INSTRUCTOR
 from .interfaces import iface_of_node
+
+from .interfaces import INSTRUCTOR
+from .interfaces import COURSE_CATALOG_NAME
 
 from .interfaces import ICourseInstance
 from .interfaces import ICourseOutlineNode
@@ -49,8 +51,6 @@ from .interfaces import IPersistentCourseCatalog
 from .interfaces import ICourseRolesSynchronized
 
 from .utils import index_course_instructors
-
-from . import COURSE_CATALOG_NAME
 
 from . import get_enrollment_catalog
 

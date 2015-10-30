@@ -57,6 +57,7 @@ from .enrollment import has_deny_open_enrollment
 from .enrollment import check_deny_open_enrollment
 
 from .interfaces import ES_CREDIT
+from .interfaces import COURSE_OUTLINE_NAME
 from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
 from .interfaces import ICourseInstance
@@ -98,7 +99,6 @@ from .interfaces import DISCUSSIONS as DISCUSSION_FOLDER_NAME
 ROLE_INFO_NAME = 'role_info.json'
 VENDOR_INFO_NAME = 'vendor_info.json'
 CATALOG_INFO_NAME = 'course_info.json'
-COURSE_OUTLINE_NAME = 'course_outline.xml'
 GRADING_POLICY_NAME = 'grading_policy.json'
 INSTRUCTOR_INFO_NAME = 'instructor_info.json'
 ASSIGNMENT_DATES_NAME = 'assignment_policies.json'

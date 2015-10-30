@@ -25,8 +25,6 @@ from .vendorinfo import VENDOR_INFO_KEY
 from .interfaces import ICourseInstance
 from .interfaces import ICourseInstanceVendorInfo
 
-COURSE_CATALOG_NAME = 'Courses'
-
 def get_enrollment_catalog():
 	return component.queryUtility(ICatalog, name=CATALOG_NAME)
 
