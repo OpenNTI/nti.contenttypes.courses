@@ -191,7 +191,7 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 		lesson_node.AvailableEnding = dates[1]
 	return lesson_node
 
-def fill_outline_from_node(outline, course_element):
+def fill_outline_from_node(outline, course_element, force=False):
 	"""
 	Given a CourseOutline object and an eTree element object containing its
 	``unit`` and ``lesson`` definitions,
@@ -205,7 +205,7 @@ def fill_outline_from_node(outline, course_element):
 
 	:return: The outline node.
 	"""
-	removed_nodes = {x.ntiid:x for x in _unregister_nodes(outline)}
+	removed_nodes = {x.ntiid:x for x in _unregister_nodes(outline, force=force)}
 	# Clear our removed entries
 	outline.clear_entries(removed_nodes.keys())
 	library = component.queryUtility(IContentPackageLibrary)
@@ -292,7 +292,7 @@ def fill_outline_from_key(outline, key, xml_parent_name=None, force=False):
 			node = next(node.iterchildren(tag=xml_parent_name))
 		except StopIteration:
 			raise ValueError("No outline child in key", key, xml_parent_name)
-	fill_outline_from_node(outline, node)
+	fill_outline_from_node(outline, node, force=force)
 
 	outline.lastModified = key.lastModified
 	return True
