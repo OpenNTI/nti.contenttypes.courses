@@ -24,6 +24,7 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 
+from nti.recorder.record import get_transactions
 from nti.recorder.record import copy_transaction_history
 from nti.recorder.record import remove_transaction_history
 
@@ -110,7 +111,6 @@ def _copy_remove_transactions(removed_nodes, registry=None):
 			remove_transaction_history(node)
 		else:
 			copy_transaction_history(node, new_node)
-copy_remove_transactions = _copy_remove_transactions
 
 def _attr_val(node, name):
 	# Under Py2, lxml will produce byte strings if it is
@@ -205,7 +205,11 @@ def fill_outline_from_node(outline, course_element, force=False):
 
 	:return: The outline node.
 	"""
+
 	removed_nodes = {x.ntiid:x for x in _unregister_nodes(outline, force=force)}
+	node_transactions = {k:get_transactions(v) for k,v in removed_nodes.items()}
+	assert len(node_transactions) == len(removed_nodes)
+
 	# Clear our removed entries
 	outline.clear_entries(removed_nodes.keys())
 	library = component.queryUtility(IContentPackageLibrary)
