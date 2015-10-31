@@ -85,8 +85,8 @@ def _unregister_nodes(outline, registry=None, force=False):
 	return removed
 unregister_nodes = _unregister_nodes
 
-def _get_node(node_ntiid, obj):
-	registry = component.getSiteManager()
+def _get_node(node_ntiid, obj, registry=None):
+	registry = component.getSiteManager() if registry is None else registry
 	result = registry.queryUtility(iface_of_node(obj), name=node_ntiid)
 	return result
 get_node = _get_node
@@ -245,10 +245,11 @@ def fill_outline_from_node(outline, course_element, force=False):
 			_handle_node(lesson, lesson_node)
 
 	for idx, unit in enumerate(course_element.iterchildren(tag='unit')):
+		node = CourseOutlineNode()
 		unit_ntiid = _get_unit_ntiid(outline, unit, idx)
-		unit_node = _get_node(unit_ntiid, CourseOutlineNode())
+		unit_node = _get_node(unit_ntiid, node)
 		if unit_node is None:
-			unit_node = CourseOutlineNode()
+			unit_node = node
 			unit_node.title = _attr_val(unit, str('label'))
 			unit_node.src = _attr_val(unit, str('src'))
 			unit_node.ntiid = unit_ntiid
