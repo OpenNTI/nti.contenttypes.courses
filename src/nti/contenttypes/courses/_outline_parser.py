@@ -24,8 +24,8 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 
+from nti.recorder.record import copy_records
 from nti.recorder.record import get_transactions
-from nti.recorder.record import copy_transaction_history
 from nti.recorder.record import remove_transaction_history
 
 from nti.site.utils import registerUtility
@@ -102,7 +102,7 @@ def _register_nodes(outline, registry=None):
 							provided=iface_of_node(node))
 register_nodes = _register_nodes
 
-def _copy_remove_transactions(removed_nodes, registry=None):
+def _copy_remove_transactions(removed_nodes, record_map, registry=None):
 	registry = component.getSiteManager() if registry is None else registry
 	for node_ntiid, node in removed_nodes.items():
 		provided = iface_of_node(node)
@@ -110,7 +110,8 @@ def _copy_remove_transactions(removed_nodes, registry=None):
 		if new_node is None:
 			remove_transaction_history(node)
 		else:
-			copy_transaction_history(node, new_node)
+			records = record_map.get(node_ntiid) or ()
+			copy_records(new_node, records)
 
 def _attr_val(node, name):
 	# Under Py2, lxml will produce byte strings if it is
@@ -208,7 +209,6 @@ def fill_outline_from_node(outline, course_element, force=False):
 
 	removed_nodes = {x.ntiid:x for x in _unregister_nodes(outline, force=force)}
 	node_transactions = {k:get_transactions(v) for k,v in removed_nodes.items()}
-	assert len(node_transactions) == len(removed_nodes)
 
 	# Clear our removed entries
 	outline.clear_entries(removed_nodes.keys())
@@ -265,8 +265,10 @@ def fill_outline_from_node(outline, course_element, force=False):
 		_handle_node(unit, unit_node)
 
 	_register_nodes(outline)
-	# After registering, copy tx history
-	_copy_remove_transactions(removed_nodes)
+	
+	# after registering, restore tx history
+	_copy_remove_transactions(removed_nodes, node_transactions)
+
 	return outline
 
 def fill_outline_from_key(outline, key, xml_parent_name=None, force=False):
