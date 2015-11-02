@@ -7,6 +7,8 @@ __docformat__ = "restructuredtext en"
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
+from hamcrest import none
+from hamcrest import is_not
 from hamcrest import has_entries
 from hamcrest import assert_that
 
@@ -15,9 +17,13 @@ from nti.testing.matchers import verifiably_provides
 
 from datetime import datetime
 
+from nti.coremetadata.interfaces import IRecordable
+
 from nti.contenttypes.courses import courses
 from nti.contenttypes.courses import outlines
 from nti.contenttypes.courses import interfaces
+
+from nti.recorder.interfaces import ITransactionRecordHistory
 
 from nti.externalization.tests import externalizes
 
@@ -25,11 +31,16 @@ from nti.contenttypes.courses.tests import CourseLayerTest
 
 class TestCourseOutline(CourseLayerTest):
 
-	set_up_packages = (__name__,)
-
 	def test_outline_implements(self):
 		assert_that( outlines.CourseOutlineNode(), verifiably_provides(interfaces.ICourseOutlineNode) )
 		assert_that( outlines.CourseOutline(), verifiably_provides(interfaces.ICourseOutline) )
+		assert_that( outlines.CourseOutlineNode(), verifiably_provides(IRecordable))
+		assert_that( outlines.CourseOutline(), verifiably_provides(IRecordable))
+
+	def test_trx_history(self):
+		node = outlines.CourseOutlineNode()
+		history = ITransactionRecordHistory(node, None)
+		assert_that(history, is_not(none()))
 
 	def test_outline_containment(self):
 		inst = courses.CourseInstance()

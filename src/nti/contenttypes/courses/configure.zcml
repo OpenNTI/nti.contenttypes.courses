@@ -14,7 +14,8 @@
 	<include package="zope.securitypolicy" />
 
 	<include package="nti.mimetype" />
-
+	<include package="nti.recorder" />
+	
 	<include package="zope.generations" />
 	<include package="zope.generations" file="subscriber.zcml" />
 
