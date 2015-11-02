@@ -118,6 +118,7 @@ class CourseCatalogEntryACLProvider(object):
 				# we actually want to be public and not inherit this.
 				non_public = False
 
+		acl = []
 		if non_public:
 			# Although it might be be nice to inherit from the non-public
 			# course in our lineage, we actually need to be a bit stricter
@@ -130,7 +131,7 @@ class CourseCatalogEntryACLProvider(object):
 			course = course_in_lineage or ICourseInstance(cce, None)
 			if course is not None:
 				# Use our course ACL to give enrolled students access.
-				acl = IACLProvider(course).__acl__
+				acl.extend(IACLProvider(course).__acl__)
 				acl.append(
 					# Nobody can 'create' (enroll)
 					# Nobody else can view it either
@@ -144,17 +145,15 @@ class CourseCatalogEntryACLProvider(object):
 								(ACT_CREATE, ACT_READ),
 								CourseCatalogEntryACLProvider),
 				)
-
-				return acl
-
-			# Hmm.
-			return [ACE_DENY_ALL]
-
-		acl = acl_from_aces(
-			ace_allowing(IPrincipal(AUTHENTICATED_GROUP_NAME),
-						 (ACT_CREATE, ACT_READ),
-						 CourseCatalogEntryACLProvider)
-		)
+			else:
+				# Hmm.
+				acl.append(ACE_DENY_ALL)
+		else:
+			acl.append(ace_allowing(IPrincipal(AUTHENTICATED_GROUP_NAME),
+						 			(ACT_CREATE, ACT_READ),
+									CourseCatalogEntryACLProvider))
+		acl.insert(0, ace_allowing(ROLE_ADMIN, ACT_READ, CourseCatalogEntryACLProvider))
+		acl = acl_from_aces(acl)
 		return acl
 
 @component.adapter(ICourseOutlineNode)
