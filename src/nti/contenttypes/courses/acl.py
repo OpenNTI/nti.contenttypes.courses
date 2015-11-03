@@ -152,7 +152,7 @@ class CourseCatalogEntryACLProvider(object):
 			acl.append(ace_allowing(IPrincipal(AUTHENTICATED_GROUP_NAME),
 						 			(ACT_CREATE, ACT_READ),
 									CourseCatalogEntryACLProvider))
-		acl.insert(0, ace_allowing(ROLE_ADMIN, ACT_READ, CourseCatalogEntryACLProvider))
+		# acl.insert(0, ace_allowing(ROLE_ADMIN, ACT_READ, CourseCatalogEntryACLProvider))
 		acl = acl_from_aces(acl)
 		return acl
 
