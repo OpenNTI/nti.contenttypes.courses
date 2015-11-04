@@ -26,8 +26,12 @@ from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 from nti.dataserver.interfaces import IACLProvider
 
 from nti.dataserver.authorization import ACT_READ
+from nti.dataserver.authorization import ACT_UPDATE
 from nti.dataserver.authorization import ACT_CREATE
 from nti.dataserver.authorization import ROLE_ADMIN
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
+from nti.dataserver.authorization import ROLE_CONTENT_EDITOR
+
 from nti.dataserver.authorization_acl import ace_denying
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
@@ -74,6 +78,8 @@ class CourseInstanceACLProvider(object):
 		aces = []
 		aces.append(ace_allowing(IPrincipal(public_scope), ACT_READ, CourseInstanceACLProvider))
 		aces.extend(ace_allowing(i, ACT_READ, CourseInstanceACLProvider)
+					for i in course.instructors)
+		aces.extend(ace_allowing(i, ACT_CONTENT_EDIT, CourseInstanceACLProvider)
 					for i in course.instructors)
 
 		# JZ: 2015-01-11 Subinstance instructors get the same permissions
@@ -173,6 +179,8 @@ class CourseOutlineNodeACLProvider(object):
 
 	@Lazy
 	def __acl__(self):
-		aces = [ ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, self) ]
+		aces = [ ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, self),
+				 ace_allowing(ROLE_CONTENT_EDITOR, ACT_READ, self),
+				 ace_allowing(ROLE_CONTENT_EDITOR, ACT_UPDATE, self) ]
 		result = acl_from_aces(aces)
 		return result
