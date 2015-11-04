@@ -391,7 +391,8 @@ documentation for what keys might be used.
                 	"realname": "",
                 	"avatarURL": "/foo/bar.jpg"
             },
-            "DefaultSharingScope" : "Parent/Public"
+            "DefaultSharingScope" : "Parent/Public",
+            "show_assignments_by_outline": false
         }
     }
 
@@ -470,6 +471,11 @@ DefaultSharingScope
 	bits of information: 'Parent' indicates that the parent
 	instance's scope should be used.  Following the '/' delimiter,
 	the actual parent scope to be used is specified.
+
+show_assignments_by_outline
+	A bool indicating whether or not this course has assignments returned
+	by assignments by outline node.  Useful for hiding the assignments tab.
+	Note: it is invalid to set this to false and have assignments in the course
 
 ``assignment_policies.json`` (optional)
 ---------------------------------------------
