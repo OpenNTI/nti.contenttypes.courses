@@ -1162,6 +1162,7 @@ def iface_of_node(node):
 		if node_interface.providedBy(node):
 			return node_interface
 	return None
+iface_of_outline_node = iface_of_node # alias
 
 def _set_ifaces():
 	for iSchema in (ICourseOutlineNode, ICourseOutlineCalendarNode, ICourseOutlineContentNode):
