@@ -92,7 +92,7 @@ def _get_node(node_ntiid, obj, registry=None):
 	return result
 get_node = _get_node
 
-def _register_nodes(outline, registry=None):
+def _register_nodes(outline, registry=None, publish=False):
 	registry = component.getSiteManager() if registry is None else registry
 	for node in _outline_nodes(outline):
 		if _get_node(node.ntiid, node) is None:
@@ -100,6 +100,8 @@ def _register_nodes(outline, registry=None):
 							component=node,
 							name=node.ntiid,
 							provided=iface_of_node(node))
+			if publish:
+				node.publish()
 register_nodes = _register_nodes
 
 def _copy_remove_transactions(removed_nodes, record_map, registry=None):
@@ -264,7 +266,7 @@ def fill_outline_from_node(outline, course_element, force=False):
 			outline.append(unit_node)
 		_handle_node(unit, unit_node)
 
-	_register_nodes(outline)
+	_register_nodes(outline, publish=True)
 	
 	# after registering, restore tx history
 	_copy_remove_transactions(removed_nodes, node_transactions)
