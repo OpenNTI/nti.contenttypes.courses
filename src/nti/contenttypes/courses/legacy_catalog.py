@@ -31,6 +31,9 @@ from nti.schema.fieldproperty import createDirectFieldProperties
 from .catalog import CourseCatalogEntry
 from .catalog import CourseCatalogInstructorInfo
 
+from .interfaces import NTIID_ENTRY_TYPE
+from .interfaces import NTIID_ENTRY_PROVIDER
+
 from .interfaces import ICourseCatalog
 from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseCatalogInstructorInfo
@@ -172,7 +175,7 @@ from nti.externalization.representation import WithRepr
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import make_specific_safe
 
-def _ntiid_from_entry(entry, nttype='CourseInfo'):
+def _ntiid_from_entry(entry, nttype=NTIID_ENTRY_TYPE):
 	parents = []
 	o = entry.__parent__
 	while o is not None and not ICourseCatalog.providedBy(o):
@@ -190,7 +193,7 @@ def _ntiid_from_entry(entry, nttype='CourseInfo'):
 	if not relative_path:
 		return None
 
-	ntiid = make_ntiid(provider='NTI',
+	ntiid = make_ntiid(provider=NTIID_ENTRY_PROVIDER,
 					   nttype=nttype,
 					   specific=make_specific_safe(relative_path))
 	return ntiid

@@ -76,6 +76,12 @@ from nti.schema.field import UniqueIterable
 from nti.schema.jsonschema import TAG_HIDDEN_IN_UI
 from nti.schema.jsonschema import TAG_REQUIRED_IN_UI
 
+#: The catalog entry NTIID provider
+NTIID_ENTRY_PROVIDER = 'NTI'
+
+#: The catalog entry NTIID type
+NTIID_ENTRY_TYPE = 'CourseInfo'
+
 #: NTIID Type for outline
 NTI_COURSE_OUTLINE = 'NTICourseOutline'
 
