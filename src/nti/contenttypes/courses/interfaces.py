@@ -1039,7 +1039,6 @@ class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
 									 default=ES_PURCHASED)
 	SharingScopeName.setTaggedValue('value', ES_PURCHASED)
 
-
 # Synchronizer
 
 class ICourseSynchronizationResults(IGenericSynchronizationResults):
@@ -1091,6 +1090,13 @@ class ICourseRolesSynchronized(IObjectEvent):
 
 @interface.implementer(ICourseRolesSynchronized)
 class CourseRolesSynchronized(ObjectEvent):
+	pass
+
+class ICourseVendorInfoSynchronized(IObjectEvent):
+	pass
+
+@interface.implementer(ICourseVendorInfoSynchronized)
+class CourseVendorInfoSynchronized(ObjectEvent):
 	pass
 
 class ICourseCatalogDidSyncEvent(IObjectEvent):

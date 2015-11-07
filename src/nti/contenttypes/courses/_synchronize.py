@@ -14,8 +14,8 @@ logger = __import__('logging').getLogger(__name__)
 
 import time
 
-from zope import interface
 from zope import component
+from zope import interface
 from zope import lifecycleevent
 
 from zope.container.contained import Contained
@@ -64,13 +64,15 @@ from .interfaces import ICourseInstance
 from .interfaces import ICourseCatalogEntry
 from .interfaces import ICourseSubInstances
 from .interfaces import IDenyOpenEnrollment
-from .interfaces import CourseRolesSynchronized
-from .interfaces import CatalogEntrySynchronized
 from .interfaces import INonPublicCourseInstance
 from .interfaces import IContentCourseSubInstance
 from .interfaces import ICourseInstanceVendorInfo
-from .interfaces import CourseInstanceAvailableEvent
 from .interfaces import IEnrollmentMappedCourseInstance
+
+from .interfaces import CourseRolesSynchronized
+from .interfaces import CatalogEntrySynchronized
+from .interfaces import CourseInstanceAvailableEvent
+from .interfaces import CourseVendorInfoSynchronized
 
 from .legacy_catalog import _ntiid_from_entry
 
@@ -400,6 +402,7 @@ class _ContentCourseSynchronizer(object):
 		sync_results = _get_sync_results(course, sync_results)
 		vendor_json_key = bucket.getChildNamed(VENDOR_INFO_NAME)
 		vendor_info = ICourseInstanceVendorInfo(course)
+
 		if not vendor_json_key:
 			vendor_info.clear()
 			vendor_info.createdTime = 0
@@ -411,6 +414,9 @@ class _ContentCourseSynchronizer(object):
 			vendor_info.createdTime = vendor_json_key.createdTime
 			vendor_info.lastModified = vendor_json_key.lastModified
 			sync_results.VendorInfoUpdated = True
+
+		if sync_results.VendorInfoReseted or sync_results.VendorInfoUpdated:
+			notify(CourseVendorInfoSynchronized(course))
 
 	@classmethod
 	def update_outline(cls, course, bucket, sync_results=None,
