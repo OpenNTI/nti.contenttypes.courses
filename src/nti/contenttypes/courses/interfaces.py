@@ -45,6 +45,8 @@ from zope.container.constraints import containers
 
 from nti.contentlibrary.interfaces import IDisplayableContent
 from nti.contentlibrary.interfaces import IContentPackageBundle
+from nti.contentlibrary.interfaces import ISynchronizationParams
+from nti.contentlibrary.interfaces import ISynchronizationResults
 from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 from nti.contentlibrary.interfaces import IGenericSynchronizationResults
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
@@ -1091,6 +1093,27 @@ class ICourseRolesSynchronized(IObjectEvent):
 class CourseRolesSynchronized(ObjectEvent):
 	pass
 
+class ICourseCatalogDidSyncEvent(IObjectEvent):
+	"""
+	A course catalog completed synchronization, with or without changes.
+	"""
+
+	params = Object(ISynchronizationParams,
+					title="Synchronization parameters",
+					required=False)
+
+	results = Object(ISynchronizationResults,
+					 title="Synchronization results",
+					 required=False)
+
+@interface.implementer(ICourseCatalogDidSyncEvent)
+class CourseCatalogDidSyncEvent(ObjectEvent):
+
+	def __init__(self, obj, params=None, results=None):
+		super(CourseCatalogDidSyncEvent, self).__init__(obj)
+		self.params = params
+		self.results = results
+
 # assesments
 
 class ICourseAssessmentItemCatalog(interface.Interface):
@@ -1171,9 +1194,12 @@ def iface_of_node(node):
 iface_of_outline_node = iface_of_node # alias
 
 def _set_ifaces():
-	for iSchema in (ICourseOutlineNode, ICourseOutlineCalendarNode, ICourseOutlineContentNode):
+	for iSchema in (ICourseOutlineNode,
+				    ICourseOutlineCalendarNode,
+				    ICourseOutlineContentNode):
 		for k, v in iSchema.namesAndDescriptions(all=True):
-			if IMethod.providedBy(v) or v.queryTaggedValue(TAG_HIDDEN_IN_UI) is not None:
+			if 	IMethod.providedBy(v) or \
+				v.queryTaggedValue(TAG_HIDDEN_IN_UI) is not None:
 				continue
 			iSchema[k].setTaggedValue(TAG_HIDDEN_IN_UI, True)
 

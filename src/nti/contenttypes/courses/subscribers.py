@@ -15,6 +15,8 @@ from zope import component
 
 from zope.component.hooks import site
 
+from zope.event import notify
+
 from zope.intid.interfaces import IIntIds
 from zope.intid.interfaces import IIntIdRemovedEvent
 
@@ -36,7 +38,9 @@ from nti.site.site import get_component_hierarchy_names
 
 from .catalog import CourseCatalogFolder
 
-from .index import IX_COURSE, IX_SCOPE, IX_SITE
+from .index import IX_SITE
+from .index import IX_SCOPE
+from .index import IX_COURSE
 
 from .interfaces import iface_of_node
 
@@ -49,6 +53,7 @@ from .interfaces import ICourseCatalogEntry
 from .interfaces import IObjectEntrySynchronizer
 from .interfaces import IPersistentCourseCatalog
 from .interfaces import ICourseRolesSynchronized
+from .interfaces import CourseCatalogDidSyncEvent
 
 from .utils import index_course_instructors
 
@@ -170,6 +175,8 @@ def sync_catalog_when_library_synched(library, event):
 	synchronizer = component.getMultiAdapter((catalog, courses_bucket),
 							   				  IObjectEntrySynchronizer)
 	synchronizer.synchronize(catalog, courses_bucket, params=params, results=results)
+
+	notify(CourseCatalogDidSyncEvent(catalog, params, results))
 
 @component.adapter(ICourseInstance, ICourseRolesSynchronized)
 def roles_sync_on_course_instance(course, event):
