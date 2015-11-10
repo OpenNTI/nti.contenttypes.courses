@@ -68,15 +68,15 @@ def _outline_nodes(outline):
 	return result
 outline_nodes = _outline_nodes
 
-def _is_node_locked( node ):
-	return IRecordable.providedBy( node ) and node.locked
+def _is_node_locked(node):
+	return IRecordable.providedBy(node) and node.locked
 
-def _is_node_move_locked( children ):
+def _is_node_move_locked(children):
 	return any((_is_node_locked(x) for x in children))
 
 def _can_be_removed(registered, force=False):
 	result = registered is not None and \
-			 (force or not _is_node_locked( registered ))
+			 (force or not _is_node_locked(registered))
 	return result
 can_be_removed = _can_be_removed
 
@@ -156,7 +156,7 @@ def _get_lesson_ntiid(parent, idx):
 	"""
 	base = parent.ntiid
 	provider = get_provider(base) or 'NTI'
-	specific_base = get_specific( base )
+	specific_base = get_specific(base)
 	specific = specific_base + ".%s" % idx
 	ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
 					   base=base,
@@ -209,7 +209,7 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 		lesson_node.AvailableEnding = dates[1]
 	return lesson_node
 
-def _update_parent_children( parent_node, old_children ):
+def _update_parent_children(parent_node, old_children):
 	"""
 	If there are old_children and the parent node is `move`
 	locked, we must preserve the existing order state.
@@ -218,11 +218,11 @@ def _update_parent_children( parent_node, old_children ):
 	some additional state management or placeholders). We do not
 	support sync inserts when there are user-locked objects in play.
 	"""
-	if old_children and _is_node_move_locked( old_children ):
+	if old_children and _is_node_move_locked(old_children):
 		new_children = list(parent_node.values())
 		new_child_map = {x.ntiid:x for x in new_children}
-		parent_node.clear()
-		for i, old_child in enumerate( old_children ):
+		parent_node.clear()  # TODO: are transactions kept here?
+		for i, old_child in enumerate(old_children):
 			try:
 				new_child = new_children[i]
 			except IndexError:
@@ -230,16 +230,16 @@ def _update_parent_children( parent_node, old_children ):
 			if new_child and old_child.ntiid != new_child.ntiid:
 				# TODO Event?
 				logger.info('Found moved node on sync (old=%s) (new=%s)',
-							old_child.ntiid, new_child.ntiid )
+							old_child.ntiid, new_child.ntiid)
 
-			new_child = new_child_map.get( old_child.ntiid )
+			new_child = new_child_map.get(old_child.ntiid)
 			if new_child is not None:
-				parent_node.append( new_child )
-			elif _is_node_locked( old_child ):
+				parent_node.append(new_child)
+			elif _is_node_locked(old_child):
 				# Preserve our locked child from deletion.
-				parent_node.append( old_child )
+				parent_node.append(old_child)
 
-def _get_node_factory( lesson ):
+def _get_node_factory(lesson):
 	result = CourseOutlineContentNode
 	# We want to begin divorcing the syllabus/structure of a course
 	# from the content that is available. We currently do this
@@ -262,17 +262,17 @@ def _handle_node(parent_lxml, parent_node, old_children, library, removed_nodes)
 	"""
 	parent_node.clear()
 	for idx, lesson in enumerate(parent_lxml.iterchildren(tag='lesson')):
-		node_factory = _get_node_factory( lesson )
+		node_factory = _get_node_factory(lesson)
 		# We may re-use ntiids of user-created nodes here, which is ok
 		# since we do not allow the insertion of new-nodes once user
 		# locked nodes exist.
 		lesson_ntiid = _get_lesson_ntiid(parent_node, idx)
 		lesson_node = node_factory()
-		old_node = _get_node( lesson_ntiid, lesson_node )
+		old_node = _get_node(lesson_ntiid, lesson_node)
 		children = list(old_node.values()) if old_node else None
 
 		if lesson_ntiid not in removed_nodes and old_node is not None:
-			if _is_node_locked( old_node ):
+			if _is_node_locked(old_node):
 				logger.info('Lesson node not syncing due to sync lock (%s)', lesson_ntiid)
 			lesson_node = old_node
 		else:
@@ -280,7 +280,7 @@ def _handle_node(parent_lxml, parent_node, old_children, library, removed_nodes)
 											  lesson_ntiid, library)
 
 		# Must add to our parent_node now to avoid NotYet exceptions.
-		parent_node.append( lesson_node )
+		parent_node.append(lesson_node)
 		_handle_node(lesson, lesson_node, children, library, removed_nodes)
 
 	_update_parent_children(parent_node, old_children)
@@ -301,7 +301,7 @@ def fill_outline_from_node(outline, course_element, force=False):
 	"""
 
 	removed_nodes = {x.ntiid:x for x in _get_removed_nodes(outline, force=force)}
-	node_transactions = {k:get_transactions(v) for k,v in removed_nodes.items()}
+	node_transactions = {k:get_transactions(v) for k, v in removed_nodes.items()}
 	library = component.queryUtility(IContentPackageLibrary)
 
 	for idx, unit in enumerate(course_element.iterchildren(tag='unit')):
@@ -309,7 +309,7 @@ def fill_outline_from_node(outline, course_element, force=False):
 		unit_node = CourseOutlineNode()
 		old_node = _get_node(unit_ntiid, unit_node)
 		if unit_ntiid not in removed_nodes and old_node is not None:
-			if _is_node_locked( old_node ):
+			if _is_node_locked(old_node):
 				logger.info('Unit node not syncing due to sync lock (%s)', unit_ntiid)
 			unit_node = old_node
 		else:
