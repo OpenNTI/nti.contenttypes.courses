@@ -30,6 +30,8 @@ import fudge
 import os.path
 import datetime
 
+from copy import copy
+
 from zope import interface
 from zope import component
 
@@ -315,6 +317,108 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		assert_that(discussions, is_not(none()))
 		assert_that(discussions, has_key('d1.json'))
 		assert_that(discussions['d1.json'], has_property('id', is_(u'nti-course-bundle://Sections/02/Discussions/d1.json')))
+
+	def test_synchronize_with_locked(self):
+		"""
+		Test outline nodes respect sync locks.
+		"""
+		bucket = self.bucket
+		folder = self.folder
+		synchronize_catalog_from_root(folder, bucket)
+
+		# Now check that we get the structure we expect
+		spring = folder['Spring2014']
+		gateway = spring['Gateway']
+		outline = gateway.Outline
+		assert_that( outline, has_length(7) )
+
+		outline_node = outline.values()[0]
+		child_node = outline_node.values()[0]
+		child_ntiid = child_node.ntiid
+		old_child_title = child_node.title
+		node_ntiid = outline_node.ntiid
+		assert_that( outline_node.locked, is_( False ) )
+		assert_that( outline_node.title, is_( "Introduction" ) )
+		assert_that( outline_node.is_published(), is_( True ) )
+		assert_that( outline_node, has_length(2) )
+
+		assert_that( child_node.locked, is_( False ) )
+
+		# 1. Change title and lock object
+		outline_node.title = new_title = 'New title'
+		outline_node.locked = True
+		child_node.title = new_child_title = 'New child title'
+
+		# Re-sync
+		outline.lastModified = 0
+		synchronize_catalog_from_root(folder, bucket)
+
+		# Our parent title change is preserved, and children are updated.
+		outline = gateway.Outline
+		assert_that( outline.lastModified, is_not(is_( 0 )))
+		outline_node = outline.values()[0]
+		child_node = outline_node.values()[0]
+
+		assert_that( outline_node.ntiid, is_( node_ntiid ) )
+		assert_that( outline_node.locked, is_( True ) )
+		assert_that( outline_node.title, is_( new_title ) )
+		assert_that( outline_node.is_published(), is_( True ) )
+		assert_that( outline_node, has_length(2) )
+
+		# Our unlocked child's title was overwritten
+		assert_that( child_node.locked, is_( False ) )
+		assert_that( child_node.ntiid, is_( child_ntiid ) )
+		assert_that( child_node.title, is_( old_child_title ) )
+
+		# 2. Change child title and lock object. Add new user-created
+		# node at index 0. We expect:
+		# 	* The changed attributes will stay changed on locked objects.
+		#	* The child node order will not be reverted.
+		#	* The new child will still exist.
+		#	* Unlocked nodes will revert.
+		unchanged_node = outline_node.values()[1]
+		old_node_title2 = unchanged_node.title
+		unchanged_node.title = 'new child node title 2'
+		child_node.locked = True
+		child_node.title = new_child_title
+		user_child_node = copy( child_node )
+		user_child_node.ntiid = user_node_ntiid = 'tag:nextthought.com,2011-10:NTI-NTICourseOutlineNode-Spring2014_Gateway.0.1000'
+		user_child_node.title = user_node_title = 'User created node'
+		user_child_node.locked = True
+		outline_node.clear()
+		outline_node.append( user_child_node )
+		outline_node.append( child_node )
+		outline_node.append( unchanged_node )
+
+		# Re-sync
+		outline.lastModified = 0
+		synchronize_catalog_from_root(folder, bucket)
+		outline = gateway.Outline
+		assert_that( outline.lastModified, is_not(is_( 0 )))
+		outline_node = outline.values()[0]
+		# New node exists
+		assert_that( outline_node, has_length(3) )
+
+		# User node in slot one
+		child_node = outline_node.values()[0]
+		assert_that( child_node.ntiid, is_( user_node_ntiid ) )
+		assert_that( child_node.locked, is_( True ) )
+		assert_that( child_node.title, is_( user_node_title ) )
+		assert_that( child_node.is_published(), is_( True ) )
+
+		# Changed title in slot two
+		child_node = outline_node.values()[1]
+		assert_that( child_node.ntiid, is_( child_node.ntiid ) )
+		assert_that( child_node.locked, is_( True ) )
+		assert_that( child_node.title, is_( new_child_title ) )
+		assert_that( child_node.is_published(), is_( True ) )
+
+		# Reverted node in slot three
+		child_node = outline_node.values()[2]
+		assert_that( child_node.ntiid, is_( unchanged_node.ntiid ) )
+		assert_that( child_node.locked, is_( False ) )
+		assert_that( child_node.title, is_( old_node_title2 ) )
+		assert_that( child_node.is_published(), is_( True ) )
 
 	def test_default_sharing_scope_use_parent(self):
 		"""

@@ -62,7 +62,7 @@ class TestFunctionalSubscribers(CourseLayerTest):
 		assert_that( sm.getUtility(lib_interfaces.IContentPackageLibrary),
 					 is_( same_instance(site_lib) ))
 
-		# And we also installed and synced the catagol
+		# And we also installed and synced the catalog
 		folder = sm.getUtility(ICourseCatalog)
 
 		spring = folder['Spring2014']

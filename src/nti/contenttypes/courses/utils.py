@@ -113,7 +113,7 @@ def drop_any_other_enrollments(context, user, ignore_existing=True):
 
 def get_instructors_in_roles(roles, setting=Allow):
 	result = set()
-	instructors = chain(roles.getPrincipalsForRole(RID_TA) or (), 
+	instructors = chain(roles.getPrincipalsForRole(RID_TA) or (),
 		  				roles.getPrincipalsForRole(RID_INSTRUCTOR) or ())
 	for principal, stored in instructors:
 		if stored == setting:

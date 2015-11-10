@@ -68,23 +68,34 @@ def _outline_nodes(outline):
 	return result
 outline_nodes = _outline_nodes
 
+def _is_node_locked( node ):
+	return IRecordable.providedBy( node ) and node.locked
+
+def _is_node_move_locked( children ):
+	return any((_is_node_locked(x) for x in children))
+
 def _can_be_removed(registered, force=False):
 	result = registered is not None and \
-			 (force or not IRecordable.providedBy(registered) or not registered.locked)
+			 (force or not _is_node_locked( registered ))
 	return result
 can_be_removed = _can_be_removed
 
 def _unregister_nodes(outline, registry=None, force=False):
+	removed_nodes = _get_removed_nodes(outline, registry, force)
+	for removed in removed_nodes:
+		unregisterUtility(registry,
+ 						name=removed.ntiid,
+ 					 	provided=iface_of_node(removed))
+	return removed
+unregister_nodes = _unregister_nodes
+
+def _get_removed_nodes(outline, registry=None, force=False):
 	removed = []
 	registry = component.getSiteManager() if registry is None else registry
 	for node in _outline_nodes(outline):
 		if _can_be_removed(node, force=force):
 			removed.append(node)
-			unregisterUtility(registry,
-							  name=node.ntiid,
-							  provided=iface_of_node(node))
 	return removed
-unregister_nodes = _unregister_nodes
 
 def _get_node(node_ntiid, obj, registry=None):
 	registry = component.getSiteManager() if registry is None else registry
@@ -140,9 +151,13 @@ def _get_unit_ntiid(outline, unit, idx):
 	return ntiid
 
 def _get_lesson_ntiid(parent, idx):
+	"""
+	Build an ntiid for the current node.
+	"""
 	base = parent.ntiid
 	provider = get_provider(base) or 'NTI'
-	specific = get_specific(base) + ".%s" % idx
+	specific_base = get_specific( base )
+	specific = specific_base + ".%s" % idx
 	ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
 					   base=base,
 					   provider=provider,
@@ -194,12 +209,88 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 		lesson_node.AvailableEnding = dates[1]
 	return lesson_node
 
+def _update_parent_children( parent_node, old_children ):
+	"""
+	If there are old_children and the parent node is `move`
+	locked, we must preserve the existing order state.
+
+	We currently do not support (*only*) user-deleted nodes (without
+	some additional state management or placeholders). We do not
+	support sync inserts when there are user-locked objects in play.
+	"""
+	if old_children and _is_node_move_locked( old_children ):
+		new_children = parent_node.values()
+		parent_node.clear()
+		new_child_map = {x.ntiid:x for x in new_children}
+		for i, old_child in enumerate( old_children ):
+			try:
+				new_child = new_children[i]
+			except IndexError:
+				new_child = None
+			if new_child and old_child.ntiid != new_child.ntiid:
+				# TODO Event?
+				logger.info( 'Found moved node on sync (old=%s) (new=%s)',
+							old_child.ntiid, new_child.ntiid )
+
+			new_child = new_child_map.get( old_child.ntiid )
+			if new_child is not None:
+				parent_node.append( new_child )
+			elif _is_node_locked( old_child ):
+				# Preserve our locked child from deletion.
+				parent_node.append( old_child )
+
+def _get_node_factory( lesson ):
+	result = CourseOutlineContentNode
+	# We want to begin divorcing the syllabus/structure of a course
+	# from the content that is available. We currently do this
+	# by stubbing out the content, and setting flags to be extracted
+	# to the ToC so that we don't give the UI back the NTIID.
+	if lesson.get(bytes('isOutlineStubOnly')) == 'true':
+		# We query for the node factory we use to "hide"
+		# content from the UI so that we can enable/disable
+		# hiding in certain site policies.
+		# (TODO: Be sure this works as expected with the caching)
+		ivalid_name = 'course outline stub node'  # not valid Class or MimeType value
+		result = component.queryUtility(component.IFactory,
+											  name=ivalid_name,
+											  default=CourseOutlineCalendarNode)
+	return result
+
+def _handle_node(parent_lxml, parent_node, old_children, library, removed_nodes):
+	"""
+	Recursively fill in outline nodes and their children.
+	"""
+	parent_node.clear()
+	for idx, lesson in enumerate(parent_lxml.iterchildren(tag='lesson')):
+		node_factory = _get_node_factory( lesson )
+		# We may re-use ntiids of user-created nodes here, which is ok
+		# since we do not allow the insertion of new-nodes once user
+		# locked nodes exist.
+		lesson_ntiid = _get_lesson_ntiid(parent_node, idx)
+		lesson_node = node_factory()
+		old_node = _get_node( lesson_ntiid, lesson_node )
+		children = old_node.values() if old_node else None
+
+		if lesson_ntiid not in removed_nodes and old_node is not None:
+			if _is_node_locked( old_node ):
+				logger.info('Lesson node not syncing due to sync lock (%s)', lesson_ntiid)
+			lesson_node = old_node
+		else:
+			lesson_node = _build_outline_node(node_factory, lesson,
+											  lesson_ntiid, library)
+
+		# Must add to our parent_node now to avoid NotYet exceptions.
+		parent_node.append( lesson_node )
+		_handle_node(lesson, lesson_node, children, library, removed_nodes)
+
+	_update_parent_children( parent_node, old_children )
+
 def fill_outline_from_node(outline, course_element, force=False):
 	"""
 	Given a CourseOutline object and an eTree element object containing its
 	``unit`` and ``lesson`` definitions,
 	fill in the outline. All existing children of the outline are
-	removed.
+	removed, if not locked.
 
 	The caller is responsible for locating the outline node
 	(giving it a name and parent). The caller is also responsible
@@ -209,66 +300,37 @@ def fill_outline_from_node(outline, course_element, force=False):
 	:return: The outline node.
 	"""
 
-	removed_nodes = {x.ntiid:x for x in _unregister_nodes(outline, force=force)}
+	removed_nodes = {x.ntiid:x for x in _get_removed_nodes(outline, force=force)}
 	node_transactions = {k:get_transactions(v) for k,v in removed_nodes.items()}
-
-	# Clear our removed entries
-	outline.clear_entries(removed_nodes.keys())
 	library = component.queryUtility(IContentPackageLibrary)
 
-	def _handle_node(parent_lxml, parent_node):
-		for idx, lesson in enumerate(parent_lxml.iterchildren(tag='lesson')):
-			node_factory = CourseOutlineContentNode
-			# We want to begin divorcing the syllabus/structure of a course
-			# from the content that is available. We currently do this
-			# by stubbing out the content, and setting flags to be extracted
-			# to the ToC so that we don't give the UI back the NTIID.
-			if lesson.get(bytes('isOutlineStubOnly')) == 'true':
-				# We query for the node factory we use to "hide"
-				# content from the UI so that we can enable/disable
-				# hiding in certain site policies.
-				# (TODO: Be sure this works as expected with the caching)
-				ivalid_name = 'course outline stub node'  # not valid Class or MimeType value
-				node_factory = component.queryUtility(component.IFactory,
-													  name=ivalid_name,
-													  default=CourseOutlineCalendarNode)
-
-			lesson_ntiid = _get_lesson_ntiid(parent_node, idx)
-			lesson_node = _get_node(lesson_ntiid, node_factory())
-			if lesson_node is None:
-				lesson_node = _build_outline_node(node_factory, lesson,
-												  lesson_ntiid, library)
-			else:
-				logger.info('Lesson node not syncing due to sync lock (%s)', lesson_ntiid)
-
-			# This node may exist and be sync-locked.  Do we want to permit
-			# the sync process to change this node's children? For now, we
-			# do, but this may change later.  If this changes, we may have
-			# to respect lock status from a node's parent lineage.
-			if lesson_ntiid not in parent_node:
-				# Our parent may or may not be new.
-				parent_node.append(lesson_node)
-			_handle_node(lesson, lesson_node)
-
 	for idx, unit in enumerate(course_element.iterchildren(tag='unit')):
-		node = CourseOutlineNode()
 		unit_ntiid = _get_unit_ntiid(outline, unit, idx)
-		unit_node = _get_node(unit_ntiid, node)
-		if unit_node is None:
-			unit_node = node
+		unit_node = CourseOutlineNode()
+		old_node = _get_node(unit_ntiid, unit_node)
+		if unit_ntiid not in removed_nodes and old_node is not None:
+			if _is_node_locked( old_node ):
+				logger.info('Unit node not syncing due to sync lock (%s)', unit_ntiid)
+			unit_node = old_node
+		else:
 			unit_node.title = _attr_val(unit, str('label'))
 			unit_node.src = _attr_val(unit, str('src'))
 			unit_node.ntiid = unit_ntiid
-		else:
-			logger.info('Unit node not syncing due to sync lock (%s)', unit_ntiid)
 
 		if unit_ntiid not in outline:
 			outline.append(unit_node)
-		_handle_node(unit, unit_node)
+		children = old_node.values() if old_node else None
+		_handle_node(unit, unit_node, children, library, removed_nodes)
 
+	# Unregister removed and re-register
+	registry = component.getSiteManager()
+	for removed_ntiid, removed_node in removed_nodes.items():
+		unregisterUtility(registry,
+ 						name=removed_ntiid,
+ 						provided=iface_of_node(removed_node))
 	_register_nodes(outline, publish=True)
-	
-	# after registering, restore tx history
+
+	# After registering, restore tx history
 	_copy_remove_transactions(removed_nodes, node_transactions)
 
 	return outline
