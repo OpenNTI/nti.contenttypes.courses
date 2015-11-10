@@ -66,12 +66,18 @@ class _AbstractCourseOutlineNode(Contained, RecordableMixin, PublishableMixin):
 		# like to be hashed (because mutable cache keys can be bad)
 		# But we have an ACL and need to be hashable
 		return hash(tuple(self.items()))
-
-	def reset(self):
+	
+	def _delitemf(self, key):
+		del self._data[key]
+		self._order.remove(key)
+		
+	def reset(self, event=True):
 		keys = list(self)
 		for k in keys:
-			del self[k]
-
+			if event:
+				del self[k]
+			else:
+				self._delitemf(k)
 	clear = reset
 
 @interface.implementer(ICourseOutlineNode)

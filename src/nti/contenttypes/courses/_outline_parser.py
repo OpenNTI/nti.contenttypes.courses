@@ -80,15 +80,6 @@ def _can_be_removed(registered, force=False):
 	return result
 can_be_removed = _can_be_removed
 
-def _unregister_nodes(outline, registry=None, force=False):
-	removed_nodes = _get_removed_nodes(outline, registry, force)
-	for removed in removed_nodes:
-		unregisterUtility(registry,
- 						name=removed.ntiid,
- 					 	provided=iface_of_node(removed))
-	return removed
-unregister_nodes = _unregister_nodes
-
 def _get_removed_nodes(outline, registry=None, force=False):
 	removed = []
 	registry = component.getSiteManager() if registry is None else registry
@@ -96,6 +87,15 @@ def _get_removed_nodes(outline, registry=None, force=False):
 		if _can_be_removed(node, force=force):
 			removed.append(node)
 	return removed
+
+def _unregister_nodes(outline, registry=None, force=False):
+	removed_nodes = _get_removed_nodes(outline, registry, force)
+	for removed in removed_nodes:
+		unregisterUtility(registry,
+ 						  name=removed.ntiid,
+ 					 	  provided=iface_of_node(removed))
+	return removed
+unregister_nodes = _unregister_nodes
 
 def _get_node(node_ntiid, obj, registry=None):
 	registry = component.getSiteManager() if registry is None else registry
@@ -143,9 +143,9 @@ def _get_unit_ntiid(outline, unit, idx):
 		provider = get_provider(base) or 'NTI'
 		specific = get_specific(base) + ".%s" % idx
 		ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
-							base=base,
-							provider=provider,
-							specific=specific)
+						   base=base,
+						   provider=provider,
+						   specific=specific)
 	else:
 		ntiid = _attr_val(unit, str('ntiid'))
 	return ntiid
@@ -219,9 +219,9 @@ def _update_parent_children( parent_node, old_children ):
 	support sync inserts when there are user-locked objects in play.
 	"""
 	if old_children and _is_node_move_locked( old_children ):
-		new_children = parent_node.values()
-		parent_node.clear()
+		new_children = list(parent_node.values())
 		new_child_map = {x.ntiid:x for x in new_children}
+		parent_node.clear()
 		for i, old_child in enumerate( old_children ):
 			try:
 				new_child = new_children[i]
@@ -229,7 +229,7 @@ def _update_parent_children( parent_node, old_children ):
 				new_child = None
 			if new_child and old_child.ntiid != new_child.ntiid:
 				# TODO Event?
-				logger.info( 'Found moved node on sync (old=%s) (new=%s)',
+				logger.info('Found moved node on sync (old=%s) (new=%s)',
 							old_child.ntiid, new_child.ntiid )
 
 			new_child = new_child_map.get( old_child.ntiid )
@@ -252,8 +252,8 @@ def _get_node_factory( lesson ):
 		# (TODO: Be sure this works as expected with the caching)
 		ivalid_name = 'course outline stub node'  # not valid Class or MimeType value
 		result = component.queryUtility(component.IFactory,
-											  name=ivalid_name,
-											  default=CourseOutlineCalendarNode)
+										name=ivalid_name,
+										default=CourseOutlineCalendarNode)
 	return result
 
 def _handle_node(parent_lxml, parent_node, old_children, library, removed_nodes):
@@ -269,7 +269,7 @@ def _handle_node(parent_lxml, parent_node, old_children, library, removed_nodes)
 		lesson_ntiid = _get_lesson_ntiid(parent_node, idx)
 		lesson_node = node_factory()
 		old_node = _get_node( lesson_ntiid, lesson_node )
-		children = old_node.values() if old_node else None
+		children = list(old_node.values()) if old_node else None
 
 		if lesson_ntiid not in removed_nodes and old_node is not None:
 			if _is_node_locked( old_node ):
@@ -283,7 +283,7 @@ def _handle_node(parent_lxml, parent_node, old_children, library, removed_nodes)
 		parent_node.append( lesson_node )
 		_handle_node(lesson, lesson_node, children, library, removed_nodes)
 
-	_update_parent_children( parent_node, old_children )
+	_update_parent_children(parent_node, old_children)
 
 def fill_outline_from_node(outline, course_element, force=False):
 	"""
@@ -326,8 +326,8 @@ def fill_outline_from_node(outline, course_element, force=False):
 	registry = component.getSiteManager()
 	for removed_ntiid, removed_node in removed_nodes.items():
 		unregisterUtility(registry,
- 						name=removed_ntiid,
- 						provided=iface_of_node(removed_node))
+ 						  name=removed_ntiid,
+ 						  provided=iface_of_node(removed_node))
 	_register_nodes(outline, publish=True)
 
 	# After registering, restore tx history
