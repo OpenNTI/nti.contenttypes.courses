@@ -221,7 +221,8 @@ def _update_parent_children(parent_node, old_children):
 	if old_children and _is_node_move_locked(old_children):
 		new_children = list(parent_node.values())
 		new_child_map = {x.ntiid:x for x in new_children}
-		parent_node.clear()  # TODO: are transactions kept here?
+		new_transactions = {x.ntiid:get_transactions(x) for x in new_children}
+		parent_node.clear()  # fires ObjectRemovedEvent which deletes transactions
 		for i, old_child in enumerate(old_children):
 			try:
 				new_child = new_children[i]
@@ -235,9 +236,11 @@ def _update_parent_children(parent_node, old_children):
 			new_child = new_child_map.get(old_child.ntiid)
 			if new_child is not None:
 				parent_node.append(new_child)
+				copy_records(new_child, new_transactions.get(old_child.ntiid) or ())
 			elif _is_node_locked(old_child):
 				# Preserve our locked child from deletion.
 				parent_node.append(old_child)
+				copy_records(old_child, new_transactions.get(old_child.ntiid) or ())
 
 def _get_node_factory(lesson):
 	result = CourseOutlineContentNode
