@@ -43,8 +43,7 @@ class _AbstractCourseOutlineNode(Contained, RecordableMixin, PublishableMixin):
 
 	createFieldProperties(ITitledDescribedContent)
 	createDirectFieldProperties(ICourseOutlineNode)
-
-	__external_can_create__ = False
+	__external_can_create__ = True
 
 	creator = SYSTEM_USER_ID
 
@@ -66,11 +65,11 @@ class _AbstractCourseOutlineNode(Contained, RecordableMixin, PublishableMixin):
 		# like to be hashed (because mutable cache keys can be bad)
 		# But we have an ACL and need to be hashable
 		return hash(tuple(self.items()))
-	
+
 	def _delitemf(self, key):
 		del self._data[key]
 		self._order.remove(key)
-		
+
 	def reset(self, event=True):
 		keys = list(self)
 		for k in keys:
@@ -96,7 +95,6 @@ class CourseOutlineNode(_AbstractCourseOutlineNode,
 	# alpha, which was the only place that saw this error? I don't remember
 	# the exact details...have to wait and see.
 	# _v_nti_pseudo_broken_replacement_name = str('CourseOutlineNode_BROKEN')
-
 	def __setitem__(self, key, value):
 		checkObject(self, key, value)
 		super(CourseOutlineNode, self).__setitem__(key, value)
@@ -104,8 +102,6 @@ class CourseOutlineNode(_AbstractCourseOutlineNode,
 	def __delitem__(self, key):
 		uncontained(self[key], self, key)
 		super(CourseOutlineNode, self).__delitem__(key)
-
-PersistentCourseOutlineNode = CourseOutlineNode
 
 @interface.implementer(ICourseOutlineCalendarNode)
 class CourseOutlineCalendarNode(SchemaConfigured,
@@ -119,13 +115,9 @@ class CourseOutlineCalendarNode(SchemaConfigured,
 		SchemaConfigured.__init__(self, *args, **kwargs)
 		CourseOutlineNode.__init__(self)
 
-PersistentCourseOutlineCalendarNode = CourseOutlineCalendarNode
-
 @interface.implementer(ICourseOutlineContentNode)
 class CourseOutlineContentNode(CourseOutlineCalendarNode):
 	createDirectFieldProperties(ICourseOutlineContentNode)
-
-PersistentCourseOutlineContentNode = CourseOutlineContentNode
 
 @interface.implementer(ICourseOutline)
 class CourseOutline(CourseOutlineNode,
@@ -134,5 +126,3 @@ class CourseOutline(CourseOutlineNode,
 
 	_SET_CREATED_MODTIME_ON_INIT = False
 	__external_can_create__ = False
-
-PersistentCourseOutline = CourseOutline

@@ -32,7 +32,7 @@ from .interfaces import ICourseAdministrativeLevel
 
 from .forum import CourseInstanceBoard
 
-from .outlines import PersistentCourseOutline
+from .outlines import CourseOutline
 
 from .sharing import CourseInstanceSharingScopes
 from .sharing import CourseSubInstanceSharingScopes
@@ -98,7 +98,7 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		"""
 		# As per Discussions
 		self._p_changed = True
-		outline = PersistentCourseOutline()
+		outline = CourseOutline()
 		lifecycleevent.created(outline)
 		try:
 			self['Outline'] = outline

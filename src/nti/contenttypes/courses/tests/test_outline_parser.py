@@ -31,7 +31,7 @@ from nti.contentlibrary.filesystem import FilesystemKey
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses._outline_parser import fill_outline_from_key
-from nti.contenttypes.courses.outlines import PersistentCourseOutline as CourseOutline
+from nti.contenttypes.courses.outlines import CourseOutline
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 
@@ -53,12 +53,12 @@ class TestOutlineParser(CourseLayerTest):
 		key.absolute_path = path
 
 		assert_that(self._as_utils(), has_length(0))
-		
+
 		outline = CourseOutline()
 		fill_outline_from_key(outline, key)
 		assert_that(outline, validly_provides(ICourseOutline))
 		assert_that(self._as_utils(), has_length(40))
-		
+
 		unit_1 = outline['tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.1']
 		assert_that(unit_1, has_property('title', 'Introduction'))
 		assert_that(unit_1, has_property('ntiid', 'tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.1'))
@@ -97,7 +97,7 @@ class TestOutlineParser(CourseLayerTest):
 		# Doing it again does nothing...
 		assert_that(outline, has_length(7))
 		assert_that(self._as_utils(), has_length(40))
-		
+
 		fill_outline_from_key(outline, key)
 		assert_that(outline, has_length(7))
 		assert_that(self._as_utils(), has_length(40))
