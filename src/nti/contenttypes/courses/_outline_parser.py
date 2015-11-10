@@ -173,7 +173,6 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 	# Now give it the title and description of the content node,
 	# if they have them (they may not, but we require them, even if blank).
 	# If the XML itself has a value, that overrides
-
 	content_units = library.pathToNTIID(topic_ntiid, skip_cache=True) if library else None
 	if not content_units:
 		logger.warn("Unable to find referenced course node %s", topic_ntiid)
@@ -209,7 +208,7 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 		lesson_node.AvailableEnding = dates[1]
 	return lesson_node
 
-def _update_parent_children(parent_node, old_children):
+def _update_parent_children(parent_node, old_children, transactions):
 	"""
 	If there are old_children and the parent node is `move`
 	locked, we must preserve the existing order state.
@@ -221,8 +220,7 @@ def _update_parent_children(parent_node, old_children):
 	if old_children and _is_node_move_locked(old_children):
 		new_children = list(parent_node.values())
 		new_child_map = {x.ntiid:x for x in new_children}
-		new_transactions = {x.ntiid:get_transactions(x) for x in new_children}
-		parent_node.clear()  # fires ObjectRemovedEvent which deletes transactions
+		parent_node.clear()
 		for i, old_child in enumerate(old_children):
 			try:
 				new_child = new_children[i]
@@ -234,13 +232,13 @@ def _update_parent_children(parent_node, old_children):
 							old_child.ntiid, new_child.ntiid)
 
 			new_child = new_child_map.get(old_child.ntiid)
+			if new_child is None and _is_node_locked(old_child):
+				# Preserve our locked child from deletion.
+				new_child = old_child
+
 			if new_child is not None:
 				parent_node.append(new_child)
-				copy_records(new_child, new_transactions.get(old_child.ntiid) or ())
-			elif _is_node_locked(old_child):
-				# Preserve our locked child from deletion.
-				parent_node.append(old_child)
-				copy_records(old_child, new_transactions.get(old_child.ntiid) or ())
+				copy_records(new_child, transactions.get( old_child.ntiid, () ))
 
 def _get_node_factory(lesson):
 	result = CourseOutlineContentNode
@@ -259,10 +257,13 @@ def _get_node_factory(lesson):
 										default=CourseOutlineCalendarNode)
 	return result
 
-def _handle_node(parent_lxml, parent_node, old_children, library, removed_nodes):
+def _handle_node(parent_lxml, parent_node, library, removed_nodes):
 	"""
 	Recursively fill in outline nodes and their children.
 	"""
+	old_children = list(parent_node.values())
+	# Capture our transactions since clear removes them.
+	transactions = {x.ntiid:get_transactions(x) for x in old_children}
 	parent_node.clear()
 	for idx, lesson in enumerate(parent_lxml.iterchildren(tag='lesson')):
 		node_factory = _get_node_factory(lesson)
@@ -272,7 +273,6 @@ def _handle_node(parent_lxml, parent_node, old_children, library, removed_nodes)
 		lesson_ntiid = _get_lesson_ntiid(parent_node, idx)
 		lesson_node = node_factory()
 		old_node = _get_node(lesson_ntiid, lesson_node)
-		children = list(old_node.values()) if old_node else None
 
 		if lesson_ntiid not in removed_nodes and old_node is not None:
 			if _is_node_locked(old_node):
@@ -284,9 +284,9 @@ def _handle_node(parent_lxml, parent_node, old_children, library, removed_nodes)
 
 		# Must add to our parent_node now to avoid NotYet exceptions.
 		parent_node.append(lesson_node)
-		_handle_node(lesson, lesson_node, children, library, removed_nodes)
+		_handle_node(lesson, lesson_node, library, removed_nodes)
 
-	_update_parent_children(parent_node, old_children)
+	_update_parent_children( parent_node, old_children, transactions )
 
 def fill_outline_from_node(outline, course_element, force=False):
 	"""
@@ -322,8 +322,7 @@ def fill_outline_from_node(outline, course_element, force=False):
 
 		if unit_ntiid not in outline:
 			outline.append(unit_node)
-		children = old_node.values() if old_node else None
-		_handle_node(unit, unit_node, children, library, removed_nodes)
+		_handle_node(unit, unit_node, library, removed_nodes)
 
 	# Unregister removed and re-register
 	registry = component.getSiteManager()

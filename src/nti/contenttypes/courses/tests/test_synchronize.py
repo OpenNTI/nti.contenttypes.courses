@@ -30,8 +30,6 @@ import fudge
 import os.path
 import datetime
 
-from copy import copy
-
 from zope import interface
 from zope import component
 
@@ -68,6 +66,8 @@ from nti.contenttypes.courses.interfaces import IEnrollmentMappedCourseInstance
 
 from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
 
+from nti.contenttypes.courses.outlines import CourseOutlineContentNode
+
 from nti.contenttypes.courses._synchronize import synchronize_catalog_from_root
 
 from nti.externalization.tests import externalizes
@@ -76,6 +76,10 @@ from nti.dataserver.tests.test_authorization_acl import denies
 from nti.dataserver.tests.test_authorization_acl import permits
 
 from nti.contenttypes.courses.tests import CourseLayerTest
+
+from nti.recorder.record import append_records
+from nti.recorder.record import get_transactions
+from nti.recorder.record import TransactionRecord
 
 class TestFunctionalSynchronize(CourseLayerTest):
 
@@ -376,16 +380,26 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		#	* The child node order will not be reverted.
 		#	* The new child will still exist.
 		#	* Unlocked nodes will revert.
+		#	* Transaction records are preserved.
 		unchanged_node = outline_node.values()[1]
 		old_node_title2 = unchanged_node.title
 		unchanged_node.title = 'new child node title 2'
+		unchanged_record = TransactionRecord( principal='user1', tid=unchanged_node.ntiid )
+
 		child_node.locked = True
 		child_node.title = new_child_title
-		user_child_node = copy( child_node )
+		child_node_record = TransactionRecord( principal='user1', tid=child_node.ntiid )
+
+		user_child_node = CourseOutlineContentNode()
 		user_child_node.ntiid = user_node_ntiid = 'tag:nextthought.com,2011-10:NTI-NTICourseOutlineNode-Spring2014_Gateway.0.1000'
 		user_child_node.title = user_node_title = 'User created node'
 		user_child_node.locked = True
+		user_child_node_record = TransactionRecord( principal='user1', tid=user_child_node.ntiid )
 		outline_node.clear()
+
+		append_records(unchanged_node, unchanged_record)
+		append_records(child_node, child_node_record)
+		append_records(user_child_node, user_child_node_record)
 		outline_node.append( user_child_node )
 		outline_node.append( child_node )
 		outline_node.append( unchanged_node )
@@ -401,24 +415,33 @@ class TestFunctionalSynchronize(CourseLayerTest):
 
 		# User node in slot one
 		child_node = outline_node.values()[0]
+		child_txs = get_transactions( child_node )
 		assert_that( child_node.ntiid, is_( user_node_ntiid ) )
 		assert_that( child_node.locked, is_( True ) )
 		assert_that( child_node.title, is_( user_node_title ) )
 		assert_that( child_node.is_published(), is_( True ) )
+		assert_that( child_txs, has_length( 1 ))
+		assert_that( child_txs[0], is_( user_child_node_record ))
 
 		# Changed title in slot two
 		child_node = outline_node.values()[1]
+		child_txs = get_transactions( child_node )
 		assert_that( child_node.ntiid, is_( child_node.ntiid ) )
 		assert_that( child_node.locked, is_( True ) )
 		assert_that( child_node.title, is_( new_child_title ) )
 		assert_that( child_node.is_published(), is_( True ) )
+		assert_that( child_txs, has_length( 1 ))
+		assert_that( child_txs[0], is_( child_node_record ))
 
 		# Reverted node in slot three
 		child_node = outline_node.values()[2]
+		child_txs = get_transactions( child_node )
 		assert_that( child_node.ntiid, is_( unchanged_node.ntiid ) )
 		assert_that( child_node.locked, is_( False ) )
 		assert_that( child_node.title, is_( old_node_title2 ) )
 		assert_that( child_node.is_published(), is_( True ) )
+		assert_that( child_txs, has_length( 1 ))
+		assert_that( child_txs[0], is_( unchanged_record ))
 
 	def test_default_sharing_scope_use_parent(self):
 		"""
