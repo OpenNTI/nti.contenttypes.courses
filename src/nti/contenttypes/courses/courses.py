@@ -18,8 +18,8 @@ from zope import lifecycleevent
 from zope.cachedescriptors.property import Lazy
 from zope.cachedescriptors.property import readproperty
 
-from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeFolder
-from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
+from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeFolder
+from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
 from nti.schema.fieldproperty import createDirectFieldProperties
 
