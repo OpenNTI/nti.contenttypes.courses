@@ -25,6 +25,9 @@ from nti.common.property import LazyOnClass
 from nti.common.property import readproperty
 from nti.common.property import CachedProperty
 
+from nti.containers.containers import CheckingLastModifiedBTreeFolder
+from nti.containers.containers import CheckingLastModifiedBTreeContainer
+
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
 
 from nti.dataserver.authorization import ACT_READ
@@ -32,9 +35,6 @@ from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
 from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
-
-from nti.dataserver.containers import CheckingLastModifiedBTreeFolder
-from nti.dataserver.containers import CheckingLastModifiedBTreeContainer
 
 from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
 

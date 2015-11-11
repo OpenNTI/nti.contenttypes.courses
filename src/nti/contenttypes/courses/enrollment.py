@@ -55,9 +55,9 @@ from nti.common.property import Lazy
 from nti.common.property import alias
 from nti.common.property import CachedProperty
 
-from nti.contentlibrary.bundle import _readCurrent
+from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
-from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
+from nti.contentlibrary.bundle import _readCurrent
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
