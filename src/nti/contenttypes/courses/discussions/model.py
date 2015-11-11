@@ -20,7 +20,7 @@ from zope.mimetype.interfaces import IContentTypeAware
 
 from ZODB.POSException import ConnectionStateError
 
-from nti.dataserver.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
+from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
 
