@@ -220,7 +220,7 @@ def _update_parent_children(parent_node, old_children, transactions):
 	if old_children and _is_node_move_locked(old_children):
 		new_children = list(parent_node.values())
 		new_child_map = {x.ntiid:x for x in new_children}
-		parent_node.clear()
+		parent_node.clear( event=False )
 		for i, old_child in enumerate(old_children):
 			try:
 				new_child = new_children[i]
@@ -257,14 +257,13 @@ def _get_node_factory(lesson):
 										default=CourseOutlineCalendarNode)
 	return result
 
-def _handle_node(parent_lxml, parent_node, library, removed_nodes):
+def _handle_node(parent_lxml, parent_node, library, removed_nodes, transactions):
 	"""
 	Recursively fill in outline nodes and their children.
 	"""
 	old_children = list(parent_node.values())
-	# Capture our transactions since clear removes them.
-	transactions = {x.ntiid:get_transactions(x) for x in old_children}
-	parent_node.clear()
+	parent_node.clear( event=False )
+
 	for idx, lesson in enumerate(parent_lxml.iterchildren(tag='lesson')):
 		node_factory = _get_node_factory(lesson)
 		# We may re-use ntiids of user-created nodes here, which is ok
@@ -284,7 +283,7 @@ def _handle_node(parent_lxml, parent_node, library, removed_nodes):
 
 		# Must add to our parent_node now to avoid NotYet exceptions.
 		parent_node.append(lesson_node)
-		_handle_node(lesson, lesson_node, library, removed_nodes)
+		_handle_node(lesson, lesson_node, library, removed_nodes, transactions)
 
 	_update_parent_children( parent_node, old_children, transactions )
 
@@ -302,10 +301,12 @@ def fill_outline_from_node(outline, course_element, force=False):
 
 	:return: The outline node.
 	"""
-
+	# Capture our transactions early since clear may remove them.
+	transactions = {node.ntiid:get_transactions(node) for node in _outline_nodes(outline)}
 	removed_nodes = {x.ntiid:x for x in _get_removed_nodes(outline, force=force)}
-	node_transactions = {k:get_transactions(v) for k, v in removed_nodes.items()}
 	library = component.queryUtility(IContentPackageLibrary)
+	old_children = list(outline.values())
+	outline.clear( event=False )
 
 	for idx, unit in enumerate(course_element.iterchildren(tag='unit')):
 		unit_ntiid = _get_unit_ntiid(outline, unit, idx)
@@ -320,9 +321,9 @@ def fill_outline_from_node(outline, course_element, force=False):
 			unit_node.src = _attr_val(unit, str('src'))
 			unit_node.ntiid = unit_ntiid
 
-		if unit_ntiid not in outline:
-			outline.append(unit_node)
-		_handle_node(unit, unit_node, library, removed_nodes)
+		outline.append( unit_node )
+		_handle_node(unit, unit_node, library, removed_nodes, transactions)
+	_update_parent_children( outline, old_children, transactions )
 
 	# Unregister removed and re-register
 	registry = component.getSiteManager()
@@ -333,7 +334,8 @@ def fill_outline_from_node(outline, course_element, force=False):
 	_register_nodes(outline, publish=True)
 
 	# After registering, restore tx history
-	_copy_remove_transactions(removed_nodes, node_transactions)
+	# TODO Do we need this anymore?
+	_copy_remove_transactions(removed_nodes, transactions)
 
 	return outline
 

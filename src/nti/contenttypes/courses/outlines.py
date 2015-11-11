@@ -57,9 +57,6 @@ class _AbstractCourseOutlineNode(Contained, RecordableMixin, PublishableMixin):
 			name = unicode(len(self))
 		self[name] = node
 
-	def updateOrder(self, order):
-		raise TypeError("Ordering cannot be changed")
-
 	def __hash__(self):
 		# We inherit an __eq__ from dict, but dict does not
 		# like to be hashed (because mutable cache keys can be bad)
