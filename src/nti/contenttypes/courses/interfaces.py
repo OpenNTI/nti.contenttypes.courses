@@ -276,16 +276,16 @@ class ICourseOutline(ICourseOutlineNode,
 	containers(str('.ICourseInstance'))
 	__parent__.required = False
 
-class ICourseOutlineNodeMoved(IObjectEvent):
+class ICourseOutlineNodeMovedEvent(IObjectEvent):
 	pass
 
-@interface.implementer(ICourseOutlineNodeMoved)
-class CourseOutlineNodeMoved(ObjectEvent):
+@interface.implementer(ICourseOutlineNodeMovedEvent)
+class CourseOutlineNodeMovedEvent(ObjectEvent):
 
 	node = alias('object')
 
 	def __init__(self, obj, principal=None, index=None):
-		super(CourseOutlineNodeMoved, self).__init__(obj)
+		super(CourseOutlineNodeMovedEvent, self).__init__(obj)
 		self.index = index
 		self.principal = principal
 

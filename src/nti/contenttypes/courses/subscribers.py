@@ -59,11 +59,11 @@ from .interfaces import ICourseOutline
 from .interfaces import ICourseInstance
 from .interfaces import ICourseOutlineNode
 from .interfaces import ICourseCatalogEntry
-from .interfaces import ICourseOutlineNodeMoved
 from .interfaces import IObjectEntrySynchronizer
 from .interfaces import IPersistentCourseCatalog
 from .interfaces import ICourseRolesSynchronized
 from .interfaces import CourseCatalogDidSyncEvent
+from .interfaces import ICourseOutlineNodeMovedEvent
 
 from .utils import index_course_instructors
 
@@ -219,7 +219,7 @@ def on_course_instance_removed(course, event):
 	for uid in catalog.apply(query) or ():
 		catalog.unindex_doc(uid)
 
-@component.adapter(ICourseOutlineNode, ICourseOutlineNodeMoved)
+@component.adapter(ICourseOutlineNode, ICourseOutlineNodeMovedEvent)
 def on_course_outline_node_moved(node, event):
 	ntiid = getattr(node, 'ntiid', None)
 	if ntiid and not ICourseOutline.providedBy(node):
