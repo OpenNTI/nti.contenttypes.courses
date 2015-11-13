@@ -28,6 +28,9 @@ from zope import interface
 from zope.annotation.interfaces import IAttributeAnnotatable
 
 from zope.interface.interfaces import IMethod
+from zope.interface.interfaces import ObjectEvent
+from zope.interface.interfaces import IObjectEvent
+
 from zope.interface.common.mapping import IEnumerableMapping
 
 from zope.security.interfaces import IPrincipal
@@ -42,6 +45,8 @@ from zope.container.interfaces import IContainerNamesContainer
 
 from zope.container.constraints import contains
 from zope.container.constraints import containers
+
+from nti.common.property import alias
 
 from nti.contentlibrary.interfaces import IDisplayableContent
 from nti.contentlibrary.interfaces import IContentPackageBundle
@@ -270,6 +275,19 @@ class ICourseOutline(ICourseOutlineNode,
 	# run into caching issues (see the MD5 hacks for forums).
 	containers(str('.ICourseInstance'))
 	__parent__.required = False
+
+class ICourseOutlineNodeMoved(IObjectEvent):
+	pass
+
+@interface.implementer(ICourseOutlineNodeMoved)
+class CourseOutlineNodeMoved(ObjectEvent):
+
+	node = alias('object')
+
+	def __init__(self, obj, principal=None, index=None):
+		super(CourseOutlineNodeMoved, self).__init__(obj)
+		self.index = index
+		self.principal = principal
 
 # Sharing
 
@@ -973,9 +991,6 @@ class IEnrollmentException(interface.Interface):
 @interface.implementer(IEnrollmentException)
 class AlreadyEnrolledException(ValueError):
 	pass
-
-from zope.interface.interfaces import ObjectEvent
-from zope.interface.interfaces import IObjectEvent
 
 class ICourseInstanceAvailableEvent(IObjectEvent):
 	"""

@@ -26,10 +26,15 @@ from zope.interface.interfaces import IUnregistered
 
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
 
+from ZODB.utils import serial_repr
+
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
+
+from nti.recorder.record import append_records
+from nti.recorder.record import TransactionRecord
 
 from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
@@ -48,11 +53,13 @@ from .interfaces import iface_of_node
 
 from .interfaces import INSTRUCTOR
 from .interfaces import COURSE_CATALOG_NAME
+from .interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
 
 from .interfaces import ICourseOutline
 from .interfaces import ICourseInstance
 from .interfaces import ICourseOutlineNode
 from .interfaces import ICourseCatalogEntry
+from .interfaces import ICourseOutlineNodeMoved
 from .interfaces import IObjectEntrySynchronizer
 from .interfaces import IPersistentCourseCatalog
 from .interfaces import ICourseRolesSynchronized
@@ -211,6 +218,18 @@ def on_course_instance_removed(course, event):
 	query = { IX_COURSE: {'any_of':(ntiid,)} }
 	for uid in catalog.apply(query) or ():
 		catalog.unindex_doc(uid)
+
+@component.adapter(ICourseOutlineNode, ICourseOutlineNodeMoved)
+def on_course_outline_node_moved(node, event):
+	ntiid = getattr(node, 'ntiid', None)
+	if ntiid and not ICourseOutline.providedBy(node):
+		tid = getattr(node, '_p_serial', None)
+		tid = unicode(serial_repr(tid)) if tid else None
+		record = TransactionRecord(type=TRX_OUTLINE_NODE_MOVE_TYPE,
+								   principal=event.principal,
+								   tid=tid)
+		append_records(node, (record,))
+		node.locked = True
 
 @component.adapter(ICourseOutlineNode, IIntIdRemovedEvent)
 def on_course_outline_node_removed(node, event):

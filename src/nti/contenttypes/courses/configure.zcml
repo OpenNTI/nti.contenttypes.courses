@@ -88,6 +88,7 @@
 	<subscriber handler=".subscribers.sync_catalog_when_library_synched" />
 
 	<subscriber handler=".subscribers.on_course_outline_node_added" />
+	<subscriber handler=".subscribers.on_course_outline_node_moved" />
 	<subscriber handler=".subscribers.on_course_outline_node_removed" />
 
 	<!-- Roles and permissions -->
