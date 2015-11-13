@@ -111,8 +111,8 @@ def _register_nodes(outline, registry=None, publish=False):
 							component=node,
 							name=node.ntiid,
 							provided=iface_of_node(node))
-			if publish:
-				node.publish()
+		if publish:
+			node.publish()
 register_nodes = _register_nodes
 
 def _copy_remove_transactions(removed_nodes, record_map, registry=None):

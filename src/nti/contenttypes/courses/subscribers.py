@@ -18,6 +18,7 @@ from zope.component.hooks import site
 from zope.event import notify
 
 from zope.intid.interfaces import IIntIds
+from zope.intid.interfaces import IIntIdAddedEvent
 from zope.intid.interfaces import IIntIdRemovedEvent
 
 from zope.interface.interfaces import IRegistered
@@ -30,6 +31,7 @@ from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
 
+from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
 from nti.site.localutility import install_utility
 from nti.site.localutility import uninstall_utility_on_unregistration
@@ -47,6 +49,7 @@ from .interfaces import iface_of_node
 from .interfaces import INSTRUCTOR
 from .interfaces import COURSE_CATALOG_NAME
 
+from .interfaces import ICourseOutline
 from .interfaces import ICourseInstance
 from .interfaces import ICourseOutlineNode
 from .interfaces import ICourseCatalogEntry
@@ -212,8 +215,20 @@ def on_course_instance_removed(course, event):
 @component.adapter(ICourseOutlineNode, IIntIdRemovedEvent)
 def on_course_outline_node_removed(node, event):
 	ntiid = getattr(node, 'ntiid', None)
-	if ntiid:
+	if ntiid and not ICourseOutline.providedBy(node):
 		registry = component.getSiteManager()
 		unregisterUtility(registry,
 						  provided=iface_of_node(node),
 					 	  name=ntiid)
+
+@component.adapter(ICourseOutlineNode, IIntIdAddedEvent)
+def on_course_outline_node_added(node, event):
+	ntiid = getattr(node, 'ntiid', None)
+	if ntiid and not ICourseOutline.providedBy(node):
+		registry = component.getSiteManager()
+		provided = iface_of_node(node)
+		if registry.queryUtility(provided, name=ntiid) is None:
+			registerUtility(registry,
+							node,
+							provided=iface_of_node(node),
+						 	name=ntiid)
