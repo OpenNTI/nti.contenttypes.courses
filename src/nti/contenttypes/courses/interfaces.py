@@ -118,6 +118,9 @@ COURSE_OUTLINE_NAME = 'course_outline.xml'
 #: Instructor role
 INSTRUCTOR = "Instructor"
 
+#: Outline node move type
+TRX_OUTLINE_NODE_MOVE_TYPE = 'outlinenodemove'
+
 # Notes:
 #
 # How to determine available courses?
