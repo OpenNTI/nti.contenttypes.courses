@@ -21,8 +21,9 @@ from zope import interface
 
 from zope.cachedescriptors.property import cachedIn
 
+from nti.containers.containers import CheckingLastModifiedBTreeContainer
+
 from nti.dataserver.users import Community
-from nti.dataserver.containers import CheckingLastModifiedBTreeContainer
 
 from nti.externalization.oids import to_external_ntiid_oid
 
