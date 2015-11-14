@@ -220,6 +220,8 @@ def _update_parent_children(parent_node, old_children, transactions):
 	if old_children and _is_node_move_locked(old_children):
 		new_children = list(parent_node.values())
 		new_child_map = {x.ntiid:x for x in new_children}
+		# Our children may already have their transactions recorded,
+		# make sure we don't clear them via wipe.
 		parent_node.clear( event=False )
 		for i, old_child in enumerate(old_children):
 			try:

@@ -184,7 +184,7 @@ def _tag_iface_fields(iface, *fields):
 		iface[name].setTaggedValue(TAG_REQUIRED_IN_UI, False)
 
 class ICourseOutlineNode(IRecordable,
-						 IAttributeAnnotatable, 
+						 IAttributeAnnotatable,
 						 ITitledDescribedContent,
 						 IOrderedContainer,
 						 IContainerNamesContainer,
@@ -204,11 +204,29 @@ class ICourseOutlineNode(IRecordable,
 	src = ValidTextLine(title="json file to populate the node overview",
 						required=False)
 
+	ContentsAvailableBeginning = ValidDatetime(
+		title="This node and its contents are not available before this time",
+		description="""When present, this specifies the time instant at which
+		this node and its children are to be available and visible to end users.
+		If this is absent, it is always available. While this is represented here as an actual
+		concrete timestamp, it is expected that in many cases the source representation
+		will be relative to something else (a ``timedelta``) and conversion to absolute
+		timestamp will be done as needed.""",
+		required=False)
+
+	ContentsAvailableEnding = ValidDatetime(
+		title="This node and its contents are no longer available after this time",
+		description="""When present, this specifies the last instance at which
+		this node is expected to be available and visible to end users.
+		As with ``ContentsAvailableBeginning``,
+		this will typically be relative and converted.""",
+		required=False)
+
 	def append(node):
 		"""
 		A synonym for __setitem__ that automatically handles naming.
 		"""
-_tag_iface_fields(ICourseOutlineNode, 'title', 'description')
+_tag_iface_fields(ICourseOutlineNode, 'title', 'description', 'ContentsAvailableBeginning', 'ContentsAvailableEnding')
 
 class ICourseOutlineCalendarNode(ICourseOutlineNode):
 	"""
@@ -225,7 +243,7 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 	ContentNTIID.setTaggedValue('_ext_excluded_out', True)
 
 	AvailableBeginning = ValidDatetime(
-		title="This node is available, or expected to be entered or active at this time",
+		title="This display time when this node should be active",
 		description="""When present, this specifies the time instant at which
 		this node and its children are to be available or active. If this is absent,
 		it is always available or active. While this is represented here as an actual
@@ -235,14 +253,15 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 		required=False)
 
 	AvailableEnding = ValidDatetime(
-		title="This node is completed and no longer available at this time",
+		title="This display time when this node should no longer be active",
 		description="""When present, this specifies the last instance at which
 		this node is expected to be available and active.
 		As with ``available_for_submission_beginning``,
 		this will typically be relative and converted.""",
 		required=False)
 
-_tag_iface_fields(ICourseOutlineCalendarNode, 'title', 'description', 'AvailableEnding', 'AvailableBeginning')
+_tag_iface_fields(ICourseOutlineCalendarNode, 'title', 'description', 'AvailableEnding',
+				'AvailableBeginning' , 'ContentsAvailableBeginning', 'ContentsAvailableEnding')
 
 class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 	"""
@@ -252,7 +271,8 @@ class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 
 	ContentNTIID = ValidNTIID(title="The NTIID of the content this node uses")
 
-_tag_iface_fields(ICourseOutlineContentNode, 'title', 'description', 'AvailableEnding', 'AvailableBeginning')
+_tag_iface_fields(ICourseOutlineContentNode, 'title', 'description', 'AvailableEnding',
+				'AvailableBeginning' , 'ContentsAvailableBeginning', 'ContentsAvailableEnding')
 
 class ICourseOutline(ICourseOutlineNode,
 					 ILastModified):
@@ -684,7 +704,7 @@ class ICatalogFamily(IDisplayableContent):
 
 	StartDate = ValidDatetime(title="The date on which the course begins",
 							  description="Currently optional; a missing value means the course already started")
-	
+
 	EndDate = ValidDatetime(title="The date on which the course ends",
 					   		description="Currently optional; a missing value means the course has no defined end date.",
 					   		required=False)
@@ -1065,19 +1085,19 @@ class ICourseSynchronizationResults(IGenericSynchronizationResults):
 	CatalogEntryUpdated = Bool(title="CatalogEntry updated", required=False, default=False)
 	SharingScopesUpdated = Bool(title="Sharing scopes updated", required=False, default=False)
 	CourseDiscussionsUpdated = Bool(title="Sharing scopes updated", required=False, default=False)
-	
+
 	ContentBundleCreated = Bool(title="Bundle created", required=False, default=False)
 	ContentBundleUpdated = Bool(title="Bundle updated", required=False, default=False)
-	
+
 	VendorInfoReseted = Bool(title="Vendor info reseted", required=False, default=False)
 	VendorInfoUpdated = Bool(title="Vendor info updated", required=False, default=False)
 
 	OutlineDeleted = Bool(title="Outline deleted", required=False, default=False)
 	OutlineUpdated = Bool(title="Outline updated", required=False, default=False)
-	
+
 	InstructorRolesReseted = Bool(title="Instructor Roles reseted", required=False, default=False)
 	InstructorRolesUpdated = Bool(title="Instructor Roles updated", required=False, default=False)
-	
+
 	AssignmentPoliciesReseted = Bool(title="Assignment Policies reseted", required=False, default=False)
 	AssignmentPoliciesUpdated = Bool(title="Assignment Policies updated", required=False, default=False)
 
@@ -1208,7 +1228,7 @@ def get_course_assessment_predicate_for_user(user, course):
 	return uber_filter
 
 def iface_of_node(node):
-	for node_interface in (ICourseOutlineContentNode, 
+	for node_interface in (ICourseOutlineContentNode,
 				  		   ICourseOutlineCalendarNode,
 				  		   ICourseOutlineNode,
 				  		   ICourseOutline): # orden matters

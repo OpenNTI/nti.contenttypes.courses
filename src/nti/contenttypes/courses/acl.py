@@ -180,7 +180,7 @@ class CourseOutlineNodeACLProvider(object):
 				 ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self)) ]
 		course = find_interface(self.context, ICourseInstance, strict=False)
 		if course is not None: # give instructors special powers
-			aces.extend(ace_allowing(i, ALL_PERMISSIONS, type(self)) 
+			aces.extend(ace_allowing(i, ALL_PERMISSIONS, type(self))
 						for i in course.instructors or ())
 		result = acl_from_aces(aces)
 		return result
