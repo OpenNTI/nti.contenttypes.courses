@@ -80,6 +80,10 @@ class _AbstractCourseOutlineNode(Contained, RecordableMixin, PublishableMixin):
 class CourseOutlineNode(_AbstractCourseOutlineNode,
 						PersistentCreatedModDateTrackingObject,  # order mattters
 						OrderedContainer):
+
+	ContentsAvailableEnding = AdaptingFieldProperty(ICourseOutlineNode['ContentsAvailableEnding'])
+	ContentsAvailableBeginning = AdaptingFieldProperty(ICourseOutlineNode['ContentsAvailableBeginning'])
+
 	# XXX This class used to be persistent. Although there were
 	# never any references explicitly stored to them, because it
 	# was persistent and is a Container, the intid utility grabbed
