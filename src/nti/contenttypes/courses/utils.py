@@ -67,6 +67,12 @@ def get_parent_course(context):
 		course = course.__parent__.__parent__
 	return course
 
+def get_course_subinstances(context):
+	course = ICourseInstance(context, None)
+	if not ICourseSubInstance.providedBy(course):
+		return list(course.SubInstances.values())
+	return ()
+
 def is_there_an_open_enrollment(course, user):
 	main_course = get_parent_course(course)
 	if main_course is not None:
