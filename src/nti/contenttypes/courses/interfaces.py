@@ -226,7 +226,8 @@ class ICourseOutlineNode(IRecordable,
 		"""
 		A synonym for __setitem__ that automatically handles naming.
 		"""
-_tag_iface_fields(ICourseOutlineNode, 'title', 'description', 'ContentsAvailableBeginning', 'ContentsAvailableEnding')
+_tag_iface_fields(ICourseOutlineNode, 'title', 'description', 'ContentsAvailableBeginning', 
+				  'ContentsAvailableEnding')
 
 class ICourseOutlineCalendarNode(ICourseOutlineNode):
 	"""
@@ -261,7 +262,8 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 		required=False)
 
 _tag_iface_fields(ICourseOutlineCalendarNode, 'title', 'description', 'AvailableEnding',
-				'AvailableBeginning' , 'ContentsAvailableBeginning', 'ContentsAvailableEnding')
+				  'AvailableBeginning' , 'ContentsAvailableBeginning', 
+				  'ContentsAvailableEnding')
 
 class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 	"""
@@ -269,10 +271,12 @@ class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 	a content unit.
 	"""
 
-	ContentNTIID = ValidNTIID(title="The NTIID of the content this node uses")
+	ContentNTIID = ValidNTIID(title="The NTIID of the content this node uses",
+							  required=False)
 
 _tag_iface_fields(ICourseOutlineContentNode, 'title', 'description', 'AvailableEnding',
-				'AvailableBeginning' , 'ContentsAvailableBeginning', 'ContentsAvailableEnding')
+				  'AvailableBeginning' , 'ContentsAvailableBeginning', 
+				  'ContentsAvailableEnding')
 
 class ICourseOutline(ICourseOutlineNode,
 					 ILastModified):
@@ -379,8 +383,9 @@ class ICourseInstanceScopedForum(ICourseInstanceForum):
 	only by a certain enrollment scope within that course.
 	"""
 
-	SharingScopeName = interface.Attribute("an optional field that should match the name of a sharing scope;"
-										   "If not found also check the tagged value on this attribute")
+	SharingScopeName = interface.Attribute(
+							"an optional field that should match the name of a sharing scope;"
+							"If not found also check the tagged value on this attribute")
 
 # Course instances
 
@@ -1231,16 +1236,16 @@ def iface_of_node(node):
 	for node_interface in (ICourseOutlineContentNode,
 				  		   ICourseOutlineCalendarNode,
 				  		   ICourseOutlineNode,
-				  		   ICourseOutline): # orden matters
+				  		   ICourseOutline):  # orden matters
 		if node_interface.providedBy(node):
 			return node_interface
 	return None
-iface_of_outline_node = iface_of_node # alias
+iface_of_outline_node = iface_of_node  # alias
 
 def _set_ifaces():
 	for iSchema in (ICourseOutlineNode,
-				    ICourseOutlineCalendarNode,
-				    ICourseOutlineContentNode):
+					ICourseOutlineCalendarNode,
+					ICourseOutlineContentNode):
 		for k, v in iSchema.namesAndDescriptions(all=True):
 			if 	IMethod.providedBy(v) or \
 				v.queryTaggedValue(TAG_HIDDEN_IN_UI) is not None:
