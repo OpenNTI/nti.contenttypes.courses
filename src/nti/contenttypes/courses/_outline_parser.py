@@ -103,7 +103,7 @@ def _get_node(node_ntiid, obj, registry=None):
 	return result
 get_node = _get_node
 
-def _register_nodes(outline, registry=None, publish=False):
+def _register_nodes(outline, registry=None):
 	registry = component.getSiteManager() if registry is None else registry
 	for node in _outline_nodes(outline):
 		if _get_node(node.ntiid, node) is None:
@@ -111,8 +111,6 @@ def _register_nodes(outline, registry=None, publish=False):
 							component=node,
 							name=node.ntiid,
 							provided=iface_of_node(node))
-		if publish:
-			node.publish()
 register_nodes = _register_nodes
 
 def _copy_remove_transactions(removed_nodes, record_map, registry=None):
@@ -341,7 +339,7 @@ def fill_outline_from_node(outline, course_element, force=False):
 		unregisterUtility(registry,
  						  name=removed_ntiid,
  						  provided=iface_of_node(removed_node))
-	_register_nodes(outline, publish=True)
+	_register_nodes(outline)
 
 	# After registering, restore tx history
 	# TODO Do we need this anymore?

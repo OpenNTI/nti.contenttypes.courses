@@ -413,13 +413,13 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		# New node exists
 		assert_that( outline_node, has_length(3) )
 
-		# User node in slot one
+		# User node in slot one; user node stays unpublished.
 		child_node = outline_node.values()[0]
 		child_txs = get_transactions( child_node )
 		assert_that( child_node.ntiid, is_( user_node_ntiid ) )
 		assert_that( child_node.locked, is_( True ) )
 		assert_that( child_node.title, is_( user_node_title ) )
-		assert_that( child_node.is_published(), is_( True ) )
+		assert_that( child_node.is_published(), is_( False ) )
 		assert_that( child_txs, has_length( 1 ))
 		assert_that( child_txs[0], is_( user_child_node_record ))
 
