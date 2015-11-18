@@ -69,7 +69,7 @@ def get_parent_course(context):
 
 def get_course_subinstances(context):
 	course = ICourseInstance(context, None)
-	if not ICourseSubInstance.providedBy(course):
+	if course is not None and not ICourseSubInstance.providedBy(course):
 		return list(course.SubInstances.values())
 	return ()
 
