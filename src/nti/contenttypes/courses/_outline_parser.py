@@ -164,6 +164,12 @@ def _get_lesson_ntiid(parent, idx):
 					   specific=specific)
 	return ntiid
 
+def _publish( node ):
+	try:
+		node.publish()
+	except AttributeError:
+		pass
+
 def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 	lesson_node = node_factory()
 	topic_ntiid = _attr_val(lesson, 'topic-ntiid')
@@ -206,6 +212,7 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 	elif len(dates) == 2:
 		lesson_node.AvailableBeginning = dates[0]
 		lesson_node.AvailableEnding = dates[1]
+	_publish( lesson_node )
 	return lesson_node
 
 def _update_parent_children(parent_node, old_children, transactions):
@@ -322,6 +329,7 @@ def fill_outline_from_node(outline, course_element, force=False):
 			unit_node.title = _attr_val(unit, str('label'))
 			unit_node.src = _attr_val(unit, str('src'))
 			unit_node.ntiid = unit_ntiid
+			_publish( unit_node )
 
 		outline.append( unit_node )
 		_handle_node(unit, unit_node, library, removed_nodes, transactions)
