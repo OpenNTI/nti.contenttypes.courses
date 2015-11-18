@@ -20,7 +20,6 @@ from zope.component.hooks import site as current_site
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 
 from nti.contenttypes.presentation.interfaces import IPresentationAsset
-from nti.contenttypes.presentation.interfaces import INTILessonOverview
 
 from nti.coremetadata.interfaces import IRecordable
 
@@ -29,7 +28,7 @@ from nti.dataserver.contenttypes.forums.interfaces import ITopic
 from nti.site.utils import unregisterUtility
 from nti.site.hostpolicy import get_all_host_sites
 
-REGISTERED_TYPES = [ICourseOutlineNode, IPresentationAsset,INTILessonOverview]
+REGISTERED_TYPES = [ICourseOutlineNode, IPresentationAsset]
 
 def unregister(registry, name, provided):
 	return unregisterUtility(registry=registry,
