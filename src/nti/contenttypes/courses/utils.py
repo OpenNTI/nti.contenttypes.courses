@@ -61,6 +61,16 @@ def index_course_instructors(context, catalog=None, intids=None):
 		result += 1
 	return result
 
+def get_course_packages(context):
+	course = ICourseInstance(context, None)
+	if course is not None:
+		try:
+			packs = course.ContentPackageBundle.ContentPackages
+		except AttributeError:
+			packs = (course.legacy_content_package,)
+		return packs or ()
+	return ()
+
 def get_parent_course(context):
 	course = ICourseInstance(context, None)
 	if ICourseSubInstance.providedBy(course):
