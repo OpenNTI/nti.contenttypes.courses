@@ -17,16 +17,12 @@ from zope.component.hooks import site as current_site
 
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 
-from nti.contenttypes.presentation.interfaces import IPresentationAsset
-
 from nti.coremetadata.interfaces import IRecordable
 
 from nti.dataserver.contenttypes.forums.interfaces import ITopic
 
 from nti.site.utils import unregisterUtility
 from nti.site.hostpolicy import get_all_host_sites
-
-REGISTERED_TYPES = [ICourseOutlineNode, IPresentationAsset]
 
 def unregister(registry, name, provided):
 	return unregisterUtility(registry=registry,
@@ -42,10 +38,9 @@ def _include(obj):
 	return not ITopic.providedBy(obj)
 
 def _get_objects(registry):
-	for registered_type in REGISTERED_TYPES:
-		for _, obj in list(registry.getUtilitiesFor(registered_type)):
-			if not _is_locked(obj) and _include(obj):
-				yield obj
+	for _, obj in list(registry.getUtilitiesFor(ICourseOutlineNode)):
+		if not _is_locked(obj) and _include(obj):
+			yield obj
 
 def do_evolve(context, generation=generation):
 	conn = context.connection
