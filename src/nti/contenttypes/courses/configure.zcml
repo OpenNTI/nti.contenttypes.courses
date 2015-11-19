@@ -81,7 +81,7 @@
 	<!-- Events -->
 	<subscriber handler=".subscribers.install_site_course_catalog" />
 	<subscriber handler=".subscribers.uninstall_site_course_catalog" />
-	
+
 	<subscriber handler=".subscribers.on_course_instance_removed" />
 
 	<subscriber handler=".subscribers.roles_sync_on_course_instance" />
@@ -89,7 +89,6 @@
 
 	<subscriber handler=".subscribers.on_course_outline_node_added" />
 	<subscriber handler=".subscribers.on_course_outline_node_moved" />
-	<subscriber handler=".subscribers.on_course_outline_node_removed" />
 
 	<!-- Roles and permissions -->
 	<include package="zope.securitypolicy" file="meta.zcml" />

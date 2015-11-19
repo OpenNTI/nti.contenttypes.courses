@@ -231,15 +231,6 @@ def on_course_outline_node_moved(node, event):
 		append_records(node, (record,))
 		node.locked = True
 
-@component.adapter(ICourseOutlineNode, IIntIdRemovedEvent)
-def on_course_outline_node_removed(node, event):
-	ntiid = getattr(node, 'ntiid', None)
-	if ntiid and not ICourseOutline.providedBy(node):
-		registry = component.getSiteManager()
-		unregisterUtility(registry,
-						  provided=iface_of_node(node),
-					 	  name=ntiid)
-
 @component.adapter(ICourseOutlineNode, IIntIdAddedEvent)
 def on_course_outline_node_added(node, event):
 	ntiid = getattr(node, 'ntiid', None)
