@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-generation 10.
-
 .. $Id$
 """
 
@@ -35,18 +33,18 @@ def unregister(registry, name, provided):
 					  		 provided=provided,
 					  		 name=name)
 
-def _is_locked( obj ):
+def _is_locked(obj):
 	# Exclude locked objects (user created).
-	return IRecordable.providedBy( obj ) and obj.locked
+	return IRecordable.providedBy(obj) and obj.locked
 
-def _include( obj ):
+def _include(obj):
 	# Exclude topics
-	return not ITopic.providedBy( obj )
+	return not ITopic.providedBy(obj)
 
-def _get_objects( registry ):
+def _get_objects(registry):
 	for registered_type in REGISTERED_TYPES:
-		for _, obj in list(registry.getUtilitiesFor( registered_type )):
-			if not _is_locked( obj ) and _include( obj ):
+		for _, obj in list(registry.getUtilitiesFor(registered_type)):
+			if not _is_locked(obj) and _include(obj):
 				yield obj
 
 def do_evolve(context, generation=generation):
@@ -61,12 +59,12 @@ def do_evolve(context, generation=generation):
 		for site in get_all_host_sites():
 			with current_site(site):
 				registry = component.getSiteManager()
-				for obj in _get_objects( registry ):
+				for obj in _get_objects(registry):
 					obj.publish()
-					publish_count +=1
+					publish_count += 1
 
 	logger.info('contenttypes.courses evolution %s done. %s items published',
-				generation, publish_count )
+				generation, publish_count)
 
 def evolve(context):
 	"""

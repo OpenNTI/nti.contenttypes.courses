@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-generation 10.
-
 .. $Id$
 """
 
@@ -34,12 +32,12 @@ def unregister(registry, name, provided):
 def do_evolve(context, generation=generation):
 	conn = context.connection
 	ds_folder = conn.root()['nti.dataserver']
-	
+
 	result = 0
 	with current_site(ds_folder):
 		assert	component.getSiteManager() == ds_folder.getSiteManager(), \
 				"Hooks not installed?"
-		
+
 		lsm = ds_folder.getSiteManager()
 		intids = lsm.getUtility(IIntIds)
 		for site in get_all_host_sites():
@@ -49,7 +47,7 @@ def do_evolve(context, generation=generation):
 					ntiid = obj.ntiid
 					if 	intids.queryId(obj) is None and \
 						unregister(registry, ntiid, iface_of_node(obj)):
-						result +=1 
+						result += 1
 
 	logger.info('contenttypes.courses evolution %s done. %s node(s) unregistered',
 				generation, result)

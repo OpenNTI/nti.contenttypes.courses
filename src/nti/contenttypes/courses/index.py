@@ -15,6 +15,8 @@ from zope import interface
 
 from zope.catalog.interfaces import ICatalog
 
+from zope.component.hooks import getSite
+
 from zope.deprecation import deprecated
 
 from zope.intid import IIntIds
@@ -26,7 +28,6 @@ from nti.common.string import safestr
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.site.interfaces import IHostPolicyFolder
-from nti.site.site import get_component_hierarchy_names
 
 from nti.zope_catalog.catalog import Catalog
 from nti.zope_catalog.index import SetIndex as RawSetIndex
@@ -48,7 +49,11 @@ class ValidatingUsernameID(object):
 
 	def __init__(self, *args, **kwargs):
 		pass
-	
+
+deprecated('SiteIndex', 'Replaced with SingleSiteIndex')
+class SiteIndex(RawSetIndex):
+	pass
+
 class KeepSetIndex(RawSetIndex):
 
 	empty_set = set()
@@ -75,18 +80,24 @@ class KeepSetIndex(RawSetIndex):
 		else:
 			super(KeepSetIndex, self).unindex_doc(doc_id)
 
-class SiteIndex(KeepSetIndex):
+class ValidatingSiteName(object):
 
-	def to_iterable(self, value):
-		if 	isinstance(value, IndexRecord) or \
-			ICourseInstanceEnrollmentRecord.providedBy(value):
-			result = get_component_hierarchy_names()
-		elif IHostPolicyFolder.providedBy(value):
-			result = get_component_hierarchy_names(value)
-		else:
-			result = ()
-		return result
-	
+	__slots__ = (b'site',)
+
+	def __init__(self, obj, default=None):
+		if 	isinstance(obj, IndexRecord) or \
+			ICourseInstanceEnrollmentRecord.providedBy(obj):
+			self.site = getSite().__name__
+		elif IHostPolicyFolder.providedBy(obj):
+			self.site = obj.__name__
+
+	def __reduce__(self):
+		raise TypeError()
+
+class SingleSiteIndex(ValueIndex):
+	default_field_name = 'site'
+	default_interface = ValidatingSiteName
+
 class UsernameIndex(KeepSetIndex):
 
 	def to_iterable(self, value):
@@ -152,8 +163,8 @@ def install_enrollment_catalog(site_manager_container, intids=None):
 	intids.register(catalog)
 	lsm.registerUtility(catalog, provided=ICatalog, name=CATALOG_NAME)
 
-	for name, clazz in ((IX_SITE, SiteIndex),
-						(IX_SCOPE, ScopeIndex),
+	for name, clazz in ((IX_SCOPE, ScopeIndex),
+						(IX_SITE, SingleSiteIndex),
 						(IX_USERNAME, UsernameIndex),
 						(IX_ENTRY, CatalogEntryIDIndex)):
 		index = clazz(family=intids.family)
