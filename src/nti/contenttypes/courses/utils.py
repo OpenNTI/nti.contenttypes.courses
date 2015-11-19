@@ -83,6 +83,14 @@ def get_course_subinstances(context):
 		return list(course.SubInstances.values())
 	return ()
 
+def get_course_hierarchy(context):
+	result = []
+	parent = get_parent_course(context)
+	if parent is not None:
+		result.append(parent)
+		result.extend(parent.SubInstances.values())
+	return result
+
 def is_there_an_open_enrollment(course, user):
 	main_course = get_parent_course(course)
 	if main_course is not None:
