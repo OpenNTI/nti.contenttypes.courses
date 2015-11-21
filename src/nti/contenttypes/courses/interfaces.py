@@ -204,30 +204,11 @@ class ICourseOutlineNode(IRecordable,
 	src = ValidTextLine(title="json file to populate the node overview",
 						required=False)
 
-	ContentsAvailableBeginning = ValidDatetime(
-		title="This node and its contents are not available before this time",
-		description="""When present, this specifies the time instant at which
-		this node and its children are to be available and visible to end users.
-		If this is absent, it is always available. While this is represented here as an actual
-		concrete timestamp, it is expected that in many cases the source representation
-		will be relative to something else (a ``timedelta``) and conversion to absolute
-		timestamp will be done as needed.""",
-		required=False)
-
-	ContentsAvailableEnding = ValidDatetime(
-		title="This node and its contents are no longer available after this time",
-		description="""When present, this specifies the last instance at which
-		this node is expected to be available and visible to end users.
-		As with ``ContentsAvailableBeginning``,
-		this will typically be relative and converted.""",
-		required=False)
-
 	def append(node):
 		"""
 		A synonym for __setitem__ that automatically handles naming.
 		"""
-_tag_iface_fields(ICourseOutlineNode, 'title', 'description', 'ContentsAvailableBeginning', 
-				  'ContentsAvailableEnding')
+_tag_iface_fields(ICourseOutlineNode, 'title', 'description')
 
 class ICourseOutlineCalendarNode(ICourseOutlineNode):
 	"""
@@ -262,8 +243,7 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 		required=False)
 
 _tag_iface_fields(ICourseOutlineCalendarNode, 'title', 'description', 'AvailableEnding',
-				  'AvailableBeginning' , 'ContentsAvailableBeginning', 
-				  'ContentsAvailableEnding')
+				  'AvailableBeginning' )
 
 class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 	"""
@@ -275,8 +255,7 @@ class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 							  required=False)
 
 _tag_iface_fields(ICourseOutlineContentNode, 'title', 'description', 'AvailableEnding',
-				  'AvailableBeginning' , 'ContentsAvailableBeginning', 
-				  'ContentsAvailableEnding')
+				  'AvailableBeginning' )
 
 class ICourseOutline(ICourseOutlineNode,
 					 ILastModified):
