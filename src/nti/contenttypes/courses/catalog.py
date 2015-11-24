@@ -98,8 +98,8 @@ class _AbstractCourseCatalogMixin(object):
 
 	def iterCatalogEntries(self):
 		seen = set()
-		for entry in self._get_all_my_entries():
-			ntiid = entry.ntiid
+		entry_map = self._get_all_my_entries()
+		for ntiid, entry in entry_map.items():
 			if ntiid is None or ntiid in seen:
 				continue
 			seen.add(ntiid)
@@ -114,25 +114,11 @@ class _AbstractCourseCatalogMixin(object):
 					yield e
 
 	def _primary_query_my_entry(self, name):
-		for entry in self._get_all_my_entries():
-			if name == entry.ntiid:
-				return entry
-
-	def _fallback_query_my_entry(self, name):
-		# Ok, is it asking by name, during traversal?
-		# This is a legacy case that shouldn't be hit anymore,
-		# except during tests that are hardcoded.
-
-		for entry in self._get_all_my_entries():
-			if entry.ProviderUniqueID == name:
-				logger.warning("Using legacy ProviderUniqueID to match %s to %s",
-							   name, entry)
-				return entry
+		entry_map = self._get_all_my_entries()
+		return entry_map.get( name )
 
 	def _query_my_entry(self, name):
 		entry = self._primary_query_my_entry(name)
-		if entry is None:
-			entry = self._fallback_query_my_entry(name)
 		return entry
 
 	def getCatalogEntry(self, name):
@@ -158,7 +144,7 @@ class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
 	lastModified = 0
 
 	def _get_all_my_entries(self):
-		return list(self.values())
+		return {x.ntiid:x for x in self.values()}
 
 	def _primary_query_my_entry(self, name):
 		try:
@@ -253,9 +239,9 @@ class CatalogFamily(SchemaConfigured,
 	DisplayName = None
 	description = None
 	ProviderUniqueID = None
-	
+
 	createDirectFieldProperties(ICatalogFamily)
-	
+
 	# legacy compatibility
 	Title = alias('title')
 	Description = alias('description')
@@ -401,18 +387,18 @@ class CourseCatalogFolder(_AbstractCourseCatalogMixin,
 
 	@cachedIn('_v_all_my_entries')
 	def _get_all_my_entries(self):
-		entries = list()
+		entries = dict()
 
 		def _recur(folder):
 			course = ICourseInstance(folder, None)
 			if course:
 				entry = ICourseCatalogEntry(course, None)
 				if entry:
-					entries.append(entry)
+					entries[entry.ntiid] = entry
 					for subinstance in course.SubInstances.values():
 						entry = ICourseCatalogEntry(subinstance, None)
 						if entry:
-							entries.append(entry)
+							entries[entry.ntiid] = entry
 				# We don't need to go any deeper than two levels
 				# (If we hit the community members in the scope, we
 				# can get infinite recursion)
