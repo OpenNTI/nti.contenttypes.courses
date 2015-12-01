@@ -19,7 +19,6 @@ from zope.event import notify
 
 from zope.intid.interfaces import IIntIds
 from zope.intid.interfaces import IIntIdAddedEvent
-from zope.intid.interfaces import IIntIdRemovedEvent
 
 from zope.interface.interfaces import IRegistered
 from zope.interface.interfaces import IUnregistered
@@ -37,7 +36,6 @@ from nti.recorder.record import append_records
 from nti.recorder.record import TransactionRecord
 
 from nti.site.utils import registerUtility
-from nti.site.utils import unregisterUtility
 from nti.site.localutility import install_utility
 from nti.site.localutility import uninstall_utility_on_unregistration
 
@@ -215,7 +213,9 @@ def on_course_instance_removed(course, event):
 	if catalog is None or not ntiid:
 		return
 
-	query = { IX_COURSE: {'any_of':(ntiid,)} }
+	sites = get_component_hierarchy_names()
+	query = { IX_SITE: {'any_of':sites},
+			  IX_COURSE: {'any_of':(ntiid,)} }
 	for uid in catalog.apply(query) or ():
 		catalog.unindex_doc(uid)
 
