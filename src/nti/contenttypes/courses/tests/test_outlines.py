@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from hamcrest.library.object.hasproperty import has_property
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -13,6 +12,7 @@ from hamcrest import none
 from hamcrest import is_not
 from hamcrest import has_entries
 from hamcrest import assert_that
+from hamcrest import has_property
 
 from nti.testing.matchers import validly_provides
 from nti.testing.matchers import verifiably_provides
@@ -31,7 +31,7 @@ from nti.contenttypes.courses import courses
 from nti.contenttypes.courses import outlines
 from nti.contenttypes.courses import interfaces
 
-from nti.externalization.internalization import find_factory_for,\
+from nti.externalization.internalization import find_factory_for, \
 	update_from_external_object
 from nti.externalization.externalization import to_external_object
 
@@ -105,9 +105,9 @@ class TestCourseOutline(CourseLayerTest):
 		assert_that(ext_obj, has_entries('Class', 'CourseOutlineContentNode',
 										 'MimeType', 'application/vnd.nextthought.courses.courseoutlinecontentnode',
 										 'ContentNTIID', u'tag:nextthought.com,2011-10:OU-HTML-CLC3403_LawAndJustice.lec:01_LESSON'))
-		
+
 		ext_obj['AvailableEnding'] = now.isoformat()
-		ext_obj['AvailableBeginning'] = time.mktime(now.timetuple()) # change to float
+		ext_obj['AvailableBeginning'] = time.mktime(now.timetuple())  # change to float
 		factory = find_factory_for(ext_obj)
 		assert_that(factory, is_not(none()))
 		inst = factory()
