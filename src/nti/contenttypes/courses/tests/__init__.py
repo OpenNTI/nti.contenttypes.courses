@@ -23,7 +23,7 @@ class CourseTestLayer(DataserverTestLayer):
 	def setUp(cls):
 		pass
 	tearDown = setUp
-	setUpTest= setUp
+	setUpTest = setUp
 	tearDownTest = setUp
 
 class CourseLayerTest(DataserverLayerTest):
