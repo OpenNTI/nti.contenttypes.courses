@@ -18,6 +18,9 @@ from nti.externalization.datetime import datetime_from_string
 
 from nti.ntiids.ntiids import validate_ntiid_string
 
+from .interfaces import SUPPORTED_DATE_KEYS
+from .interfaces import SUPPORTED_PVE_INT_KEYS
+
 def reset_asg_missing_key(course):
 	IQAssessmentDateContext(course).clear()
 	result = IQAssessmentPolicies(course).clear()
@@ -50,27 +53,23 @@ def fill_asg_from_key(course, key):
 	dates.lastModified = key.lastModified
 	policies.lastModified = key.lastModified
 
-	supported_pve_int_keys = ('maximum_time_allowed',)
-
-	supported_date_keys = ('available_for_submission_beginning',
-						   'available_for_submission_ending')
-	dropped_policies_keys = supported_date_keys + ('Title',)
+	dropped_policies_keys = SUPPORTED_DATE_KEYS + ('Title',)
 	for key, val in json.items():
 		validate_ntiid_string(key)
 		if not isinstance(val, dict):
 			raise ValueError("Expected a dictionary")
 
 		stored_dates = dict()
-		for k in supported_date_keys:
+		for k in SUPPORTED_DATE_KEYS:
 			if k in val:
 				date_str = val[k]
 				__traceback_info__ = key, k, date_str
 				stored_dates[k] = datetime_from_string(date_str) if date_str else None
 
-		# data policy is stored in its own map
+		# Date policy is stored in its own map
 		dates[key] = stored_dates
 
-		for k in supported_pve_int_keys:
+		for k in SUPPORTED_PVE_INT_KEYS:
 			if k not in val:
 				continue
 			int_val = val.get(k)

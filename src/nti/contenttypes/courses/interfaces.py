@@ -126,6 +126,12 @@ INSTRUCTOR = "Instructor"
 #: Outline node move type
 TRX_OUTLINE_NODE_MOVE_TYPE = 'outlinenodemove'
 
+#: Supported positive integer keys
+SUPPORTED_PVE_INT_KEYS = ('maximum_time_allowed',)
+
+#: Supported date keys
+SUPPORTED_DATE_KEYS	= ('available_for_submission_beginning', 'available_for_submission_ending')
+	
 # Notes:
 #
 # How to determine available courses?
