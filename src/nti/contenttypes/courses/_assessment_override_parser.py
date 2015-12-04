@@ -53,7 +53,7 @@ def fill_asg_from_key(course, key):
 	dates.lastModified = key.lastModified
 	policies.lastModified = key.lastModified
 
-	dropped_policies_keys = SUPPORTED_DATE_KEYS + ('Title',)
+	dropped_policies_keys = SUPPORTED_DATE_KEYS + ('Title', 'locked')
 	for key, val in json.items():
 		policy = policies.getPolicyForAssessment(key)
 		if policy and policy.get('locked', False):
