@@ -50,9 +50,10 @@ class EmptyAssessmentDateContext(object):
 	def clear(self):
 		pass
 
-	def __setitem__(self, key, valu):
+	def __setitem__(self, key, value):
 		pass
-EmptyAssignmentDateContext = EmptyAssessmentDateContext # BWC
+
+EmptyAssignmentDateContext = EmptyAssessmentDateContext  # BWC
 
 @NoPickle
 class _Dates(object):
@@ -93,9 +94,20 @@ class MappingAssessmentDateContext(Contained,
 	def clear(self):
 		self._mapping.clear()
 
+	def get(self, key, default=None):
+		try:
+			result = self[key]
+		except KeyError:
+			result = default
+		return result
+
+	def __getitem__(self, key):
+		return self._mapping[key]
+
 	def __setitem__(self, key, value):
 		self._mapping[key] = value
-MappingAssignmentDateContext = MappingAssessmentDateContext # BWC
+
+MappingAssignmentDateContext = MappingAssessmentDateContext  # BWC
 
 COURSE_SUBINSTANCE_DATE_CONTEXT_KEY = 'nti.contenttypes.courses.assignment.MappingAssignmentDateContext'
 CourseSubInstanceAssignmentDateContextFactory = an_factory(MappingAssignmentDateContext,
@@ -127,6 +139,16 @@ class MappingAssessmentPolicies(Contained, PersistentCreatedAndModifiedTimeObjec
 		self._mapping.clear()
 		return size > 0
 
+	def get(self, key, default=None):
+		try:
+			result = self[key]
+		except KeyError:
+			result = default
+		return result
+
+	def __getitem__(self, key):
+		return self._mapping[key]
+
 	def __setitem__(self, key, value):
 		self._mapping[key] = value
 
@@ -140,7 +162,8 @@ class MappingAssessmentPolicies(Contained, PersistentCreatedAndModifiedTimeObjec
 	def __bool__(self):
 		return bool(self._mapping)
 	__nonzero__ = __bool__
-MappingAssignmentPolicies = MappingAssessmentPolicies # BWC
+
+MappingAssignmentPolicies = MappingAssessmentPolicies  # BWC
 
 COURSE_DATE_CONTEXT_KEY = 'nti.contenttypes.courses.assignment.MappingAssignmentPolicies'
 CourseInstanceAssignmentPoliciesFactory = an_factory(MappingAssignmentPolicies,

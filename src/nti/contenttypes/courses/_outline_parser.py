@@ -75,8 +75,7 @@ def _is_node_move_locked(children):
 	return any((_is_node_locked(x) for x in children))
 
 def _can_be_removed(registered, force=False):
-	result = registered is not None and \
-			 (force or not _is_node_locked(registered))
+	result = registered is not None and (force or not _is_node_locked(registered))
 	return result
 can_be_removed = _can_be_removed
 
@@ -89,12 +88,14 @@ def _get_removed_nodes(outline, registry=None, force=False):
 	return removed
 
 def _unregister_nodes(outline, registry=None, force=False):
-	removed_nodes = _get_removed_nodes(outline, registry, force)
-	for removed in removed_nodes:
-		unregisterUtility(registry,
- 						  name=removed.ntiid,
- 					 	  provided=iface_of_node(removed))
-	return removed
+	result = []
+	nodes = _get_removed_nodes(outline, registry, force)
+	for node in nodes:
+		if unregisterUtility(registry,
+							 name=node.ntiid,
+							 provided=iface_of_node(node)):
+			result.append(node)
+	return result
 unregister_nodes = _unregister_nodes
 
 def _get_node(node_ntiid, obj, registry=None):
