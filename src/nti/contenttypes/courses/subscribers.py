@@ -25,15 +25,12 @@ from zope.interface.interfaces import IUnregistered
 
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
 
-from ZODB.utils import serial_repr
-
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
 
-from nti.recorder.record import append_records
-from nti.recorder.record import TransactionRecord
+from nti.recorder.utils import record_transaction
 
 from nti.site.utils import registerUtility
 from nti.site.localutility import install_utility
@@ -223,13 +220,8 @@ def on_course_instance_removed(course, event):
 def on_course_outline_node_moved(node, event):
 	ntiid = getattr(node, 'ntiid', None)
 	if ntiid and not ICourseOutline.providedBy(node):
-		tid = getattr(node, '_p_serial', None)
-		tid = unicode(serial_repr(tid)) if tid else None
-		record = TransactionRecord(type=TRX_OUTLINE_NODE_MOVE_TYPE,
-								   principal=event.principal,
-								   tid=tid)
-		append_records(node, (record,))
-		node.locked = True
+		record_transaction(node, principal=event.principal,
+						   type_=TRX_OUTLINE_NODE_MOVE_TYPE)
 
 @component.adapter(ICourseOutlineNode, IIntIdAddedEvent)
 def on_course_outline_node_added(node, event):
