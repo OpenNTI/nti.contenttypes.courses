@@ -67,8 +67,7 @@ class DefaultAssessmentPolicyValidator(object):
 			return  # pragma no cover
 		assignment = component.queryUtility(IQAssignment, name=ntiid)
 		if assignment is None:
-			logger.log(loglevels.TRACE,
-					   "Could not find assessment with ntiid %s", ntiid)
+			logger.log(loglevels.TRACE, "Could not find assessment with ntiid %s", ntiid)
 		auto_grade = self.valid_auto_grade(policy, assignment, ntiid)
 		self.validate_pointbased_policy(auto_grade, assignment, ntiid)
 
@@ -103,7 +102,7 @@ def validate_assigment_policies(course):
 				validator = None
 
 	if validator is None:
-		# # let's try default validator
+		# let's try default validator
 		validator = DefaultAssessmentPolicyValidator()
 
 	# go through policies
