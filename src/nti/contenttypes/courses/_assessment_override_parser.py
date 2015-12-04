@@ -55,6 +55,10 @@ def fill_asg_from_key(course, key):
 
 	dropped_policies_keys = SUPPORTED_DATE_KEYS + ('Title',)
 	for key, val in json.items():
+		assessment_policy = policies.get(key)
+		if assessment_policy and assessment_policy.get('locked', False):
+			continue
+
 		validate_ntiid_string(key)
 		if not isinstance(val, dict):
 			raise ValueError("Expected a dictionary")
