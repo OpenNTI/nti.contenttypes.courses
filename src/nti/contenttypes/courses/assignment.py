@@ -101,6 +101,13 @@ class MappingAssessmentDateContext(Contained,
 			result = default
 		return result
 
+	def set(self, assessment, name, value):
+		ntiid = getattr(assessment, 'ntiid', assessment)
+		dates = self._mapping.get(ntiid)
+		if dates is None:
+			dates = self._mapping[ntiid] = dict()
+		dates[name] = value
+
 	def __getitem__(self, key):
 		return self._mapping[key]
 
