@@ -234,7 +234,8 @@ def _update_parent_children(parent_node, old_children, transactions):
 				new_child = new_children[i]
 			except IndexError:
 				new_child = None
-			if new_child and old_child.ntiid != new_child.ntiid:
+			if 		new_child is not None \
+				and old_child.ntiid != new_child.ntiid:
 				# TODO Event?
 				logger.info('Found moved node on sync (old=%s) (new=%s)',
 							old_child.ntiid, new_child.ntiid)
