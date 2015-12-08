@@ -92,6 +92,8 @@ class MappingAssessmentDateContext(Contained,
 		return asg
 
 	def clear(self):
+		for m in self._mapping.values():
+			m.clear()
 		self._mapping.clear()
 
 	def get(self, key, default=None):
@@ -105,7 +107,7 @@ class MappingAssessmentDateContext(Contained,
 		ntiid = getattr(assessment, 'ntiid', assessment)
 		dates = self._mapping.get(ntiid)
 		if dates is None:
-			dates = self._mapping[ntiid] = dict()
+			dates = self._mapping[ntiid] = PersistentMapping()
 		dates[name] = value
 
 	def __getitem__(self, key):
