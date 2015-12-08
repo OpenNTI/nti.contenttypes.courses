@@ -123,6 +123,9 @@ COURSE_OUTLINE_NAME = 'course_outline.xml'
 #: Instructor role
 INSTRUCTOR = "Instructor"
 
+#: Editor role
+EDITOR = "Editor"
+
 #: Outline node move type
 TRX_OUTLINE_NODE_MOVE_TYPE = 'outlinenodemove'
 

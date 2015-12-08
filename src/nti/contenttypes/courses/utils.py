@@ -13,6 +13,7 @@ from itertools import chain
 
 from zope import component
 
+from zope.component.hooks import getSite
 from zope.component.interfaces import ComponentLookupError
 
 from zope.intid import IIntIds
@@ -22,10 +23,13 @@ from zope.security.interfaces import IPrincipal
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 
+from .index import IX_SITE
+from .index import IX_SCOPE
+from .index import IX_COURSE
 from .index import IndexRecord
 
 from .interfaces import RID_TA
-from .interfaces import ES_PUBLIC
+from .interfaces import ES_PUBLIC 
 from .interfaces import INSTRUCTOR
 from .interfaces import RID_INSTRUCTOR
 from .interfaces import ICourseCatalog
@@ -38,10 +42,22 @@ from .interfaces import ICourseEnrollmentManager
 
 from . import get_enrollment_catalog
 
+def unindex_course_instructors(context, catalog=None):
+	course = ICourseInstance(context, None)
+	entry = ICourseCatalogEntry(course, None)
+	catalog = get_enrollment_catalog() if catalog is None else catalog
+	if entry is not None:  # remove all instructors
+		site = getSite().__name__
+		query = { IX_SITE: {'any_of':(site,)},
+				  IX_COURSE: {'any_of':(entry.ntiid,)},
+				  IX_SCOPE : {'any_of':(INSTRUCTOR,)}}
+		for uid in catalog.apply(query) or ():
+			catalog.unindex_doc(uid)
+
 def index_course_instructors(context, catalog=None, intids=None):
 	course = ICourseInstance(context, None)
 	entry = ICourseCatalogEntry(context, None)
-	if course is None or entry is None:
+	if entry is None:
 		return 0
 
 	catalog = get_enrollment_catalog() if catalog is None else catalog

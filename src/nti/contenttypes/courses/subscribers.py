@@ -14,6 +14,7 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 
 from zope.component.hooks import site
+from zope.component.hooks import getSite
 
 from zope.event import notify
 
@@ -36,17 +37,13 @@ from nti.site.utils import registerUtility
 from nti.site.localutility import install_utility
 from nti.site.localutility import uninstall_utility_on_unregistration
 
-from nti.site.site import get_component_hierarchy_names
-
 from .catalog import CourseCatalogFolder
 
 from .index import IX_SITE
-from .index import IX_SCOPE
 from .index import IX_COURSE
 
 from .interfaces import iface_of_node
 
-from .interfaces import INSTRUCTOR
 from .interfaces import COURSE_CATALOG_NAME
 from .interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
 
@@ -61,6 +58,7 @@ from .interfaces import CourseCatalogDidSyncEvent
 from .interfaces import ICourseOutlineNodeMovedEvent
 
 from .utils import index_course_instructors
+from .utils import unindex_course_instructors
 
 from . import get_enrollment_catalog
 
@@ -189,17 +187,7 @@ def roles_sync_on_course_instance(course, event):
 	intids = component.queryUtility(IIntIds)
 	if catalog is None or intids is None:
 		return
-	entry = ICourseCatalogEntry(course, None)
-	ntiid = getattr(entry, 'ntiid', None)
-	if ntiid:  # remove all instructors
-		sites = get_component_hierarchy_names()
-		query = { IX_SITE: {'any_of':sites},
-				  IX_COURSE: {'any_of':(ntiid,)},
-				  IX_SCOPE : {'any_of':(INSTRUCTOR,)}}
-		for uid in catalog.apply(query) or ():
-			catalog.unindex_doc(uid)
-
-	# reindex
+	unindex_course_instructors(course, catalog)
 	index_course_instructors(course, catalog=catalog, intids=intids)
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
@@ -210,8 +198,8 @@ def on_course_instance_removed(course, event):
 	if catalog is None or not ntiid:
 		return
 
-	sites = get_component_hierarchy_names()
-	query = { IX_SITE: {'any_of':sites},
+	site = getSite().__name__
+	query = { IX_SITE: {'any_of':(site,)},
 			  IX_COURSE: {'any_of':(ntiid,)} }
 	for uid in catalog.apply(query) or ():
 		catalog.unindex_doc(uid)
