@@ -11,6 +11,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from persistent.mapping import PersistentMapping
+
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentDateContext
 
@@ -63,7 +65,7 @@ def fill_asg_from_key(course, key):
 		if not isinstance(val, dict):
 			raise ValueError("Expected a dictionary")
 
-		stored_dates = dict()
+		stored_dates = PersistentMapping()
 		for k in SUPPORTED_DATE_KEYS:
 			if k in val:
 				date_str = val[k]
