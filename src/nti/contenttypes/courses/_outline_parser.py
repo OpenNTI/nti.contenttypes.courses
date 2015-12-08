@@ -266,6 +266,33 @@ def _get_node_factory(lesson):
 										default=CourseOutlineCalendarNode)
 	return result
 
+def _use_or_create_node( node_ntiid, new_node, removed_nodes, builder ):
+	"""
+	Use an existing node for the given ntiid or return a brand new node.
+	"""
+	old_node = _get_node( node_ntiid, new_node )
+	if old_node is not None:
+		if node_ntiid not in removed_nodes and _is_node_locked( old_node ):
+			logger.info('Node not syncing due to sync lock (%s)',
+					node_ntiid)
+		elif node_ntiid not in removed_nodes:
+			# We have a registered node that is not locked and not removed.
+			# This case should really not happen, but in alpha, we've seen nodes
+			# with ntiids that do not match their registered ntiids. Clean them up.
+			logger.info('Mis-registered node? (register_id=%s) (node_ntiid=%s)',
+						node_ntiid,
+						getattr( old_node, 'ntiid', '' ))
+			removed_nodes[ node_ntiid ] = old_node
+			old_node = None
+		else:
+			old_node = None
+
+	if old_node is not None:
+		result = old_node
+	else:
+		result = builder()
+	return result
+
 def _handle_node(parent_lxml, parent_node, library, removed_nodes, transactions):
 	"""
 	Recursively fill in outline nodes and their children.
@@ -275,20 +302,13 @@ def _handle_node(parent_lxml, parent_node, library, removed_nodes, transactions)
 
 	for idx, lesson in enumerate(parent_lxml.iterchildren(tag='lesson')):
 		node_factory = _get_node_factory(lesson)
-		# We may re-use ntiids of user-created nodes here, which is ok
-		# since we do not allow the insertion of new-nodes once user
-		# locked nodes exist.
 		lesson_ntiid = _get_lesson_ntiid(parent_node, idx)
-		lesson_node = node_factory()
-		old_node = _get_node(lesson_ntiid, lesson_node)
+		def builder():
+			return _build_outline_node(node_factory, lesson,
+										lesson_ntiid, library)
 
-		if lesson_ntiid not in removed_nodes and old_node is not None:
-			if _is_node_locked(old_node):
-				logger.info('Lesson node not syncing due to sync lock (%s)', lesson_ntiid)
-			lesson_node = old_node
-		else:
-			lesson_node = _build_outline_node(node_factory, lesson,
-											  lesson_ntiid, library)
+		lesson_node = _use_or_create_node( lesson_ntiid, node_factory(),
+										removed_nodes, builder )
 
 		# Must add to our parent_node now to avoid NotYet exceptions.
 		parent_node.append(lesson_node)
@@ -323,22 +343,17 @@ def fill_outline_from_node(outline, course_element, force=False):
 
 	for idx, unit in enumerate(course_element.iterchildren(tag='unit')):
 		unit_ntiid = _get_unit_ntiid(outline, unit, idx)
-		unit_node = CourseOutlineNode()
-		old_node = _get_node(unit_ntiid, unit_node)
-		if unit_ntiid not in removed_nodes and old_node is not None:
-			if _is_node_locked(old_node):
-				logger.info('Unit node not syncing due to sync lock (%s)', unit_ntiid)
-			else:
-				# TODO: When does this case hit? WTF
-				logger.info('Mis-registered node? (register_id=%s) (node_ntiid=%s)',
-							unit_ntiid,
-							getattr( old_node, 'ntiid', '' ))
-			unit_node = old_node
-		else:
-			unit_node.title = _attr_val(unit, str('label'))
-			unit_node.src = _attr_val(unit, str('src'))
-			unit_node.ntiid = unit_ntiid
-			_publish(unit_node)
+
+		def builder():
+			new_node = CourseOutlineNode()
+			new_node.title = _attr_val(unit, str('label'))
+			new_node.src = _attr_val(unit, str('src'))
+			new_node.ntiid = unit_ntiid
+			_publish( new_node )
+			return new_node
+
+		unit_node = _use_or_create_node( unit_ntiid, CourseOutlineNode(),
+										removed_nodes, builder )
 
 		outline.append(unit_node)
 		_handle_node(unit, unit_node, library, removed_nodes, transactions)
