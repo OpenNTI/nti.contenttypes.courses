@@ -249,6 +249,14 @@ def _update_parent_children(parent_node, old_children, transactions):
 				parent_node.append(new_child)
 				copy_records(new_child, transactions.get(old_child.ntiid, ()))
 
+		# Possibly sync-appended items that we are ignoring..
+		ignored_children = set(new_child_map.keys()) - set((x.ntiid for x in old_children))
+		for ignored_child in ignored_children:
+			# TODO Event
+			logger.info( 'Not appending new node (%s) since parent node (%s) has sync locked children',
+						ignored_child,
+						parent_node.ntiid )
+
 def _get_node_factory(lesson):
 	result = CourseOutlineContentNode
 	# We want to begin divorcing the syllabus/structure of a course
