@@ -315,7 +315,7 @@ def fill_outline_from_node(outline, course_element, force=False):
 	# Capture our transactions early since clear may remove them.
 	transactions = {node.ntiid:get_transactions(node) for node in _outline_nodes(outline)}
 
-	# get nodes that can be removed
+	# Get nodes that can be removed
 	removed_nodes = {x.ntiid:x for x in _get_nodes_to_remove(outline, force=force)}
 
 	old_children = list(outline.values())
@@ -328,6 +328,11 @@ def fill_outline_from_node(outline, course_element, force=False):
 		if unit_ntiid not in removed_nodes and old_node is not None:
 			if _is_node_locked(old_node):
 				logger.info('Unit node not syncing due to sync lock (%s)', unit_ntiid)
+			else:
+				# TODO: When does this case hit? WTF
+				logger.info('Mis-registered node? (register_id=%s) (node_ntiid=%s)',
+							unit_ntiid,
+							getattr( old_node, 'ntiid', '' ))
 			unit_node = old_node
 		else:
 			unit_node.title = _attr_val(unit, str('label'))
