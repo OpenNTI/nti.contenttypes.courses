@@ -11,6 +11,7 @@ from hamcrest import is_
 from hamcrest import assert_that
 
 from nti.contenttypes.courses.discussions.model import CourseDiscussion
+
 from nti.contenttypes.courses.discussions.utils import get_discussion_key
 from nti.contenttypes.courses.discussions.utils import is_nti_course_bundle
 from nti.contenttypes.courses.discussions.utils import get_discussion_mapped_scopes
