@@ -316,7 +316,7 @@ def _handle_node(parent_lxml, parent_node, library, removed_nodes, transactions)
 										lesson_ntiid, library)
 
 		lesson_node = _use_or_create_node( lesson_ntiid, node_factory(),
-										removed_nodes, builder )
+											removed_nodes, builder )
 
 		# Must add to our parent_node now to avoid NotYet exceptions.
 		parent_node.append(lesson_node)

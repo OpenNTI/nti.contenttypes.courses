@@ -25,6 +25,7 @@ from zope.securitypolicy.securitymap import PersistentSecurityMap
 from ZODB.interfaces import IConnection
 
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 
 from nti.dataserver.users import User
@@ -48,7 +49,6 @@ def _fill_roles_from_json(course, manager, json):
 		 ... }
 
 	"""
-
 	for role_id, role_values in json.items():
 		checkRole(course, role_id)
 
@@ -146,12 +146,15 @@ def fill_roles_from_key(course, key):
 	# NOTE: We only take care of addition, we do not handle removal,
 	# (that could be done with some extra work)
 	for role_id, pid, setting in role_manager.getPrincipalsAndRoles():
-		if setting is not Allow or role_id not in (RID_INSTRUCTOR, RID_TA):
+		is_instructor = bool( role_id in (RID_INSTRUCTOR, RID_TA) )
+		if 		setting is not Allow \
+			or 	(not is_instructor and not role_id == RID_CONTENT_EDITOR):
 			continue
 
 		try:
 			user = User.get_user(pid)
-			course.instructors += (IPrincipal(user),)
+			if is_instructor:
+				course.instructors += (IPrincipal(user),)
 		except (LookupError, TypeError):
 			# lookuperror if we're not in a ds context,
 			# TypeError if no named user was found and none was returned
@@ -162,6 +165,8 @@ def fill_roles_from_key(course, key):
 			# to what enrollment does and they've gotten out of sync
 			# in the past.
 			add_principal_to_course_content_roles(user, course)
+			if not is_instructor:
+				continue
 			for scope in course.SharingScopes.values():
 				# They're a member...
 				user.record_dynamic_membership(scope)

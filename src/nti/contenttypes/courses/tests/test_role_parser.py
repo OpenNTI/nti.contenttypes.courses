@@ -41,7 +41,8 @@ from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 class TestRoleParser(CourseLayerTest):
 
 	def setup_users(self):
-		unames = ('jmadden', 'steve.johnson@nextthought.com', 'harp4162', 'orig_instructor')
+		unames = ('jmadden', 'steve.johnson@nextthought.com', 'harp4162',
+				'orig_instructor', 'course_editor_name')
 		users = {}
 		for uname in unames:
 			u = User.create_user(dataserver=self.ds, username=uname)
@@ -74,8 +75,9 @@ class TestRoleParser(CourseLayerTest):
 					is_(Allow))
 		assert_that(roles.getSetting('nti.roles.course_instructor', 'steve.johnson@nextthought.com'),
 					is_(Deny))
-
 		assert_that(roles.getSetting('nti.roles.course_instructor', 'harp4162'),
+					is_(Allow))
+		assert_that(roles.getSetting('nti.roles.course_content_editor', 'course_editor_name'),
 					is_(Allow))
 
 		assert_that(inst.instructors, contains_inanyorder(IPrincipal(users['jmadden']),

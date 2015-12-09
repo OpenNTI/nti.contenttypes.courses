@@ -111,6 +111,12 @@
 		description="This role may have fewer permissions than an
 					 instructor" />
 
+	<role
+		id="nti.roles.course_content_editor"
+		title="A course content admin"
+		description="This role should have full edit permissions
+					on course objects." />
+
 	<adapter factory=".acl.CourseInstanceACLProvider" />
 	<adapter factory=".acl.CourseOutlineNodeACLProvider" />
 	<adapter factory=".acl.CourseCatalogEntryACLProvider" />

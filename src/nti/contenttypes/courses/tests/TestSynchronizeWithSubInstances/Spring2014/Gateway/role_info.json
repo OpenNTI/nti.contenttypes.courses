@@ -5,5 +5,8 @@
 	},
 	"nti.roles.course_ta": {
 		"allow": ["jmadden"]
+	},
+	"nti.roles.course_content_editor": {
+		"allow": ["course_editor_name"]
 	}
 }

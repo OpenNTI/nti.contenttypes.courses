@@ -11,6 +11,7 @@ logger = __import__('logging').getLogger(__name__)
 
 from itertools import chain
 
+
 from zope import component
 
 from zope.component.hooks import getSite
@@ -22,6 +23,9 @@ from zope.security.interfaces import IPrincipal
 
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
+from zope.securitypolicy.interfaces import IPrincipalRoleManager
+
+from nti.dataserver.users import User
 
 from .index import IX_SITE
 from .index import IX_SCOPE
@@ -29,11 +33,13 @@ from .index import IX_COURSE
 from .index import IndexRecord
 
 from .interfaces import RID_TA
-from .interfaces import ES_PUBLIC 
+from .interfaces import EDITOR
+from .interfaces import ES_PUBLIC
 from .interfaces import INSTRUCTOR
 from .interfaces import RID_INSTRUCTOR
 from .interfaces import ICourseCatalog
 from .interfaces import ICourseInstance
+from .interfaces import RID_CONTENT_EDITOR
 from .interfaces import ICourseEnrollments
 from .interfaces import ICourseSubInstance
 from .interfaces import ICourseCatalogEntry
@@ -42,7 +48,7 @@ from .interfaces import ICourseEnrollmentManager
 
 from . import get_enrollment_catalog
 
-def unindex_course_instructors(context, catalog=None):
+def unindex_course_roles(context, catalog=None):
 	course = ICourseInstance(context, None)
 	entry = ICourseCatalogEntry(course, None)
 	catalog = get_enrollment_catalog() if catalog is None else catalog
@@ -50,11 +56,35 @@ def unindex_course_instructors(context, catalog=None):
 		site = getSite().__name__
 		query = { IX_SITE: {'any_of':(site,)},
 				  IX_COURSE: {'any_of':(entry.ntiid,)},
-				  IX_SCOPE : {'any_of':(INSTRUCTOR,)}}
+				  IX_SCOPE : {'any_of':(INSTRUCTOR,EDITOR)}}
 		for uid in catalog.apply(query) or ():
 			catalog.unindex_doc(uid)
 
-def index_course_instructors(context, catalog=None, intids=None):
+def _index_instructors( course, catalog, entry, doc_id ):
+	result = 0
+	for instructor in course.instructors or ():
+		principal = IPrincipal(instructor, None)
+		if principal is None:
+			continue
+		pid = principal.id
+		record = IndexRecord(pid, entry.ntiid, INSTRUCTOR)
+		catalog.index_doc(doc_id, record)
+		result += 1
+	return result
+
+def _index_editors( course, catalog, entry, doc_id ):
+	result = 0
+	for editor in get_course_editors( course ) or ():
+		principal = IPrincipal(editor, None)
+		if principal is None:
+			continue
+		pid = principal.id
+		record = IndexRecord(pid, entry.ntiid, EDITOR)
+		catalog.index_doc(doc_id, record)
+		result += 1
+	return result
+
+def index_course_roles(context, catalog=None, intids=None):
 	course = ICourseInstance(context, None)
 	entry = ICourseCatalogEntry(context, None)
 	if entry is None:
@@ -67,14 +97,8 @@ def index_course_instructors(context, catalog=None, intids=None):
 		return 0
 
 	result = 0
-	for instructor in course.instructors or ():
-		principal = IPrincipal(instructor, None)
-		if principal is None:
-			continue
-		pid = principal.id
-		record = IndexRecord(pid, entry.ntiid, INSTRUCTOR)
-		catalog.index_doc(doc_id, record)
-		result += 1
+	result += _index_instructors( course, catalog, entry, doc_id )
+	result += _index_editors( course, catalog, entry, doc_id )
 	return result
 
 def get_course_packages(context):
@@ -159,6 +183,20 @@ def get_instructors_in_roles(roles, setting=Allow):
 		if stored == setting:
 			pid = getattr(principal, 'id', str(principal))
 			result.add(pid)
+	return result
+
+def get_course_editors(context, setting=Allow):
+	role_manager = IPrincipalRoleManager( context )
+	result = []
+	for prin, setting in role_manager.getPrincipalsForRole( RID_CONTENT_EDITOR ):
+		if setting is setting:
+			try:
+				user = User.get_user( prin )
+				principal = IPrincipal( user )
+			except (LookupError, TypeError):
+				pass
+			else:
+				result.append( principal )
 	return result
 
 def get_course_instructors(context, setting=Allow):

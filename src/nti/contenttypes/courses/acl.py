@@ -43,6 +43,8 @@ from .interfaces import ICourseOutlineNode
 from .interfaces import ICourseCatalogEntry
 from .interfaces import INonPublicCourseInstance
 
+from .utils import get_course_editors
+
 @component.adapter(ICourseInstance)
 @interface.implementer(IACLProvider)
 class CourseInstanceACLProvider(object):
@@ -85,6 +87,11 @@ class CourseInstanceACLProvider(object):
 		for subinstance in course.SubInstances.values():
 			aces.extend(ace_allowing(i, ACT_READ, CourseInstanceACLProvider)
 						for i in subinstance.instructors)
+
+		# Now our course content admins
+		for editor in get_course_editors( course ):
+			aces.append( ace_allowing(editor, ACT_READ, type(self)) )
+			aces.append( ace_allowing(editor, ACT_CONTENT_EDIT, type(self)) )
 
 		result = acl_from_aces(aces)
 		return result

@@ -108,6 +108,9 @@ RID_INSTRUCTOR = "nti.roles.course_instructor"
 #: The ID of a role for teaching assistants
 RID_TA = "nti.roles.course_ta"
 
+#: The ID of the content editor role.
+RID_CONTENT_EDITOR = "nti.roles.course_content_editor"
+
 #: Sections folder
 SECTIONS = 'Sections'
 

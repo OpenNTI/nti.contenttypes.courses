@@ -57,8 +57,8 @@ from .interfaces import ICourseRolesSynchronized
 from .interfaces import CourseCatalogDidSyncEvent
 from .interfaces import ICourseOutlineNodeMovedEvent
 
-from .utils import index_course_instructors
-from .utils import unindex_course_instructors
+from .utils import index_course_roles
+from .utils import unindex_course_roles
 
 from . import get_enrollment_catalog
 
@@ -187,8 +187,8 @@ def roles_sync_on_course_instance(course, event):
 	intids = component.queryUtility(IIntIds)
 	if catalog is None or intids is None:
 		return
-	unindex_course_instructors(course, catalog)
-	index_course_instructors(course, catalog=catalog, intids=intids)
+	unindex_course_roles(course, catalog)
+	index_course_roles(course, catalog=catalog, intids=intids)
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def on_course_instance_removed(course, event):
