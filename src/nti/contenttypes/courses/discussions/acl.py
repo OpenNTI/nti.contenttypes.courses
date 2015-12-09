@@ -25,6 +25,8 @@ from nti.dataserver.authorization import ROLE_CONTENT_EDITOR
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
+from ..utils import get_course_editors
+
 from ..interfaces import ICourseInstance
 
 from .interfaces import ICourseDiscussion
@@ -48,7 +50,7 @@ class CourseDiscussionACLProvider(object):
 
 		course = ICourseInstance(self.context, None)
 		if course is not None:
-			for i in course.instructors or ():
+			for i in get_course_editors(course):
 				aces.append(ace_allowing(i, ALL_PERMISSIONS, type(self)))
 				aces.append(ace_allowing(i, ACT_CONTENT_EDIT, type(self)))
 

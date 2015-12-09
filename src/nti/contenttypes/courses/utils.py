@@ -11,7 +11,6 @@ logger = __import__('logging').getLogger(__name__)
 
 from itertools import chain
 
-
 from zope import component
 
 from zope.component.hooks import getSite
@@ -56,11 +55,11 @@ def unindex_course_roles(context, catalog=None):
 		site = getSite().__name__
 		query = { IX_SITE: {'any_of':(site,)},
 				  IX_COURSE: {'any_of':(entry.ntiid,)},
-				  IX_SCOPE : {'any_of':(INSTRUCTOR,EDITOR)}}
+				  IX_SCOPE : {'any_of':(INSTRUCTOR, EDITOR)}}
 		for uid in catalog.apply(query) or ():
 			catalog.unindex_doc(uid)
 
-def _index_instructors( course, catalog, entry, doc_id ):
+def _index_instructors(course, catalog, entry, doc_id):
 	result = 0
 	for instructor in course.instructors or ():
 		principal = IPrincipal(instructor, None)
@@ -72,9 +71,9 @@ def _index_instructors( course, catalog, entry, doc_id ):
 		result += 1
 	return result
 
-def _index_editors( course, catalog, entry, doc_id ):
+def _index_editors(course, catalog, entry, doc_id):
 	result = 0
-	for editor in get_course_editors( course ) or ():
+	for editor in get_course_editors(course) or ():
 		principal = IPrincipal(editor, None)
 		if principal is None:
 			continue
@@ -97,8 +96,8 @@ def index_course_roles(context, catalog=None, intids=None):
 		return 0
 
 	result = 0
-	result += _index_instructors( course, catalog, entry, doc_id )
-	result += _index_editors( course, catalog, entry, doc_id )
+	result += _index_instructors(course, catalog, entry, doc_id)
+	result += _index_editors(course, catalog, entry, doc_id)
 	return result
 
 def get_course_packages(context):
@@ -186,17 +185,21 @@ def get_instructors_in_roles(roles, setting=Allow):
 	return result
 
 def get_course_editors(context, setting=Allow):
-	role_manager = IPrincipalRoleManager( context )
 	result = []
-	for prin, setting in role_manager.getPrincipalsForRole( RID_CONTENT_EDITOR ):
-		if setting is setting:
-			try:
-				user = User.get_user( prin )
-				principal = IPrincipal( user )
-			except (LookupError, TypeError):
-				pass
-			else:
-				result.append( principal )
+	course = ICourseInstance(context, None)
+	role_manager = IPrincipalRoleManager(course, None)
+	if role_manager is not None:
+		for prin, setting in role_manager.getPrincipalsForRole(RID_CONTENT_EDITOR):
+			if setting is setting:
+				try:
+					user = User.get_user(prin)
+					principal = IPrincipal(user, None)
+				except (LookupError, TypeError):
+					# lookuperror if we're not in a ds context,
+					pass
+				else:
+					if principal is not None:
+						result.append(principal)
 	return result
 
 def get_course_instructors(context, setting=Allow):
@@ -213,6 +216,15 @@ def is_course_instructor(context, user):
 	if roles and prin:
 		result = Allow in (roles.getSetting(RID_TA, prin.id),
 						   roles.getSetting(RID_INSTRUCTOR, prin.id))
+	return result
+
+def is_course_editor(context, user):
+	result = False
+	prin = IPrincipal(user, None)
+	course = ICourseInstance(context, None)
+	roles = IPrincipalRoleMap(course, None)
+	if roles and prin:
+		result = Allow in (roles.getSetting(RID_CONTENT_EDITOR, prin.id))
 	return result
 
 def is_instructor_in_hierarchy(context, user):

@@ -80,7 +80,6 @@ class CourseInstanceACLProvider(object):
 		aces.append(ace_allowing(IPrincipal(public_scope), ACT_READ, CourseInstanceACLProvider))
 		for i in course.instructors or ():
 			aces.append(ace_allowing(i, ACT_READ, CourseInstanceACLProvider))
-			aces.append(ace_allowing(i, ACT_CONTENT_EDIT, CourseInstanceACLProvider))
 
 		# JZ: 2015-01-11 Subinstance instructors get the same permissions
 		# as their students.
@@ -186,8 +185,9 @@ class CourseOutlineNodeACLProvider(object):
 		aces = [ ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, self),
 				 ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self)) ]
 		course = find_interface(self.context, ICourseInstance, strict=False)
-		if course is not None: # give instructors special powers
+		if course is not None:
+			# give instructors and editors special powers
 			aces.extend(ace_allowing(i, ALL_PERMISSIONS, type(self))
-						for i in course.instructors or ())
+						for i in get_course_editors(course) or ())
 		result = acl_from_aces(aces)
 		return result

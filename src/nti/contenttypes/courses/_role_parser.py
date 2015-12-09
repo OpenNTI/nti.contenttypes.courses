@@ -146,7 +146,7 @@ def fill_roles_from_key(course, key):
 	# NOTE: We only take care of addition, we do not handle removal,
 	# (that could be done with some extra work)
 	for role_id, pid, setting in role_manager.getPrincipalsAndRoles():
-		is_instructor = bool( role_id in (RID_INSTRUCTOR, RID_TA) )
+		is_instructor = bool(role_id in (RID_INSTRUCTOR, RID_TA))
 		if 		setting is not Allow \
 			or 	(not is_instructor and not role_id == RID_CONTENT_EDITOR):
 			continue
