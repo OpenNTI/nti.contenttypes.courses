@@ -59,6 +59,7 @@ def fill_asg_from_key(course, key):
 	for key, val in json.items():
 		policy = policies.getPolicyForAssessment(key)
 		if policy and policy.get('locked', False):
+			logger.warn("Policy for %s is locked", key)
 			continue
 
 		validate_ntiid_string(key)
