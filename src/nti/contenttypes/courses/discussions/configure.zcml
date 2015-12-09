@@ -12,6 +12,7 @@
 
 	<!-- Adapters -->
 	<adapter factory=".model.CourseDiscussions" />
+	<adapter factory=".acl.CourseDiscussionACLProvider" />
 	<adapter factory=".adapters._course_discussion_to_course" />
 			 
 	<!-- Externalization -->
