@@ -11,6 +11,8 @@ logger = __import__('logging').getLogger(__name__)
 
 import os
 
+import simplejson
+
 import zope.intid
 
 from zope import component
@@ -48,6 +50,10 @@ def path_to_course(resource):
 	result = os.path.sep.join(result)
 	return result
 
+def prepare_json_text(s):
+	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
+	return result
+
 def parse_discussions(course, bucket, intids=None):
 	__traceback_info__ = bucket, course
 	discussions = ICourseDiscussions(course)
@@ -72,7 +78,7 @@ def parse_discussions(course, bucket, intids=None):
 		if discussion is not None and key.lastModified <= discussion.lastModified:
 			continue
 
-		json = key.readContentsAsYaml()
+		json = simplejson.loads(prepare_json_text(key.readContents()))
 		factory = find_factory_for(json)
 		if factory is None:
 			raise InvalidDiscussionException("Cannot find factory for discussion in json file. Check MimeType")
