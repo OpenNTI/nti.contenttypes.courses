@@ -88,7 +88,7 @@ def fill_asg_from_key(course, key):
 
 		# Policies stores it directly, with the exception
 		# of things we know we don't want/need
-		policies[key] = {k: v for k, v in val.items()
-						 if k not in dropped_policies_keys}
+		policies[key] = PersistentMapping({k: v for k, v in val.items()
+						 				   if k not in dropped_policies_keys})
 
 	return True

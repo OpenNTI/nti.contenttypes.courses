@@ -50,6 +50,12 @@ class EmptyAssessmentDateContext(object):
 	def clear(self):
 		pass
 
+	def get(self, key, default=None):
+		return default
+
+	def set(self, assessment, name, value):
+		pass
+
 	def __setitem__(self, key, value):
 		pass
 
@@ -155,15 +161,22 @@ class MappingAssessmentPolicies(Contained, PersistentCreatedAndModifiedTimeObjec
 			result = default
 		return result
 
+	def getPolicyForAssessment(self, key):
+		return self._mapping.get(key, {})
+	getPolicyForAssignment = getPolicyForAssessment  # BWC
+
+	def set(self, assessment, name, value):
+		ntiid = getattr(assessment, 'ntiid', assessment)
+		data = self._mapping.get(ntiid)
+		if data is None:
+			data = self._mapping[ntiid] = PersistentMapping()
+		data[name] = value
+		
 	def __getitem__(self, key):
 		return self._mapping[key]
 
 	def __setitem__(self, key, value):
 		self._mapping[key] = value
-
-	def getPolicyForAssessment(self, key):
-		return self._mapping.get(key, {})
-	getPolicyForAssignment = getPolicyForAssessment  # BWC
 
 	def __len__(self):
 		return self.size()
