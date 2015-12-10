@@ -128,6 +128,10 @@ class MappingAssessmentMixin(Contained, PersistentCreatedAndModifiedTimeObject):
 
 	def __len__(self):
 		return self.size()
+	
+	def __conform__(self, iface):
+		if ICourseInstance.isOrExtends(iface):
+			return self.__parent__
 
 @component.adapter(ICourseInstance)
 @interface.implementer(IQAssessmentDateContext)
