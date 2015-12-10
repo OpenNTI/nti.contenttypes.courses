@@ -54,8 +54,7 @@
 			 provides="nti.externalization.interfaces.IInternalObjectExternalizer"
 			 name="summary" />
 
-	<!-- Externalize the CourseInstanceSharingScope like the 'community'
-	it appears to be. -->
+	<!-- Externalize the CourseInstanceSharingScope like the 'community' it appears to be. -->
 	<adapter factory="nti.dataserver.users.users_external._EntitySummaryExternalObject"
 			 for=".interfaces.ICourseInstanceSharingScope"
 			 name="summary" />

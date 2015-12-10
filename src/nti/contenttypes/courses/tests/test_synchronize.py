@@ -129,30 +129,30 @@ class TestFunctionalSynchronize(CourseLayerTest):
 
 		# The bundle's NTIID is derived from the path
 		assert_that(gateway.ContentPackageBundle,
-					 has_property('ntiid', 'tag:nextthought.com,2011-10:NTI-Bundle:CourseBundle-Spring2014_Gateway'))
+					has_property('ntiid', 'tag:nextthought.com,2011-10:NTI-Bundle:CourseBundle-Spring2014_Gateway'))
 		# The name is currently an alias of the NTIID; that's not
 		# exactly what we want, but unless/until it's an issue, we'll
 		# ignore that.
 		assert_that(gateway.ContentPackageBundle,
-					 has_property('__name__', gateway.ContentPackageBundle.ntiid))
+					has_property('__name__', gateway.ContentPackageBundle.ntiid))
 
 		# assert_that( gateway.instructors, is_((IPrincipal('harp4162'),)))
 
 		assert_that(ICourseInstanceVendorInfo(gateway),
-					 has_entry('OU', has_entry('key', 42)))
+					has_entry('OU', has_entry('key', 42)))
 
 		assert_that(ICourseCatalogEntry(gateway),
-					 has_properties( 'ProviderUniqueID', 'CLC 3403',
-									 'Title', 'Law and Justice',
-									 'creators', ('Jason',)))
+					has_properties( 'ProviderUniqueID', 'CLC 3403',
+									'Title', 'Law and Justice',
+									'creators', ('Jason',)))
 		assert_that(ICourseInstance(ICourseCatalogEntry(gateway)),
-					 is_(gateway))
+					is_(gateway))
 
 		assert_that(ICourseCatalogEntry(gateway),
 					 verifiably_provides(IPersistent))
 		# Ensure we're not proxied
 		assert_that(type(ICourseCatalogEntry(gateway)),
-					 is_(same_instance(legacy_catalog._CourseInstanceCatalogLegacyEntry)))
+					is_(same_instance(legacy_catalog._CourseInstanceCatalogLegacyEntry)))
 
 		sec1 = gateway.SubInstances['01']
 		sec_public_ntiid = 'tag:nextthought.com,2011-10:NTI-OID-0x12345-public-sec'

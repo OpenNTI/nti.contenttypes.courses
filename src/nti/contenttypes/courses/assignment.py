@@ -50,14 +50,17 @@ class EmptyAssessmentDateContext(object):
 	def clear(self):
 		pass
 
-	def get(self, key, default=None):
+	def get(self, assessment, key, default=None):
 		return default
 
 	def set(self, assessment, name, value):
 		pass
 
-	def __setitem__(self, key, value):
-		pass
+	def size(self):
+		return 0
+
+	def __len__(self):
+		return 0
 
 EmptyAssignmentDateContext = EmptyAssessmentDateContext  # BWC
 
@@ -74,67 +77,7 @@ class _Dates(object):
 		except KeyError:
 			return getattr(self._asg, name)
 
-@component.adapter(ICourseInstance)
-@interface.implementer(IQAssessmentDateContext)
-class MappingAssessmentDateContext(Contained,
-								   PersistentCreatedAndModifiedTimeObject):
-	"""
-	A persistent mapping of assessment_ntiid -> {'available_for_submission_beginning': datetime}
-	"""
-
-	_SET_CREATED_MODTIME_ON_INIT = False
-
-	def __init__(self):
-		PersistentCreatedAndModifiedTimeObject.__init__(self)
-		self._mapping = PersistentMapping()
-
-	def assessments(self):
-		return list(self._mapping.keys())
-	assignments = assessments  # BWC
-
-	def of(self, asg):
-		if asg.ntiid in self._mapping:
-			return _Dates(self._mapping, asg)
-		return asg
-
-	def clear(self):
-		for m in self._mapping.values():
-			m.clear()
-		self._mapping.clear()
-
-	def get(self, key, default=None):
-		try:
-			result = self[key]
-		except KeyError:
-			result = default
-		return result
-
-	def set(self, assessment, name, value):
-		ntiid = getattr(assessment, 'ntiid', assessment)
-		dates = self._mapping.get(ntiid)
-		if dates is None:
-			dates = self._mapping[ntiid] = PersistentMapping()
-		dates[name] = value
-
-	def __getitem__(self, key):
-		return self._mapping[key]
-
-	def __setitem__(self, key, value):
-		self._mapping[key] = value
-
-MappingAssignmentDateContext = MappingAssessmentDateContext  # BWC
-
-COURSE_SUBINSTANCE_DATE_CONTEXT_KEY = 'nti.contenttypes.courses.assignment.MappingAssignmentDateContext'
-CourseSubInstanceAssignmentDateContextFactory = an_factory(MappingAssignmentDateContext,
-														   key=COURSE_SUBINSTANCE_DATE_CONTEXT_KEY)
-
-@component.adapter(ICourseInstance)
-@interface.implementer(IQAssessmentPolicies)
-class MappingAssessmentPolicies(Contained, PersistentCreatedAndModifiedTimeObject):
-	"""
-	A persistent mapping of assessment ids to policy information,
-	that is uninterpreted by this module.
-	"""
+class MappingAssessmentMixin(Contained, PersistentCreatedAndModifiedTimeObject):
 
 	_SET_CREATED_MODTIME_ON_INIT = False
 
@@ -151,35 +94,70 @@ class MappingAssessmentPolicies(Contained, PersistentCreatedAndModifiedTimeObjec
 
 	def clear(self):
 		size = self.size()
+		for m in self._mapping.values():
+			m.clear()
 		self._mapping.clear()
 		return size > 0
 
-	def get(self, key, default=None):
+	def get(self, assessment, key, default=None):
+		ntiid = getattr(assessment, 'ntiid', assessment)
 		try:
-			result = self[key]
+			result = self[ntiid][key]
 		except KeyError:
 			result = default
 		return result
 
-	def getPolicyForAssessment(self, key):
-		return self._mapping.get(key, {})
-	getPolicyForAssignment = getPolicyForAssessment  # BWC
-
 	def set(self, assessment, name, value):
 		ntiid = getattr(assessment, 'ntiid', assessment)
-		data = self._mapping.get(ntiid)
-		if data is None:
-			data = self._mapping[ntiid] = PersistentMapping()
-		data[name] = value
-		
+		dates = self._mapping.get(ntiid)
+		if dates is None:
+			dates = self._mapping[ntiid] = PersistentMapping()
+		dates[name] = value
+
+	def __contains__(self, key):
+		return key in self._mapping
+	
 	def __getitem__(self, key):
 		return self._mapping[key]
 
 	def __setitem__(self, key, value):
 		self._mapping[key] = value
+		
+	def __delitem__(self, key):
+		del self._mapping[key]
 
 	def __len__(self):
 		return self.size()
+
+@component.adapter(ICourseInstance)
+@interface.implementer(IQAssessmentDateContext)
+class MappingAssessmentDateContext(MappingAssessmentMixin):
+	"""
+	A persistent mapping of assessment_ntiid -> {'available_for_submission_beginning': datetime}
+	"""
+
+	def of(self, asg):
+		if asg.ntiid in self._mapping:
+			return _Dates(self._mapping, asg)
+		return asg
+
+MappingAssignmentDateContext = MappingAssessmentDateContext  # BWC
+
+COURSE_SUBINSTANCE_DATE_CONTEXT_KEY = 'nti.contenttypes.courses.assignment.MappingAssignmentDateContext'
+CourseSubInstanceAssignmentDateContextFactory = an_factory(MappingAssignmentDateContext,
+														   key=COURSE_SUBINSTANCE_DATE_CONTEXT_KEY)
+
+@component.adapter(ICourseInstance)
+@interface.implementer(IQAssessmentPolicies)
+class MappingAssessmentPolicies(MappingAssessmentMixin):
+	"""
+	A persistent mapping of assessment ids to policy information,
+	that is uninterpreted by this module.
+	"""
+
+	def getPolicyForAssessment(self, key):
+		return self._mapping.get(key, {})
+	getPolicyForAssignment = getPolicyForAssessment  # BWC
 
 	def __bool__(self):
 		return bool(self._mapping)

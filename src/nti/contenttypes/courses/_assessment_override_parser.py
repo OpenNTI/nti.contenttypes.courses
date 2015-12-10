@@ -23,10 +23,17 @@ from nti.ntiids.ntiids import validate_ntiid_string
 from .interfaces import SUPPORTED_DATE_KEYS
 from .interfaces import SUPPORTED_PVE_INT_KEYS
 
-def reset_asg_missing_key(course):
-	IQAssessmentDateContext(course).clear()
-	result = IQAssessmentPolicies(course).clear()
-	return result
+def reset_asg_missing_key(course, full=True):
+	dates = IQAssessmentDateContext(course)
+	policies = IQAssessmentPolicies(course)
+	if full:
+		dates.clear()
+		policies.clear()
+	else:
+		for key in list(policies.assessments()):
+			if not policies.get(key, 'locked', False):
+				del policies[key]
+	return policies
 
 def fill_asg_from_key(course, key):
 	"""
@@ -50,15 +57,14 @@ def fill_asg_from_key(course, key):
 	if key.lastModified <= policies.lastModified:
 		return False
 
-	reset_asg_missing_key(course)
+	reset_asg_missing_key(course, full=False)
 	json = key.readContentsAsYaml()
 	dates.lastModified = key.lastModified
 	policies.lastModified = key.lastModified
 
 	dropped_policies_keys = SUPPORTED_DATE_KEYS + ('Title', 'locked')
 	for key, val in json.items():
-		policy = policies.getPolicyForAssessment(key)
-		if policy and policy.get('locked', False):
+		if policies.get(key, 'locked', False):
 			logger.warn("Policy for %s is locked", key)
 			continue
 
