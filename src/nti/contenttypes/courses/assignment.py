@@ -14,6 +14,9 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from zope.interface.common.mapping import IItemMapping
+from zope.interface.common.mapping import IWriteMapping
+
 from zope.annotation.factory import factory as an_factory
 
 from zope.container.contained import Contained
@@ -77,6 +80,7 @@ class _Dates(object):
 		except KeyError:
 			return getattr(self._asg, name)
 
+@interface.implementer(IItemMapping, IWriteMapping)
 class MappingAssessmentMixin(Contained, PersistentCreatedAndModifiedTimeObject):
 
 	_SET_CREATED_MODTIME_ON_INIT = False
