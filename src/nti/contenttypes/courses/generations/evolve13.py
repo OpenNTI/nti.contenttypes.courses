@@ -45,7 +45,7 @@ def do_evolve(context, generation=generation):
 						continue
 
 					dates = IQAssessmentDateContext(course)
-					for ntiid in list(dates.assessments()):  # mutating
+					for ntiid in dates.assessments():
 						data = dates.get(ntiid)
 						if data is not None and not isinstance(data, PersistentMapping):
 							data = PersistentMapping(data)

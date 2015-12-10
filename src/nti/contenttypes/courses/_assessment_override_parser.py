@@ -30,7 +30,7 @@ def reset_asg_missing_key(course, full=True):
 		dates.clear()
 		policies.clear()
 	else:
-		for key in list(policies.assessments()):
+		for key in policies.assessments():
 			if not policies.get(key, 'locked', False):
 				del policies[key]
 	return policies

@@ -45,7 +45,7 @@ def do_evolve(context, generation=generation):
 						continue
 
 					policies = IQAssessmentPolicies(course)
-					for ntiid in list(policies.assessments()):  # mutating
+					for ntiid in policies.assessments():
 						data = policies.get(ntiid)
 						if data is not None and not isinstance(data, PersistentMapping):
 							data = PersistentMapping(data)
