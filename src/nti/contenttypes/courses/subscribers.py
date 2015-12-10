@@ -26,6 +26,9 @@ from zope.interface.interfaces import IUnregistered
 
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
 
+from nti.assessment.interfaces import IQAssessmentPolicies
+from nti.assessment.interfaces import IQAssessmentDateContextModified
+
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
@@ -222,3 +225,11 @@ def on_course_outline_node_added(node, event):
 							node,
 							provided=iface_of_node(node),
 						 	name=ntiid)
+
+@component.adapter(IQAssessmentDateContextModified)
+def on_assessment_date_context_modified(event):
+	context = event.object
+	course = ICourseInstance(context, None)
+	if course is not None and event.assesment:
+		policies = IQAssessmentPolicies(course)
+		policies.set(event.assesment, 'locked', True)
