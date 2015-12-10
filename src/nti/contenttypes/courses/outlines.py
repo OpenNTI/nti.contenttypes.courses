@@ -57,6 +57,21 @@ class _AbstractCourseOutlineNode(Contained, RecordableMixin, CalendarPublishable
 			name = unicode(len(self))
 		self[name] = node
 
+	def _do_reorder(self, index, ntiid):
+		old_keys = list(self.keys())
+		# An index outside our boundary acts as a no-op/append.
+		if index is not None and index < len(old_keys):
+			old_keys.remove(ntiid)
+			new_keys = old_keys[:index]
+			new_keys.append(ntiid)
+			new_keys.extend(old_keys[index:])
+			self.updateOrder(new_keys)
+
+	def insert(self, index, obj):
+		if obj.ntiid not in list(self.keys()):
+			self.append(obj)
+		self._do_reorder(index, obj.ntiid)
+
 	def __hash__(self):
 		# We inherit an __eq__ from dict, but dict does not
 		# like to be hashed (because mutable cache keys can be bad)
