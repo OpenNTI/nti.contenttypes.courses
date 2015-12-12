@@ -224,7 +224,7 @@ def is_course_editor(context, user):
 	course = ICourseInstance(context, None)
 	roles = IPrincipalRoleMap(course, None)
 	if roles and prin:
-		result = Allow in (roles.getSetting(RID_CONTENT_EDITOR, prin.id))
+		result = (Allow == roles.getSetting(RID_CONTENT_EDITOR, prin.id))
 	return result
 
 def is_instructor_in_hierarchy(context, user):
