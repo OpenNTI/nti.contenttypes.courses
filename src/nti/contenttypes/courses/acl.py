@@ -77,20 +77,20 @@ class CourseInstanceACLProvider(object):
 		public_scope = sharing_scopes[ES_PUBLIC]
 
 		aces = []
-		aces.append(ace_allowing(IPrincipal(public_scope), ACT_READ, CourseInstanceACLProvider))
+		aces.append(ace_allowing(IPrincipal(public_scope), ACT_READ, type(self)))
 		for i in course.instructors or ():
-			aces.append(ace_allowing(i, ACT_READ, CourseInstanceACLProvider))
+			aces.append(ace_allowing(i, ACT_READ, type(self)))
 
 		# JZ: 2015-01-11 Subinstance instructors get the same permissions
 		# as their students.
 		for subinstance in course.SubInstances.values():
-			aces.extend(ace_allowing(i, ACT_READ, CourseInstanceACLProvider)
+			aces.extend(ace_allowing(i, ACT_READ, type(self))
 						for i in subinstance.instructors)
 
 		# Now our course content admins
-		for editor in get_course_editors( course ):
-			aces.append( ace_allowing(editor, ACT_READ, type(self)) )
-			aces.append( ace_allowing(editor, ACT_CONTENT_EDIT, type(self)) )
+		for editor in get_course_editors(course):
+			aces.append(ace_allowing(editor, ACT_READ, type(self)))
+			aces.append(ace_allowing(editor, ACT_CONTENT_EDIT, type(self)))
 
 		result = acl_from_aces(aces)
 		return result
@@ -186,7 +186,7 @@ class CourseOutlineNodeACLProvider(object):
 				 ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self)) ]
 		course = find_interface(self.context, ICourseInstance, strict=False)
 		if course is not None:
-			# give instructors and editors special powers
+			# give editors special powers
 			aces.extend(ace_allowing(i, ALL_PERMISSIONS, type(self))
 						for i in get_course_editors(course) or ())
 		result = acl_from_aces(aces)
