@@ -222,7 +222,7 @@ def is_course_editor(context, user):
 	result = False
 	prin = IPrincipal(user, None)
 	course = ICourseInstance(context, None)
-	roles = IPrincipalRoleMap(course, None)
+	roles = IPrincipalRoleManager(course, None)
 	if roles and prin:
 		result = (Allow == roles.getSetting(RID_CONTENT_EDITOR, prin.id))
 	return result
