@@ -69,7 +69,10 @@ class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer
 	"""
 	The default representation of course discussions.
 	"""
-
+	
+	__external_class_name__ = u"CourseDiscussions"
+	mime_type = mimeType = u'application/vnd.nextthought.courses.discussions'
+	
 	__name__ = None
 	__parent__ = None
 
