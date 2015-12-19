@@ -13,11 +13,10 @@ import os
 
 import simplejson
 
-import zope.intid
-
 from zope import component
-
 from zope import lifecycleevent
+
+from zope.intid import IIntIds
 
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
@@ -72,7 +71,7 @@ def parse_discussions(course, bucket, intids=None):
 			del discussions[child_name]
 			result = True
 
-	intids = component.queryUtility(zope.intid.IIntIds) if intids is None else intids
+	intids = component.queryUtility(IIntIds) if intids is None else intids
 	for name, key in child_files.items():
 		discussion = discussions.get(name)
 		if discussion is not None and key.lastModified <= discussion.lastModified:
@@ -81,7 +80,8 @@ def parse_discussions(course, bucket, intids=None):
 		json = simplejson.loads(prepare_json_text(key.readContents()))
 		factory = find_factory_for(json)
 		if factory is None:
-			raise InvalidDiscussionException("Cannot find factory for discussion in json file. Check MimeType")
+			raise InvalidDiscussionException(
+					"Cannot find factory for discussion in json file. Check MimeType")
 		new_discussion = factory() if discussion is None else discussion
 		update_from_external_object(new_discussion, json, notify=False)
 

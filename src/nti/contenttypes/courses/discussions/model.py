@@ -22,6 +22,8 @@ from ZODB.POSException import ConnectionStateError
 
 from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
+from nti.coremetadata.interfaces import SYSTEM_USER_ID
+
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
 
 from nti.schema.schema import EqHash
@@ -42,9 +44,9 @@ class CourseDiscussion(SchemaConfigured,
 
 	__external_class_name__ = u"Discussion"
 	mime_type = mimeType = u'application/vnd.nextthought.courses.discussion'
-
-	creator = None
 	parameters = {}
+
+	creator = SYSTEM_USER_ID
 
 	_SET_CREATED_MODTIME_ON_INIT = False
 
@@ -70,10 +72,10 @@ class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer
 	"""
 	The default representation of course discussions.
 	"""
-	
+
 	__external_class_name__ = u"CourseDiscussions"
 	mime_type = mimeType = u'application/vnd.nextthought.courses.discussions'
-	
+
 	__name__ = None
 	__parent__ = None
 
