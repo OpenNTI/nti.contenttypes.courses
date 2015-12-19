@@ -22,7 +22,12 @@ from nti.coremetadata.interfaces import ILastModified
 
 from nti.dataserver_fragments.interfaces import ITaggedContent
 
+from nti.namedfile.interfaces import INamedFile
+
 from nti.schema.field import Choice
+from nti.schema.field import Object
+from nti.schema.field import Variant
+from nti.schema.field import ValidURI
 from nti.schema.field import ListOrTuple
 from nti.schema.field import ValidTextLine
 
@@ -36,9 +41,17 @@ NTI_COURSE_BUNDLE_REF = "%s://" % NTI_COURSE_BUNDLE
 
 ALL_SCOPES_VOCABULARY = SimpleVocabulary([SimpleTerm(ES_ALL)] + list(ENROLLMENT_SCOPE_VOCABULARY))
 
+def href_schema_field(title=u'', required=False, default=None):
+	return Variant((ValidTextLine(title="href name"),
+					ValidURI(title="href source uri"),
+					Object(INamedFile, title="href file")),
+					title=title,
+					default=default,
+					required=required)
+
 class ICourseDiscussion(ITitled, ITaggedContent, ILastModified, IContained):
 	title = ValidTextLine(title="Discussion title", required=True)
-	icon = ValidTextLine(title="Discussion icon href", required=False)
+	icon = href_schema_field(title="Discussion icon href")
 	label = ValidTextLine(title="The label", required=False, default=u'')
 	body = DiscussionModeledContentBody(required=False)
 	scopes = ListOrTuple(Choice(vocabulary=ALL_SCOPES_VOCABULARY),
