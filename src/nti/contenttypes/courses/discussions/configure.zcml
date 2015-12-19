@@ -12,8 +12,11 @@
 
 	<!-- Adapters -->
 	<adapter factory=".model.CourseDiscussions" />
+	
 	<adapter factory=".acl.CourseDiscussionACLProvider" />
+	
 	<adapter factory=".adapters._course_discussion_to_course" />
+	<adapter factory=".adapters._course_discussions_to_course" />
 			 
 	<!-- Externalization -->
 	<include package="nti.externalization" file="meta.zcml" />

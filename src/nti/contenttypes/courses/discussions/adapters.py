@@ -17,8 +17,14 @@ from nti.traversal.traversal import find_interface
 from ..interfaces import ICourseInstance
 
 from .interfaces import ICourseDiscussion
+from .interfaces import ICourseDiscussions
 
 @component.adapter(ICourseDiscussion)
 @interface.implementer(ICourseInstance)
 def _course_discussion_to_course(context):
-    return find_interface(context, ICourseInstance, strict=False)
+	return find_interface(context, ICourseInstance, strict=False)
+
+@component.adapter(ICourseDiscussions)
+@interface.implementer(ICourseInstance)
+def _course_discussions_to_course(context):
+	return find_interface(context, ICourseInstance, strict=False)
