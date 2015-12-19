@@ -43,6 +43,7 @@ class CourseDiscussion(SchemaConfigured,
 	__external_class_name__ = u"Discussion"
 	mime_type = mimeType = u'application/vnd.nextthought.courses.discussion'
 
+	creator = None
 	parameters = {}
 
 	_SET_CREATED_MODTIME_ON_INIT = False

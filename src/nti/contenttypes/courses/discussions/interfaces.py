@@ -18,6 +18,7 @@ from zope.schema.vocabulary import SimpleVocabulary
 from zope.location.interfaces import IContained
 
 from nti.coremetadata.interfaces import ITitled
+from nti.coremetadata.interfaces import ICreated
 from nti.coremetadata.interfaces import ILastModified
 
 from nti.dataserver_fragments.interfaces import ITaggedContent
@@ -49,7 +50,7 @@ def href_schema_field(title=u'', required=False, default=None):
 					default=default,
 					required=required)
 
-class ICourseDiscussion(ITitled, ITaggedContent, ILastModified, IContained):
+class ICourseDiscussion(ITitled, ITaggedContent, ILastModified, IContained, ICreated):
 	title = ValidTextLine(title="Discussion title", required=True)
 	icon = href_schema_field(title="Discussion icon href")
 	label = ValidTextLine(title="The label", required=False, default=u'')
