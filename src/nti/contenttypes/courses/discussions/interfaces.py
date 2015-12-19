@@ -47,7 +47,7 @@ class ICourseDiscussion(ITitled, ITaggedContent, ILastModified, IContained):
 	id = ValidTextLine(title="Internal id", required=False)
 	id.setTaggedValue('_ext_excluded_out', True)
 
-class ICourseDiscussions(IContainer, IContained):
+class ICourseDiscussions(IContainer, IContained, ILastModified):
 	"""
 	A container for all the discussions
 	"""
