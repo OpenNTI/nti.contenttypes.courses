@@ -264,7 +264,7 @@ class _ContentCourseSynchronizer(object):
 
 		self.update_deny_open_enrollment(course)
 
-		notify(CourseInstanceAvailableEvent(course, bucket))
+		notify(CourseInstanceAvailableEvent(course, bucket, sync_results))
 
 		sections_bucket = bucket.getChildNamed(SECTION_FOLDER_NAME)
 		sync = component.getMultiAdapter((course.SubInstances, sections_bucket))
@@ -610,7 +610,7 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		entry = ICourseCatalogEntry(subcourse)
 		subcourse.lastSynchronized = entry.lastSynchronized = time.time()
 
-		notify(CourseInstanceAvailableEvent(subcourse, bucket))
+		notify(CourseInstanceAvailableEvent(subcourse, bucket, sync_results))
 
 def synchronize_catalog_from_root(catalog_folder, root, **kwargs):
 	"""

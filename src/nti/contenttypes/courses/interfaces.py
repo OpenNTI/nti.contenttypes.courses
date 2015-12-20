@@ -442,8 +442,8 @@ class ICourseInstance(IFolder,
 						  title="The sub-instances of this course, if any")
 	SubInstances.setTaggedValue('_ext_excluded_out', True)
 
-	# # Reflecting instructors, TAs, and other affiliated
-	# # people with a special role in the course:
+	# Reflecting instructors, TAs, and other affiliated
+	# people with a special role in the course:
 	# This could be done in a couple ways. We could define a generic
 	# "role" object, and have a list of roles and their occupants.
 	# This is flexible, but not particularly high on ease-of-use.
@@ -1021,13 +1021,15 @@ class ICourseInstanceAvailableEvent(IObjectEvent):
 	"""
 
 	bucket = Object(IDelimitedHierarchyBucket, title="Bucket", required=False)
+	results = Object(ISynchronizationResults, title="Sync Results", required=False)
 
 @interface.implementer(ICourseInstanceAvailableEvent)
 class CourseInstanceAvailableEvent(ObjectEvent):
 
-	def __init__(self, obj, bucket=None):
+	def __init__(self, obj, bucket=None, results=None):
 		super(CourseInstanceAvailableEvent, self).__init__(obj)
 		self.bucket = bucket
+		self.results = results
 
 from zope.lifecycleevent import ObjectCreatedEvent
 from zope.lifecycleevent.interfaces import IObjectCreatedEvent
