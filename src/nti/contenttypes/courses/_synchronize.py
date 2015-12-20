@@ -125,10 +125,14 @@ def _get_sync_packages(**kwargs):
 	packages = packages if isinstance(packages, set) else set(packages)
 	return packages
 
-def _get_sync_results(context, sync_results=None, **kwargs):
+def _get_sync_results(**kwargs):
+	results = kwargs.get('results') or []
+	return results
+
+def _get_course_sync_results(context, sync_results=None, **kwargs):
 	if sync_results is None:
 		entry = ICourseCatalogEntry(context)
-		results = kwargs.get('results') or []
+		results = _get_sync_results(**kwargs)
 		sync_results = CourseSynchronizationResults(NTIID=entry.ntiid, Site=_site_name())
 		results.append(sync_results)
 	return sync_results
@@ -218,7 +222,7 @@ class _ContentCourseSynchronizer(object):
 
 		# gather/prepare sync params/results
 		packages = _get_sync_packages(**kwargs)
-		sync_results = _get_sync_results(entry, **kwargs)
+		sync_results = _get_course_sync_results(entry, **kwargs)
 
 		# First, synchronize the bundle
 		bundle_json_key = bucket.getChildNamed(BUNDLE_META_NAME)
@@ -264,7 +268,9 @@ class _ContentCourseSynchronizer(object):
 
 		self.update_deny_open_enrollment(course)
 
-		notify(CourseInstanceAvailableEvent(course, bucket, sync_results))
+		notify(CourseInstanceAvailableEvent(course,
+											bucket, 
+											_get_sync_results(**kwargs)))
 
 		sections_bucket = bucket.getChildNamed(SECTION_FOLDER_NAME)
 		sync = component.getMultiAdapter((course.SubInstances, sections_bucket))
@@ -283,7 +289,7 @@ class _ContentCourseSynchronizer(object):
 	def update_common_info(cls, course, bucket,
 						   sync_results=None,
 						   try_legacy_content_bundle=False):
-		sync_results = _get_sync_results(course, sync_results)
+		sync_results = _get_course_sync_results(course, sync_results)
 
 		course.SharingScopes.initScopes()
 		if ES_CREDIT in course.SharingScopes:
@@ -331,7 +337,7 @@ class _ContentCourseSynchronizer(object):
 
 	@classmethod
 	def update_sharing_scopes_friendly_names(cls, course, sync_results=None):
-		sync_results = _get_sync_results(course, sync_results)
+		sync_results = _get_course_sync_results(course, sync_results)
 		cce = ICourseCatalogEntry(course)
 		sharing_scopes_data = (ICourseInstanceVendorInfo(course)
 							   .get('NTI', {})
@@ -399,7 +405,7 @@ class _ContentCourseSynchronizer(object):
 
 	@classmethod
 	def update_vendor_info(cls, course, bucket, sync_results=None):
-		sync_results = _get_sync_results(course, sync_results)
+		sync_results = _get_course_sync_results(course, sync_results)
 		vendor_json_key = bucket.getChildNamed(VENDOR_INFO_NAME)
 		vendor_info = ICourseInstanceVendorInfo(course)
 
@@ -422,7 +428,7 @@ class _ContentCourseSynchronizer(object):
 	def update_outline(cls, course, bucket, sync_results=None,
 					   try_legacy_content_bundle=False,
 					   force=False):
-		sync_results = _get_sync_results(course, sync_results)
+		sync_results = _get_course_sync_results(course, sync_results)
 
 		outline_xml_node = None
 		outline_xml_key = bucket.getChildNamed(COURSE_OUTLINE_NAME)
@@ -462,7 +468,7 @@ class _ContentCourseSynchronizer(object):
 	@classmethod
 	def update_catalog_entry(cls, course, bucket, sync_results=None,
 							 try_legacy_content_bundle=False):
-		sync_results = _get_sync_results(course, sync_results)
+		sync_results = _get_course_sync_results(course, sync_results)
 		catalog_json_key = bucket.getChildNamed(CATALOG_INFO_NAME)
 		if not catalog_json_key and try_legacy_content_bundle:
 			# Only want to do this for root courses
@@ -495,7 +501,7 @@ class _ContentCourseSynchronizer(object):
 
 	@classmethod
 	def update_instructor_roles(cls, course, bucket, sync_results=None):
-		sync_results = _get_sync_results(course, sync_results)
+		sync_results = _get_course_sync_results(course, sync_results)
 		role_json_key = bucket.getChildNamed(ROLE_INFO_NAME)
 		if role_json_key:
 			if fill_roles_from_key(course, role_json_key):
@@ -508,7 +514,7 @@ class _ContentCourseSynchronizer(object):
 
 	@classmethod
 	def update_assignment_policies(cls, course, bucket, sync_results=None):
-		sync_results = _get_sync_results(course, sync_results)
+		sync_results = _get_course_sync_results(course, sync_results)
 		key = bucket.getChildNamed(ASSIGNMENT_DATES_NAME)
 		if key is not None:
 			if fill_asg_from_key(course, key):
@@ -518,7 +524,7 @@ class _ContentCourseSynchronizer(object):
 
 	@classmethod
 	def update_grading_policy(cls, course, bucket, sync_results=None):
-		sync_results = _get_sync_results(course, sync_results)
+		sync_results = _get_course_sync_results(course, sync_results)
 		key = bucket.getChildNamed(GRADING_POLICY_NAME)
 		if key is not None:
 			if fill_grading_policy_from_key(course, key):
@@ -548,7 +554,7 @@ class _ContentCourseSynchronizer(object):
 
 	@classmethod
 	def update_course_discussions(cls, course, bucket, sync_results=None):
-		sync_results = _get_sync_results(course, sync_results)
+		sync_results = _get_course_sync_results(course, sync_results)
 		key = bucket.getChildNamed(DISCUSSION_FOLDER_NAME)
 		if key is not None and IDelimitedHierarchyBucket.providedBy(key):
 			result = parse_discussions(course, key)
@@ -594,9 +600,9 @@ class _ContentCourseSubInstanceSynchronizer(object):
 	def synchronize(self, subcourse, bucket, **kwargs):
 		__traceback_info__ = subcourse, bucket
 
-		sync_results = _get_sync_results(subcourse, **kwargs)
+		course_sync_results = _get_course_sync_results(subcourse, **kwargs)
 		_ContentCourseSynchronizer.update_common_info(subcourse, bucket,
-													  sync_results=sync_results)
+													  sync_results=course_sync_results)
 
 		# check for open enrollment
 		if has_deny_open_enrollment(subcourse):
@@ -610,7 +616,9 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		entry = ICourseCatalogEntry(subcourse)
 		subcourse.lastSynchronized = entry.lastSynchronized = time.time()
 
-		notify(CourseInstanceAvailableEvent(subcourse, bucket, sync_results))
+		notify(CourseInstanceAvailableEvent(subcourse, 
+											bucket,
+											_get_sync_results(**kwargs)))
 
 def synchronize_catalog_from_root(catalog_folder, root, **kwargs):
 	"""
