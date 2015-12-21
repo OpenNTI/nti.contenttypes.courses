@@ -1080,6 +1080,18 @@ class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
 
 # Synchronizer
 
+class ICourseLessonSyncResults(IGenericSynchronizationResults):
+
+	LessonsUpdated = ListOrTuple( title="Lessons updated on sync.", required=False )
+	LessonsSyncLocked = ListOrTuple( title="Lessons not updated due to sync locks.", required=False )
+
+@interface.implementer(ICourseLessonSyncResults)
+class CourseLessonSyncResults(object):
+
+	def __init__(self):
+		self.LessonsUpdated = []
+		self.LessonsSyncLocked = []
+
 class ICourseSynchronizationResults(IGenericSynchronizationResults):
 	NTIID = ValidTextLine(title="Course NTIID", required=False)
 
@@ -1104,6 +1116,8 @@ class ICourseSynchronizationResults(IGenericSynchronizationResults):
 
 	GradingPolicyDeleted = Bool(title="Grading Policy deleted", required=False, default=False)
 	GradingPolicyUpdated = Bool(title="Grading Policy updated", required=False, default=False)
+
+	Lessons = Object(ICourseLessonSyncResults, title="Lesson Results", required=False)
 
 	Site = ValidTextLine(title="Site Name", required=False)
 

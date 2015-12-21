@@ -38,6 +38,7 @@
 						 .interfaces.ICourseInstance
 						 .interfaces.ICourseOutlineNode
 						 .interfaces.ICourseCatalogEntry
+						 .interfaces.ICourseLessonSyncResults
 						 .interfaces.ICourseCatalogInstructorInfo
 						 .interfaces.ICourseSynchronizationResults"
 		modules=".courses .outlines .catalog .sharing ._synchronize" />
@@ -77,7 +78,7 @@
 	<subscriber factory=".decorators._SharedScopesForumDecorator"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator" />
 
-	<!-- Events -->	
+	<!-- Events -->
 	<subscriber handler=".subscribers.install_site_course_catalog" />
 	<subscriber handler=".subscribers.uninstall_site_course_catalog" />
 

@@ -269,7 +269,7 @@ class _ContentCourseSynchronizer(object):
 		self.update_deny_open_enrollment(course)
 
 		notify(CourseInstanceAvailableEvent(course,
-											bucket, 
+											bucket,
 											_get_sync_results(**kwargs)))
 
 		sections_bucket = bucket.getChildNamed(SECTION_FOLDER_NAME)
@@ -616,7 +616,7 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		entry = ICourseCatalogEntry(subcourse)
 		subcourse.lastSynchronized = entry.lastSynchronized = time.time()
 
-		notify(CourseInstanceAvailableEvent(subcourse, 
+		notify(CourseInstanceAvailableEvent(subcourse,
 											bucket,
 											_get_sync_results(**kwargs)))
 
