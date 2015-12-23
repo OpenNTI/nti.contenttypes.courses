@@ -462,7 +462,8 @@ class _ContentCourseSynchronizer(object):
 			if fill_outline_from_key(course.Outline,
 								  	 outline_xml_key,
 								  	 xml_parent_name=outline_xml_node,
-								  	 force=force):
+								  	 force=force,
+								  	 sync_results=sync_results):
 				sync_results.OutlineUpdated = True
 
 	@classmethod

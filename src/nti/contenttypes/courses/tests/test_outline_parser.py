@@ -79,13 +79,14 @@ class TestOutlineParser(CourseLayerTest):
 		assert_that(lesson_1["tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.0.0"],
 					has_property('ContentNTIID', "tag:nextthought.com,2011-10:OU-HTML-DNE"))
 
-		# This one is a stub
+		# This one is a stub: now with a null src only, and a ContentNTIID.
 		lesson_2 = unit_1["tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.1"]
 		assert_that(lesson_2,
 					 externalizes(
 						 all_of(
-							 does_not(has_key('ContentNTIID')),
-							 has_entry('Class', 'CourseOutlineCalendarNode'),
+							 has_key('ContentNTIID'),
+							 has_entry('Class', 'CourseOutlineContentNode'),
+							 has_entry( 'src', none() ),
 							 has_entry('NTIID', 'tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.1'))))
 
 		unit_7 = outline['tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.7']

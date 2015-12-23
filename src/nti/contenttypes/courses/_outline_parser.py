@@ -35,7 +35,6 @@ from nti.traversal.traversal import find_interface
 
 from .outlines import CourseOutlineNode
 from .outlines import CourseOutlineContentNode
-from .outlines import CourseOutlineCalendarNode
 
 from .interfaces import NTI_COURSE_OUTLINE_NODE
 
@@ -197,7 +196,10 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 	if topic_ntiid:
 		lesson_node.ContentNTIID = topic_ntiid
 
-	lesson_node.src = _attr_val(lesson, str('src'))
+	# For the legacy calendar nodes, we now create content nodes
+	# that we guarantee has no src.
+	if not _is_outline_stub(lesson):
+		lesson_node.src = _attr_val(lesson, str('src'))
 	lesson_node.ntiid = lesson_ntiid
 
 	# Sigh. It looks like date is optionally a comma-separated
@@ -257,22 +259,8 @@ def _update_parent_children(parent_node, old_children, transactions):
 						ignored_child,
 						parent_node.ntiid )
 
-def _get_node_factory(lesson):
-	result = CourseOutlineContentNode
-	# We want to begin divorcing the syllabus/structure of a course
-	# from the content that is available. We currently do this
-	# by stubbing out the content, and setting flags to be extracted
-	# to the ToC so that we don't give the UI back the NTIID.
-	if lesson.get(bytes('isOutlineStubOnly')) == 'true':
-		# We query for the node factory we use to "hide"
-		# content from the UI so that we can enable/disable
-		# hiding in certain site policies.
-		# (TODO: Be sure this works as expected with the caching)
-		ivalid_name = 'course outline stub node'  # not valid Class or MimeType value
-		result = component.queryUtility(component.IFactory,
-										name=ivalid_name,
-										default=CourseOutlineCalendarNode)
-	return result
+def _is_outline_stub( lesson ):
+	return lesson.get(bytes('isOutlineStubOnly')) == 'true'
 
 def _use_or_create_node( node_ntiid, new_node, removed_nodes, builder ):
 	"""
@@ -309,13 +297,12 @@ def _handle_node(parent_lxml, parent_node, library, removed_nodes, transactions)
 	parent_node.clear(event=False)
 
 	for idx, lesson in enumerate(parent_lxml.iterchildren(tag='lesson')):
-		node_factory = _get_node_factory(lesson)
 		lesson_ntiid = _get_lesson_ntiid(parent_node, idx)
 		def builder():
-			return _build_outline_node(node_factory, lesson,
+			return _build_outline_node(CourseOutlineContentNode, lesson,
 										lesson_ntiid, library)
 
-		lesson_node = _use_or_create_node( lesson_ntiid, node_factory(),
+		lesson_node = _use_or_create_node( lesson_ntiid, CourseOutlineContentNode(),
 											removed_nodes, builder )
 
 		# Must add to our parent_node now to avoid NotYet exceptions.
@@ -324,7 +311,7 @@ def _handle_node(parent_lxml, parent_node, library, removed_nodes, transactions)
 
 	_update_parent_children(parent_node, old_children, transactions)
 
-def fill_outline_from_node(outline, course_element, force=False):
+def fill_outline_from_node(outline, course_element, force=False, **kwargs):
 	"""
 	Given a CourseOutline object and an eTree element object containing its
 	``unit`` and ``lesson`` definitions,
@@ -381,7 +368,7 @@ def fill_outline_from_node(outline, course_element, force=False):
 
 	return outline
 
-def fill_outline_from_key(outline, key, xml_parent_name=None, force=False):
+def fill_outline_from_key(outline, key, xml_parent_name=None, force=False, **kwargs):
 	"""
 	Given a course outline node and a :class:`.IDelimitedHierarchyKey`,
 	read the XML from the key's contents
@@ -409,7 +396,7 @@ def fill_outline_from_key(outline, key, xml_parent_name=None, force=False):
 			node = next(node.iterchildren(tag=xml_parent_name))
 		except StopIteration:
 			raise ValueError("No outline child in key", key, xml_parent_name)
-	fill_outline_from_node(outline, node, force=force)
+	fill_outline_from_node(outline, node, force=force, **kwargs)
 
 	outline.lastModified = key.lastModified
 	return True
