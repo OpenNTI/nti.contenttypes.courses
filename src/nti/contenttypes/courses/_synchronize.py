@@ -126,8 +126,8 @@ def _get_sync_packages(**kwargs):
 	return packages
 
 def _get_sync_results(**kwargs):
-	results = kwargs.get('results') or []
-	return results
+	results = kwargs.get('results')
+	return results if results is not None else []
 
 def _get_course_sync_results(context, sync_results=None, **kwargs):
 	if sync_results is None:
