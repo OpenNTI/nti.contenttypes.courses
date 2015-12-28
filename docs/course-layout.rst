@@ -347,10 +347,10 @@ file. Full information is in
 ----------------------------------
 
 This file defines who has access to the administrative functions of
-the course, such as the gradebook. It maps from role name to
-permission to a list of users given or denied that role. It is
-inherited (important for sections). Only the roles documented here are
-supported. For example::
+the course, such as the gradebook, and content editing roles for the
+course. It maps from role name to permission to a list of users given
+or denied that role. It is inherited (important for sections). Only
+the roles documented here are supported. For example::
 
 	{
           "nti.roles.course_instructor": {
@@ -359,6 +359,9 @@ supported. For example::
           },
           "nti.roles.course_ta": {
                 "allow": ["jmadden"]
+          },
+          "nti.roles.course_content_editor": {
+                "allow": ["harp4162"]
           }
 	}
 
@@ -444,9 +447,9 @@ Forums
 	  that, if set, will override the default display name for these
 	  items the first time the forum is created; after that, you must
 	  use the API or GUI to change them.
-	  
+
 	* ``AutoCreate`: A boolean that determine whether
-	  the corresponding boards are automatically created if course 
+	  the corresponding boards are automatically created if course
 	  disussions are defined
 
 SharingScopesDisplayInfo
@@ -606,10 +609,10 @@ course_outline.xml
 	course will be used.
 
 role_info.json
-	If this file is present, it grants instructor or TA permissions.
-	This file will usually be present. Remember that the permissions
-	are additive, so permissions from the parent course will be
-	available (or denied) here unless explicitly overridden.
+	If this file is present, it grants instructor, TA, and content
+	editing permissions. This file will usually be present. Remember
+	that the permissions are additive, so permissions from the parent
+	course will be available (or denied) here unless explicitly overridden.
 
 vendor_info.json
 	The information in these files is **never** inherited. Vendor
@@ -625,12 +628,12 @@ presentation-assets/
 	This directory of assets is used for this course section. It
 	may contain images of this section's instructors, for example.
 
-	
+
 Course Discussions
 ===============
 
 If a course instance directory contains a directory called
-``Discussions``, then the json files of that directory defines the 
+``Discussions``, then the json files of that directory defines the
 discussions in the course:
 
 	platform.ou.edu/
@@ -640,7 +643,7 @@ discussions in the course:
                 Discussions/
                    01.json
                    02.json
-	
+
 A course discussion is json file with the following format.
 
 ::

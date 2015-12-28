@@ -38,6 +38,19 @@
                 }
             }},
             "additionalProperties": false
+        },
+        "nti.roles.course_content_editor": {
+            "id": "nti.roles.course_content_editor",
+            "type": "object",
+            "properties": {"allow": {
+                "id": "allow",
+                "type": "array",
+                "items": {
+                    "id": "0",
+                    "type": "string"
+                }
+            }},
+            "additionalProperties": false
         }
     },
     "additionalProperties": false
