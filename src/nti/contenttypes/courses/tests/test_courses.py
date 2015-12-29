@@ -28,9 +28,8 @@ from nti.testing.matchers import verifiably_provides
 import fudge
 
 from zope import interface
-from zope.security.interfaces import IPrincipal
 
-from nti.dataserver.authorization import ACT_READ
+from zope.security.interfaces import IPrincipal
 
 from nti.contenttypes.courses import acl
 from nti.contenttypes.courses import courses
@@ -41,8 +40,12 @@ from nti.contenttypes.courses.interfaces import ES_PURCHASED
 
 from nti.contenttypes.courses.decorators import _SharingScopesAndDiscussionDecorator
 
+from nti.dataserver.interfaces import IUser
+from nti.dataserver.authorization import ACT_READ
+
 from nti.externalization.tests import externalizes
 
+from nti.contenttypes.courses.tests import MockPrincipal
 from nti.contenttypes.courses.tests import CourseLayerTest
 
 import nti.dataserver.tests.mock_dataserver as mock_dataserver
@@ -189,3 +192,35 @@ class TestCourseInstance(CourseLayerTest):
 		assert_that( result, has_entry('ParentDiscussions',
 									   has_entries('Creator', ntiid)))
 
+	def _course_setup(self):
+		principal = MockPrincipal()
+		self.ds.root[principal.id] = principal
+		interface.alsoProvides(principal, IUser)
+
+		admin = courses.CourseAdministrativeLevel()
+		self.ds.root['admin'] = admin
+		for name in ('course',):
+			course = courses.ContentCourseInstance()
+			admin[name] = course
+			course.SharingScopes.initScopes()
+
+		self.principal  = principal
+		self.course = admin['course']
+		self.admin = self.ds.root['admin']
+		
+	@WithMockDSTrans
+	def test_course_deletion(self):
+		self._course_setup()
+		admin = self.admin
+		course = self.course
+		principal = self.principal
+		
+		manager = interfaces.ICourseEnrollmentManager(course)
+		manager.enroll(principal, scope='Public')
+		
+		ce = interfaces.ICourseEnrollments(course)
+		assert_that(ce.count_enrollments(), is_(1))
+		
+		del admin['course']
+		ce = interfaces.ICourseEnrollments(course)
+		assert_that(ce.count_enrollments(), is_(0))

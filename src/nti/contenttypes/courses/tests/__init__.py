@@ -27,5 +27,41 @@ class CourseTestLayer(DataserverTestLayer):
 	tearDownTest = setUp
 
 class CourseLayerTest(DataserverLayerTest):
-
 	layer = CourseTestLayer
+
+import functools
+
+from zope import interface
+
+from zope.annotation.interfaces import IAttributeAnnotatable
+
+from zope.container.interfaces import IContained
+
+from zope.security.interfaces import IPrincipal
+
+from persistent import Persistent
+
+from nti.dataserver.sharing import SharingSourceMixin
+
+from nti.wref.interfaces import IWeakRef
+
+@functools.total_ordering
+@interface.implementer(IPrincipal, IWeakRef, IContained, IAttributeAnnotatable)
+class MockPrincipal(SharingSourceMixin, Persistent):
+	username = id = 'MyPrincipal'
+	__name__ = None
+	__parent__ = None
+
+	def __call__(self):
+		return self
+
+	def __eq__(self, other):
+		return self is other
+
+	def __ne__(self, other):
+		return self is not other
+
+	def __lt__(self, other):
+		if other is not self:
+			return True
+		return False

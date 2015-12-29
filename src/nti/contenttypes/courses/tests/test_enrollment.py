@@ -63,18 +63,11 @@ class TestEnrollment(unittest.TestCase):
 		assert_that( calling(setattr).with_args(record, 'Scope', 'not valid scope'),
 					 raises(ConstraintNotSatisfied))
 
-import functools
-from persistent import Persistent
-
 from zope.security.interfaces import IPrincipal
-from zope.container.interfaces import IContained
 from zope.location.interfaces import ISublocations
 from zope.lifecycleevent import IObjectRemovedEvent
-from zope.annotation.interfaces import IAttributeAnnotatable
 
 from nti.dataserver.interfaces import IUser
-
-from nti.wref.interfaces import IWeakRef
 
 from nti.dataserver.authentication import _dynamic_memberships_that_participate_in_security
 
@@ -93,30 +86,9 @@ from nti.contenttypes.courses.interfaces import ICourseEnrollments
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import IEnrollmentMappedCourseInstance
 
+from nti.contenttypes.courses.tests import MockPrincipal
+
 from zope.component import eventtesting
-
-from nti.dataserver.sharing import SharingSourceMixin
-
-@functools.total_ordering
-@interface.implementer(IPrincipal, IWeakRef, IContained, IAttributeAnnotatable)
-class MockPrincipal(SharingSourceMixin, Persistent):
-	username = id = 'MyPrincipal'
-	__name__ = None
-	__parent__ = None
-
-	def __call__(self):
-		return self
-
-	def __eq__(self, other):
-		return self is other
-
-	def __ne__(self, other):
-		return self is not other
-
-	def __lt__(self, other):
-		if other is not self:
-			return True
-		return False
 
 class MockContentPackage(object):
 	ntiid = "tag:nextthought.com,2011-10:USSC-HTML-Cohen.cohen_v._california."
