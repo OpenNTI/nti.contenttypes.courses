@@ -89,7 +89,7 @@ from .interfaces import IDefaultCourseCatalogEnrollmentStorage
 from .interfaces import IDefaultCourseInstanceEnrollmentStorage
 from .interfaces import ICourseInstanceEnrollmentRecordContainer
 
-ICourseInstanceEnrollmentRecordContainer = ICourseInstanceEnrollmentRecordContainer # BWC
+ICourseInstanceEnrollmentRecordContainer = ICourseInstanceEnrollmentRecordContainer  # BWC
 
 def save_in_container(container, key, value, event=False):
 	if event:
@@ -336,14 +336,14 @@ class DefaultCourseEnrollmentManager(object):
 	def _cat_enrollment_storage(self):
 		return IDefaultCourseCatalogEnrollmentStorage(self._catalog)
 
-	
+
 	# NOTE: The enroll/drop methods DO NOT set up any of the scope/sharing
 	# information; that's left to ObjectEvent subscribers. That may
 	# seem like action at a distance, but the rationale is that we
 	# want to, in addition to the Added and Removed events fired here,
 	# support Modified events (e.g., a user starts out open/public
 	# enrolled, then pays for the course, and becomes for-credit-non-degree)
-	
+
 	def enroll(self, principal, scope=ES_PUBLIC, context=None):
 		principal_id = IPrincipal(principal).id
 		if principal_id in self._inst_enrollment_storage:
@@ -428,13 +428,14 @@ class DefaultCourseEnrollmentManager(object):
 			del storage[pid]
 
 		return records
+	reset = drop_all
 
 from .interfaces import IEnrollmentMappedCourseInstance
 
 from . import get_course_vendor_info
 
 def get_vendor_info(context):
-	result =  get_course_vendor_info(context, False) or {}
+	result = get_course_vendor_info(context, False) or {}
 	return result
 
 def has_deny_open_enrollment(context):
@@ -495,7 +496,7 @@ class SectionSeat(object):
 
 	name = alias('section_name')
 	count = alias('seat_count')
-	
+
 	def __init__(self, section_name, seat_count):
 		self.seat_count = seat_count
 		self.section_name = section_name

@@ -54,6 +54,7 @@ from .interfaces import ICourseOutline
 from .interfaces import ICourseInstance
 from .interfaces import ICourseOutlineNode
 from .interfaces import ICourseCatalogEntry
+from .interfaces import ICourseEnrollmentManager
 from .interfaces import IObjectEntrySynchronizer
 from .interfaces import IPersistentCourseCatalog
 from .interfaces import ICourseRolesSynchronized
@@ -188,24 +189,26 @@ def sync_catalog_when_library_synched(library, event):
 def roles_sync_on_course_instance(course, event):
 	catalog = get_enrollment_catalog()
 	intids = component.queryUtility(IIntIds)
-	if catalog is None or intids is None:
-		return
-	unindex_course_roles(course, catalog)
-	index_course_roles(course, catalog=catalog, intids=intids)
+	if catalog is not None and intids is not None:
+		unindex_course_roles(course, catalog)
+		index_course_roles(course, catalog=catalog, intids=intids)
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def on_course_instance_removed(course, event):
+	# unindex enrollment records
 	catalog = get_enrollment_catalog()
 	entry = ICourseCatalogEntry(course, None)
 	ntiid = getattr(entry, 'ntiid', None)
-	if catalog is None or not ntiid:
-		return
-
-	site = getSite().__name__
-	query = { IX_SITE: {'any_of':(site,)},
-			  IX_COURSE: {'any_of':(ntiid,)} }
-	for uid in catalog.apply(query) or ():
-		catalog.unindex_doc(uid)
+	if catalog is not None and ntiid:
+		site = getSite().__name__
+		query = { IX_SITE: {'any_of':(site,)},
+				  IX_COURSE: {'any_of':(ntiid,)} }
+		for uid in catalog.apply(query) or ():
+			catalog.unindex_doc(uid)
+	# drop enrollment records
+	manager = ICourseEnrollmentManager(course, None)
+	if manager is not None:
+		manager.drop_all()
 
 @component.adapter(ICourseOutlineNode, ICourseOutlineNodeMovedEvent)
 def on_course_outline_node_moved(node, event):
