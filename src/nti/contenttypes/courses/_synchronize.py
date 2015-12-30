@@ -105,6 +105,12 @@ GRADING_POLICY_NAME = 'grading_policy.json'
 INSTRUCTOR_INFO_NAME = 'instructor_info.json'
 ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
 
+@WithRepr
+@EqHash('NTIID')
+@interface.implementer(ICourseSynchronizationResults)
+class CourseSynchronizationResults(SchemaConfigured, Contained):
+	createDirectFieldProperties(ICourseSynchronizationResults)
+
 def _site_name(registry=None):
 	registry = component.getSiteManager() if registry is None else registry
 	if ILocalSiteManager.providedBy(registry):
@@ -113,17 +119,11 @@ def _site_name(registry=None):
 		result = getattr(registry, '__name__', None)
 	return safestr(result)
 
-@WithRepr
-@EqHash('NTIID')
-@interface.implementer(ICourseSynchronizationResults)
-class CourseSynchronizationResults(SchemaConfigured, Contained):
-	createDirectFieldProperties(ICourseSynchronizationResults)
-
-def _get_sync_packages(**kwargs):
+def _get_sync_ntiids(**kwargs):
 	params = kwargs.get('params')  # sync params
-	packages = params.packages if params is not None else ()
-	packages = packages if isinstance(packages, set) else set(packages)
-	return packages
+	ntiids = params.packages if params is not None else ()
+	ntiids = ntiids if isinstance(ntiids, set) else set(ntiids)
+	return ntiids
 
 def _get_sync_results(**kwargs):
 	results = kwargs.get('results')
@@ -220,14 +220,20 @@ class _ContentCourseSynchronizer(object):
 		__traceback_info__ = course, bucket
 		entry = ICourseCatalogEntry(course)
 
-		# gather/prepare sync params/results
-		packages = _get_sync_packages(**kwargs)
-		sync_results = _get_course_sync_results(entry, **kwargs)
+		# gather sync params
+		ntiids = _get_sync_ntiids(**kwargs)
 
 		# First, synchronize the bundle
 		bundle_json_key = bucket.getChildNamed(BUNDLE_META_NAME)
 		if not IDelimitedHierarchyKey.providedBy(bundle_json_key):  # pragma: no cover
 			raise ValueError("No bundle defined for course", course, bucket)
+
+		# Check if we need to sync
+		if ntiids and entry.ntiid not in ntiids:
+			return
+
+		# prepare sync results
+		sync_results = _get_course_sync_results(entry, **kwargs)
 
 		bundle = None
 		created_bundle = False
@@ -244,11 +250,6 @@ class _ContentCourseSynchronizer(object):
 			# register w/ course and notify
 			course.ContentPackageBundle = bundle
 			lifecycleevent.created(bundle)
-		elif packages:  # check if underlying library was updated
-			ntiids = {x.ntiid for x in course.ContentPackageBundle.ContentPackages}
-			# if none of the bundle pacakges were updated return
-			if not ntiids.intersection(packages):
-				return
 
 		# The catalog entry gets the default DublinCore metadata file name,
 		# in this bucket, since it really describes the data.
