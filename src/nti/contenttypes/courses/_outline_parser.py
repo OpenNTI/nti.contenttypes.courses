@@ -33,16 +33,14 @@ from nti.site.utils import unregisterUtility
 
 from nti.traversal.traversal import find_interface
 
-from .outlines import CourseOutlineNode
-from .outlines import CourseOutlineContentNode
-
-from .interfaces import NTI_COURSE_OUTLINE_NODE
-
 from .interfaces import iface_of_node
-
 from .interfaces import ICourseOutline
 from .interfaces import ICourseInstance
 from .interfaces import ICourseCatalogEntry
+from .interfaces import NTI_COURSE_OUTLINE_NODE
+
+from .outlines import CourseOutlineNode
+from .outlines import CourseOutlineContentNode
 
 # too many branches
 # pylint:disable=I0011,R0912
@@ -255,29 +253,28 @@ def _update_parent_children(parent_node, old_children, transactions):
 		ignored_children = set(new_child_map.keys()) - set((x.ntiid for x in old_children))
 		for ignored_child in ignored_children:
 			# TODO Event
-			logger.info( 'Not appending new node (%s) since parent node (%s) has sync locked children',
+			logger.info('Not appending new node (%s) since parent node (%s) has sync locked children',
 						ignored_child,
-						parent_node.ntiid )
+						parent_node.ntiid)
 
-def _is_outline_stub( lesson ):
+def _is_outline_stub(lesson):
 	return lesson.get(bytes('isOutlineStubOnly')) == 'true'
 
-def _use_or_create_node( node_ntiid, new_node, removed_nodes, builder ):
+def _use_or_create_node(node_ntiid, new_node, removed_nodes, builder):
 	"""
 	Use an existing node for the given ntiid or return a brand new node.
 	"""
-	old_node = _get_node( node_ntiid, new_node )
+	old_node = _get_node(node_ntiid, new_node)
 	if old_node is not None:
-		if node_ntiid not in removed_nodes and _is_node_locked( old_node ):
-			logger.info('Node not syncing due to sync lock (%s)',
-					node_ntiid)
+		if node_ntiid not in removed_nodes and _is_node_locked(old_node):
+			logger.info('Node not syncing due to sync lock (%s)', node_ntiid)
 		elif node_ntiid not in removed_nodes:
 			# We have a registered node that is not locked and not removed.
 			# This case should really not happen, but in alpha, we've seen nodes
 			# with ntiids that do not match their registered ntiids. Clean them up.
 			logger.info('Mis-registered node? (register_id=%s) (node_ntiid=%s)',
 						node_ntiid,
-						getattr( old_node, 'ntiid', '' ))
+						getattr(old_node, 'ntiid', ''))
 			removed_nodes[ node_ntiid ] = old_node
 			old_node = None
 		else:
@@ -300,10 +297,10 @@ def _handle_node(parent_lxml, parent_node, library, removed_nodes, transactions)
 		lesson_ntiid = _get_lesson_ntiid(parent_node, idx)
 		def builder():
 			return _build_outline_node(CourseOutlineContentNode, lesson,
-										lesson_ntiid, library)
+									   lesson_ntiid, library)
 
-		lesson_node = _use_or_create_node( lesson_ntiid, CourseOutlineContentNode(),
-											removed_nodes, builder )
+		lesson_node = _use_or_create_node(lesson_ntiid, CourseOutlineContentNode(),
+										  removed_nodes, builder)
 
 		# Must add to our parent_node now to avoid NotYet exceptions.
 		parent_node.append(lesson_node)
@@ -344,11 +341,11 @@ def fill_outline_from_node(outline, course_element, force=False, **kwargs):
 			new_node.title = _attr_val(unit, str('label'))
 			new_node.src = _attr_val(unit, str('src'))
 			new_node.ntiid = unit_ntiid
-			_publish( new_node )
+			_publish(new_node)
 			return new_node
 
-		unit_node = _use_or_create_node( unit_ntiid, CourseOutlineNode(),
-										removed_nodes, builder )
+		unit_node = _use_or_create_node(unit_ntiid, CourseOutlineNode(),
+										removed_nodes, builder)
 
 		outline.append(unit_node)
 		_handle_node(unit, unit_node, library, removed_nodes, transactions)
