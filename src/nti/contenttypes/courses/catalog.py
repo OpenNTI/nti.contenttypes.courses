@@ -58,7 +58,7 @@ from .interfaces import IPersistentCourseCatalog
 from .interfaces import ICourseCatalogInstructorInfo
 
 def _queryNextCatalog(context):
-	return queryNextUtility(context,ICourseCatalog)
+	return queryNextUtility(context, ICourseCatalog)
 
 class _AbstractCourseCatalogMixin(object):
 	"""
@@ -69,11 +69,11 @@ class _AbstractCourseCatalogMixin(object):
 	__name__ = 'CourseCatalog'
 
 	@LazyOnClass
-	def __acl__( self ):
+	def __acl__(self):
 		# Got to be here after the components are registered
 		return acl_from_aces(
 			# Everyone logged in has read and search access to the catalog
-			ace_allowing(AUTHENTICATED_GROUP_NAME, ACT_READ, type(self) ) )
+			ace_allowing(AUTHENTICATED_GROUP_NAME, ACT_READ, type(self)))
 
 	# regardless of length, catalogs are True
 	def __bool__(self):
@@ -115,7 +115,7 @@ class _AbstractCourseCatalogMixin(object):
 
 	def _primary_query_my_entry(self, name):
 		entry_map = self._get_all_my_entries()
-		return entry_map.get( name )
+		return entry_map.get(name)
 
 	def _query_my_entry(self, name):
 		entry = self._primary_query_my_entry(name)
@@ -132,9 +132,9 @@ class _AbstractCourseCatalogMixin(object):
 
 		return parent.getCatalogEntry(name)
 
-@interface.implementer(IGlobalCourseCatalog)
 @NoPickle
 @WithRepr
+@interface.implementer(IGlobalCourseCatalog)
 class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
 						  CheckingLastModifiedBTreeContainer):
 
@@ -173,8 +173,7 @@ class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
 			self._setitemf(key, entry)
 			entry.__parent__ = self
 
-		self.lastModified = max( self.lastModified, entry.lastModified )
-
+		self.lastModified = max(self.lastModified, entry.lastModified)
 
 	append = addCatalogEntry
 
@@ -222,14 +221,14 @@ class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
 
 	__getitem__ = _AbstractCourseCatalogMixin.getCatalogEntry
 
-@interface.implementer(ICourseCatalogInstructorInfo)
 @WithRepr
+@interface.implementer(ICourseCatalogInstructorInfo)
 class CourseCatalogInstructorInfo(SchemaConfigured):
 	createDirectFieldProperties(ICourseCatalogInstructorInfo)
 
-@interface.implementer(ICatalogFamily)
 @WithRepr
 @EqHash('ProviderUniqueID')
+@interface.implementer(ICatalogFamily)
 class CatalogFamily(SchemaConfigured,
 					DisplayableContentMixin):
 	# shut up pylint
@@ -247,7 +246,7 @@ class CatalogFamily(SchemaConfigured,
 	Description = alias('description')
 
 	def __init__(self, *args, **kwargs):
-		SchemaConfigured.__init__(self, *args, **kwargs) # not cooperative
+		SchemaConfigured.__init__(self, *args, **kwargs)  # not cooperative
 
 @interface.implementer(ICourseCatalogEntry)
 @total_ordering
@@ -288,7 +287,7 @@ class CourseCatalogEntry(CatalogFamily,
 		result = ()
 		instance = ICourseInstance(self, None)
 		if instance is not None:
-			result = [Link( instance, rel="CourseInstance" )]
+			result = [Link(instance, rel="CourseInstance")]
 		return result
 
 	@property
@@ -298,7 +297,7 @@ class CourseCatalogEntry(CatalogFamily,
 		we echo the first thing we have that does contain
 		them. This should simplify things for the clients.
 		"""
-		ours = super(CourseCatalogEntry,self).PlatformPresentationResources
+		ours = super(CourseCatalogEntry, self).PlatformPresentationResources
 		if ours:
 			return ours
 
@@ -335,12 +334,12 @@ class CourseCatalogEntry(CatalogFamily,
 	def InstructorsSignature(self):
 		sig_lines = []
 		for inst in self.Instructors:
-			sig_lines.append( inst.Name )
-			sig_lines.append( inst.JobTitle )
+			sig_lines.append(inst.Name)
+			sig_lines.append(inst.JobTitle)
 
-			sig_lines.append( "" )
-		del sig_lines[-1] # always at least one instructor. take off the last trailing line
-		signature = '\n\n'.join( sig_lines )
+			sig_lines.append("")
+		del sig_lines[-1]  # always at least one instructor. take off the last trailing line
+		signature = '\n\n'.join(sig_lines)
 		return signature
 
 	def isCourseCurrentlyActive(self):
@@ -445,13 +444,13 @@ def _clear_catalog_cache_when_course_updated(course, event):
 	catalogs = []
 
 	# Include the parent, if we have one
-	catalogs.append( find_interface(course, IPersistentCourseCatalog, strict=False) )
+	catalogs.append(find_interface(course, IPersistentCourseCatalog, strict=False))
 
 	# If the event has oldParent and/or newParent, include them
 	for n in 'oldParent', 'newParent':
-		catalogs.append( find_interface(getattr(event, n, None),
-										IPersistentCourseCatalog,
-										strict=False) )
+		catalogs.append(find_interface(getattr(event, n, None),
+									   IPersistentCourseCatalog,
+									   strict=False))
 	# finally, anything else we can find
 	catalogs.extend(component.getAllUtilitiesRegisteredFor(ICourseCatalog))
 
@@ -460,7 +459,7 @@ def _clear_catalog_cache_when_course_updated(course, event):
 			continue
 		try:
 			catalog._get_all_my_entries.invalidate(catalog)
-		except AttributeError: # pragma: no cover
+		except AttributeError:  # pragma: no cover
 			pass
 		if hasattr(catalog, '_p_changed') and catalog._p_jar:
 			catalog._p_changed = True

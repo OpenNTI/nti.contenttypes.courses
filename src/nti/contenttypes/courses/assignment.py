@@ -45,7 +45,7 @@ class EmptyAssessmentDateContext(object):
 
 	def assessments(self):
 		return ()
-	assignments = assessments
+	assignments = assessments # BWC
 
 	def of(self, asg):
 		return asg

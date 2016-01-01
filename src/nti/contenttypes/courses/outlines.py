@@ -69,7 +69,7 @@ class _AbstractCourseOutlineNode(Contained, RecordableMixin, CalendarPublishable
 			# An index outside our boundary acts as an append.
 			old_keys.append(ntiid)
 			new_keys = old_keys
-		self.updateOrder(new_keys)
+		self.updateOrder(new_keys)  # see OrderedContainer
 
 	def insert(self, index, obj):
 		if obj.ntiid not in list(self.keys()):
