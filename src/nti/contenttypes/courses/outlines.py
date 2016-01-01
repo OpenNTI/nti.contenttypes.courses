@@ -59,13 +59,17 @@ class _AbstractCourseOutlineNode(Contained, RecordableMixin, CalendarPublishable
 
 	def _do_reorder(self, index, ntiid):
 		old_keys = list(self.keys())
-		# An index outside our boundary acts as a no-op/append.
+		old_keys.remove(ntiid)
 		if index is not None and index < len(old_keys):
-			old_keys.remove(ntiid)
+			# Slicing works even if index > len at this point.
 			new_keys = old_keys[:index]
 			new_keys.append(ntiid)
 			new_keys.extend(old_keys[index:])
-			self.updateOrder(new_keys)
+		else:
+			# An index outside our boundary acts as an append.
+			old_keys.append(ntiid)
+			new_keys = old_keys
+		self.updateOrder(new_keys)
 
 	def insert(self, index, obj):
 		if obj.ntiid not in list(self.keys()):
