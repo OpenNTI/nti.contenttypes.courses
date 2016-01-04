@@ -56,7 +56,7 @@ from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 from nti.contentlibrary.interfaces import IGenericSynchronizationResults
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
-from nti.coremetadata.interfaces import IRecordable
+from nti.coremetadata.interfaces import IRecordableContainer
 
 from nti.dataserver.interfaces import ICommunity
 from nti.dataserver.interfaces import ILastModified
@@ -198,7 +198,7 @@ def _tag_iface_fields(iface, *fields):
 		iface[name].setTaggedValue(TAG_HIDDEN_IN_UI, False)
 		iface[name].setTaggedValue(TAG_REQUIRED_IN_UI, False)
 
-class ICourseOutlineNode(IRecordable,
+class ICourseOutlineNode(IRecordableContainer,
 						 IAttributeAnnotatable,
 						 ITitledDescribedContent,
 						 IOrderedContainer,
