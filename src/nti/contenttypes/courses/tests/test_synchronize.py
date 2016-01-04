@@ -336,6 +336,10 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		outline = gateway.Outline
 		assert_that( outline, has_length(7) )
 
+		def _resync():
+			outline.lastModified = 0
+			synchronize_catalog_from_root(folder, bucket)
+
 		outline_node = outline.values()[0]
 		child_node = outline_node.values()[0]
 		child_ntiid = child_node.ntiid
@@ -353,9 +357,7 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		outline_node.locked = True
 		child_node.title = new_child_title = 'New child title'
 
-		# Re-sync
-		outline.lastModified = 0
-		synchronize_catalog_from_root(folder, bucket)
+		_resync()
 
 		# Our parent title change is preserved, and children are updated.
 		outline = gateway.Outline
@@ -404,9 +406,8 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		outline_node.append( child_node )
 		outline_node.append( unchanged_node )
 
-		# Re-sync
-		outline.lastModified = 0
-		synchronize_catalog_from_root(folder, bucket)
+		_resync()
+
 		outline = gateway.Outline
 		assert_that( outline.lastModified, is_not(is_( 0 )))
 		outline_node = outline.values()[0]
@@ -442,6 +443,39 @@ class TestFunctionalSynchronize(CourseLayerTest):
 		assert_that( child_node.is_published(), is_( True ) )
 		assert_that( child_txs, has_length( 1 ))
 		assert_that( child_txs[0], is_( unchanged_record ))
+
+		# Reset unit node locks.
+		for child in outline.values():
+			child.locked = False
+		assert_that( outline, has_length(7) )
+		_resync()
+
+		# Remove node and test child_order_locked
+		del outline[outline.keys()[0]]
+
+		_resync()
+		assert_that( outline, has_length(7) )
+
+		outline.child_order_locked = True
+		del outline[outline.keys()[0]]
+		_resync()
+		assert_that( outline, has_length(6) )
+
+		# Reset
+		outline.child_order_locked = False
+		_resync()
+		assert_that( outline, has_length(7) )
+
+		# Swap order
+		original_ntiid_order = tuple( outline.keys() )
+		outline.insert( 0, outline.values()[-1] )
+		move_ntiid_order = tuple( outline.keys() )
+		outline.child_order_locked = True
+		_resync()
+
+		assert_that( outline, has_length(7) )
+		assert_that( move_ntiid_order, is_not( original_ntiid_order ))
+		assert_that( tuple( outline.keys() ), is_( move_ntiid_order ))
 
 	def test_default_sharing_scope_use_parent(self):
 		"""

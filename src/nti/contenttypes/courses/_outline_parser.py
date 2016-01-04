@@ -68,8 +68,11 @@ outline_nodes = _outline_nodes
 def _is_node_locked(node):
 	return IRecordable.providedBy(node) and node.locked
 
-def _is_node_move_locked(children):
-	return any((_is_node_locked(x) for x in children))
+def _is_node_move_locked(container, children):
+	# Ideally, the child_order_locked field alone will indicate locked,
+	# but fall back to child status if necessary.
+	return getattr( container, 'child_order_locked', False ) \
+		or any((_is_node_locked(x) for x in children))
 
 def _can_be_removed(registered, force=False):
 	result = registered is not None and (force or not _is_node_locked(registered))
@@ -217,13 +220,10 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 def _update_parent_children(parent_node, old_children, transactions):
 	"""
 	If there are old_children and the parent node is `move`
-	locked, we must preserve the existing order state.
-
-	We currently do not support (*only*) user-deleted nodes (without
-	some additional state management or placeholders). We do not
+	locked, we must preserve the existing order state. We do not
 	support sync inserts when there are user-locked objects in play.
 	"""
-	if old_children and _is_node_move_locked(old_children):
+	if old_children and _is_node_move_locked( parent_node, old_children ):
 		new_children = list(parent_node.values())
 		new_child_map = {x.ntiid:x for x in new_children}
 		# Our children may already have their transactions recorded,
@@ -255,7 +255,7 @@ def _update_parent_children(parent_node, old_children, transactions):
 			# TODO Event
 			logger.info('Not appending new node (%s) since parent node (%s) has sync locked children',
 						ignored_child,
-						parent_node.ntiid)
+						getattr( parent_node, 'ntiid', '' ))
 
 def _is_outline_stub(lesson):
 	return lesson.get(bytes('isOutlineStubOnly')) == 'true'
