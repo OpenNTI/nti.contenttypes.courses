@@ -57,7 +57,6 @@ from .interfaces import ICourseOutline
 from .interfaces import ICourseInstance
 from .interfaces import ICourseOutlineNode
 from .interfaces import ICourseCatalogEntry
-from .interfaces import ICourseEnrollmentManager
 from .interfaces import IObjectEntrySynchronizer
 from .interfaces import IPersistentCourseCatalog
 from .interfaces import ICourseRolesSynchronized
@@ -206,7 +205,6 @@ def on_user_removed(user, event):
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def on_course_instance_removed(course, event):
-	# unindex enrollment records
 	catalog = get_enrollment_catalog()
 	entry = ICourseCatalogEntry(course, None)
 	ntiid = getattr(entry, 'ntiid', None)
@@ -216,10 +214,6 @@ def on_course_instance_removed(course, event):
 				  IX_COURSE: {'any_of':(ntiid,)} }
 		for uid in catalog.apply(query) or ():
 			catalog.unindex_doc(uid)
-	# drop enrollment records
-	manager = ICourseEnrollmentManager(course, None)
-	if manager is not None:
-		manager.drop_all()
 
 @component.adapter(ICourseOutlineNode, ICourseOutlineNodeMovedEvent)
 def on_course_outline_node_moved(node, event):
