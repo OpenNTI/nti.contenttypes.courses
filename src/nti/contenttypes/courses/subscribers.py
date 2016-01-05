@@ -200,7 +200,7 @@ def roles_sync_on_course_instance(course, event):
 def on_user_removed(user, event):
 	catalog = get_enrollment_catalog()
 	if catalog is not None:
-		query = { IX_USERNAME: {'any_of':(user.username)} }
+		query = { IX_USERNAME: {'any_of':(user.username,)} }
 		for uid in catalog.apply(query) or ():
 			catalog.unindex_doc(uid)
 
