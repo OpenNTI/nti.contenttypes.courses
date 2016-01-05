@@ -82,6 +82,7 @@
 	<subscriber handler=".subscribers.install_site_course_catalog" />
 	<subscriber handler=".subscribers.uninstall_site_course_catalog" />
 
+	<subscriber handler=".subscribers.on_user_removed" />
 	<subscriber handler=".subscribers.on_course_instance_removed" />
 
 	<subscriber handler=".subscribers.roles_sync_on_course_instance" />

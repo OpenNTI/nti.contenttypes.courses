@@ -34,6 +34,8 @@ from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
 
+from nti.dataserver.interfaces import IUser
+
 from nti.recorder.utils import record_transaction
 
 from nti.site.utils import registerUtility
@@ -44,6 +46,7 @@ from .catalog import CourseCatalogFolder
 
 from .index import IX_SITE
 from .index import IX_COURSE
+from .index import IX_USERNAME
 
 from .interfaces import iface_of_node
 
@@ -192,6 +195,14 @@ def roles_sync_on_course_instance(course, event):
 	if catalog is not None and intids is not None:
 		unindex_course_roles(course, catalog)
 		index_course_roles(course, catalog=catalog, intids=intids)
+
+@component.adapter(IUser, IObjectRemovedEvent)
+def on_user_removed(user, event):
+	catalog = get_enrollment_catalog()
+	if catalog is not None:
+		query = { IX_USERNAME: {'any_of':(user.username)} }
+		for uid in catalog.apply(query) or ():
+			catalog.unindex_doc(uid)
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def on_course_instance_removed(course, event):
