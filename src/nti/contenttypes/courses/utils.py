@@ -106,7 +106,10 @@ def get_course_packages(context):
 		try:
 			packs = course.ContentPackageBundle.ContentPackages
 		except AttributeError:
-			packs = (course.legacy_content_package,)
+			try:
+				packs = (course.legacy_content_package,)
+			except AttributeError:
+				packs = ()
 		return packs or ()
 	return ()
 
