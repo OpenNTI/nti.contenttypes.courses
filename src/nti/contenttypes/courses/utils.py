@@ -16,7 +16,7 @@ from zope import component
 from zope.component.hooks import getSite
 from zope.component.interfaces import ComponentLookupError
 
-from zope.intid import IIntIds
+from zope.intid.interfaces import IIntIds
 
 from zope.security.interfaces import IPrincipal
 
@@ -136,7 +136,7 @@ def get_course_hierarchy(context):
 def is_there_an_open_enrollment(course, user):
 	main_course = get_parent_course(course)
 	if main_course is not None:
-		for instance in chain((main_course,), main_course.SubInstances.values()):
+		for instance in chain((main_course,), get_course_subinstances(main_course)):
 			enrollments = ICourseEnrollments(instance)
 			record = enrollments.get_enrollment_for_principal(user)
 			if record is not None and record.Scope == ES_PUBLIC:
@@ -146,7 +146,7 @@ def is_there_an_open_enrollment(course, user):
 def get_enrollment_in_hierarchy(course, user):
 	main_course = get_parent_course(course)
 	if main_course is not None:
-		for instance in chain((main_course,), main_course.SubInstances.values()):
+		for instance in chain((main_course,), get_course_subinstances(main_course)):
 			enrollments = ICourseEnrollments(instance)
 			record = enrollments.get_enrollment_for_principal(user)
 			if record is not None:
@@ -162,7 +162,7 @@ def drop_any_other_enrollments(context, user, ignore_existing=True):
 	result = []
 	main_course = get_parent_course(course)
 	if main_course is not None:
-		for instance in chain((main_course,) , main_course.SubInstances.values()):
+		for instance in chain((main_course,) , get_course_subinstances(main_course)):
 			instance_entry = ICourseCatalogEntry(instance)
 			if ignore_existing and course_ntiid == instance_entry.ntiid:
 				continue
@@ -233,7 +233,7 @@ def is_course_editor(context, user):
 def is_instructor_in_hierarchy(context, user):
 	main_course = get_parent_course(context)
 	if main_course is not None:
-		for instance in chain((main_course,) , main_course.SubInstances.values()):
+		for instance in chain((main_course,), get_course_subinstances(main_course)):
 			if is_course_instructor(instance, user):
 				return True
 	return False
@@ -241,10 +241,14 @@ def is_instructor_in_hierarchy(context, user):
 def get_instructed_course_in_hierarchy(context, user):
 	main_course = get_parent_course(context)
 	if main_course is not None:
-		for instance in chain((main_course,) , main_course.SubInstances.values()):
+		for instance in chain((main_course,), get_course_subinstances(main_course)):
 			if is_course_instructor(instance, user):
 				return instance
 	return None
+
+def is_course_instructor_or_editor(context, user):
+	result = is_course_instructor(context, user) or is_course_editor(context, user)
+	return result
 
 def get_catalog_entry(ntiid, safe=True):
 	try:
@@ -266,7 +270,7 @@ def get_enrollment_record(context, user):
 def get_enrollment_record_in_hierarchy(context, user):
 	main_course = get_parent_course(context)
 	if main_course is not None:
-		for instance in chain((main_course,) , main_course.SubInstances.values()):
+		for instance in chain((main_course,), get_course_subinstances(main_course)):
 			record = get_enrollment_record(instance, user)
 			if record is not None:
 				return record
