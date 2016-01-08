@@ -20,6 +20,7 @@ from zope.container.contained import uncontained
 from zope.container.constraints import checkObject
 from zope.container.ordered import OrderedContainer  # this is persistent
 
+from nti.coremetadata.interfaces import ILastModified
 from nti.coremetadata.mixins import CalendarPublishableMixin
 from nti.coremetadata.mixins import RecordableContainerMixin
 
@@ -95,7 +96,7 @@ class _AbstractCourseOutlineNode(Contained, RecordableContainerMixin, CalendarPu
 				self._delitemf(k)
 	clear = reset
 
-@interface.implementer(ICourseOutlineNode)
+@interface.implementer(ICourseOutlineNode, ILastModified)
 class CourseOutlineNode(_AbstractCourseOutlineNode,
 						PersistentCreatedModDateTrackingObject,  # order mattters
 						OrderedContainer):
@@ -115,10 +116,17 @@ class CourseOutlineNode(_AbstractCourseOutlineNode,
 	def __setitem__(self, key, value):
 		checkObject(self, key, value)
 		super(CourseOutlineNode, self).__setitem__(key, value)
+		self.updateLastMod()
 
 	def __delitem__(self, key):
 		uncontained(self[key], self, key)
 		super(CourseOutlineNode, self).__delitem__(key)
+		self.updateLastMod()
+	
+	def reset(self, event=True):
+		super(CourseOutlineNode, self).reset(event=event)
+		self.updateLastMod()
+	clear = reset
 
 @interface.implementer(ICourseOutlineCalendarNode)
 class CourseOutlineCalendarNode(SchemaConfigured,
@@ -136,7 +144,7 @@ class CourseOutlineCalendarNode(SchemaConfigured,
 class CourseOutlineContentNode(CourseOutlineCalendarNode):
 	createDirectFieldProperties(ICourseOutlineContentNode)
 
-@interface.implementer(ICourseOutline)
+@interface.implementer(ICourseOutline, ILastModified)
 class CourseOutline(CourseOutlineNode,
 					PersistentCreatedModDateTrackingObject):
 	createDirectFieldProperties(ICourseOutline)
