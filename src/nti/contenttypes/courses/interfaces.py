@@ -48,6 +48,8 @@ from zope.container.constraints import containers
 
 from nti.common.property import alias
 
+from nti.contentfragments.schema import PlainTextLine
+
 from nti.contentlibrary.interfaces import IDisplayableContent
 from nti.contentlibrary.interfaces import IContentPackageBundle
 from nti.contentlibrary.interfaces import ISynchronizationParams
@@ -218,6 +220,9 @@ class ICourseOutlineNode(IRecordableContainer,
 
 	src = ValidTextLine(title="json file to populate the node overview",
 						required=False)
+	title = PlainTextLine( max_length=300, required=False,
+					title="The human-readable title of this object",
+					__name__='title')
 
 	def append(node):
 		"""

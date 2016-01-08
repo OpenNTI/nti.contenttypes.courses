@@ -48,7 +48,7 @@ class _AbstractCourseOutlineNode(Contained, RecordableContainerMixin, CalendarPu
 
 	creator = SYSTEM_USER_ID
 
-	title = AdaptingFieldProperty(ITitledDescribedContent['title'])
+	title = AdaptingFieldProperty(ICourseOutlineNode['title'])
 	description = AdaptingFieldProperty(ITitledDescribedContent['description'])
 
 	def append(self, node):
@@ -122,7 +122,7 @@ class CourseOutlineNode(_AbstractCourseOutlineNode,
 		uncontained(self[key], self, key)
 		super(CourseOutlineNode, self).__delitem__(key)
 		self.updateLastMod()
-	
+
 	def reset(self, event=True):
 		super(CourseOutlineNode, self).reset(event=event)
 		self.updateLastMod()
