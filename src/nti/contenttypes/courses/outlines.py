@@ -11,6 +11,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import time
+
 from zope import interface
 
 from zope.annotation.interfaces import IAttributeAnnotatable
@@ -40,10 +42,13 @@ from .interfaces import ICourseOutlineContentNode
 from .interfaces import ICourseOutlineCalendarNode
 
 @interface.implementer(IAttributeAnnotatable)
-class _AbstractCourseOutlineNode(Contained, RecordableContainerMixin, CalendarPublishableMixin):
+class _AbstractCourseOutlineNode(Contained, 
+								 RecordableContainerMixin, 
+								 CalendarPublishableMixin):
 
 	createFieldProperties(ITitledDescribedContent)
 	createDirectFieldProperties(ICourseOutlineNode)
+
 	__external_can_create__ = True
 
 	creator = SYSTEM_USER_ID
@@ -127,6 +132,14 @@ class CourseOutlineNode(_AbstractCourseOutlineNode,
 		super(CourseOutlineNode, self).reset(event=event)
 		self.updateLastMod()
 	clear = reset
+	
+	def updateLastMod(self, t=None):
+		try:
+			t = time.time() if t is None else t
+			super(CourseOutlineNode, self).updateLastMod(t)
+			self.__parent__.updateLastMod(t)
+		except AttributeError:
+			pass
 
 @interface.implementer(ICourseOutlineCalendarNode)
 class CourseOutlineCalendarNode(SchemaConfigured,
