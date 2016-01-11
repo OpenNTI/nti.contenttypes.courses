@@ -10,8 +10,7 @@ __docformat__ = "restructuredtext en"
 from hamcrest import assert_that
 
 # We can simply reuse the dataserver test layer and
-# test case because its auto-include mechanism
-# will pull us in too.
+# test case because its auto-include mechanism will pull us in too.
 # But we define some values in case we need to change this later
 
 from nti.dataserver.tests.mock_dataserver import DataserverTestLayer
