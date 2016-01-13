@@ -218,9 +218,10 @@ def unregister_outline_nodes(course):
 	def recur(node):
 		for child in node.values():
 			recur(child)
-		unregisterUtility(registry,
-						  name=node.ntiid,
-						  provided=iface_of_node(node))
+		if not ICourseOutline.providedBy(node):
+			unregisterUtility(registry,
+							  name=node.ntiid,
+							  provided=iface_of_node(node))
 
 	if course.Outline:
 		recur(course.Outline)
