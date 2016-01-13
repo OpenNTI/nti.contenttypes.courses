@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Event listeners.
-
 .. $Id$
 """
 
@@ -34,39 +32,40 @@ from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
 
+from nti.contenttypes.courses.catalog import CourseCatalogFolder
+
+from nti.contenttypes.courses import get_enrollment_catalog
+
+from nti.contenttypes.courses.index import IX_SITE
+from nti.contenttypes.courses.index import IX_COURSE
+from nti.contenttypes.courses.index import IX_USERNAME
+
+from nti.contenttypes.courses.interfaces import iface_of_node
+
+from nti.contenttypes.courses.interfaces import COURSE_CATALOG_NAME
+from nti.contenttypes.courses.interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
+
+from nti.contenttypes.courses.interfaces import ICourseOutline
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
+from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseRolesSynchronized
+from nti.contenttypes.courses.interfaces import CourseCatalogDidSyncEvent
+from nti.contenttypes.courses.interfaces import ICourseOutlineNodeMovedEvent
+
+from nti.contenttypes.courses.utils import index_course_roles
+from nti.contenttypes.courses.utils import unindex_course_roles
+
 from nti.dataserver.interfaces import IUser
 
 from nti.recorder.utils import record_transaction
 
 from nti.site.utils import registerUtility
+from nti.site.utils import unregisterUtility
 from nti.site.localutility import install_utility
 from nti.site.localutility import uninstall_utility_on_unregistration
-
-from .catalog import CourseCatalogFolder
-
-from .index import IX_SITE
-from .index import IX_COURSE
-from .index import IX_USERNAME
-
-from .interfaces import iface_of_node
-
-from .interfaces import COURSE_CATALOG_NAME
-from .interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
-
-from .interfaces import ICourseOutline
-from .interfaces import ICourseInstance
-from .interfaces import ICourseOutlineNode
-from .interfaces import ICourseCatalogEntry
-from .interfaces import IObjectEntrySynchronizer
-from .interfaces import IPersistentCourseCatalog
-from .interfaces import ICourseRolesSynchronized
-from .interfaces import CourseCatalogDidSyncEvent
-from .interfaces import ICourseOutlineNodeMovedEvent
-
-from .utils import index_course_roles
-from .utils import unindex_course_roles
-
-from . import get_enrollment_catalog
 
 # XXX: This is very similar to nti.contentlibrary.subscribers
 
@@ -203,8 +202,7 @@ def on_user_removed(user, event):
 		for uid in catalog.apply(query) or ():
 			catalog.unindex_doc(uid)
 
-@component.adapter(ICourseInstance, IObjectRemovedEvent)
-def on_course_instance_removed(course, event):
+def unindex_enrollment_records(course):
 	catalog = get_enrollment_catalog()
 	entry = ICourseCatalogEntry(course, None)
 	ntiid = getattr(entry, 'ntiid', None)
@@ -214,6 +212,24 @@ def on_course_instance_removed(course, event):
 				  IX_COURSE: {'any_of':(ntiid,)} }
 		for uid in catalog.apply(query) or ():
 			catalog.unindex_doc(uid)
+
+def unregister_outline_nodes(course):
+	registry = component.getSiteManager()
+	def recur(node):
+		for child in node.values():
+			recur(child)
+		unregisterUtility(registry,
+						  name=node.ntiid,
+						  provided=iface_of_node(node))
+
+	if course.Outline:
+		recur(course.Outline)
+		course.Outline.clear() # clear outline
+
+@component.adapter(ICourseInstance, IObjectRemovedEvent)
+def on_course_instance_removed(course, event):
+	unindex_enrollment_records(course)
+	unregister_outline_nodes(course)
 
 @component.adapter(ICourseOutlineNode, ICourseOutlineNodeMovedEvent)
 def on_course_outline_node_moved(node, event):
