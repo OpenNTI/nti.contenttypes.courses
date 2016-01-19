@@ -18,6 +18,14 @@ from zope.security.interfaces import IPrincipal
 
 from nti.common.property import Lazy
 
+from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
+
+from nti.contenttypes.courses.utils import get_course_editors
+
 from nti.dataserver.interfaces import ACE_DENY_ALL
 from nti.dataserver.interfaces import ALL_PERMISSIONS
 from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
@@ -36,14 +44,6 @@ from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
 from nti.traversal.traversal import find_interface
-
-from .interfaces import ES_PUBLIC
-from .interfaces import ICourseInstance
-from .interfaces import ICourseOutlineNode
-from .interfaces import ICourseCatalogEntry
-from .interfaces import INonPublicCourseInstance
-
-from .utils import get_course_editors
 
 @component.adapter(ICourseInstance)
 @interface.implementer(IACLProvider)
@@ -76,7 +76,8 @@ class CourseInstanceACLProvider(object):
 		# is public or not.
 		public_scope = sharing_scopes[ES_PUBLIC]
 
-		aces = []
+		aces = [ ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
+				 ace_allowing(ROLE_CONTENT_EDITOR, ACT_READ, type(self)) ]
 		aces.append(ace_allowing(IPrincipal(public_scope), ACT_READ, type(self)))
 		for i in course.instructors or ():
 			aces.append(ace_allowing(i, ACT_READ, type(self)))
