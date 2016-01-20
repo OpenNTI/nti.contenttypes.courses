@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from functools import total_ordering
+
 from zope import component
 from zope import interface
 
@@ -22,6 +24,11 @@ from ZODB.POSException import ConnectionStateError
 
 from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussion
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
+
+from nti.contenttypes.courses.interfaces import ICourseInstance
+
 from nti.coremetadata.interfaces import SYSTEM_USER_ID
 
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
@@ -30,12 +37,8 @@ from nti.schema.schema import EqHash
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
 
-from ..interfaces import ICourseInstance
-
-from .interfaces import ICourseDiscussion
-from .interfaces import ICourseDiscussions
-
 @EqHash('id')
+@total_ordering
 @interface.implementer(ICourseDiscussion, IContentTypeAware)
 class CourseDiscussion(SchemaConfigured,
 					   PersistentCreatedModDateTrackingObject,
@@ -44,7 +47,8 @@ class CourseDiscussion(SchemaConfigured,
 
 	__external_class_name__ = u"Discussion"
 	mime_type = mimeType = u'application/vnd.nextthought.courses.discussion'
-	parameters = {}
+
+	parameters = {} # IContentTypeAware
 
 	creator = SYSTEM_USER_ID
 
@@ -63,8 +67,19 @@ class CourseDiscussion(SchemaConfigured,
 			return result
 		except ConnectionStateError:
 			return"<%s object at %s>" % (type(self).__name__, hex(id(self)))
-
 	__repr__ = __str__
+
+	def __lt__(self, other):
+		try:
+			return (self.mimeType, self.title) < (other.mimeType, other.title)
+		except AttributeError:
+			return NotImplemented
+
+	def __gt__(self, other):
+		try:
+			return (self.mimeType, self.title) > (other.mimeType, other.title)
+		except AttributeError:
+			return NotImplemented
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseDiscussions)

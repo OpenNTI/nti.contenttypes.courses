@@ -12,10 +12,15 @@ logger = __import__('logging').getLogger(__name__)
 from zope.container.constraints import contains
 from zope.container.interfaces import IContainer
 
+from zope.location.interfaces import IContained
+
 from zope.schema.vocabulary import SimpleTerm
 from zope.schema.vocabulary import SimpleVocabulary
 
-from zope.location.interfaces import IContained
+from nti.contenttypes.courses.discussions.schema import DiscussionModeledContentBody
+
+from nti.contenttypes.courses.interfaces import ES_ALL
+from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
 from nti.coremetadata.interfaces import ITitled
 from nti.coremetadata.interfaces import ICreated
@@ -31,11 +36,6 @@ from nti.schema.field import Variant
 from nti.schema.field import ValidURI
 from nti.schema.field import ListOrTuple
 from nti.schema.field import ValidTextLine
-
-from ..interfaces import ES_ALL
-from ..interfaces import ENROLLMENT_SCOPE_VOCABULARY
-
-from .schema import DiscussionModeledContentBody
 
 NTI_COURSE_BUNDLE = u'nti-course-bundle'
 NTI_COURSE_BUNDLE_REF = "%s://" % NTI_COURSE_BUNDLE
