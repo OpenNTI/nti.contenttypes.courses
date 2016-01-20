@@ -11,6 +11,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from itertools import chain
+
 from zope import component
 from zope import interface
 
@@ -37,7 +39,7 @@ from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ACT_CREATE
 from nti.dataserver.authorization import ROLE_ADMIN
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
-from nti.dataserver.authorization import ROLE_CONTENT_EDITOR
+from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
 
 from nti.dataserver.authorization_acl import ace_denying
 from nti.dataserver.authorization_acl import ace_allowing
@@ -76,8 +78,7 @@ class CourseInstanceACLProvider(object):
 		# is public or not.
 		public_scope = sharing_scopes[ES_PUBLIC]
 
-		aces = [ ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
-				 ace_allowing(ROLE_CONTENT_EDITOR, ACT_READ, type(self)) ]
+		aces = [ ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)) ]
 		aces.append(ace_allowing(IPrincipal(public_scope), ACT_READ, type(self)))
 		for i in course.instructors or ():
 			aces.append(ace_allowing(i, ACT_READ, type(self)))
@@ -88,8 +89,8 @@ class CourseInstanceACLProvider(object):
 			aces.extend(ace_allowing(i, ACT_READ, type(self))
 						for i in subinstance.instructors)
 
-		# Now our course content admins
-		for editor in get_course_editors(course):
+		# Now our content editors/admins.
+		for editor in chain( get_course_editors(course), (ROLE_CONTENT_ADMIN,)):
 			aces.append(ace_allowing(editor, ACT_READ, type(self)))
 			aces.append(ace_allowing(editor, ACT_CONTENT_EDIT, type(self)))
 
@@ -184,7 +185,7 @@ class CourseOutlineNodeACLProvider(object):
 	@Lazy
 	def __acl__(self):
 		aces = [ ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, self),
-				 ace_allowing(ROLE_CONTENT_EDITOR, ALL_PERMISSIONS, type(self))]
+				 ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self))]
 		course = find_interface(self.context, ICourseInstance, strict=False)
 		if course is not None:
 			# give editors special powers

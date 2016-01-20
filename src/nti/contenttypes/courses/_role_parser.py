@@ -124,6 +124,7 @@ def fill_roles_from_key(course, key):
 			add_principal_to_course_content_roles(user, course)
 		return False
 
+	logger.info( 'Syncing course roles for key (%s)', key )
 	reset_roles_missing_key(role_manager)
 
 	__traceback_info__ = key, course
