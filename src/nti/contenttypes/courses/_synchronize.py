@@ -39,64 +39,64 @@ from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 
 from nti.contentlibrary.dublincore import read_dublincore_from_named_key
 
+from nti.contenttypes.courses._assessment_override_parser import fill_asg_from_key
+from nti.contenttypes.courses._assessment_override_parser import reset_asg_missing_key
+
+from nti.contenttypes.courses._assessment_policy_validator import validate_assigment_policies
+
+from nti.contenttypes.courses._catalog_entry_parser import fill_entry_from_legacy_key
+
+from nti.contenttypes.courses._outline_parser import fill_outline_from_key
+
+from nti.contenttypes.courses._role_parser import fill_roles_from_key
+from nti.contenttypes.courses._role_parser import reset_roles_missing_key
+
+from nti.contenttypes.courses.courses import ContentCourseInstance
+from nti.contenttypes.courses.courses import ContentCourseSubInstance
+from nti.contenttypes.courses.courses import CourseAdministrativeLevel
+
+from nti.contenttypes.courses.discussions import parse_discussions
+
+from nti.contenttypes.courses.enrollment import check_enrollment_mapped
+from nti.contenttypes.courses.enrollment import has_deny_open_enrollment
+from nti.contenttypes.courses.enrollment import check_deny_open_enrollment
+
+from nti.contenttypes.courses.grading import reset_grading_policy
+from nti.contenttypes.courses.grading import fill_grading_policy_from_key
+
+from nti.contenttypes.courses.interfaces import ES_CREDIT
+from nti.contenttypes.courses.interfaces import COURSE_OUTLINE_NAME
+from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
+from nti.contenttypes.courses.interfaces import SECTIONS as SECTION_FOLDER_NAME
+from nti.contenttypes.courses.interfaces import DISCUSSIONS as DISCUSSION_FOLDER_NAME
+
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseSubInstances
+from nti.contenttypes.courses.interfaces import IDenyOpenEnrollment
+from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
+from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
+from nti.contenttypes.courses.interfaces import IContentCourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
+from nti.contenttypes.courses.interfaces import ICourseSynchronizationResults
+from nti.contenttypes.courses.interfaces import IEnrollmentMappedCourseInstance
+
+from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
+from nti.contenttypes.courses.interfaces import CatalogEntrySynchronized
+from nti.contenttypes.courses.interfaces import CourseInstanceAvailableEvent
+from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
+
+from nti.contenttypes.courses.legacy_catalog import _ntiid_from_entry
+
+from nti.dataserver.interfaces import ISharingTargetEntityIterable
+
 from nti.dataserver.users.interfaces import IAvatarURL
 from nti.dataserver.users.interfaces import IBackgroundURL
 from nti.dataserver.users.interfaces import IFriendlyNamed
-from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
 from nti.schema.schema import EqHash
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
-
-from .courses import ContentCourseInstance
-from .courses import ContentCourseSubInstance
-from .courses import CourseAdministrativeLevel
-
-from .enrollment import check_enrollment_mapped
-from .enrollment import has_deny_open_enrollment
-from .enrollment import check_deny_open_enrollment
-
-from .interfaces import ES_CREDIT
-from .interfaces import COURSE_OUTLINE_NAME
-from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
-
-from .interfaces import ICourseInstance
-from .interfaces import ICourseCatalogEntry
-from .interfaces import ICourseSubInstances
-from .interfaces import IDenyOpenEnrollment
-from .interfaces import INonPublicCourseInstance
-from .interfaces import IContentCourseSubInstance
-from .interfaces import ICourseInstanceVendorInfo
-from .interfaces import IEnrollmentMappedCourseInstance
-
-from .interfaces import CourseRolesSynchronized
-from .interfaces import CatalogEntrySynchronized
-from .interfaces import CourseInstanceAvailableEvent
-from .interfaces import CourseVendorInfoSynchronized
-
-from .legacy_catalog import _ntiid_from_entry
-
-from ._role_parser import fill_roles_from_key
-from ._role_parser import reset_roles_missing_key
-
-from ._outline_parser import fill_outline_from_key
-
-from ._assessment_override_parser import fill_asg_from_key
-
-from ._catalog_entry_parser import fill_entry_from_legacy_key
-
-from ._assessment_override_parser import reset_asg_missing_key
-from ._assessment_policy_validator import validate_assigment_policies
-
-from .grading import reset_grading_policy
-from .grading import fill_grading_policy_from_key
-
-from .discussions import parse_discussions
-
-from .interfaces import IObjectEntrySynchronizer
-from .interfaces import ICourseSynchronizationResults
-from .interfaces import SECTIONS as SECTION_FOLDER_NAME
-from .interfaces import DISCUSSIONS as DISCUSSION_FOLDER_NAME
 
 ROLE_INFO_NAME = 'role_info.json'
 VENDOR_INFO_NAME = 'vendor_info.json'
@@ -409,12 +409,13 @@ class _ContentCourseSynchronizer(object):
 		sync_results = _get_course_sync_results(course, sync_results)
 		vendor_json_key = bucket.getChildNamed(VENDOR_INFO_NAME)
 		vendor_info = ICourseInstanceVendorInfo(course)
+		not_empty = bool(vendor_info)
 
 		if not vendor_json_key:
 			vendor_info.clear()
 			vendor_info.createdTime = 0
 			vendor_info.lastModified = 0
-			sync_results.VendorInfoReseted = True
+			sync_results.VendorInfoReseted = not_empty
 		elif vendor_json_key.lastModified > vendor_info.lastModified:
 			vendor_info.clear()
 			vendor_info.update(vendor_json_key.readContentsAsJson())
