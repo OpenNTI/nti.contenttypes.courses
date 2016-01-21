@@ -759,19 +759,30 @@ class ICourseCatalogEntry(ICatalogFamily,
 
 # Enrollments
 
+#: Open enrollment
 OPEN = 'Open'
+
+#: Purchased enrollment
 PURCHASED = 'Purchased'
+
+#: For Credit enrollment
 FOR_CREDIT = 'For Credit'
+
+#: For Credit Degree Enrollment
 FOR_CREDIT_DEGREE = 'For Credit (Degree)'
+
+#: For Credit Non Degree Enrollment
 FOR_CREDIT_NON_DEGREE = 'For Credit (Non-degree)'
 
+#: Vendor key Credit Enrollment
 IN_CLASS = 'In-Class'
+
+#: Vendor key prefix Credit Enrollment
 IN_CLASS_PREFIX = 'InClass'
 
 #: Now we list the scopes and create a vocabulary
 #: for them. In the future, we can use a vocabularyregistry
 #: to have these be site-specific.
-
 ES_ALL = u'All'
 
 #: The "root" enrollment or sharing scope; everyone enrolled or administrating
