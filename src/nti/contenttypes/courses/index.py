@@ -26,14 +26,13 @@ from zope.location import locate
 from nti.common.string import safestr
 
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.site.interfaces import IHostPolicyFolder
 
 from nti.zope_catalog.catalog import Catalog
 from nti.zope_catalog.index import SetIndex as RawSetIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
-
-from .interfaces import ICourseInstanceEnrollmentRecord
 
 CATALOG_NAME = 'nti.dataserver.++etc++enrollment-catalog'
 

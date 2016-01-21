@@ -16,7 +16,6 @@ from . import MessageFactory as _
 import six
 import sys
 import random
-from functools import partial
 from collections import Mapping
 from functools import total_ordering
 
@@ -59,6 +58,23 @@ from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeCo
 
 from nti.contentlibrary.bundle import _readCurrent
 
+from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import ES_CREDIT
+from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
+
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseEnrollments
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import IDenyOpenEnrollment
+from nti.contenttypes.courses.interfaces import IGlobalCourseCatalog
+from nti.contenttypes.courses.interfaces import IPrincipalEnrollments
+from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
+from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
+from nti.contenttypes.courses.interfaces import IDefaultCourseCatalogEnrollmentStorage
+from nti.contenttypes.courses.interfaces import IDefaultCourseInstanceEnrollmentStorage
+from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecordContainer
+
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
 from nti.externalization.persistence import NoPickle
@@ -68,28 +84,10 @@ from nti.schema.schema import EqHash
 from nti.schema.schema import SchemaConfigured
 from nti.schema.fieldproperty import FieldProperty
 
-from nti.site.hostpolicy import run_job_in_all_host_sites
-
 from nti.wref.interfaces import IWeakRef
 
-from .interfaces import ES_PUBLIC
-from .interfaces import ES_CREDIT
-from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
-
-from .interfaces import ICourseCatalog
-from .interfaces import ICourseInstance
-from .interfaces import ICourseEnrollments
-from .interfaces import ICourseCatalogEntry
-from .interfaces import IDenyOpenEnrollment
-from .interfaces import IGlobalCourseCatalog
-from .interfaces import IPrincipalEnrollments
-from .interfaces import ICourseEnrollmentManager
-from .interfaces import ICourseInstanceEnrollmentRecord
-from .interfaces import IDefaultCourseCatalogEnrollmentStorage
-from .interfaces import IDefaultCourseInstanceEnrollmentStorage
-from .interfaces import ICourseInstanceEnrollmentRecordContainer
-
-ICourseInstanceEnrollmentRecordContainer = ICourseInstanceEnrollmentRecordContainer  # BWC
+# BWC definition
+ICourseInstanceEnrollmentRecordContainer = ICourseInstanceEnrollmentRecordContainer
 
 def save_in_container(container, key, value, event=False):
 	if event:
@@ -202,6 +200,7 @@ class CourseEnrollmentList(Persistent):
 @component.adapter(ICourseCatalog)
 @interface.implementer(IDefaultCourseCatalogEnrollmentStorage)
 class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedBTreeContainer):
+
 	__name__ = None
 	__parent__ = None
 
@@ -276,7 +275,7 @@ def _global_course_catalog_storage(site_manager):
 	except (KeyError, TypeError):
 		return None
 
-from .interfaces import CourseInstanceEnrollmentRecordCreatedEvent
+from nti.contenttypes.courses.interfaces import CourseInstanceEnrollmentRecordCreatedEvent
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseEnrollmentManager)
@@ -335,7 +334,6 @@ class DefaultCourseEnrollmentManager(object):
 	@Lazy
 	def _cat_enrollment_storage(self):
 		return IDefaultCourseCatalogEnrollmentStorage(self._catalog)
-
 
 	# NOTE: The enroll/drop methods DO NOT set up any of the scope/sharing
 	# information; that's left to ObjectEvent subscribers. That may
@@ -430,9 +428,9 @@ class DefaultCourseEnrollmentManager(object):
 		return records
 	reset = drop_all
 
-from .interfaces import IEnrollmentMappedCourseInstance
+from nti.contenttypes.courses import get_course_vendor_info
 
-from . import get_course_vendor_info
+from nti.contenttypes.courses.interfaces import IEnrollmentMappedCourseInstance
 
 def get_vendor_info(context):
 	result = get_course_vendor_info(context, False) or {}
@@ -579,8 +577,8 @@ class EnrollmentMappedCourseEnrollmentManager(DefaultCourseEnrollmentManager):
 	# didn't actually wind up enrolling in this course instance itself
 	# to start with.
 
-from zope.lifecycleevent import IObjectAddedEvent
-from zope.lifecycleevent import IObjectModifiedEvent
+from zope.lifecycleevent.interfaces import IObjectAddedEvent
+from zope.lifecycleevent.interfaces import IObjectModifiedEvent
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectModifiedEvent)
 def on_modified_potentially_move_courses(record, event):
@@ -829,22 +827,36 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 # so we need to catch them on the IntIdRemoved event
 # for dependable ordering
 
+from zope.intid.interfaces import IIntIds
+
+from nti.contenttypes.courses import get_enrollment_catalog
+
+from nti.contenttypes.courses.index import IX_USERNAME
+
 def remove_user_enroll_data(principal):
-	pins = component.subscribers((principal,), IPrincipalEnrollments)
-	for enrollments in pins:
-		for record in enrollments.iter_enrollments():
-			course = record.CourseInstance
-			manager = ICourseEnrollmentManager(course)
+	"""
+	remove all enrollment records for the specified principal
+	"""
+	if IPrincipal.providedBy(principal):
+		username = principal.id
+	elif IUser.providedBy(principal):
+		username = principal.username
+	else:
+		username = str(principal)
+	catalog = get_enrollment_catalog()
+	intids = component.getUtility(IIntIds)
+	query = { IX_USERNAME: {'any_of':(username,)} }
+	for uid in list(catalog.apply(query) or ()):
+		context = intids.queryObject(uid)
+		course = ICourseInstance(context, None)
+		manager = ICourseEnrollmentManager(course, None)
+		if manager is not None:
 			manager.drop(principal)
 
 def on_principal_deletion_unenroll(principal, event):
 	endInteraction()
 	try:
-		# try current site
 		remove_user_enroll_data(principal)
-		# try all sites
-		func = partial(remove_user_enroll_data, principal=principal)
-		run_job_in_all_host_sites(func)
 	finally:
 		restoreInteraction()
 

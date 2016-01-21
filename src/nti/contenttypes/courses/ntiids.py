@@ -14,10 +14,10 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
-from nti.ntiids.interfaces import INTIIDResolver
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 
-from .interfaces import ICourseCatalog
-from .interfaces import ICourseOutlineNode
+from nti.ntiids.interfaces import INTIIDResolver
 
 @interface.implementer(INTIIDResolver)
 class _CourseInfoNTIIDResolver(object):
@@ -37,7 +37,7 @@ class _CourseInfoNTIIDResolver(object):
 @interface.implementer(INTIIDResolver)
 class _CourseOutlineNodeNTIIDResolver(object):
 	"""
-	Resolves outline nodes 
+	Resolves outline nodes
 	"""
 
 	def resolve(self, ntiid):

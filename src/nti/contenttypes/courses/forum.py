@@ -11,11 +11,13 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from . import MessageFactory as _
-
 from zope import interface
 
 from zope.cachedescriptors.property import cachedIn
+
+from nti.contenttypes.courses import MessageFactory as _
+
+from nti.contenttypes.courses.interfaces import ICourseInstanceBoard
 
 from nti.dataserver.contenttypes.forums.board import CommunityBoard
 from nti.dataserver.contenttypes.forums.forum import CommunityForum
@@ -23,8 +25,6 @@ from nti.dataserver.contenttypes.forums.forum import CommunityForum
 from nti.externalization.oids import to_external_ntiid_oid
 
 from nti.ntiids.ntiids import TYPE_OID
-
-from .interfaces import ICourseInstanceBoard
 
 @interface.implementer(ICourseInstanceBoard)
 class CourseInstanceBoard(CommunityBoard):

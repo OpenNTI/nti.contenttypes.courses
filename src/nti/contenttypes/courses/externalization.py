@@ -14,12 +14,12 @@ from zope import interface
 
 from zope.security.interfaces import IPrincipal
 
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
+
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IInternalObjectExternalizer
-
-from .interfaces import ICourseCatalogEntry
-from .interfaces import ICourseInstanceEnrollmentRecord
 
 CLASS = StandardExternalFields.CLASS
 MIMETYPE = StandardExternalFields.MIMETYPE
