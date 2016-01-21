@@ -107,7 +107,7 @@ get_node = _get_node
 def _register_nodes(outline, registry=None):
 	registry = component.getSiteManager() if registry is None else registry
 	for node in _outline_nodes(outline):
-		if _get_node(node.ntiid, node) is None:
+		if _get_node(node.ntiid, node, registry=registry) is None:
 			registerUtility(registry,
 							component=node,
 							name=node.ntiid,
@@ -308,7 +308,7 @@ def _handle_node(parent_lxml, parent_node, library, removed_nodes, transactions)
 
 	_update_parent_children(parent_node, old_children, transactions)
 
-def fill_outline_from_node(outline, course_element, force=False, **kwargs):
+def fill_outline_from_node(outline, course_element, force=False, registry=None, **kwargs):
 	"""
 	Given a CourseOutline object and an eTree element object containing its
 	``unit`` and ``lesson`` definitions,
@@ -323,12 +323,15 @@ def fill_outline_from_node(outline, course_element, force=False, **kwargs):
 	:return: The outline node.
 	"""
 	library = component.queryUtility(IContentPackageLibrary)
-
+	registry = component.getSiteManager() if registry is None else registry
+	
 	# Capture our transactions early since clear may remove them.
 	transactions = {node.ntiid:get_transactions(node) for node in _outline_nodes(outline)}
 
 	# Get nodes that can be removed
-	removed_nodes = {x.ntiid:x for x in _get_nodes_to_remove(outline, force=force)}
+	removed_nodes = {x.ntiid:x for x in _get_nodes_to_remove(outline,
+															 registry=registry,
+															 force=force)}
 
 	old_children = list(outline.values())
 	outline.clear(event=False)
@@ -352,20 +355,20 @@ def fill_outline_from_node(outline, course_element, force=False, **kwargs):
 	_update_parent_children(outline, old_children, transactions)
 
 	# Unregister removed and re-register
-	registry = component.getSiteManager()
 	for removed_ntiid, removed_node in removed_nodes.items():
 		unregisterUtility(registry,
  						  name=removed_ntiid,
  						  provided=iface_of_node(removed_node))
-	_register_nodes(outline)
+	_register_nodes(outline, registry)
 
 	# After registering, restore tx history
 	# TODO Do we need this anymore?
-	_copy_remove_transactions(removed_nodes, transactions)
+	_copy_remove_transactions(removed_nodes, transactions, registry=registry)
 
 	return outline
 
-def fill_outline_from_key(outline, key, xml_parent_name=None, force=False, **kwargs):
+def fill_outline_from_key(outline, key, xml_parent_name=None, force=False,
+						  registry=None, **kwargs):
 	"""
 	Given a course outline node and a :class:`.IDelimitedHierarchyKey`,
 	read the XML from the key's contents
@@ -393,7 +396,7 @@ def fill_outline_from_key(outline, key, xml_parent_name=None, force=False, **kwa
 			node = next(node.iterchildren(tag=xml_parent_name))
 		except StopIteration:
 			raise ValueError("No outline child in key", key, xml_parent_name)
-	fill_outline_from_node(outline, node, force=force, **kwargs)
+	fill_outline_from_node(outline, node, force=force, registry=registry, **kwargs)
 
 	outline.lastModified = key.lastModified
 	return True
