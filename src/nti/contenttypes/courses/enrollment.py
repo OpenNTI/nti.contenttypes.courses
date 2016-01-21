@@ -843,6 +843,7 @@ def remove_user_enroll_data(principal):
 		username = principal.username
 	else:
 		username = str(principal)
+	logger.info("Removing enrollment records for %s", username)
 	catalog = get_enrollment_catalog()
 	intids = component.getUtility(IIntIds)
 	query = { IX_USERNAME: {'any_of':(username,)} }
