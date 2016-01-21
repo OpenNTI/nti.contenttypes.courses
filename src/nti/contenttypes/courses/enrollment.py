@@ -847,12 +847,13 @@ def remove_user_enroll_data(principal):
 	catalog = get_enrollment_catalog()
 	intids = component.getUtility(IIntIds)
 	query = { IX_USERNAME: {'any_of':(username,)} }
-	for uid in list(catalog.apply(query) or ()):
+	for uid in list(catalog.apply(query) or ()): # mutating
 		context = intids.queryObject(uid)
-		course = ICourseInstance(context, None)
-		manager = ICourseEnrollmentManager(course, None)
-		if manager is not None:
-			manager.drop(principal)
+		if ICourseInstanceEnrollmentRecord.providedBy(context):
+			course = ICourseInstance(context, None)
+			manager = ICourseEnrollmentManager(course, None)
+			if manager is not None:
+				manager.drop(principal)
 
 def on_principal_deletion_unenroll(principal, event):
 	endInteraction()
