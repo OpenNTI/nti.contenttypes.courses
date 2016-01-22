@@ -260,11 +260,11 @@ def _update_parent_children(parent_node, old_children, transactions):
 def _is_outline_stub(lesson):
 	return lesson.get(bytes('isOutlineStubOnly')) == 'true'
 
-def _use_or_create_node(node_ntiid, new_node, removed_nodes, builder):
+def _use_or_create_node(node_ntiid, new_node, removed_nodes, builder, registry=None):
 	"""
 	Use an existing node for the given ntiid or return a brand new node.
 	"""
-	old_node = _get_node(node_ntiid, new_node)
+	old_node = _get_node(node_ntiid, new_node, registry=registry)
 	if old_node is not None:
 		if node_ntiid not in removed_nodes and _is_node_locked(old_node):
 			logger.info('Node not syncing due to sync lock (%s)', node_ntiid)
@@ -286,7 +286,7 @@ def _use_or_create_node(node_ntiid, new_node, removed_nodes, builder):
 		result = builder()
 	return result
 
-def _handle_node(parent_lxml, parent_node, library, removed_nodes, transactions):
+def _handle_node(parent_lxml, parent_node, library, removed_nodes, transactions, registry=None):
 	"""
 	Recursively fill in outline nodes and their children.
 	"""
@@ -300,11 +300,12 @@ def _handle_node(parent_lxml, parent_node, library, removed_nodes, transactions)
 									   lesson_ntiid, library)
 
 		lesson_node = _use_or_create_node(lesson_ntiid, CourseOutlineContentNode(),
-										  removed_nodes, builder)
+										  removed_nodes, builder, registry=registry)
 
 		# Must add to our parent_node now to avoid NotYet exceptions.
 		parent_node.append(lesson_node)
-		_handle_node(lesson, lesson_node, library, removed_nodes, transactions)
+		_handle_node(lesson, lesson_node, library, removed_nodes, 
+					 transactions, registry=registry)
 
 	_update_parent_children(parent_node, old_children, transactions)
 
@@ -348,10 +349,11 @@ def fill_outline_from_node(outline, course_element, force=False, registry=None, 
 			return new_node
 
 		unit_node = _use_or_create_node(unit_ntiid, CourseOutlineNode(),
-										removed_nodes, builder)
+										removed_nodes, builder, registry=registry)
 
 		outline.append(unit_node)
-		_handle_node(unit, unit_node, library, removed_nodes, transactions)
+		_handle_node(unit, unit_node, library, removed_nodes, 
+					 transactions, registry=registry)
 	_update_parent_children(outline, old_children, transactions)
 
 	# Unregister removed and re-register
@@ -362,7 +364,7 @@ def fill_outline_from_node(outline, course_element, force=False, registry=None, 
 	_register_nodes(outline, registry)
 
 	# After registering, restore tx history
-	# TODO Do we need this anymore?
+	# TODO: Do we need this anymore?
 	_copy_remove_transactions(removed_nodes, transactions, registry=registry)
 
 	return outline
