@@ -268,6 +268,8 @@ def _use_or_create_node(node_ntiid, new_node, removed_nodes, builder, registry=N
 	old_children = None
 	old_node = _get_node(node_ntiid, new_node, registry=registry)
 	if old_node is not None:
+		# Capture our old children here for merge.
+		old_children = list(old_node.values())
 		if node_ntiid not in removed_nodes and _is_node_locked(old_node):
 			logger.info('Node not syncing due to sync lock (%s)', node_ntiid)
 		elif node_ntiid not in removed_nodes:
@@ -280,8 +282,7 @@ def _use_or_create_node(node_ntiid, new_node, removed_nodes, builder, registry=N
 			removed_nodes[ node_ntiid ] = old_node
 			old_node = None
 		else:
-			# Removed node; capture our old children here for merge.
-			old_children = list(old_node.values())
+			# Removed node
 			old_node = None
 
 	if old_node is not None:
