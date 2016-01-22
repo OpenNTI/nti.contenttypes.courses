@@ -18,6 +18,15 @@ from zope import component
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
+from nti.contenttypes.courses.interfaces import iface_of_node
+from nti.contenttypes.courses.interfaces import ICourseOutline
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
+
+from nti.contenttypes.courses.outlines import CourseOutlineNode
+from nti.contenttypes.courses.outlines import CourseOutlineContentNode
+
 from nti.coremetadata.interfaces import IRecordable
 
 from nti.ntiids.ntiids import make_ntiid
@@ -32,15 +41,6 @@ from nti.site.utils import registerUtility
 from nti.site.utils import unregisterUtility
 
 from nti.traversal.traversal import find_interface
-
-from .interfaces import iface_of_node
-from .interfaces import ICourseOutline
-from .interfaces import ICourseInstance
-from .interfaces import ICourseCatalogEntry
-from .interfaces import NTI_COURSE_OUTLINE_NODE
-
-from .outlines import CourseOutlineNode
-from .outlines import CourseOutlineContentNode
 
 # too many branches
 # pylint:disable=I0011,R0912
@@ -71,7 +71,7 @@ def _is_node_locked(node):
 def _is_node_move_locked(container, children):
 	# Ideally, the child_order_locked field alone will indicate locked,
 	# but fall back to child status if necessary.
-	return getattr( container, 'child_order_locked', False ) \
+	return getattr(container, 'child_order_locked', False) \
 		or any((_is_node_locked(x) for x in children))
 
 def _can_be_removed(registered, force=False):
@@ -223,7 +223,7 @@ def _update_parent_children(parent_node, old_children, transactions):
 	locked, we must preserve the existing order state. We do not
 	support sync inserts when there are user-locked objects in play.
 	"""
-	if old_children and _is_node_move_locked( parent_node, old_children ):
+	if old_children and _is_node_move_locked(parent_node, old_children):
 		new_children = list(parent_node.values())
 		new_child_map = {x.ntiid:x for x in new_children}
 		# Our children may already have their transactions recorded,
@@ -255,7 +255,7 @@ def _update_parent_children(parent_node, old_children, transactions):
 			# TODO Event
 			logger.info('Not appending new node (%s) since parent node (%s) has sync locked children',
 						ignored_child,
-						getattr( parent_node, 'ntiid', '' ))
+						getattr(parent_node, 'ntiid', ''))
 
 def _is_outline_stub(lesson):
 	return lesson.get(bytes('isOutlineStubOnly')) == 'true'
@@ -281,7 +281,7 @@ def _use_or_create_node(node_ntiid, new_node, removed_nodes, builder, registry=N
 			old_node = None
 		else:
 			# Removed node; capture our old children here for merge.
-			old_children = list( old_node.values() )
+			old_children = list(old_node.values())
 			old_node = None
 
 	if old_node is not None:
@@ -290,7 +290,8 @@ def _use_or_create_node(node_ntiid, new_node, removed_nodes, builder, registry=N
 		result = builder()
 	return result, old_children
 
-def _handle_node(parent_lxml, parent_node, old_children, library, removed_nodes, transactions, registry=None):
+def _handle_node(parent_lxml, parent_node, old_children, library,
+				 removed_nodes, transactions, registry=None):
 	"""
 	Recursively fill in outline nodes and their children.
 	"""
@@ -299,17 +300,21 @@ def _handle_node(parent_lxml, parent_node, old_children, library, removed_nodes,
 	for idx, lesson in enumerate(parent_lxml.iterchildren(tag='lesson')):
 		lesson_ntiid = _get_lesson_ntiid(parent_node, idx)
 		def builder():
-			return _build_outline_node(CourseOutlineContentNode, lesson,
-									   lesson_ntiid, library)
+			return _build_outline_node(CourseOutlineContentNode,
+									   lesson,
+									   lesson_ntiid,
+									   library)
 
 		lesson_node, old_lesson_children = _use_or_create_node(lesson_ntiid,
-										CourseOutlineContentNode(),
-										  removed_nodes, builder, registry=registry)
+															   CourseOutlineContentNode(),
+										  					   removed_nodes,
+										  					   builder,
+										  					   registry=registry)
 
 		# Must add to our parent_node now to avoid NotYet exceptions.
 		parent_node.append(lesson_node)
 		_handle_node(lesson, lesson_node, old_lesson_children, library,
-					removed_nodes, transactions, registry=registry)
+					 removed_nodes, transactions, registry=registry)
 
 	_update_parent_children(parent_node, old_children, transactions)
 
@@ -352,12 +357,15 @@ def fill_outline_from_node(outline, course_element, force=False, registry=None, 
 			_publish(new_node)
 			return new_node
 
-		unit_node, old_unit_children = _use_or_create_node(unit_ntiid, CourseOutlineNode(),
-										removed_nodes, builder, registry=registry)
+		unit_node, old_unit_children = _use_or_create_node(unit_ntiid,
+														   CourseOutlineNode(),
+														   removed_nodes,
+														   builder,
+														   registry=registry)
 
 		outline.append(unit_node)
 		_handle_node(unit, unit_node, old_unit_children, library,
-					removed_nodes, transactions, registry=registry)
+					 removed_nodes, transactions, registry=registry)
 	_update_parent_children(outline, old_children, transactions)
 
 	# Unregister removed and re-register
