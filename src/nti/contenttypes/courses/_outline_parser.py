@@ -262,8 +262,10 @@ def _is_outline_stub(lesson):
 
 def _use_or_create_node(node_ntiid, new_node, removed_nodes, builder, registry=None):
 	"""
-	Use an existing node for the given ntiid or return a brand new node.
+	Use an existing node for the given ntiid or return a brand new node,
+	and the old children of our node, if they exist.
 	"""
+	old_children = None
 	old_node = _get_node(node_ntiid, new_node, registry=registry)
 	if old_node is not None:
 		if node_ntiid not in removed_nodes and _is_node_locked(old_node):
@@ -278,19 +280,20 @@ def _use_or_create_node(node_ntiid, new_node, removed_nodes, builder, registry=N
 			removed_nodes[ node_ntiid ] = old_node
 			old_node = None
 		else:
+			# Removed node; capture our old children here for merge.
+			old_children = list( old_node.values() )
 			old_node = None
 
 	if old_node is not None:
 		result = old_node
 	else:
 		result = builder()
-	return result
+	return result, old_children
 
-def _handle_node(parent_lxml, parent_node, library, removed_nodes, transactions, registry=None):
+def _handle_node(parent_lxml, parent_node, old_children, library, removed_nodes, transactions, registry=None):
 	"""
 	Recursively fill in outline nodes and their children.
 	"""
-	old_children = list(parent_node.values())
 	parent_node.clear(event=False)
 
 	for idx, lesson in enumerate(parent_lxml.iterchildren(tag='lesson')):
@@ -299,13 +302,14 @@ def _handle_node(parent_lxml, parent_node, library, removed_nodes, transactions,
 			return _build_outline_node(CourseOutlineContentNode, lesson,
 									   lesson_ntiid, library)
 
-		lesson_node = _use_or_create_node(lesson_ntiid, CourseOutlineContentNode(),
+		lesson_node, old_lesson_children = _use_or_create_node(lesson_ntiid,
+										CourseOutlineContentNode(),
 										  removed_nodes, builder, registry=registry)
 
 		# Must add to our parent_node now to avoid NotYet exceptions.
 		parent_node.append(lesson_node)
-		_handle_node(lesson, lesson_node, library, removed_nodes, 
-					 transactions, registry=registry)
+		_handle_node(lesson, lesson_node, old_lesson_children, library,
+					removed_nodes, transactions, registry=registry)
 
 	_update_parent_children(parent_node, old_children, transactions)
 
@@ -325,7 +329,7 @@ def fill_outline_from_node(outline, course_element, force=False, registry=None, 
 	"""
 	library = component.queryUtility(IContentPackageLibrary)
 	registry = component.getSiteManager() if registry is None else registry
-	
+
 	# Capture our transactions early since clear may remove them.
 	transactions = {node.ntiid:get_transactions(node) for node in _outline_nodes(outline)}
 
@@ -348,12 +352,12 @@ def fill_outline_from_node(outline, course_element, force=False, registry=None, 
 			_publish(new_node)
 			return new_node
 
-		unit_node = _use_or_create_node(unit_ntiid, CourseOutlineNode(),
+		unit_node, old_unit_children = _use_or_create_node(unit_ntiid, CourseOutlineNode(),
 										removed_nodes, builder, registry=registry)
 
 		outline.append(unit_node)
-		_handle_node(unit, unit_node, library, removed_nodes, 
-					 transactions, registry=registry)
+		_handle_node(unit, unit_node, old_unit_children, library,
+					removed_nodes, transactions, registry=registry)
 	_update_parent_children(outline, old_children, transactions)
 
 	# Unregister removed and re-register
