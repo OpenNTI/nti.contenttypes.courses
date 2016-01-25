@@ -30,6 +30,14 @@ from nti.containers.containers import CheckingLastModifiedBTreeContainer
 
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
 
+from nti.contenttypes.courses.interfaces import ICatalogFamily
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import IGlobalCourseCatalog
+from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseCatalogInstructorInfo
+
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
@@ -43,19 +51,12 @@ from nti.externalization.representation import WithRepr
 
 from nti.links.links import Link
 
-from nti.schema.schema import EqHash
 from nti.schema.fieldproperty import createDirectFieldProperties
+
+from nti.schema.schema import EqHash
 from nti.schema.schema import PermissiveSchemaConfigured as SchemaConfigured
 
 from nti.site.localutility import queryNextUtility
-
-from .interfaces import ICatalogFamily
-from .interfaces import ICourseCatalog
-from .interfaces import ICourseInstance
-from .interfaces import ICourseCatalogEntry
-from .interfaces import IGlobalCourseCatalog
-from .interfaces import IPersistentCourseCatalog
-from .interfaces import ICourseCatalogInstructorInfo
 
 def _queryNextCatalog(context):
 	return queryNextUtility(context, ICourseCatalog)
@@ -129,7 +130,6 @@ class _AbstractCourseCatalogMixin(object):
 		parent = self._next_catalog
 		if parent is None:
 			raise KeyError(name)
-
 		return parent.getCatalogEntry(name)
 
 @NoPickle
@@ -329,6 +329,10 @@ class CourseCatalogEntry(CatalogFamily,
 			pass
 
 		return theirs
+
+	@readproperty
+	def AdditionalProperties(self):
+		return None
 
 	@readproperty
 	def InstructorsSignature(self):

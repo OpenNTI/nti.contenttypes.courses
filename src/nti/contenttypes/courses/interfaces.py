@@ -20,24 +20,14 @@ logger = __import__('logging').getLogger(__name__)
 # disable: too many ancestors, missing 'self''
 # pylint: disable=I0011,R0901,E0213
 
-from . import MessageFactory as _
 
 from zope import component
 from zope import interface
 
 from zope.annotation.interfaces import IAttributeAnnotatable
 
-from zope.interface.interfaces import IMethod
-from zope.interface.interfaces import ObjectEvent
-from zope.interface.interfaces import IObjectEvent
-
-from zope.interface.common.mapping import IEnumerableMapping
-
-from zope.security.interfaces import IPrincipal
-
-from zope.securitypolicy.interfaces import IRolePermissionManager
-
-from zope.site.interfaces import IFolder
+from zope.container.constraints import contains
+from zope.container.constraints import containers
 
 from zope.container.interfaces import IContainer
 from zope.container.interfaces import IContained
@@ -45,8 +35,17 @@ from zope.container.interfaces import IContentContainer
 from zope.container.interfaces import IOrderedContainer
 from zope.container.interfaces import IContainerNamesContainer
 
-from zope.container.constraints import contains
-from zope.container.constraints import containers
+from zope.interface.common.mapping import IEnumerableMapping
+
+from zope.interface.interfaces import IMethod
+from zope.interface.interfaces import ObjectEvent
+from zope.interface.interfaces import IObjectEvent
+
+from zope.security.interfaces import IPrincipal
+
+from zope.securitypolicy.interfaces import IRolePermissionManager
+
+from zope.site.interfaces import IFolder
 
 from nti.common.property import alias
 
@@ -60,6 +59,8 @@ from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 from nti.contentlibrary.interfaces import IGenericSynchronizationResults
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
+from nti.contenttypes.courses import MessageFactory as _
+
 from nti.coremetadata.interfaces import IRecordableContainer
 
 from nti.dataserver.interfaces import ICommunity
@@ -68,13 +69,14 @@ from nti.dataserver.interfaces import ITitledDescribedContent
 from nti.dataserver.interfaces import IShouldHaveTraversablePath
 from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
 
-from nti.dataserver.users.interfaces import IDisallowMembershipOperations
-
 from nti.dataserver.contenttypes.forums.interfaces import IBoard
+
+from nti.dataserver.users.interfaces import IDisallowMembershipOperations
 
 from nti.ntiids.schema import ValidNTIID
 
 from nti.schema.field import Bool
+from nti.schema.field import Dict
 from nti.schema.field import Choice
 from nti.schema.field import Object
 from nti.schema.field import Number
@@ -646,8 +648,7 @@ class ICourseCatalog(interface.Interface):
 
 from persistent.interfaces import IPersistent
 
-class IPersistentCourseCatalog(ICourseCatalog,
-							   IPersistent):
+class IPersistentCourseCatalog(ICourseCatalog, IPersistent):
 	"""
 	A locally persistent course catalog; contrast with the global
 	course catalog.
@@ -750,6 +751,8 @@ class ICourseCatalogEntry(ICatalogFamily,
 	Duration = Timedelta(title="The length of the course",
 						 description="Currently optional, may be None",
 						 required=False)
+
+	AdditionalProperties = Dict(title="dictionary of additional unmodeled data", required=False)
 
 	def isCourseCurrentlyActive():
 		"""

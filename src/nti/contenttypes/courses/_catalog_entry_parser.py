@@ -14,17 +14,18 @@ logger = __import__('logging').getLogger(__name__)
 from urlparse import urljoin
 from datetime import datetime
 from datetime import timedelta
+from collections import Mapping
 
 from zope import interface
 
 from zope.interface.common.idatetime import IDateTime
 
+from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
+
+from nti.contenttypes.courses.legacy_catalog import CourseCreditLegacyInfo
+from nti.contenttypes.courses.legacy_catalog import CourseCatalogInstructorLegacyInfo
+
 from nti.dataserver.users import Entity
-
-from .interfaces import INonPublicCourseInstance
-
-from .legacy_catalog import CourseCreditLegacyInfo
-from .legacy_catalog import CourseCatalogInstructorLegacyInfo
 
 def _quiet_delattr(o, k):
 	try:
@@ -164,6 +165,13 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		catalog_entry.Prerequisites = info_json_dict.get('prerequisites', [])
 	else:
 		_quiet_delattr(catalog_entry, 'Prerequisites')
+		
+	if 'additionalProperties' in info_json_dict:
+		catalog_entry.AdditionalProperties = info_json_dict.get('additionalProperties', {})
+		assert 	isinstance(catalog_entry.AdditionalProperties, Mapping), \
+				"Invalid additionalProperties entry"
+	else:
+		_quiet_delattr(catalog_entry, 'AdditionalProperties')
 
 	return catalog_entry
 
@@ -183,9 +191,8 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/'):
 
 	if key.lastModified > catalog_entry.lastModified:
 		__traceback_info__ = key, catalog_entry
-		logger.info(
-			"Updating catalog entry %s with [legacy] json %s. (dates: key=%s, ce=%s)",
-			catalog_entry.ntiid, key, key.lastModified, catalog_entry.lastModified)
+		logger.info("Updating catalog entry %s with [legacy] json %s. (dates: key=%s, ce=%s)",
+					catalog_entry.ntiid, key, key.lastModified, catalog_entry.lastModified)
 		json = key.readContentsAsYaml()
 		fill_entry_from_legacy_json(catalog_entry, json, base_href=base_href)
 		catalog_entry.key = key

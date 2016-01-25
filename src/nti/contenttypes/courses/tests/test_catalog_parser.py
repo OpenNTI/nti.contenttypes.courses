@@ -26,13 +26,12 @@ from zope.interface.common.idatetime import IDateTime
 
 from nti.contentlibrary.filesystem import FilesystemKey
 
-from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
-
 from nti.contenttypes.courses._catalog_entry_parser import fill_entry_from_legacy_key
 from nti.contenttypes.courses._catalog_entry_parser import fill_entry_from_legacy_json
 
-from nti.contenttypes.courses.legacy_catalog import ICourseCatalogLegacyEntry
+from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 
+from nti.contenttypes.courses.legacy_catalog import ICourseCatalogLegacyEntry
 from nti.contenttypes.courses.legacy_catalog import PersistentCourseCatalogLegacyEntry as CourseCatalogLegacyEntry
 
 from nti.externalization.tests import externalizes
@@ -70,7 +69,8 @@ class TestCatalogParser(CourseLayerTest):
 		fill_entry_from_legacy_key(entry, key)
 		assert_that( entry,
 					 has_properties( 'ProviderUniqueID', 'CLC 3403',
-									 'Title', 'Law and Justice') )
+									 'Title', 'Law and Justice',
+									 'AdditionalProperties', {"section":"parent"}) )
 		
 	def test_start_and_duration_parse(self):
 		key = self.key

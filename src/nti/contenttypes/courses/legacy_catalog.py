@@ -18,6 +18,16 @@ from zope import interface
 
 from nti.common.property import readproperty
 
+from nti.contenttypes.courses.catalog import CourseCatalogEntry
+from nti.contenttypes.courses.catalog import CourseCatalogInstructorInfo
+
+from nti.contenttypes.courses.interfaces import NTIID_ENTRY_TYPE
+from nti.contenttypes.courses.interfaces import NTIID_ENTRY_PROVIDER
+
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseCatalogInstructorInfo
+
 from nti.schema.field import Int
 from nti.schema.field import Dict
 from nti.schema.field import List
@@ -25,18 +35,9 @@ from nti.schema.field import Bool
 from nti.schema.field import Object
 from nti.schema.field import ValidURI
 from nti.schema.field import ValidTextLine
-from nti.schema.schema import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
 
-from .catalog import CourseCatalogEntry
-from .catalog import CourseCatalogInstructorInfo
-
-from .interfaces import NTIID_ENTRY_TYPE
-from .interfaces import NTIID_ENTRY_PROVIDER
-
-from .interfaces import ICourseCatalog
-from .interfaces import ICourseCatalogEntry
-from .interfaces import ICourseCatalogInstructorInfo
+from nti.schema.schema import SchemaConfigured
 
 class ICourseCatalogInstructorLegacyInfo(ICourseCatalogInstructorInfo):
 	"""
@@ -137,6 +138,7 @@ def _derive_preview(self):
 
 @interface.implementer(ICourseCatalogLegacyEntry)
 class CourseCatalogLegacyEntry(CourseCatalogEntry):
+
 	DisableOverviewCalendar = False
 	__external_can_create__ = False
 
@@ -202,7 +204,7 @@ from nti.common.property import CachedProperty
 
 class PersistentCourseCatalogLegacyEntry(CourseCatalogLegacyEntry,
 										 PersistentCreatedAndModifiedTimeObject):
-
+	
 	def __init__(self, *args, **kwargs):
 		# Schema configured is not cooperative
 		CourseCatalogLegacyEntry.__init__(self, *args, **kwargs)
@@ -221,7 +223,7 @@ from nti.schema.schema import EqHash
 
 from nti.traversal.traversal import find_interface
 
-from .interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseInstance
 
 @component.adapter(ICourseInstance)
 class _CourseInstanceCatalogLegacyEntry(PersistentCourseCatalogLegacyEntry):
@@ -248,7 +250,7 @@ from nti.contentlibrary.presentationresource import DisplayableContentMixin
 
 from nti.links.links import Link
 
-from .interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
 
 @WithRepr
 @total_ordering

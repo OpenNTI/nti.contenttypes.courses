@@ -15,5 +15,6 @@
 	],
     "startDate": "2013-08-13T06:00:00+00:00",
     "duration": "16 Weeks",
-    "disable_calendar_overview": true
+    "disable_calendar_overview": true,
+    "additionalProperties": { "section": "parent" }
 }
