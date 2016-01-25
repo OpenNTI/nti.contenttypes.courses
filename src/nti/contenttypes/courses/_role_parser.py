@@ -18,24 +18,25 @@ from zope.intid import IIntIds
 from zope.security.interfaces import IPrincipal
 
 from zope.securitypolicy.role import checkRole
+
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
+
 from zope.securitypolicy.securitymap import PersistentSecurityMap
 
 from ZODB.interfaces import IConnection
 
+from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 
+from nti.contenttypes.courses.sharing import add_principal_to_course_content_roles
+from nti.contenttypes.courses.sharing import remove_principal_from_course_content_roles
+
 from nti.dataserver.users import User
 from nti.dataserver.interfaces import IUser
-
-from .interfaces import RID_TA
-from .interfaces import RID_INSTRUCTOR
-
-from .sharing import add_principal_to_course_content_roles
-from .sharing import remove_principal_from_course_content_roles
 
 def _fill_roles_from_json(course, manager, json):
 	"""

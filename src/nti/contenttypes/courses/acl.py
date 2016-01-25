@@ -11,8 +11,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from itertools import chain
-
 from zope import component
 from zope import interface
 
@@ -90,7 +88,7 @@ class CourseInstanceACLProvider(object):
 						for i in subinstance.instructors)
 
 		# Now our content editors/admins.
-		for editor in chain( get_course_editors(course), (ROLE_CONTENT_ADMIN,)):
+		for editor in get_course_editors(course):
 			aces.append(ace_allowing(editor, ACT_READ, type(self)))
 			aces.append(ace_allowing(editor, ACT_CONTENT_EDIT, type(self)))
 

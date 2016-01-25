@@ -35,6 +35,8 @@ from zope.interface.common.mapping import IEnumerableMapping
 
 from zope.security.interfaces import IPrincipal
 
+from zope.securitypolicy.interfaces import IRolePermissionManager
+
 from zope.site.interfaces import IFolder
 
 from zope.container.interfaces import IContainer
@@ -1238,6 +1240,16 @@ class ICourseAssessmentUserFilter(interface.Interface):
 		Given a user and an :class:`.ICourseInstance` the user is enrolled in, return a
 		callable that takes an assessment and returns True if the
 		assignment should be visible to the user and False otherwise.
+		"""
+
+class ICourseRolePermissionManager(IRolePermissionManager):
+	"""
+	A role permission manager for courses.
+	"""
+
+	def initialize():
+		"""
+		Initialize our role manager to default status.
 		"""
 
 def get_course_assessment_predicate_for_user(user, course):

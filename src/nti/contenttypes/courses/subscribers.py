@@ -54,6 +54,8 @@ from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CourseCatalogDidSyncEvent
 from nti.contenttypes.courses.interfaces import ICourseOutlineNodeMovedEvent
+from nti.contenttypes.courses.interfaces import ICourseRolePermissionManager
+from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
 from nti.contenttypes.courses.utils import index_course_roles
 from nti.contenttypes.courses.utils import unindex_course_roles
@@ -231,6 +233,12 @@ def unregister_outline_nodes(course):
 def on_course_instance_removed(course, event):
 	unindex_enrollment_records(course)
 	unregister_outline_nodes(course)
+
+@component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
+def course_default_roles(course, event):
+	course_role_manager = ICourseRolePermissionManager( course )
+	if course_role_manager is not None:
+		course_role_manager.initialize()
 
 @component.adapter(ICourseOutlineNode, ICourseOutlineNodeMovedEvent)
 def on_course_outline_node_moved(node, event):

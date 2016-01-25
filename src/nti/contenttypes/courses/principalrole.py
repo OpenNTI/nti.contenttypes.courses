@@ -21,9 +21,17 @@ from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import Unset
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 
-from .interfaces import RID_TA
-from .interfaces import RID_INSTRUCTOR
-from .interfaces import ICourseInstance
+from zope.securitypolicy.rolepermission import AnnotationRolePermissionManager
+
+from nti.dataserver.authorization import ACT_READ
+from nti.dataserver.authorization import ACT_UPDATE
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
+from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
+
+from nti.contenttypes.courses.interfaces import RID_TA
+from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseRolePermissionManager
 
 @component.adapter(ICourseInstance)
 @interface.implementer(IPrincipalRoleMap)
@@ -79,3 +87,14 @@ class CourseInstancePrincipalRoleMap(object):
 		for rid, meth in self.__role_meth:
 			result.extend(((rid, x.id, Allow) for x in meth()))
 		return result
+
+@component.adapter(ICourseInstance)
+@interface.implementer(ICourseRolePermissionManager)
+class CourseRolePermissionManager(AnnotationRolePermissionManager):
+
+	def initialize(self):
+		if not self.map or not self.map._byrow:
+			# Initialize with perms for our global content admin.
+			for perm in ( ACT_READ, ACT_CONTENT_EDIT, ACT_UPDATE ):
+				self.grantPermissionToRole( perm.id, ROLE_CONTENT_ADMIN.id )
+

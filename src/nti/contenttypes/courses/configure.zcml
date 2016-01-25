@@ -67,6 +67,8 @@
 	<subscriber handler=".subscribers.install_site_course_catalog" />
 	<subscriber handler=".subscribers.uninstall_site_course_catalog" />
 
+	<subscriber handler=".subscribers.course_default_roles" />
+
 	<subscriber handler=".subscribers.on_user_removed" />
 	<subscriber handler=".subscribers.on_course_instance_removed" />
 
@@ -109,6 +111,8 @@
 	<adapter factory=".acl.CourseOutlineNodeACLProvider" />
 	<adapter factory=".acl.CourseCatalogEntryACLProvider" />
 	<adapter factory=".principalrole.CourseInstancePrincipalRoleMap" />
+	<adapter factory=".principalrole.CourseRolePermissionManager"
+				provides=".interfaces.ICourseRolePermissionManager" />
 
 	<!-- Catalog -->
 	<!--
