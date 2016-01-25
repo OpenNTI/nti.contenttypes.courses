@@ -17,13 +17,13 @@ from zope import component
 
 from zope.component.hooks import site, setHooks
 
-from zope.intid import IIntIds
+from zope.intid.interfaces import IIntIds
 
-from ..index import IX_USERNAME
-from ..index import UsernameIndex
-from ..index import install_enrollment_catalog
+from nti.contenttypes.courses.generations.evolve4 import do_reindex
 
-from .evolve4 import do_reindex
+from nti.contenttypes.courses.index import IX_USERNAME
+from nti.contenttypes.courses.index import UsernameIndex
+from nti.contenttypes.courses.index import install_enrollment_catalog
 	
 def do_evolve(context, generation=generation):
 

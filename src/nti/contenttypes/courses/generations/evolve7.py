@@ -17,12 +17,11 @@ from zope import component
 
 from zope.component.hooks import site, setHooks
 
-from zope.intid import IIntIds
+from zope.intid.interfaces import IIntIds
 
-from ..index import IX_SITE
-
-from ..index import SiteIndex
-from ..index import install_enrollment_catalog
+from nti.contenttypes.courses.index import IX_SITE
+from nti.contenttypes.courses.index import SiteIndex
+from nti.contenttypes.courses.index import install_enrollment_catalog
 
 from .evolve4 import do_reindex
 	

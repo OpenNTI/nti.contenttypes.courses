@@ -17,9 +17,9 @@ from zope.component.hooks import site as current_site
 
 from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
 
-from ..interfaces import ICourseCatalog
-from ..interfaces import ICourseInstance
-from ..interfaces import INonPublicCourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 
 FOR_CREDIT_FORUM_KEYS = ('In_Class_Announcements', 'In_Class_Discussions')
 

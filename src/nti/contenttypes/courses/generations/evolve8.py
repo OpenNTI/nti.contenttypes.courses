@@ -19,24 +19,24 @@ from zope import interface
 from zope.component.hooks import setHooks
 from zope.component.hooks import site as current_site
 
-from zope.intid import IIntIds
+from zope.intid.interfaces import IIntIds
 
 from ZODB.POSException import POSError
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
+from nti.contenttypes.courses.index import IndexRecord
+from nti.contenttypes.courses.index import install_enrollment_catalog
+
+from nti.contenttypes.courses.interfaces import INSTRUCTOR
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseEnrollments
+
+from nti.contenttypes.courses.legacy_catalog import ILegacyCourseCatalogEntry
+
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
-
-from ..interfaces import INSTRUCTOR
-from ..interfaces import ICourseCatalog
-from ..interfaces import ICourseInstance
-from ..interfaces import ICourseEnrollments
-
-from ..index import IndexRecord
-from ..index import install_enrollment_catalog
-
-from ..legacy_catalog import ILegacyCourseCatalogEntry
 
 @interface.implementer(IDataserver)
 class MockDataserver(object):
