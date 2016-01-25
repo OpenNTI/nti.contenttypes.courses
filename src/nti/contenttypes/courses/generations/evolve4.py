@@ -19,11 +19,11 @@ from zope.component.hooks import site as current_site
 
 from ZODB.POSException import POSError
 
-from ..interfaces import ICourseCatalog
-from ..interfaces import ICourseInstance
-from ..interfaces import ICourseEnrollments
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseEnrollments
 
-from ..utils import index_course_instructors
+from nti.contenttypes.courses.utils import index_course_roles
 
 def do_reindex(sites, catalog, intids):
 	total = 0
@@ -39,7 +39,7 @@ def do_reindex(sites, catalog, intids):
 				if not course:
 					continue
 
-				total += index_course_instructors(course, catalog=catalog, intids=intids)
+				total += index_course_roles(course, catalog=catalog, intids=intids)
 
 				# index enrollment records
 				enrollments = ICourseEnrollments(course, None)
