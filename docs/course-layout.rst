@@ -280,6 +280,27 @@ The ``is_non_public`` key is a boolean that determines whether this
 course and catalog entry is public, or restricted to those that are
 enrolled in it through some other means.
 
+The ``additionalProperties`` key is an object that defines structured,
+un-modeled data for use in UI or other consumers of the UI.  Well defined
+keys are defined below.
+
+``Marketing`` which if present is an object containing
+one property ``URL`` that is the marketing url for the course.  This is useful
+when a courses marketing url is different from the courses landing page.  For example,
+the Gary England course has a marketing url of https://garyengland.ou.edu, likewise
+history channel courses have a marketing url of https://historychannel.ou.edu.  For example:
+
+::
+
+    "additionalProperties": {
+        "Marketing": {
+        	"URL": "https://historychannel.ou.edu"
+        }
+    }
+
+Currently ``Marketing.URL`` is used when generating the janux landing page from the
+course catalog entry objects.
+
 .. warning:: Unlike legacy courses, the ``instructors`` field **DOES
 			 NOT** influence course permissioning or course roles. It
 			 is simply for display purposes in the UI. Therefore, anyone
