@@ -36,6 +36,7 @@ from nti.dataserver.interfaces import IACLProvider
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ACT_CREATE
 from nti.dataserver.authorization import ROLE_ADMIN
+from nti.dataserver.authorization import ACT_UPDATE
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
 
@@ -90,6 +91,7 @@ class CourseInstanceACLProvider(object):
 		# Now our content editors/admins.
 		for editor in get_course_editors(course):
 			aces.append(ace_allowing(editor, ACT_READ, type(self)))
+			aces.append(ace_allowing(editor, ACT_UPDATE, type(self)))
 			aces.append(ace_allowing(editor, ACT_CONTENT_EDIT, type(self)))
 
 		result = acl_from_aces(aces)
