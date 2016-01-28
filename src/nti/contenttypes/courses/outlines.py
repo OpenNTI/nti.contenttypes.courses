@@ -22,6 +22,11 @@ from zope.container.contained import uncontained
 from zope.container.constraints import checkObject
 from zope.container.ordered import OrderedContainer  # this is persistent
 
+from nti.contenttypes.courses.interfaces import ICourseOutline
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
+from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
+
 from nti.coremetadata.interfaces import ILastModified
 from nti.coremetadata.mixins import CalendarPublishableMixin
 from nti.coremetadata.mixins import RecordableContainerMixin
@@ -35,11 +40,6 @@ from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import AdaptingFieldProperty
 from nti.schema.fieldproperty import createFieldProperties
 from nti.schema.fieldproperty import createDirectFieldProperties
-
-from .interfaces import ICourseOutline
-from .interfaces import ICourseOutlineNode
-from .interfaces import ICourseOutlineContentNode
-from .interfaces import ICourseOutlineCalendarNode
 
 @interface.implementer(IAttributeAnnotatable)
 class _AbstractCourseOutlineNode(Contained, 

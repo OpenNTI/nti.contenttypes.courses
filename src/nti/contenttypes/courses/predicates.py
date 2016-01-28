@@ -14,13 +14,13 @@ from zope import component
 from nti.dataserver.interfaces import IUser
 from nti.dataserver.interfaces import ISystemUserPrincipal
 
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import IPrincipalEnrollments
+
 from nti.metadata.predicates import BasePrincipalObjects
 
 from nti.site.hostpolicy import run_job_in_all_host_sites
-
-from .interfaces import ICourseCatalog
-from .interfaces import ICourseInstance
-from .interfaces import IPrincipalEnrollments
 
 def course_collector(catalog=None):
 	catalog = component.getUtility(ICourseCatalog) if catalog is None else catalog
