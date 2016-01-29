@@ -12,6 +12,7 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 import time
+from functools import total_ordering
 
 from zope import interface
 
@@ -41,6 +42,7 @@ from nti.schema.fieldproperty import AdaptingFieldProperty
 from nti.schema.fieldproperty import createFieldProperties
 from nti.schema.fieldproperty import createDirectFieldProperties
 
+@total_ordering
 @interface.implementer(IAttributeAnnotatable)
 class _AbstractCourseOutlineNode(Contained, 
 								 RecordableContainerMixin, 
@@ -87,6 +89,18 @@ class _AbstractCourseOutlineNode(Contained,
 		# like to be hashed (because mutable cache keys can be bad)
 		# But we have an ACL and need to be hashable
 		return hash(tuple(self.items()))
+
+	def __lt__(self, other):
+		try:
+			return (self.mimeType, self.ntiid) < (other.mimeType, other.ntiid)
+		except AttributeError:
+			return NotImplemented
+
+	def __gt__(self, other):
+		try:
+			return (self.mimeType, self.ntiid) > (other.mimeType, other.ntiid)
+		except AttributeError:
+			return NotImplemented
 
 	def _delitemf(self, key):
 		del self._data[key]
