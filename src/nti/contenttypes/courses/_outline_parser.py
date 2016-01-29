@@ -82,9 +82,8 @@ def _can_be_removed(registered, force=False):
 	return result
 can_be_removed = _can_be_removed
 
-def _get_nodes_to_remove(outline, registry=None, force=False):
+def _get_nodes_to_remove(outline, force=False):
 	removed = []
-	registry = component.getSiteManager() if registry is None else registry
 	for node in _outline_nodes(outline):
 		if _can_be_removed(node, force=force):
 			removed.append(node)
@@ -93,14 +92,13 @@ def _get_nodes_to_remove(outline, registry=None, force=False):
 def _do_unregister( removed_node, registry=None ):
 	iface_to_remove = (iface_of_node( removed_node ),)
 	if ICourseOutlineContentNode.providedBy( removed_node ):
-		iface_to_remove = ( ICourseOutlineContentNode, ICourseOutlineCalendarNode )
+		iface_to_remove = ( ICourseOutlineCalendarNode, ICourseOutlineContentNode )
+	result = False
 	for iface in iface_to_remove:
 		result = unregisterUtility(registry,
 						  		   name=removed_node.ntiid,
 						  		   provided=iface)
-		if result:
-			return True
-	return False
+	return result
 
 def _unregister_nodes(outline, registry=None, force=False):
 	result = []
