@@ -102,7 +102,7 @@ def _do_unregister( removed_node, registry=None ):
 
 def _unregister_nodes(outline, registry=None, force=False):
 	result = []
-	nodes = _get_nodes_to_remove(outline, registry, force)
+	nodes = _get_nodes_to_remove(outline, force)
 	for node in nodes:
 		if _do_unregister( node, registry=registry ):
 			result.append(node)
@@ -351,7 +351,7 @@ def fill_outline_from_node(outline, course_element, force=False, registry=None, 
 	transactions = {node.ntiid:get_transactions(node) for node in _outline_nodes(outline)}
 
 	# Get nodes that can be removed
-	removed_nodes = {x.ntiid:x for x in _get_nodes_to_remove(outline, registry=registry, force=force)}
+	removed_nodes = {x.ntiid:x for x in _get_nodes_to_remove(outline, force=force)}
 
 	old_children = list(outline.values())
 	outline.clear(event=False)
