@@ -22,6 +22,9 @@ from nti.contenttypes.courses.interfaces import iface_of_node
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
+from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
+
 from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
 
 from nti.contenttypes.courses.outlines import CourseOutlineNode
@@ -87,13 +90,23 @@ def _get_nodes_to_remove(outline, registry=None, force=False):
 			removed.append(node)
 	return removed
 
+def _do_unregister( removed_node, registry=None ):
+	iface_to_remove = (iface_of_node( removed_node ),)
+	if ICourseOutlineContentNode.providedBy( removed_node ):
+		iface_to_remove = ( ICourseOutlineContentNode, ICourseOutlineCalendarNode )
+	for iface in iface_to_remove:
+		result = unregisterUtility(registry,
+						  		   name=removed_node.ntiid,
+						  		   provided=iface)
+		if result:
+			return True
+	return False
+
 def _unregister_nodes(outline, registry=None, force=False):
 	result = []
 	nodes = _get_nodes_to_remove(outline, registry, force)
 	for node in nodes:
-		if unregisterUtility(registry,
-							 name=node.ntiid,
-							 provided=iface_of_node(node)):
+		if _do_unregister( node, registry=registry ):
 			result.append(node)
 	return result
 unregister_nodes = _unregister_nodes
@@ -340,9 +353,7 @@ def fill_outline_from_node(outline, course_element, force=False, registry=None, 
 	transactions = {node.ntiid:get_transactions(node) for node in _outline_nodes(outline)}
 
 	# Get nodes that can be removed
-	removed_nodes = {x.ntiid:x for x in _get_nodes_to_remove(outline,
-															 registry=registry,
-															 force=force)}
+	removed_nodes = {x.ntiid:x for x in _get_nodes_to_remove(outline, registry=registry, force=force)}
 
 	old_children = list(outline.values())
 	outline.clear(event=False)
@@ -370,10 +381,8 @@ def fill_outline_from_node(outline, course_element, force=False, registry=None, 
 	_update_parent_children(outline, old_children, transactions)
 
 	# Unregister removed and re-register
-	for removed_ntiid, removed_node in removed_nodes.items():
-		unregisterUtility(registry,
- 						  name=removed_ntiid,
- 						  provided=iface_of_node(removed_node))
+	for removed_node in removed_nodes.values():
+		_do_unregister( removed_node, registry=registry )
 	_register_nodes(outline, registry)
 
 	# After registering, restore tx history
