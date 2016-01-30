@@ -32,15 +32,13 @@ from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
 
-from nti.contenttypes.courses.catalog import CourseCatalogFolder
-
 from nti.contenttypes.courses import get_enrollment_catalog
+
+from nti.contenttypes.courses.catalog import CourseCatalogFolder
 
 from nti.contenttypes.courses.index import IX_SITE
 from nti.contenttypes.courses.index import IX_COURSE
 from nti.contenttypes.courses.index import IX_USERNAME
-
-from nti.contenttypes.courses.interfaces import iface_of_node
 
 from nti.contenttypes.courses.interfaces import COURSE_CATALOG_NAME
 from nti.contenttypes.courses.interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
@@ -57,6 +55,8 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineNodeMovedEvent
 from nti.contenttypes.courses.interfaces import ICourseRolePermissionManager
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 
+from nti.contenttypes.courses.interfaces import iface_of_node
+
 from nti.contenttypes.courses.utils import index_course_roles
 from nti.contenttypes.courses.utils import unindex_course_roles
 
@@ -64,10 +64,11 @@ from nti.dataserver.interfaces import IUser
 
 from nti.recorder.utils import record_transaction
 
-from nti.site.utils import registerUtility
-from nti.site.utils import unregisterUtility
 from nti.site.localutility import install_utility
 from nti.site.localutility import uninstall_utility_on_unregistration
+
+from nti.site.utils import registerUtility
+from nti.site.utils import unregisterUtility
 
 # XXX: This is very similar to nti.contentlibrary.subscribers
 
@@ -102,6 +103,7 @@ def install_site_course_catalog(local_library, _=None):
 	# up the parent tree)
 	local_site_manager = component.getSiteManager(local_library)
 
+	# XXX: Don't import a message factory
 	if _ is None and COURSE_CATALOG_NAME in local_site_manager:
 		cat = local_site_manager[COURSE_CATALOG_NAME]
 		logger.debug("Nothing to do for site %s, catalog already present %s",
@@ -179,13 +181,14 @@ def sync_catalog_when_library_synched(library, event):
 		return
 
 	logger.info("Synchronizing course catalog %s in site %s from directory %s",
-				 catalog, site_manager.__parent__.__name__,
-				 getattr(courses_bucket, 'absolute_path', courses_bucket))
+				catalog, site_manager.__parent__.__name__,
+				getattr(courses_bucket, 'absolute_path', courses_bucket))
 
 	synchronizer = component.getMultiAdapter((catalog, courses_bucket),
 							   				  IObjectEntrySynchronizer)
 	synchronizer.synchronize(catalog, courses_bucket, params=params, results=results)
 
+	# Course catalog has been synced
 	notify(CourseCatalogDidSyncEvent(catalog, params, results))
 
 @component.adapter(ICourseInstance, ICourseRolesSynchronized)
