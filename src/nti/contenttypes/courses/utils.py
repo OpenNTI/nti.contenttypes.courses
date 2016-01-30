@@ -24,28 +24,29 @@ from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
+from nti.contenttypes.courses.index import IX_SITE
+from nti.contenttypes.courses.index import IX_SCOPE
+from nti.contenttypes.courses.index import IX_COURSE
+from nti.contenttypes.courses.index import IndexRecord
+
+from nti.contenttypes.courses.interfaces import RID_TA
+from nti.contenttypes.courses.interfaces import EDITOR
+from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import INSTRUCTOR
+from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
+from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
+
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseEnrollments
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import IPrincipalEnrollments
+from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
+
+from nti.contenttypes.courses import get_enrollment_catalog
+
 from nti.dataserver.users import User
-
-from .index import IX_SITE
-from .index import IX_SCOPE
-from .index import IX_COURSE
-from .index import IndexRecord
-
-from .interfaces import RID_TA
-from .interfaces import EDITOR
-from .interfaces import ES_PUBLIC
-from .interfaces import INSTRUCTOR
-from .interfaces import RID_INSTRUCTOR
-from .interfaces import ICourseCatalog
-from .interfaces import ICourseInstance
-from .interfaces import RID_CONTENT_EDITOR
-from .interfaces import ICourseEnrollments
-from .interfaces import ICourseSubInstance
-from .interfaces import ICourseCatalogEntry
-from .interfaces import IPrincipalEnrollments
-from .interfaces import ICourseEnrollmentManager
-
-from . import get_enrollment_catalog
 
 def unindex_course_roles(context, catalog=None):
 	course = ICourseInstance(context, None)
@@ -104,7 +105,7 @@ def get_course_packages(context):
 	course = ICourseInstance(context, None)
 	if course is not None:
 		try:
-			packs = course.ContentPackageBundle.ContentPackages
+			packs = course.ContentPackageBundle.ContentPackages or ()
 		except AttributeError:
 			try:
 				packs = (course.legacy_content_package,)
@@ -122,7 +123,7 @@ def get_parent_course(context):
 def get_course_subinstances(context):
 	course = ICourseInstance(context, None)
 	if course is not None and not ICourseSubInstance.providedBy(course):
-		return list(course.SubInstances.values())
+		return tuple(course.SubInstances.values())
 	return ()
 
 def get_course_hierarchy(context):
