@@ -13,18 +13,18 @@ import os
 from urllib import unquote
 from urlparse import urlparse
 
+from nti.contenttypes.courses.discussions.interfaces import NTI_COURSE_BUNDLE
+from nti.contenttypes.courses.discussions.interfaces import NTI_COURSE_BUNDLE_REF
+
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
+
+from nti.contenttypes.courses.interfaces import SECTIONS
+from nti.contenttypes.courses.interfaces import DISCUSSIONS
+from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
+
+from nti.contenttypes.courses.utils import get_parent_course
+
 from nti.ntiids.ntiids import make_specific_safe
-
-from ..interfaces import SECTIONS
-from ..interfaces import DISCUSSIONS
-from ..interfaces import ENROLLMENT_LINEAGE_MAP
-
-from ..utils import get_parent_course
-
-from .interfaces import NTI_COURSE_BUNDLE
-from .interfaces import NTI_COURSE_BUNDLE_REF
-
-from .interfaces import ICourseDiscussions
 
 ENROLLED_COURSE_ROOT = ':EnrolledCourseRoot'
 ENROLLED_COURSE_SECTION = ':EnrolledCourseSection'

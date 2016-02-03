@@ -14,6 +14,12 @@ from zope import interface
 
 from nti.common.property import Lazy
 
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussion
+
+from nti.contenttypes.courses.interfaces import ICourseInstance
+
+from nti.contenttypes.courses.utils import get_course_editors
+
 from nti.dataserver.interfaces import ALL_PERMISSIONS
 
 from nti.dataserver.interfaces import IACLProvider
@@ -24,12 +30,6 @@ from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
 
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
-
-from ..utils import get_course_editors
-
-from ..interfaces import ICourseInstance
-
-from .interfaces import ICourseDiscussion
 
 @component.adapter(ICourseDiscussion)
 @interface.implementer(IACLProvider)

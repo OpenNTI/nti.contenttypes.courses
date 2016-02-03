@@ -12,12 +12,12 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussion
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
+
+from nti.contenttypes.courses.interfaces import ICourseInstance
+
 from nti.traversal.traversal import find_interface
-
-from ..interfaces import ICourseInstance
-
-from .interfaces import ICourseDiscussion
-from .interfaces import ICourseDiscussions
 
 @component.adapter(ICourseDiscussion)
 @interface.implementer(ICourseInstance)

@@ -23,11 +23,11 @@ from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
 from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 from nti.contentlibrary.synchronize import SynchronizationException
 
+from nti.contenttypes.courses.discussions.interfaces import NTI_COURSE_BUNDLE
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
+
 from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
-
-from .interfaces import NTI_COURSE_BUNDLE
-from .interfaces import ICourseDiscussions
 
 INVALID_DISCUSSION_CODE = 300
 
