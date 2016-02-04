@@ -21,6 +21,8 @@ from zope.component.interfaces import ComponentLookupError
 
 from zope.intid.interfaces import IIntIds
 
+from zope.location import LocationIterator
+
 from zope.security.interfaces import IPrincipal
 
 from zope.securitypolicy.interfaces import Allow
@@ -243,6 +245,34 @@ def is_course_instructor(context, user):
 						   roles.getSetting(RID_INSTRUCTOR, prin.id))
 	return result
 
+def course_locator(context):
+	for x in LocationIterator(context):
+		course = ICourseInstance(x, None)
+		if course is not None:
+			return course
+	return None
+
+def is_instructed_by_name(context, username):
+	"""
+	Checks if the context is within something instructed
+	by the given principal id. The context will be searched
+	for an ICourseInstance.
+
+	If either the context or username is missing, returns
+	a false value.
+	"""
+
+	if username is None or context is None:
+		return False
+
+	course = course_locator(context)
+	roles = IPrincipalRoleMap(course, None)
+	if roles:
+		result = Allow in (roles.getSetting(RID_TA, username),
+						   roles.getSetting(RID_INSTRUCTOR, username))
+		return result
+	return False
+
 def is_course_editor(context, user):
 	result = False
 	prin = IPrincipal(user, None)
@@ -251,6 +281,39 @@ def is_course_editor(context, user):
 	if roles and prin:
 		result = (Allow == roles.getSetting(RID_CONTENT_EDITOR, prin.id))
 	return result
+
+def is_edited_by_name(context, username):
+	"""
+	Checks if the context is within something that can be edited
+	by the given principal id. The context will be searched
+	for an ICourseInstance.
+
+	If either the context or username is missing, returns
+	a false value.
+	"""
+
+	if username is None or context is None:
+		return False
+
+	course = course_locator(context)
+	roles = IPrincipalRoleMap(course, None)
+	if roles:
+		result = (Allow == roles.getSetting(RID_CONTENT_EDITOR, username))
+		return result
+	return False
+
+def is_instructed_or_edited_by_name(context, username):
+	if username is None or context is None:
+		return False
+
+	course = course_locator(context)
+	roles = IPrincipalRoleMap(course, None)
+	if roles:
+		result = Allow in (roles.getSetting(RID_TA, username),
+						   roles.getSetting(RID_INSTRUCTOR, username),
+						   roles.getSetting(RID_CONTENT_EDITOR, username))
+		return result
+	return False
 
 def is_instructor_in_hierarchy(context, user):
 	main_course = get_parent_course(context)
