@@ -26,11 +26,11 @@ from persistent.mapping import PersistentMapping
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentDateContext
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
+
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
 from nti.externalization.persistence import NoPickle
-
-from .interfaces import ICourseInstance
 
 @interface.implementer(IQAssessmentDateContext)
 class EmptyAssessmentDateContext(object):
@@ -45,7 +45,7 @@ class EmptyAssessmentDateContext(object):
 
 	def assessments(self):
 		return ()
-	assignments = assessments # BWC
+	assignments = assessments  # BWC
 
 	def of(self, asg):
 		return asg
@@ -120,19 +120,19 @@ class MappingAssessmentMixin(Contained, PersistentCreatedAndModifiedTimeObject):
 
 	def __contains__(self, key):
 		return key in self._mapping
-	
+
 	def __getitem__(self, key):
 		return self._mapping[key]
 
 	def __setitem__(self, key, value):
 		self._mapping[key] = value
-		
+
 	def __delitem__(self, key):
 		del self._mapping[key]
 
 	def __len__(self):
 		return self.size()
-	
+
 	def __conform__(self, iface):
 		if ICourseInstance.isOrExtends(iface):
 			return self.__parent__

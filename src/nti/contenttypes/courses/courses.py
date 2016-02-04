@@ -9,8 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from . import MessageFactory as _
-
 from zope import interface
 
 from zope import lifecycleevent
@@ -21,21 +19,23 @@ from zope.cachedescriptors.property import readproperty
 from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeFolder
 from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
+from  nti.contenttypes.courses import MessageFactory as _
+
+from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseSubInstances
+from nti.contenttypes.courses.interfaces import IContentCourseInstance
+from nti.contenttypes.courses.interfaces import IContentCourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
+
+from nti.contenttypes.courses.forum import CourseInstanceBoard
+
+from nti.contenttypes.courses.outlines import CourseOutline
+
+from nti.contenttypes.courses.sharing import CourseInstanceSharingScopes
+from nti.contenttypes.courses.sharing import CourseSubInstanceSharingScopes
+
 from nti.schema.fieldproperty import createDirectFieldProperties
-
-from .interfaces import ES_PUBLIC
-from .interfaces import ICourseInstance
-from .interfaces import ICourseSubInstances
-from .interfaces import IContentCourseInstance
-from .interfaces import IContentCourseSubInstance
-from .interfaces import ICourseAdministrativeLevel
-
-from .forum import CourseInstanceBoard
-
-from .outlines import CourseOutline
-
-from .sharing import CourseInstanceSharingScopes
-from .sharing import CourseSubInstanceSharingScopes
 
 @interface.implementer(ICourseAdministrativeLevel)
 class CourseAdministrativeLevel(CaseInsensitiveCheckingLastModifiedBTreeFolder):
