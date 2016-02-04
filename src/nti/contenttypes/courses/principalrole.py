@@ -97,4 +97,3 @@ class CourseRolePermissionManager(AnnotationRolePermissionManager):
 			# Initialize with perms for our global content admin.
 			for perm in ( ACT_READ, ACT_CONTENT_EDIT, ACT_UPDATE ):
 				self.grantPermissionToRole( perm.id, ROLE_CONTENT_ADMIN.id )
-

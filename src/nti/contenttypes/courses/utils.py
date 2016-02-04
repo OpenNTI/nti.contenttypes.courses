@@ -13,7 +13,10 @@ from itertools import chain
 
 from zope import component
 
+from zope.catalog.interfaces import ICatalog
+
 from zope.component.hooks import getSite
+
 from zope.component.interfaces import ComponentLookupError
 
 from zope.intid.interfaces import IIntIds
@@ -28,6 +31,7 @@ from nti.contenttypes.courses.index import IX_SITE
 from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_COURSE
 from nti.contenttypes.courses.index import IndexRecord
+from nti.contenttypes.courses.index import CATALOG_NAME
 
 from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import EDITOR
@@ -43,10 +47,27 @@ from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IPrincipalEnrollments
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
+from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 
-from nti.contenttypes.courses import get_enrollment_catalog
+from nti.contenttypes.courses.vendorinfo import VENDOR_INFO_KEY
 
 from nti.dataserver.users import User
+
+def get_enrollment_catalog():
+	return component.queryUtility(ICatalog, name=CATALOG_NAME)
+
+def get_course_vendor_info(context, create=True):
+	result = None
+	course = ICourseInstance(context, None)
+	if create:
+		result = ICourseInstanceVendorInfo(context, None)
+	elif course is not None:
+		try:
+			annotations = course.__annotations__
+			result = annotations.get(VENDOR_INFO_KEY, None)
+		except AttributeError:
+			pass
+	return result
 
 def unindex_course_roles(context, catalog=None):
 	course = ICourseInstance(context, None)

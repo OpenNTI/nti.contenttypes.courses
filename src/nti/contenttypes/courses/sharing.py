@@ -23,6 +23,12 @@ from zope.cachedescriptors.property import cachedIn
 
 from nti.containers.containers import CheckingLastModifiedBTreeContainer
 
+from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
+
+from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
+from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
+from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScopes
+
 from nti.dataserver.users import Community
 
 from nti.externalization.oids import to_external_ntiid_oid
@@ -30,12 +36,6 @@ from nti.externalization.oids import to_external_ntiid_oid
 from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
-
-from .interfaces import ENROLLMENT_SCOPE_VOCABULARY
-
-from .interfaces import ICourseInstanceVendorInfo
-from .interfaces import ICourseInstanceSharingScope
-from .interfaces import ICourseInstanceSharingScopes
 
 @interface.implementer(ICourseInstanceSharingScope)
 class CourseInstanceSharingScope(Community):
@@ -194,7 +194,7 @@ from zope.lifecycleevent import IObjectModifiedEvent
 from zope.intid.interfaces import IIntIdAddedEvent
 from zope.intid.interfaces import IIntIdRemovedEvent
 
-from .interfaces import ICourseInstanceEnrollmentRecord
+from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 def _adjust_scope_membership(record, course,
 							 join, follow,
@@ -241,15 +241,16 @@ def _adjust_scope_membership(record, course,
 
 from ZODB.POSException import POSError
 
-from nti.dataserver.interfaces import IUser
-from nti.dataserver.interfaces import IMutableGroupMember
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseEnrollments
+
 from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
 from nti.dataserver.authorization import role_for_providers_content
 
-from nti.ntiids import ntiids
+from nti.dataserver.interfaces import IUser
+from nti.dataserver.interfaces import IMutableGroupMember
 
-from .interfaces import ICourseSubInstance
-from .interfaces import ICourseEnrollments
+from nti.ntiids import ntiids
 
 def get_principal(principal):
 	try:
@@ -414,9 +415,9 @@ def on_modified_update_scope_membership(record, event):
 							 currently_in=currently_in,
 							 relevant_scopes=scopes_i_should_be_in)
 
-from nti.traversal.traversal import find_interface
+from nti.contenttypes.courses.interfaces import ICourseInstance
 
-from .interfaces import ICourseInstance
+from nti.traversal.traversal import find_interface
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectMovedEvent)
 def on_moved_between_courses_update_scope_membership(record, event):
@@ -469,4 +470,3 @@ def get_default_sharing_scope(context):
 				course = context.__parent__.__parent__
 			result = course.SharingScopes[ scope ]
 	return result
-

@@ -21,6 +21,7 @@ from zope.annotation.interfaces import IAttributeAnnotatable
 from zope.container.contained import Contained
 from zope.container.contained import uncontained
 from zope.container.constraints import checkObject
+
 from zope.container.ordered import OrderedContainer  # this is persistent
 
 from nti.contenttypes.courses.interfaces import ICourseOutline

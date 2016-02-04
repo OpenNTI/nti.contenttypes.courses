@@ -11,17 +11,17 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from zope import interface
 from zope import component
+from zope import interface
 
 from zope.annotation.factory import factory as an_factory
 
 from persistent.mapping import PersistentMapping
 
-from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 
-from .interfaces import ICourseInstance
-from .interfaces import ICourseInstanceVendorInfo
+from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseInstanceVendorInfo)

@@ -15,7 +15,7 @@ from zope import interface
 
 from zope.traversing.interfaces import IPathAdapter
 
-from .interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 @interface.implementer(IPathAdapter)
 def CourseCatalogEntryTraverser(instance, request):

@@ -20,7 +20,6 @@ logger = __import__('logging').getLogger(__name__)
 # disable: too many ancestors, missing 'self''
 # pylint: disable=I0011,R0901,E0213
 
-
 from zope import component
 from zope import interface
 
