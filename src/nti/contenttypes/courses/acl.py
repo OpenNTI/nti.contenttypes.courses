@@ -25,6 +25,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 
 from nti.contenttypes.courses.utils import get_course_editors
+from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.dataserver.interfaces import ACE_DENY_ALL
 from nti.dataserver.interfaces import ALL_PERMISSIONS
@@ -84,7 +85,7 @@ class CourseInstanceACLProvider(object):
 
 		# JZ: 2015-01-11 Subinstance instructors get the same permissions
 		# as their students.
-		for subinstance in course.SubInstances.values():
+		for subinstance in get_course_subinstances(course):
 			aces.extend(ace_allowing(i, ACT_READ, type(self))
 						for i in subinstance.instructors)
 
