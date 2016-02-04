@@ -579,36 +579,6 @@ class IDenyOpenEnrollment(interface.Interface):
 	"""
 IDenyOpenEnrollment.setTaggedValue('_ext_is_marker_interface', True)
 
-from zope.location import LocationIterator
-
-def is_instructed_by_name(context, username):
-	"""
-	Checks if the context is within something instructed
-	by the given principal id. The context will be searched
-	for an ICourseInstance.
-
-	If either the context or username is missing, returns
-	a false value.
-
-	This is semi-deprecated; switch to using explicit permissions
-	granted to roles such as the :const:`RID_INSTRUCTOR` role
-	and :func:`zope.security.management.checkPermission`.
-	"""
-
-	if username is None or context is None:
-		return None
-
-	course = None
-	for x in LocationIterator(context):
-		course = ICourseInstance(x, None)
-		if course is not None:
-			break
-
-	if course is None:
-		return False
-
-	return any((username == instructor.id for instructor in course.instructors))
-
 # Catalog
 
 class ICourseCatalog(interface.Interface):
