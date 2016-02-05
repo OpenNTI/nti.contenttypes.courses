@@ -140,6 +140,9 @@ TRX_OUTLINE_NODE_MOVE_TYPE = 'outlinenodemove'
 #: Supported string keys
 SUPPORTED_STRING_KEYS = ('title',)
 
+#: Supported bool keys
+SUPPORTED_BOOL_KEYS = ('excluded',)
+
 #: Supported positive integer keys
 SUPPORTED_PVE_INT_KEYS = ('maximum_time_allowed',)
 
