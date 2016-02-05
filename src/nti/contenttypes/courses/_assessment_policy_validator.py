@@ -18,9 +18,9 @@ from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentPolicyValidator
 
-from nti.ntiids.ntiids import is_valid_ntiid_string
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
-from .interfaces import ICourseCatalogEntry
+from nti.ntiids.ntiids import is_valid_ntiid_string
 
 @interface.implementer(IQAssessmentPolicyValidator)
 class DefaultAssessmentPolicyValidator(object):

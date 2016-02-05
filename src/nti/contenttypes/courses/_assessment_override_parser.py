@@ -16,12 +16,12 @@ from persistent.mapping import PersistentMapping
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentDateContext
 
+from nti.contenttypes.courses.interfaces import SUPPORTED_DATE_KEYS
+from nti.contenttypes.courses.interfaces import SUPPORTED_PVE_INT_KEYS
+
 from nti.externalization.datetime import datetime_from_string
 
 from nti.ntiids.ntiids import validate_ntiid_string
-
-from .interfaces import SUPPORTED_DATE_KEYS
-from .interfaces import SUPPORTED_PVE_INT_KEYS
 
 def reset_asg_missing_key(course, full=True):
 	dates = IQAssessmentDateContext(course)
