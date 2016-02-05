@@ -14,9 +14,9 @@ from zope import component
 
 from zope.annotation.interfaces import IAnnotations
 
-from ..interfaces import ICourseInstance
+from nti.contenttypes.courses.grading.interfaces import ICourseGradingPolicy
 
-from .interfaces import ICourseGradingPolicy
+from nti.contenttypes.courses.interfaces import ICourseInstance
 
 GRADING_POLICY_KEY = 'CourseGradingPolicy'
 
@@ -45,6 +45,6 @@ def set_grading_policy_for_course(course, policy=None):
 	return True
 
 # re-export
-from .parser import parse_grading_policy
-from .parser import reset_grading_policy
-from .parser import fill_grading_policy_from_key
+from nti.contenttypes.courses.grading.parser import parse_grading_policy
+from nti.contenttypes.courses.grading.parser import reset_grading_policy
+from nti.contenttypes.courses.grading.parser import fill_grading_policy_from_key

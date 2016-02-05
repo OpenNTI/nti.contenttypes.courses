@@ -11,12 +11,12 @@ logger = __import__('logging').getLogger(__name__)
 
 from nti.assessment.interfaces import IQAssignmentPolicies
 
+from nti.contenttypes.courses.grading import set_grading_policy_for_course
+
+from nti.contenttypes.courses.grading.interfaces import ICourseGradingPolicy
+
 from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
-
-from .interfaces import ICourseGradingPolicy
-
-from . import set_grading_policy_for_course
 
 def reset_grading_policy(course):
 	return set_grading_policy_for_course(course, None)

@@ -12,15 +12,21 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
-from zope.mimetype.interfaces import IContentTypeAware
-
 from zope.container.contained import Contained
+
+from zope.mimetype.interfaces import IContentTypeAware
 
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQAssignmentPolicies
 
 from nti.common.property import alias
 from nti.common.property import CachedProperty
+
+from nti.contenttypes.courses.grading.interfaces import IEqualGroupGrader
+from nti.contenttypes.courses.grading.interfaces import ICategoryGradeScheme
+from nti.contenttypes.courses.grading.interfaces import ICourseGradingPolicy
+
+from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
 
@@ -30,12 +36,6 @@ from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
 
 from nti.zodb.persistentproperty import PersistentPropertyHolder
-
-from ..interfaces import ICourseInstance
-
-from .interfaces import IEqualGroupGrader
-from .interfaces import ICategoryGradeScheme
-from .interfaces import ICourseGradingPolicy
 
 def get_assignment_policies(course):
 	result = IQAssignmentPolicies(course, None)
@@ -47,7 +47,7 @@ def get_assignment(ntiid):
 
 @interface.implementer(IContentTypeAware)
 class BaseMixin(PersistentPropertyHolder, SchemaConfigured, Contained):
-	
+
 	parameters = {}
 
 	def __init__(self, *args, **kwargs):
@@ -58,13 +58,13 @@ class BaseMixin(PersistentPropertyHolder, SchemaConfigured, Contained):
 @WithRepr
 @interface.implementer(ICategoryGradeScheme)
 class CategoryGradeScheme(BaseMixin):
-	
+
 	mime_type = mimeType = 'application/vnd.nextthought.courses.grading.categorygradescheme'
-	
+
 	createDirectFieldProperties(ICategoryGradeScheme)
 
 	LatePenalty = 1
-		
+
 	weight = alias('Weight')
 	penalty = alias('LatePenalty')
 	dropLowest = alias('DropLowest')
@@ -73,20 +73,20 @@ class CategoryGradeScheme(BaseMixin):
 @interface.implementer(IEqualGroupGrader)
 class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 	createDirectFieldProperties(IEqualGroupGrader)
-	
+
 	mime_type = mimeType = 'application/vnd.nextthought.courses.grading.equalgroupgrader'
-	
+
 	groups = alias('Groups')
-		
+
 	def validate(self):
 		assert self.groups, "must specify at least a group"
-		
+
 		count = 0
 		for name, category in self.groups.items():
 			weight = category.Weight
-			assert weight > 0 and weight <=1, "invalid weight for category %s" % name
+			assert weight > 0 and weight <= 1, "invalid weight for category %s" % name
 			count += weight
-			
+
 		assert  round(count, 2) <= 1.0, \
 				"total category weight must be less than or equal to one"
 
@@ -94,7 +94,7 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 		for name in categories.keys():
 			assert name in self.groups, \
 				   "%s is an invalid group name" % name
-		
+
 		seen = set()
 		for name in self.groups.keys():
 			data = categories.get(name)
@@ -104,12 +104,12 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 				assert ntiid not in seen, \
 					   "Assignment %s is in multiple groups" % ntiid
 				seen.add(ntiid)
-				
+
 				assignment = get_assignment(ntiid)
 				if assignment is None:
 					raise AssertionError("assignment does not exists", ntiid)
-		
-	@property	
+
+	@property
 	def lastSynchronized(self):
 		self_lastModified = self.lastModified or 0
 		parent_lastSynchronized = getattr(self.course, 'lastSynchronized', None) or 0
@@ -118,11 +118,11 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 	def _raw_categories(self):
 		result = {}
 		policies = get_assignment_policies(self.course)
-		if policies is not None: 
+		if policies is not None:
 			for assignment in policies.assignments():
 				policy = policies.getPolicyForAssignment(assignment)
 				if not policy or policy.get('excluded', False):
-					continue		  
+					continue
 
 				auto_grade = policy.get('auto_grade') or {}
 				grader = policy.get('grader') or auto_grade.get('grader')
@@ -135,13 +135,13 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 					total_points = auto_grade.get('total_points')
 					if total_points:
 						data['total_points'] = data['points'] = total_points
-					data.update(grader) # override
-					data['assignment'] = assignment # save 
-					
+					data.update(grader)  # override
+					data['assignment'] = assignment  # save
+
 					result.setdefault(group, [])
 					result[group].append(data)
 		return result
-	
+
 	@CachedProperty('lastSynchronized')
 	def _categories(self):
 		result = self._raw_categories()
@@ -153,15 +153,15 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 			for assignment in [x['assignment'] for x in data]:
 				result[assignment] = name
 		return result
-	
+
 	@CachedProperty('lastSynchronized')
 	def _rev_categories(self):
 		result = self._raw_rev_categories()
 		return result
-	
+
 	def _raw_assignments(self):
 		return tuple(self._raw_rev_categories().keys())
-	
+
 	@CachedProperty('lastSynchronized')
 	def _assignments(self):
 		result = self._raw_assignments()
@@ -173,10 +173,10 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 
 	def __len__(self):
 		return len(self.groups)
-	
+
 	def __getitem__(self, key):
 		return self.groups[key]
-	
+
 	def __iter__(self):
 		return iter(self.groups)
 
@@ -186,9 +186,9 @@ class DefaultCourseGradingPolicy(CreatedAndModifiedTimeMixin, BaseMixin):
 	createDirectFieldProperties(ICourseGradingPolicy)
 
 	mime_type = mimeType = 'application/vnd.nextthought.courses.grading.defaultpolicy'
-	
+
 	grader = alias('Grader')
-	
+
 	def __setattr__(self, name, value):
 		if name in ("Grader", "grader") and value is not None:
 			value.__parent__ = self
@@ -197,12 +197,12 @@ class DefaultCourseGradingPolicy(CreatedAndModifiedTimeMixin, BaseMixin):
 	def validate(self):
 		assert self.grader, "must specify a grader"
 		self.grader.validate()
-	
+
 	def synchronize(self):
 		course = self.course
 		assert course, "must policy must be attached to a course"
 		self.validate()
-		
+
 	@property
 	def course(self):
 		return ICourseInstance(self.__parent__, None)
@@ -216,7 +216,7 @@ class DefaultCourseGradingPolicy(CreatedAndModifiedTimeMixin, BaseMixin):
 			self.grader.updateLastMod(t)
 		return result
 
-	def updateLastModIfGreater( self, t ):
+	def updateLastModIfGreater(self, t):
 		result = super(DefaultCourseGradingPolicy, self).updateLastModIfGreater(t)
 		if self.grader is not None:
 			self.grader.updateLastModIfGreater(t)
