@@ -19,10 +19,12 @@ from zope.cachedescriptors.property import readproperty
 from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeFolder
 from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
-from  nti.contenttypes.courses import MessageFactory as _
+from nti.contenttypes.courses import MessageFactory as _
 
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSubInstances
 from nti.contenttypes.courses.interfaces import IContentCourseInstance
 from nti.contenttypes.courses.interfaces import IContentCourseSubInstance
@@ -53,7 +55,7 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 	lastSynchronized = 0
 
 	def __init__(self):
-		super(CourseInstance,self).__init__()
+		super(CourseInstance, self).__init__()
 
 	# Whether or not they have contents, they are true
 	def __bool__(self):
@@ -144,6 +146,11 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		"""
 		return ()
 
+	@property
+	def aliasId(self):
+		entry = ICourseCatalogEntry(self, None)
+		return getattr(entry, 'ntiid', None)
+
 from Acquisition import aq_acquire
 
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
@@ -162,7 +169,7 @@ class ContentCourseInstance(DisplayableContentMixin,
 		we return the bundle's resources.
 		"""
 
-		ours = super(ContentCourseInstance,self).PlatformPresentationResources
+		ours = super(ContentCourseInstance, self).PlatformPresentationResources
 		if ours:
 			return ours
 
