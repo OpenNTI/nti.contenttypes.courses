@@ -24,7 +24,6 @@ from nti.contenttypes.courses import MessageFactory as _
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSubInstances
 from nti.contenttypes.courses.interfaces import IContentCourseInstance
 from nti.contenttypes.courses.interfaces import IContentCourseSubInstance
@@ -145,11 +144,6 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 
 		"""
 		return ()
-
-	@property
-	def aliasId(self):
-		entry = ICourseCatalogEntry(self, None)
-		return getattr(entry, 'ntiid', None)
 
 from Acquisition import aq_acquire
 
