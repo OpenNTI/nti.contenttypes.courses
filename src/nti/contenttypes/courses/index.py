@@ -29,11 +29,14 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
+from nti.contenttypes.courses.utils import get_course_packages
+
 from nti.site.interfaces import IHostPolicyFolder
 
 from nti.traversal.traversal import find_interface
 
 from nti.zope_catalog.catalog import Catalog
+from nti.zope_catalog.index import AttributeSetIndex
 from nti.zope_catalog.index import SetIndex as RawSetIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
 
@@ -62,7 +65,7 @@ class KeepSetIndex(RawSetIndex):
 		value = {v for v in self.to_iterable(value) if v is not None}
 		old = self.documents_to_values.get(doc_id) or self.empty_set
 		if value.difference(old):
-			value.update(old or ())
+			value.update(old)
 			result = super(KeepSetIndex, self).index_doc(doc_id, value)
 			return result
 
@@ -159,9 +162,7 @@ class EnrollmentCatalog(Catalog):
 
 def install_enrollment_catalog(site_manager_container, intids=None):
 	lsm = site_manager_container.getSiteManager()
-	if intids is None:
-		intids = lsm.getUtility(IIntIds)
-
+	intids = lsm.getUtility(IIntIds) if intids is None else intids
 	catalog = lsm.queryUtility(ICatalog, name=ENROLLMENT_CATALOG_NAME)
 	if catalog is not None:
 		return catalog
@@ -183,6 +184,7 @@ def install_enrollment_catalog(site_manager_container, intids=None):
 
 # course catalog
 
+IX_PACKAGES = 'packages'
 COURSES_CATALOG_NAME = 'nti.dataserver.++etc++courses-catalog'
 
 class ValidatingCourseSiteName(object):
@@ -217,15 +219,30 @@ class CourseCatalogEntryIndex(ValueIndex):
 	default_field_name = 'ntiid'
 	default_interface = ValidatingCourseCatalogEntry
 
+class ValidatingCoursePackages(object):
+
+	__slots__ = (b'packages',)
+
+	def __init__(self, obj, default=None):
+		if ICourseInstance.providedBy(obj):
+			packs = get_course_packages(obj)
+			self.packages = {getattr(x, 'ntiid', None) for x in packs}
+			self.packages.discard(None)
+
+	def __reduce__(self):
+		raise TypeError()
+
+class CoursePackagesIndex(AttributeSetIndex):
+	default_field_name = 'packages'
+	default_interface = ValidatingCoursePackages
+
 @interface.implementer(ICatalog)
 class CoursesCatalog(Catalog):
 	pass
 
 def install_courses_catalog(site_manager_container, intids=None):
 	lsm = site_manager_container.getSiteManager()
-	if intids is None:
-		intids = lsm.getUtility(IIntIds)
-
+	intids = lsm.getUtility(IIntIds) if intids is None else intids
 	catalog = lsm.queryUtility(ICatalog, name=COURSES_CATALOG_NAME)
 	if catalog is not None:
 		return catalog
@@ -236,7 +253,8 @@ def install_courses_catalog(site_manager_container, intids=None):
 	lsm.registerUtility(catalog, provided=ICatalog, name=COURSES_CATALOG_NAME)
 
 	for name, clazz in ((IX_SITE, CourseSiteIndex),
-						(IX_ENTRY, CourseCatalogEntryIndex)):
+						(IX_ENTRY, CourseCatalogEntryIndex),
+						(IX_PACKAGES, CoursePackagesIndex)):
 		index = clazz(family=intids.family)
 		intids.register(index)
 		locate(index, catalog, name)
