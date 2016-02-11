@@ -17,27 +17,28 @@ from zope import component
 
 from zope.component.hooks import site as current_site
 
+from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
+
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseOutline
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
+
+from nti.contenttypes.courses.interfaces import iface_of_node
+
+from nti.contenttypes.courses.legacy_catalog import ILegacyCourseCatalogEntry
+
+from nti.contenttypes.courses.utils import get_parent_course
+
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 
-from nti.site.utils import registerUtility
-from nti.site.utils import unregisterUtility
 from nti.site.hostpolicy import get_all_host_sites
 
-from ..interfaces import NTI_COURSE_OUTLINE_NODE
-
-from ..interfaces import ICourseCatalog
-from ..interfaces import ICourseOutline
-from ..interfaces import ICourseInstance
-from ..interfaces import ICourseOutlineNode
-from ..interfaces import ICourseSubInstance
-
-from ..interfaces import iface_of_node
-
-from ..utils import get_parent_course
-
-from ..legacy_catalog import ILegacyCourseCatalogEntry
+from nti.site.utils import registerUtility
+from nti.site.utils import unregisterUtility
 
 def _outline_nodes(outline):
 	result = []
@@ -73,13 +74,13 @@ def unregister_nodes():
 		with current_site(site):
 			registry = component.getSiteManager()
 			for name, obj in list(component.getUtilitiesFor(ICourseOutlineNode)):
-				provided=iface_of_node(obj)
+				provided = iface_of_node(obj)
 				if unregisterUtility(registry=registry,
 								  	 component=obj,
 								  	 provided=provided,
 								  	 name=name,
 								  	 event=False):
-					result+=1
+					result += 1
 	logger.info('%s node(s) unregistered', result)
 	return result
 
@@ -89,7 +90,7 @@ def do_evolve(context, generation=generation):
 	with current_site(ds_folder):
 		assert	component.getSiteManager() == ds_folder.getSiteManager(), \
 				"Hooks not installed?"
-				
+
 		total = 0
 		seen = set()
 		unregister_nodes()
@@ -105,7 +106,7 @@ def do_evolve(context, generation=generation):
 						continue
 					seen.add(ntiid)
 					course = ICourseInstance(entry)
-					
+
 					# check for shared outlines
 					if ICourseSubInstance.providedBy(course):
 						parent = get_parent_course(course)
@@ -126,17 +127,17 @@ def do_evolve(context, generation=generation):
 										   provider=provider,
 										   specific=specific)
 						node.ntiid = ntiid
-	
+
 						# replace in container
 						_replace(parent, node)
-	
+
 						# register
 						if registerUtility(registry=registry,
 										   component=node,
 										   provided=iface_of_node(node),
 										   name=node.ntiid,
 										   event=False):
-							site_total +=1
+							site_total += 1
 				total += site_total
 				if site_total:
 					logger.info("%s node(s) registered in site %s", site_total,
