@@ -25,33 +25,19 @@ from zope.location import locate
 
 from nti.common.string import safestr
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.site.interfaces import IHostPolicyFolder
 
+from nti.traversal.traversal import find_interface
+
 from nti.zope_catalog.catalog import Catalog
 from nti.zope_catalog.index import SetIndex as RawSetIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
 
-CATALOG_NAME = 'nti.dataserver.++etc++enrollment-catalog'
-
-IX_SITE = 'site'
-IX_SCOPE = 'scope'
-IX_ENTRY = IX_COURSE = 'course'
-IX_USERNAME = IX_STUDENT = IX_INSTRUCTOR = 'username'
-
-IndexRecord = namedtuple('IndexRecord', 'username ntiid Scope')
-
-deprecated('ValidatingUsernameID', 'Use lastest index implementation')
-class ValidatingUsernameID(object):
-
-	def __init__(self, *args, **kwargs):
-		pass
-
-deprecated('SiteIndex', 'Replaced with SingleSiteIndex')
-class SiteIndex(RawSetIndex):
-	pass
+# utilities
 
 class KeepSetIndex(RawSetIndex):
 
@@ -79,6 +65,27 @@ class KeepSetIndex(RawSetIndex):
 		else:
 			super(KeepSetIndex, self).unindex_doc(doc_id)
 
+# enrollment catalog
+
+deprecated('ValidatingUsernameID', 'Use lastest index implementation')
+class ValidatingUsernameID(object):
+
+	def __init__(self, *args, **kwargs):
+		pass
+
+deprecated('SiteIndex', 'Replaced with SingleSiteIndex')
+class SiteIndex(RawSetIndex):
+	pass
+
+IndexRecord = namedtuple('IndexRecord', 'username ntiid Scope')
+
+ENROLLMENT_CATALOG_NAME = 'nti.dataserver.++etc++enrollment-catalog'
+
+IX_SITE = 'site'
+IX_SCOPE = 'scope'
+IX_ENTRY = IX_COURSE = 'course'
+IX_USERNAME = IX_STUDENT = IX_INSTRUCTOR = 'username'
+
 class ValidatingSiteName(object):
 
 	__slots__ = (b'site',)
@@ -86,9 +93,12 @@ class ValidatingSiteName(object):
 	def __init__(self, obj, default=None):
 		if 	isinstance(obj, IndexRecord) or \
 			ICourseInstanceEnrollmentRecord.providedBy(obj):
-			self.site = getSite().__name__
+			self.site = unicode(getSite().__name__)
 		elif IHostPolicyFolder.providedBy(obj):
-			self.site = obj.__name__
+			self.site = unicode(obj.__name__)
+		elif ICourseInstance.providedBy(obj):
+			folder = find_interface(obj, IHostPolicyFolder, strict=False)
+			self.site = unicode(getattr(folder,'__name__', None) or u'')
 
 	def __reduce__(self):
 		raise TypeError()
@@ -153,19 +163,51 @@ def install_enrollment_catalog(site_manager_container, intids=None):
 	if intids is None:
 		intids = lsm.getUtility(IIntIds)
 
-	catalog = lsm.queryUtility(ICatalog, name=CATALOG_NAME)
+	catalog = lsm.queryUtility(ICatalog, name=ENROLLMENT_CATALOG_NAME)
 	if catalog is not None:
 		return catalog
 
 	catalog = EnrollmentCatalog(family=intids.family)
-	locate(catalog, site_manager_container, CATALOG_NAME)
+	locate(catalog, site_manager_container, ENROLLMENT_CATALOG_NAME)
 	intids.register(catalog)
-	lsm.registerUtility(catalog, provided=ICatalog, name=CATALOG_NAME)
+	lsm.registerUtility(catalog, provided=ICatalog, name=ENROLLMENT_CATALOG_NAME)
 
 	for name, clazz in ((IX_SCOPE, ScopeIndex),
 						(IX_SITE, SingleSiteIndex),
 						(IX_USERNAME, UsernameIndex),
 						(IX_ENTRY, CatalogEntryIDIndex)):
+		index = clazz(family=intids.family)
+		intids.register(index)
+		locate(index, catalog, name)
+		catalog[name] = index
+	return catalog
+
+# course catalog
+
+COURSE_CATALOG_NAME = 'nti.dataserver.++etc++course-catalog'
+
+class CourseSiteIndex(SingleSiteIndex):
+	pass
+
+@interface.implementer(ICatalog)
+class CourseCatalog(Catalog):
+	pass
+
+def install_course_catalog(site_manager_container, intids=None):
+	lsm = site_manager_container.getSiteManager()
+	if intids is None:
+		intids = lsm.getUtility(IIntIds)
+
+	catalog = lsm.queryUtility(ICatalog, name=COURSE_CATALOG_NAME)
+	if catalog is not None:
+		return catalog
+
+	catalog = CourseCatalog(family=intids.family)
+	locate(catalog, site_manager_container, COURSE_CATALOG_NAME)
+	intids.register(catalog)
+	lsm.registerUtility(catalog, provided=ICatalog, name=COURSE_CATALOG_NAME)
+
+	for name, clazz in ((IX_SITE, CourseSiteIndex),):
 		index = clazz(family=intids.family)
 		intids.register(index)
 		locate(index, catalog, name)
