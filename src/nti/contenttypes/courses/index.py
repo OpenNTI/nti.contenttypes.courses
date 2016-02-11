@@ -19,7 +19,7 @@ from zope.component.hooks import getSite
 
 from zope.deprecation import deprecated
 
-from zope.intid import IIntIds
+from zope.intid.interfaces import IIntIds
 
 from zope.location import locate
 
@@ -36,6 +36,18 @@ from nti.traversal.traversal import find_interface
 from nti.zope_catalog.catalog import Catalog
 from nti.zope_catalog.index import SetIndex as RawSetIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
+
+# deprecations
+
+deprecated('ValidatingUsernameID', 'Use lastest index implementation')
+class ValidatingUsernameID(object):
+
+	def __init__(self, *args, **kwargs):
+		pass
+
+deprecated('SiteIndex', 'Replaced with SingleSiteIndex')
+class SiteIndex(RawSetIndex):
+	pass
 
 # utilities
 
@@ -67,16 +79,6 @@ class KeepSetIndex(RawSetIndex):
 
 # enrollment catalog
 
-deprecated('ValidatingUsernameID', 'Use lastest index implementation')
-class ValidatingUsernameID(object):
-
-	def __init__(self, *args, **kwargs):
-		pass
-
-deprecated('SiteIndex', 'Replaced with SingleSiteIndex')
-class SiteIndex(RawSetIndex):
-	pass
-
 IndexRecord = namedtuple('IndexRecord', 'username ntiid Scope')
 
 ENROLLMENT_CATALOG_NAME = 'nti.dataserver.++etc++enrollment-catalog'
@@ -91,14 +93,11 @@ class ValidatingSiteName(object):
 	__slots__ = (b'site',)
 
 	def __init__(self, obj, default=None):
-		if 	isinstance(obj, IndexRecord) or \
-			ICourseInstanceEnrollmentRecord.providedBy(obj):
+		if		isinstance(obj, IndexRecord) \
+			or	ICourseInstanceEnrollmentRecord.providedBy(obj):
 			self.site = unicode(getSite().__name__)
 		elif IHostPolicyFolder.providedBy(obj):
 			self.site = unicode(obj.__name__)
-		elif ICourseInstance.providedBy(obj):
-			folder = find_interface(obj, IHostPolicyFolder, strict=False)
-			self.site = unicode(getattr(folder,'__name__', None) or u'')
 
 	def __reduce__(self):
 		raise TypeError()
@@ -184,30 +183,60 @@ def install_enrollment_catalog(site_manager_container, intids=None):
 
 # course catalog
 
-COURSE_CATALOG_NAME = 'nti.dataserver.++etc++course-catalog'
+COURSES_CATALOG_NAME = 'nti.dataserver.++etc++courses-catalog'
 
-class CourseSiteIndex(SingleSiteIndex):
-	pass
+class ValidatingCourseSiteName(object):
+
+	__slots__ = (b'site',)
+
+	def __init__(self, obj, default=None):
+		if ICourseInstance.providedBy(obj):
+			folder = find_interface(obj, IHostPolicyFolder, strict=False)
+			self.site = unicode(getattr(folder, '__name__', None) or u'')
+
+	def __reduce__(self):
+		raise TypeError()
+
+class CourseSiteIndex(ValueIndex):
+	default_field_name = 'site'
+	default_interface = ValidatingCourseSiteName
+
+class ValidatingCourseCatalogEntry(object):
+
+	__slots__ = (b'ntiid',)
+
+	def __init__(self, obj, default=None):
+		if ICourseInstance.providedBy(obj):
+			entry = ICourseCatalogEntry(obj, None)
+			self.ntiid = getattr(entry, 'ntiid', None)
+
+	def __reduce__(self):
+		raise TypeError()
+
+class CourseCatalogEntryIndex(ValueIndex):
+	default_field_name = 'ntiid'
+	default_interface = ValidatingCourseCatalogEntry
 
 @interface.implementer(ICatalog)
-class CourseCatalog(Catalog):
+class CoursesCatalog(Catalog):
 	pass
 
-def install_course_catalog(site_manager_container, intids=None):
+def install_courses_catalog(site_manager_container, intids=None):
 	lsm = site_manager_container.getSiteManager()
 	if intids is None:
 		intids = lsm.getUtility(IIntIds)
 
-	catalog = lsm.queryUtility(ICatalog, name=COURSE_CATALOG_NAME)
+	catalog = lsm.queryUtility(ICatalog, name=COURSES_CATALOG_NAME)
 	if catalog is not None:
 		return catalog
 
-	catalog = CourseCatalog(family=intids.family)
-	locate(catalog, site_manager_container, COURSE_CATALOG_NAME)
+	catalog = CoursesCatalog(family=intids.family)
+	locate(catalog, site_manager_container, COURSES_CATALOG_NAME)
 	intids.register(catalog)
-	lsm.registerUtility(catalog, provided=ICatalog, name=COURSE_CATALOG_NAME)
+	lsm.registerUtility(catalog, provided=ICatalog, name=COURSES_CATALOG_NAME)
 
-	for name, clazz in ((IX_SITE, CourseSiteIndex),):
+	for name, clazz in ((IX_SITE, CourseSiteIndex),
+						(IX_ENTRY, CourseCatalogEntryIndex)):
 		index = clazz(family=intids.family)
 		intids.register(index)
 		locate(index, catalog, name)
