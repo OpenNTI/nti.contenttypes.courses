@@ -13,11 +13,12 @@ logger = __import__('logging').getLogger(__name__)
 
 generation = 15
 
-import zope.intid
+from zope.intid.interfaces import IIntIds
 
 from zope.generations.generations import SchemaManager
 
-from ..index import install_enrollment_catalog
+from nti.contenttypes.courses.index import install_courses_catalog
+from nti.contenttypes.courses.index import install_enrollment_catalog
 
 class _CoursesSchemaManager(SchemaManager):
 	"""
@@ -37,5 +38,6 @@ def install_catalog(context):
 	root = conn.root()
 	dataserver_folder = root['nti.dataserver']
 	lsm = dataserver_folder.getSiteManager()
-	intids = lsm.getUtility(zope.intid.IIntIds)
+	intids = lsm.getUtility(IIntIds)
+	install_courses_catalog(dataserver_folder, intids)
 	install_enrollment_catalog(dataserver_folder, intids)

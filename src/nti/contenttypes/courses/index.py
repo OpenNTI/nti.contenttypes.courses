@@ -40,7 +40,7 @@ from nti.zope_catalog.index import AttributeSetIndex
 from nti.zope_catalog.index import SetIndex as RawSetIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
 
-# deprecations
+### Deprecations
 
 deprecated('ValidatingUsernameID', 'Use lastest index implementation')
 class ValidatingUsernameID(object):
@@ -52,7 +52,7 @@ deprecated('SiteIndex', 'Replaced with SingleSiteIndex')
 class SiteIndex(RawSetIndex):
 	pass
 
-# utilities
+### Utilities
 
 class KeepSetIndex(RawSetIndex):
 
@@ -80,7 +80,7 @@ class KeepSetIndex(RawSetIndex):
 		else:
 			super(KeepSetIndex, self).unindex_doc(doc_id)
 
-# enrollment catalog
+### Enrollment catalog
 
 IndexRecord = namedtuple('IndexRecord', 'username ntiid Scope')
 
@@ -96,8 +96,10 @@ class ValidatingSiteName(object):
 	__slots__ = (b'site',)
 
 	def __init__(self, obj, default=None):
-		if		isinstance(obj, IndexRecord) \
-			or	ICourseInstanceEnrollmentRecord.providedBy(obj):
+		if isinstance(obj, IndexRecord):
+			self.site = unicode(getSite().__name__)
+		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
+			# record the site where enrollment occurred on
 			self.site = unicode(getSite().__name__)
 		elif IHostPolicyFolder.providedBy(obj):
 			self.site = unicode(obj.__name__)
@@ -182,7 +184,7 @@ def install_enrollment_catalog(site_manager_container, intids=None):
 		catalog[name] = index
 	return catalog
 
-# course catalog
+### Courses catalog
 
 IX_PACKAGES = 'packages'
 COURSES_CATALOG_NAME = 'nti.dataserver.++etc++courses-catalog'
