@@ -23,3 +23,4 @@ def get_course_packages(context):
 				packs = ()
 		return packs or ()
 	return ()
+get_course_content_packages = get_course_packages
