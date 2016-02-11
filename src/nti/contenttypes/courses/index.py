@@ -25,6 +25,8 @@ from zope.location import locate
 
 from nti.common.string import safestr
 
+from nti.contenttypes.courses.common import get_course_packages
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
@@ -77,20 +79,6 @@ class KeepSetIndex(RawSetIndex):
 			super(KeepSetIndex, self).index_doc(doc_id, old)
 		else:
 			super(KeepSetIndex, self).unindex_doc(doc_id)
-
-
-def get_course_packages(context):
-	course = ICourseInstance(context, None)
-	if course is not None:
-		try:
-			packs = course.ContentPackageBundle.ContentPackages or ()
-		except AttributeError:
-			try:
-				packs = (course.legacy_content_package,)
-			except AttributeError:
-				packs = ()
-		return packs or ()
-	return ()
 
 ### Enrollment catalog
 

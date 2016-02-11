@@ -29,6 +29,8 @@ from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
+from nti.contenttypes.courses.common import get_course_packages
+
 from nti.contenttypes.courses.index import IX_SITE
 from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_COURSE
@@ -124,19 +126,6 @@ def index_course_roles(context, catalog=None, intids=None):
 	result += _index_editors(course, catalog, entry, doc_id)
 	return result
 
-def get_course_packages(context):
-	course = ICourseInstance(context, None)
-	if course is not None:
-		try:
-			packs = course.ContentPackageBundle.ContentPackages or ()
-		except AttributeError:
-			try:
-				packs = (course.legacy_content_package,)
-			except AttributeError:
-				packs = ()
-		return packs or ()
-	return ()
-
 def get_parent_course(context):
 	course = ICourseInstance(context, None)
 	if ICourseSubInstance.providedBy(course):
@@ -156,6 +145,8 @@ def get_course_hierarchy(context):
 		result.append(parent)
 		result.extend(parent.SubInstances.values())
 	return result
+
+get_course_content_packages = get_course_packages # BWC
 
 def is_there_an_open_enrollment(course, user):
 	for instance in get_course_hierarchy(course):
