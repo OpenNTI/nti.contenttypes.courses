@@ -35,6 +35,7 @@ from nti.contenttypes.courses.index import IX_SITE
 from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_COURSE
 from nti.contenttypes.courses.index import IndexRecord
+from nti.contenttypes.courses.index import COURSES_CATALOG_NAME
 from nti.contenttypes.courses.index import ENROLLMENT_CATALOG_NAME
 
 from nti.contenttypes.courses.interfaces import RID_TA
@@ -56,6 +57,9 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.vendorinfo import VENDOR_INFO_KEY
 
 from nti.dataserver.users import User
+
+def get_courses_catalog():
+	return component.queryUtility(ICatalog, name=COURSES_CATALOG_NAME)
 
 def get_enrollment_catalog():
 	return component.queryUtility(ICatalog, name=ENROLLMENT_CATALOG_NAME)
