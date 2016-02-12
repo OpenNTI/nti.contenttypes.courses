@@ -9,8 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from zope import interface
 from zope import component
+from zope import interface
 
 from zope.annotation.interfaces import IAnnotations
 
@@ -18,6 +18,7 @@ from nti.contenttypes.courses.grading.interfaces import ICourseGradingPolicy
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
+#: Grading policy course annotation key
 GRADING_POLICY_KEY = 'CourseGradingPolicy'
 
 @component.adapter(ICourseInstance)

@@ -48,7 +48,7 @@ def get_assignment(ntiid):
 @interface.implementer(IContentTypeAware)
 class BaseMixin(PersistentPropertyHolder, SchemaConfigured, Contained):
 
-	parameters = {}
+	parameters = {} # IContentTypeAware
 
 	def __init__(self, *args, **kwargs):
 		# SchemaConfigured is not cooperative
