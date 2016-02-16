@@ -1245,6 +1245,7 @@ def get_course_assessment_predicate_for_user(user, course):
 		return all((f.allow_assessment_for_user_in_course(asg, user, course) for f in filters))
 	return uber_filter
 
+#: All course outline node interfaces
 ALL_COURSE_OUTLINE_INTERFACES = (ICourseOutlineContentNode, ICourseOutlineCalendarNode, ICourseOutlineNode)
 
 def iface_of_node(node):
@@ -1260,8 +1261,8 @@ iface_of_outline_node = iface_of_node  # alias
 def _set_ifaces():
 	for iSchema in ALL_COURSE_OUTLINE_INTERFACES:
 		for k, v in iSchema.namesAndDescriptions(all=True):
-			if 	IMethod.providedBy(v) or \
-				v.queryTaggedValue(TAG_HIDDEN_IN_UI) is not None:
+			if 		IMethod.providedBy(v) \
+				or 	v.queryTaggedValue(TAG_HIDDEN_IN_UI) is not None:
 				continue
 			iSchema[k].setTaggedValue(TAG_HIDDEN_IN_UI, True)
 
