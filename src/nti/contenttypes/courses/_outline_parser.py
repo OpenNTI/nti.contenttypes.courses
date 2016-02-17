@@ -69,7 +69,7 @@ def _outline_nodes(outline):
 outline_nodes = _outline_nodes
 
 def _is_node_locked(node):
-	return IRecordable.providedBy(node) and node.locked
+	return IRecordable.providedBy(node) and node.isLocked()
 
 def _is_node_move_locked(container, children):
 	# Ideally, the child_order_locked field alone will indicate locked,
