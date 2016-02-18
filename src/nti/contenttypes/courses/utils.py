@@ -189,6 +189,10 @@ def drop_any_other_enrollments(context, user, ignore_existing=True):
 	return result
 
 def get_instructors_in_roles(roles, setting=Allow):
+	"""
+	return the instructor principal ids for the specified roles with
+	the specified setting
+	"""
 	result = set()
 	instructors = chain(roles.getPrincipalsForRole(RID_TA) or (),
 		  				roles.getPrincipalsForRole(RID_INSTRUCTOR) or ())
@@ -199,6 +203,9 @@ def get_instructors_in_roles(roles, setting=Allow):
 	return result
 
 def get_course_editors(context, setting=Allow):
+	"""
+	return the principals for the specified course with the specified setting
+	"""
 	result = []
 	course = ICourseInstance(context, None)
 	role_manager = IPrincipalRoleManager(course, None)
@@ -217,6 +224,10 @@ def get_course_editors(context, setting=Allow):
 	return result
 
 def get_course_instructors(context, setting=Allow):
+	"""
+	return the instructor principal ids for the specified course with
+	the specified setting
+	"""
 	course = ICourseInstance(context, None)
 	roles = IPrincipalRoleMap(course, None)
 	result = get_instructors_in_roles(roles, setting) if roles else ()
