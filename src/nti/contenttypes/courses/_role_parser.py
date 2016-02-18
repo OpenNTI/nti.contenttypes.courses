@@ -13,7 +13,7 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import component
 
-from zope.intid import IIntIds
+from zope.intid.interfaces import IIntIds
 
 from zope.security.interfaces import IPrincipal
 
@@ -35,8 +35,9 @@ from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.sharing import add_principal_to_course_content_roles
 from nti.contenttypes.courses.sharing import remove_principal_from_course_content_roles
 
-from nti.dataserver.users import User
 from nti.dataserver.interfaces import IUser
+
+from nti.dataserver.users import User
 
 def _fill_roles_from_json(course, manager, json):
 	"""
