@@ -29,11 +29,14 @@ from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
-from nti.contenttypes.courses.common import get_course_packages
+from nti.contentlibrary.interfaces import IContentUnit
+from nti.contentlibrary.interfaces import IContentPackage
 
 from nti.contenttypes.courses.index import IX_SITE
 from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_COURSE
+from nti.contenttypes.courses.index import IX_PACKAGES
+
 from nti.contenttypes.courses.index import IndexRecord
 from nti.contenttypes.courses.index import COURSES_CATALOG_NAME
 from nti.contenttypes.courses.index import ENROLLMENT_CATALOG_NAME
@@ -57,6 +60,10 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.vendorinfo import VENDOR_INFO_KEY
 
 from nti.dataserver.users import User
+
+from nti.site.site import get_component_hierarchy_names
+
+from nti.traversal.traversal import find_interface
 
 def get_courses_catalog():
 	return component.queryUtility(ICatalog, name=COURSES_CATALOG_NAME)
@@ -150,7 +157,24 @@ def get_course_hierarchy(context):
 		result.extend(parent.SubInstances.values())
 	return result
 
-get_course_content_packages = get_course_packages # BWC
+def content_unit_to_courses(context, include_sub_instances=True):
+	result = []
+	unit = IContentUnit(context, None)
+	package = find_interface(unit, IContentPackage, strict=False)
+	if package is not None:
+		catalog = get_courses_catalog()
+		intids = component.getUtility(IIntIds)
+		sites = get_component_hierarchy_names()
+		query = { IX_SITE: {'any_of':sites},
+				  IX_PACKAGES: {'any_of':(package.ntiid,) }}
+		for uid in catalog.apply(query) or ():
+			course = intids.queryObject(uid)
+			if not ICourseInstance.providedBy(course):
+				continue
+			if not include_sub_instances and ICourseSubInstance.providedBy(course):
+				continue
+			result.append(course)
+	return result
 
 def is_there_an_open_enrollment(course, user):
 	for instance in get_course_hierarchy(course):
@@ -366,3 +390,11 @@ def has_enrollments(user):
 		if enrollments.count_enrollments():
 			return True
 	return False
+
+import zope.deferredimport
+zope.deferredimport.initialize()
+zope.deferredimport.deprecatedFrom(
+	"moved to nti.contenttypes.courses.common",
+	"nti.contenttypes.courses.common",
+	"get_course_packages",
+	"get_course_content_packages")
