@@ -572,6 +572,18 @@ class INonPublicCourseInstance(interface.Interface):
 # interfaces.
 INonPublicCourseInstance.setTaggedValue('_ext_is_marker_interface', True)
 
+class IAnonymouslyAccessibleCourseInstance(interface.Interface):
+	"""
+	A marker interface applied to course instances to designate
+	that they are accessible via anonymous requests (unauthenticated)
+	users.  Although this marks anonymously accessible courses these
+	courses are not "publicly" accessible.  Authenticated users cannot
+	access them without being enrolled.
+	"""
+# Don't try to consider this when determining most-derived
+# interfaces.
+IAnonymouslyAccessibleCourseInstance.setTaggedValue('_ext_is_marker_interface', True)
+
 class IDenyOpenEnrollment(interface.Interface):
 	"""
 	A marker interface applied to course instances to designate

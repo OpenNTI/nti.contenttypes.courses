@@ -29,6 +29,7 @@ from nti.contentlibrary.filesystem import FilesystemKey
 from nti.contenttypes.courses._catalog_entry_parser import fill_entry_from_legacy_key
 from nti.contenttypes.courses._catalog_entry_parser import fill_entry_from_legacy_json
 
+from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 
 from nti.contenttypes.courses.legacy_catalog import ICourseCatalogLegacyEntry
@@ -134,3 +135,29 @@ class TestCatalogParser(CourseLayerTest):
 		del json['is_non_public']
 		fill_entry_from_legacy_json(entry, json)
 		assert_that( entry, does_not(verifiably_provides(INonPublicCourseInstance)))
+
+	def test_toggle_anonymously_accessible(self):
+		key = self.key
+
+		entry = CourseCatalogLegacyEntry()
+		fill_entry_from_legacy_key(entry, key)
+
+		json = key.readContentsAsJson()
+
+		json['is_anonymously_but_not_publicly_accessible'] = True
+		fill_entry_from_legacy_json(entry, json)
+		assert_that( entry, verifiably_provides(IAnonymouslyAccessibleCourseInstance))
+
+		json['is_anonymously_but_not_publicly_accessible'] = False
+		fill_entry_from_legacy_json(entry, json)
+		assert_that( entry, does_not(verifiably_provides(IAnonymouslyAccessibleCourseInstance)))
+
+		# Back to true
+		json['is_anonymously_but_not_publicly_accessible'] = True
+		fill_entry_from_legacy_json(entry, json)
+		assert_that( entry, verifiably_provides(IAnonymouslyAccessibleCourseInstance))
+
+		# Now simply missing
+		del json['is_anonymously_but_not_publicly_accessible']
+		fill_entry_from_legacy_json(entry, json)
+		assert_that( entry, does_not(verifiably_provides(IAnonymouslyAccessibleCourseInstance)))

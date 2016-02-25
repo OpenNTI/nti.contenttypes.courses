@@ -20,6 +20,7 @@ from zope import interface
 
 from zope.interface.common.idatetime import IDateTime
 
+from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 
 from nti.contenttypes.courses.legacy_catalog import CourseCreditLegacyInfo
@@ -56,6 +57,11 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		interface.alsoProvides(catalog_entry, INonPublicCourseInstance)
 	elif INonPublicCourseInstance.providedBy(catalog_entry):
 		interface.noLongerProvides(catalog_entry, INonPublicCourseInstance)
+
+	if info_json_dict.get('is_anonymously_but_not_publicly_accessible'):
+		interface.alsoProvides(catalog_entry, IAnonymouslyAccessibleCourseInstance)
+	elif IAnonymouslyAccessibleCourseInstance.providedBy(catalog_entry):
+		interface.noLongerProvides(catalog_entry, IAnonymouslyAccessibleCourseInstance)
 
 	for field, key in (('Term', 'term'),  # XXX: non-interface
 					   ('ntiid', 'ntiid'),

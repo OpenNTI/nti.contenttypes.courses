@@ -75,6 +75,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSubInstances
 from nti.contenttypes.courses.interfaces import IDenyOpenEnrollment
 from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
+from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import IContentCourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
@@ -497,6 +498,11 @@ class _ContentCourseSynchronizer(object):
 			interface.alsoProvides(course, INonPublicCourseInstance)
 		elif INonPublicCourseInstance.providedBy(course):
 			interface.noLongerProvides(course, INonPublicCourseInstance)
+
+		if IAnonymouslyAccessibleCourseInstance.providedBy(catalog_entry):
+			interface.alsoProvides(course, IAnonymouslyAccessibleCourseInstance)
+		elif IAnonymouslyAccessibleCourseInstance.providedBy(course):
+			interface.noLongerProvides(course, IAnonymouslyAccessibleCourseInstance)
 
 		if modified:
 			notify(CatalogEntrySynchronized(catalog_entry))
