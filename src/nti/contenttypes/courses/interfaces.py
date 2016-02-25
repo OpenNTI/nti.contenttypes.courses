@@ -592,6 +592,8 @@ class IDenyOpenEnrollment(interface.Interface):
 	course itself. This enrollment typically happens in a backend
 	process.
 	"""
+# Don't try to consider this when determining most-derived
+# interfaces.
 IDenyOpenEnrollment.setTaggedValue('_ext_is_marker_interface', True)
 
 # Catalog
@@ -1264,7 +1266,7 @@ def iface_of_node(node):
 	for node_interface in (ICourseOutlineContentNode,
 				  		   ICourseOutlineCalendarNode,
 				  		   ICourseOutlineNode,
-				  		   ICourseOutline):  # orden matters
+				  		   ICourseOutline):  # order matters
 		if node_interface.providedBy(node):
 			return node_interface
 	return None

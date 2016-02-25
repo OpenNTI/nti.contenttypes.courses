@@ -24,8 +24,9 @@ from zope.event import notify
 
 from zope.site.interfaces import ILocalSiteManager
 
-from nti.common.string import safestr
 from nti.common.representation import WithRepr
+
+from nti.common.string import safestr
 
 from nti.contentlibrary import ContentRemovalException
 
@@ -74,13 +75,13 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSubInstances
 from nti.contenttypes.courses.interfaces import IDenyOpenEnrollment
-from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
-from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
+from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
 from nti.contenttypes.courses.interfaces import IContentCourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseSynchronizationResults
 from nti.contenttypes.courses.interfaces import IEnrollmentMappedCourseInstance
+from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
 from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CatalogEntrySynchronized
@@ -206,8 +207,8 @@ class _GenericFolderSynchronizer(object):
 		# Synchronize everything
 		for child_name, child in folder.items():
 			child_bucket = child_buckets[child_name]
-			sync = component.getMultiAdapter((child, child_bucket),
-											  IObjectEntrySynchronizer)
+			sync = component.getMultiAdapter((child, child_bucket), 
+											 IObjectEntrySynchronizer)
 			sync.synchronize(child, child_bucket, **kwargs)
 
 @interface.implementer(IObjectEntrySynchronizer)

@@ -29,8 +29,8 @@ from nti.contentlibrary.filesystem import FilesystemKey
 from nti.contenttypes.courses._catalog_entry_parser import fill_entry_from_legacy_key
 from nti.contenttypes.courses._catalog_entry_parser import fill_entry_from_legacy_json
 
-from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
+from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
 from nti.contenttypes.courses.legacy_catalog import ICourseCatalogLegacyEntry
 from nti.contenttypes.courses.legacy_catalog import PersistentCourseCatalogLegacyEntry as CourseCatalogLegacyEntry

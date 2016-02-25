@@ -20,8 +20,8 @@ from zope import interface
 
 from zope.interface.common.idatetime import IDateTime
 
-from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
+from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
 from nti.contenttypes.courses.legacy_catalog import CourseCreditLegacyInfo
 from nti.contenttypes.courses.legacy_catalog import CourseCatalogInstructorLegacyInfo
