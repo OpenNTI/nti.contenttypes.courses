@@ -14,11 +14,13 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from zope.authentication.interfaces import IUnauthenticatedPrincipal
 from zope.security.interfaces import IPrincipal
 
 from nti.common.property import Lazy
 
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -74,12 +76,23 @@ class CourseInstanceACLProvider(object):
 		sharing_scopes = course.SharingScopes
 		sharing_scopes.initScopes()
 
+		aces = [ ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)) ]
+
 		# Anyone still enrolled in course has access, whether the course
 		# is public or not.
 		public_scope = sharing_scopes[ES_PUBLIC]
-
-		aces = [ ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)) ]
 		aces.append(ace_allowing(IPrincipal(public_scope), ACT_READ, type(self)))
+
+		#Courses marked as being anonymously accessible should have READ access
+		#for the unauthenticated user.  Note that for BWC we intentionally
+		#do NOT use the Everyone principal.  We don't want authenticated
+		#but unenrolled users to have access right now.
+		if IAnonymouslyAccessibleCourseInstance.providedBy(course):
+			unauthenticated_principal = component.getUtility(IUnauthenticatedPrincipal)
+			aces.append(ace_allowing(unauthenticated_principal,
+						 			(ACT_READ),
+									type(self)))
+
 		for i in course.instructors or ():
 			aces.append(ace_allowing(i, ACT_READ, type(self)))
 
