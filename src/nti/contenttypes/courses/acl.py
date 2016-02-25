@@ -15,6 +15,7 @@ from zope import component
 from zope import interface
 
 from zope.authentication.interfaces import IUnauthenticatedPrincipal
+
 from zope.security.interfaces import IPrincipal
 
 from nti.common.property import Lazy
@@ -29,13 +30,6 @@ from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInst
 from nti.contenttypes.courses.utils import get_course_editors
 from nti.contenttypes.courses.utils import get_course_subinstances
 
-from nti.dataserver.interfaces import ACE_DENY_ALL
-from nti.dataserver.interfaces import ALL_PERMISSIONS
-from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
-from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
-
-from nti.dataserver.interfaces import IACLProvider
-
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ACT_CREATE
 from nti.dataserver.authorization import ROLE_ADMIN
@@ -46,6 +40,13 @@ from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
 from nti.dataserver.authorization_acl import ace_denying
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
+
+from nti.dataserver.interfaces import ACE_DENY_ALL
+from nti.dataserver.interfaces import ALL_PERMISSIONS
+from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
+from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
+
+from nti.dataserver.interfaces import IACLProvider
 
 from nti.traversal.traversal import find_interface
 
