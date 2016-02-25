@@ -90,7 +90,7 @@ class CourseInstanceACLProvider(object):
 		if IAnonymouslyAccessibleCourseInstance.providedBy(course):
 			unauthenticated_principal = component.getUtility(IUnauthenticatedPrincipal)
 			aces.append(ace_allowing(unauthenticated_principal,
-						 			(ACT_READ),
+						 			ACT_READ,
 									type(self)))
 
 		for i in course.instructors or ():

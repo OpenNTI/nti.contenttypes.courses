@@ -179,8 +179,9 @@ class _GenericFolderSynchronizer(object):
 		for folder_child_name in list(folder):
 			if folder_child_name not in child_buckets:
 				child_folder = folder[folder_child_name]
-				if 	not allowRemoval and self._COURSE_INSTANCE_FACTORY is not None and \
-					isinstance(child_folder, self._COURSE_INSTANCE_FACTORY):
+				if 		not allowRemoval \
+					and self._COURSE_INSTANCE_FACTORY is not None \
+					and isinstance(child_folder, self._COURSE_INSTANCE_FACTORY):
 					raise ContentRemovalException(
 							"Cannot remove course without explicitly allowing it")
 				else:
