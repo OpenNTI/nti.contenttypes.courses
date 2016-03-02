@@ -19,6 +19,8 @@ from zope.component.hooks import getSite
 
 from zope.component.interfaces import ComponentLookupError
 
+from zope.container.contained import Contained
+
 from zope.intid.interfaces import IIntIds
 
 from zope.location import LocationIterator
@@ -28,6 +30,8 @@ from zope.security.interfaces import IPrincipal
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
+
+from nti.common.property import Lazy
 
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
@@ -64,6 +68,32 @@ from nti.dataserver.users import User
 from nti.site.site import get_component_hierarchy_names
 
 from nti.traversal.traversal import find_interface
+
+class AbstractInstanceWrapper(Contained):
+
+	__acl__ = ()
+
+	def __init__(self, context):
+		self.CourseInstance = context
+		# Sometimes the CourseInstance object goes away
+		# for externalization, so capture an extra copy
+		self._private_course_instance = context
+
+	@Lazy
+	def __name__(self):
+		try:
+			# We probably want a better value than `ntiid`? Human readable?
+			# or is this supposed to be traversable?
+			return ICourseCatalogEntry(self._private_course_instance).ntiid
+		except TypeError:  # Hmm, the catalog entry is gone, something doesn't match. What?
+			logger.warning("Failed to get name from catalog for %s/%s",
+						   self._private_course_instance,
+						   self._private_course_instance.__name__)
+			return self._private_course_instance.__name__
+
+	def __conform__(self, iface):
+		if ICourseInstance.isOrExtends(iface):
+			return self._private_course_instance
 
 def get_courses_catalog():
 	return component.queryUtility(ICatalog, name=COURSES_CATALOG_NAME)

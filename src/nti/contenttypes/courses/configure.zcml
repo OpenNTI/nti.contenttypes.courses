@@ -40,8 +40,9 @@
 						 .interfaces.ICourseCatalogEntry
 						 .interfaces.ICourseLessonSyncResults
 						 .interfaces.ICourseCatalogInstructorInfo
-						 .interfaces.ICourseSynchronizationResults"
-		modules=".courses .outlines .catalog .sharing ._synchronize" />
+						 .interfaces.ICourseSynchronizationResults
+						 .interfaces.ICourseInstanceAdministrativeRole"
+		modules=".administered .catalog .courses .outlines .sharing ._synchronize" />
 
 	<ext:registerAutoPackageIO
 		root_interfaces=".legacy_catalog.ICourseCatalogLegacyEntry
@@ -107,6 +108,7 @@
 		description="This role should have full edit permissions
 					on course objects." />
 
+	<!-- ACLs -->
 	<adapter factory=".acl.CourseInstanceACLProvider" />
 	<adapter factory=".acl.CourseOutlineNodeACLProvider" />
 	<adapter factory=".acl.CourseCatalogEntryACLProvider" />
@@ -163,6 +165,18 @@
 
 	<adapter factory=".enrollment.DefaultCourseEnrollments" />
 
+	<!-- Administered Courses -->
+	<configure zcml:condition="not-have testmode">
+		<utility factory=".administered.IndexAdminCourses" />
+	</configure>
+	<configure zcml:condition="have testmode">
+		<utility factory=".administered.IterableAdminCourses" />
+	</configure>
+	
+	<!-- A subscriber for getting admin roles -->
+	<subscriber factory=".administered._DefaultPrincipalAdministrativeRoleCatalog"
+				provides=".interfaces.IPrincipalAdministrativeRoleCatalog" />
+				
 	<!-- anything that can become a Principal... -->
 	<subscriber factory=".enrollment.DefaultPrincipalEnrollments"
 				provides=".interfaces.IPrincipalEnrollments"
