@@ -1231,6 +1231,27 @@ class ICourseAssessmentUserFilter(interface.Interface):
 		assignment should be visible to the user and False otherwise.
 		"""
 
+class IPrincipalAdministrativeRoleCatalog(interface.Interface):
+	"""
+	Something that can provide information about all courses
+	administered by the principal.
+
+	There can be multiple catalogs for courses that are managed in
+	different ways. Therefore, commonly implementations will be
+	registered as subscription adapters from the user.
+	"""
+
+	def iter_administrations():
+		"""
+		Iterate across :class:`.ICourseInstanceAdministrativeRole` objects, or at
+		least something that can be adapted to that interface.
+		"""
+
+	def count_administrations():
+		"""
+		return the count of administrator roles
+		"""
+
 class ICourseRolePermissionManager(IRolePermissionManager):
 	"""
 	A role permission manager for courses.
