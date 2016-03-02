@@ -155,11 +155,11 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
 			# For now, we're including editors in the administered
 			# workspace.
 			if roles.getSetting(RID_INSTRUCTOR, self.user.id) is Allow:
-				role = 'instructor'
+				role = u'instructor'
 			elif roles.getSetting(RID_TA, self.user.id) is Allow:
-				role = 'teaching assistant'
+				role = u'teaching assistant'
 			else:
-				role = 'editor'
+				role = u'editor'
 			yield CourseInstanceAdministrativeRole(RoleName=role, CourseInstance=course)
 	iter_enrollments = iter_administrations  # for convenience
 
