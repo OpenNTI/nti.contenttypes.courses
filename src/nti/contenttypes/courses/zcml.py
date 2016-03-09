@@ -47,6 +47,7 @@ def _register(code, course, scope=ES_PUBLIC):
     invitations = component.queryUtility(IInvitations)
     if invitations is not None:
         invitations.registerInvitation(JoinCourseInvitation(code, course, scope))
+        logger.info('Course invitation "%s" has been registered', code)
 
 def registerJoinCourseInvitation(_context, code, course, scope=ES_PUBLIC):
     """
