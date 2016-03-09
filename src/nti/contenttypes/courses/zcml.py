@@ -14,10 +14,14 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from zope.component.zcml import utility
+
 from zope.configuration.fields import TextLine
 
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_NAMES
+
+from nti.contenttypes.courses.interfaces import IJoinCourseInvitation
 
 from nti.contenttypes.courses.invitation import JoinCourseInvitation
 
@@ -43,10 +47,17 @@ class IRegisterJoinCourseInvitationDirective(interface.Interface):
         required=False,
         )
 
-def _register(code, course, scope=ES_PUBLIC):
+def _register(_context, code, course, scope=ES_PUBLIC):
     invitations = component.queryUtility(IInvitations)
     if invitations is not None:
-        invitations.registerInvitation(JoinCourseInvitation(code, course, scope))
+        # register w/ invitations
+        invitation = JoinCourseInvitation(code, course, scope)
+        invitations.registerInvitation(invitation)
+        # register as a utility
+        utility(_context, 
+                provides=IJoinCourseInvitation, 
+                component=invitation,
+                name=code)
         logger.info('Course invitation "%s" has been registered', code)
 
 def registerJoinCourseInvitation(_context, code, course, scope=ES_PUBLIC):
@@ -61,4 +72,4 @@ def registerJoinCourseInvitation(_context, code, course, scope=ES_PUBLIC):
 
     _context.action(discriminator=('registerJoinCourseInvitation', code),
                     callable=_register,
-                    args=(code, course, scope))
+                    args=(_context, code, course, scope))
