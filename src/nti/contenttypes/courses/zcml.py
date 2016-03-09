@@ -44,8 +44,9 @@ class IRegisterJoinCourseInvitationDirective(interface.Interface):
         )
 
 def _register(code, course, scope=ES_PUBLIC):
-    invitations = component.getUtility(IInvitations)
-    invitations.registerInvitation(JoinCourseInvitation(code, course, scope))
+    invitations = component.queryUtility(IInvitations)
+    if invitations is not None:
+        invitations.registerInvitation(JoinCourseInvitation(code, course, scope))
 
 def registerJoinCourseInvitation(_context, code, course, scope=ES_PUBLIC):
     """
