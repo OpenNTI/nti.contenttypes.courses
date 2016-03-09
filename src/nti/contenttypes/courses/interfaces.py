@@ -72,6 +72,9 @@ from nti.dataserver.contenttypes.forums.interfaces import IBoard
 
 from nti.dataserver.users.interfaces import IDisallowMembershipOperations
 
+from nti.invitations.interfaces import IInvitation
+from nti.invitations.interfaces import IInvitationActor
+
 from nti.ntiids.schema import ValidNTIID
 
 from nti.schema.field import Bool
@@ -1311,6 +1314,28 @@ def get_course_assessment_predicate_for_user(user, course):
 	def uber_filter(asg):
 		return all((f.allow_assessment_for_user_in_course(asg, user, course) for f in filters))
 	return uber_filter
+
+# Invitations
+
+class IJoinCourseInvitation(IInvitation):
+	"""
+	Marker interface for a invitation to join a course
+	"""
+
+class IJoinCourseInvitationActor(IInvitationActor):
+	"""
+	Actor to enroll a user in a course
+	"""
+	
+	def accept(user, course, scope):
+		"""
+		Perform the enrollment invitation
+		
+		:param user User being invited
+		:param course Course to join
+		:param scope Enrollment scope
+		:return true if user was enrolled
+		"""
 
 #: All course outline node interfaces
 ALL_COURSE_OUTLINE_INTERFACES = (ICourseOutlineContentNode,
