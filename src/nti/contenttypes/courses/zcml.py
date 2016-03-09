@@ -17,6 +17,8 @@ from zope import interface
 from zope.configuration.fields import TextLine
 
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_NAMES
+
 from nti.contenttypes.courses.invitation import JoinCourseInvitation
 
 from nti.invitations.interfaces import IInvitations
@@ -52,6 +54,9 @@ def registerJoinCourseInvitation(_context, code, course, scope=ES_PUBLIC):
 
     :param module module: The module to inspect.
     """
+    scope = scope or ES_PUBLIC
+    assert scope in ENROLLMENT_SCOPE_NAMES, 'Invalid scope'
+
     _context.action(discriminator=('registerJoinCourseInvitation', code),
                     callable=_register,
                     args=(code, course, scope))
