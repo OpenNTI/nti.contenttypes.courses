@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from nti.contenttypes.courses import MessageFactory as _
+
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -38,8 +40,7 @@ class JoinCourseInvitationActor(object):
 		scope = scope or ES_PUBLIC
 		catalog = component.queryUtility(ICourseCatalog)
 		if catalog is None:
-			logger.warn("Course catalog not available")
-			return False
+			raise ValueError(_("Course catalog not available."))
 
 		# find course
 		course = find_object_with_ntiid(entry)
@@ -48,13 +49,11 @@ class JoinCourseInvitationActor(object):
 
 		course = ICourseInstance(course, None)
 		if course is None:
-			logger.error("Course %s was not found", entry)
-			return False
+			raise ValueError(_("Course not found."))
 
 		record = get_enrollment_in_hierarchy(course, user)
 		if record is not None:
-			logger.warn("User %s already enrolled in %s", user, entry)
-			return False
+			raise ValueError(_("User already enrolled in course."))
 
 		enrollment_manager = ICourseEnrollmentManager(course)
 		enrollment_manager.enroll(user, scope=scope)
