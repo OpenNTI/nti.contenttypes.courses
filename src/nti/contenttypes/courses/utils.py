@@ -207,6 +207,8 @@ def content_unit_to_courses(context, include_sub_instances=True):
 	return result
 
 def is_there_an_open_enrollment(course, user):
+	if user is None:
+		return False
 	for instance in get_course_hierarchy(course):
 		enrollments = ICourseEnrollments(instance)
 		record = enrollments.get_enrollment_for_principal(user)
@@ -215,6 +217,8 @@ def is_there_an_open_enrollment(course, user):
 	return False
 
 def get_enrollment_in_hierarchy(course, user):
+	if user is None:
+		return None
 	for instance in get_course_hierarchy(course):
 		enrollments = ICourseEnrollments(instance)
 		record = enrollments.get_enrollment_for_principal(user)
@@ -415,7 +419,7 @@ def is_enrolled_in_hierarchy(context, user):
 	record = get_enrollment_record_in_hierarchy(context, user)
 	return record is not None
 
-def has_enrollments(user):
+def has_enrollments(user):		
 	for enrollments in component.subscribers((user,), IPrincipalEnrollments):
 		if enrollments.count_enrollments():
 			return True
