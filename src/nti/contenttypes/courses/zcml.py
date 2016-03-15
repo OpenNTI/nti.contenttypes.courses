@@ -11,6 +11,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from functools import partial
+
 from zope import component
 from zope import interface
 
@@ -47,18 +49,18 @@ class IRegisterJoinCourseInvitationDirective(interface.Interface):
 		required=False,
 		)
 
-def _register(_context, code, course, scope=ES_PUBLIC):
+def _register(code, course, scope=ES_PUBLIC):
 	invitations = component.queryUtility(IInvitations)
 	if invitations is not None:
 		# register w/ invitations
 		invitation = JoinCourseInvitation(code, course, scope)
 		invitations.registerInvitation(invitation)
-		# register as a utility
-		utility(_context,
-				provides=IJoinCourseInvitation,
-				component=invitation,
-				name=code)
-		logger.info('Course invitation "%s" has been registered', code)
+
+def _get_invitiation(code):
+	invitations = component.queryUtility(IInvitations)
+	if invitations is not None:
+		return invitations.getInvitationByCode(code)
+	return None
 
 def registerJoinCourseInvitation(_context, code, course, scope=ES_PUBLIC):
 	"""
@@ -70,4 +72,9 @@ def registerJoinCourseInvitation(_context, code, course, scope=ES_PUBLIC):
 	scope = scope or ES_PUBLIC
 	assert scope in ENROLLMENT_SCOPE_NAMES, 'Invalid scope'
 
-	_register(_context, code, course, scope)
+	_context.action(discriminator=('registerJoinCourseInvitation', code),
+					callable=_register,
+					args=(code, course, scope))
+
+	factory = partial(_get_invitiation, code=code)
+	utility(_context, provides=IJoinCourseInvitation, factory=factory, name=code)
