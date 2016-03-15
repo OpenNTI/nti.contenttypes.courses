@@ -28,48 +28,46 @@ from nti.contenttypes.courses.invitation import JoinCourseInvitation
 from nti.invitations.interfaces import IInvitations
 
 class IRegisterJoinCourseInvitationDirective(interface.Interface):
-    """
-    The arguments needed for registering an invitation to join communities.
-    """
+	"""
+	The arguments needed for registering an invitation to join communities.
+	"""
 
-    code = TextLine(
-        title="The human readable/writable code the user types in. Should not have spaces.",
-        required=True,
-        )
+	code = TextLine(
+		title="The human readable/writable code the user types in. Should not have spaces.",
+		required=True,
+		)
 
-    course = TextLine(
-        title="The NTIID of the course to join",
-        required=True,
-        )
-    
-    scope = TextLine(
-        title="The enrollment scope",
-        required=False,
-        )
+	course = TextLine(
+		title="The NTIID of the course to join",
+		required=True,
+		)
+
+	scope = TextLine(
+		title="The enrollment scope",
+		required=False,
+		)
 
 def _register(_context, code, course, scope=ES_PUBLIC):
-    invitations = component.queryUtility(IInvitations)
-    if invitations is not None:
-        # register w/ invitations
-        invitation = JoinCourseInvitation(code, course, scope)
-        invitations.registerInvitation(invitation)
-        # register as a utility
-        utility(_context, 
-                provides=IJoinCourseInvitation, 
-                component=invitation,
-                name=code)
-        logger.info('Course invitation "%s" has been registered', code)
+	invitations = component.queryUtility(IInvitations)
+	if invitations is not None:
+		# register w/ invitations
+		invitation = JoinCourseInvitation(code, course, scope)
+		invitations.registerInvitation(invitation)
+		# register as a utility
+		utility(_context,
+				provides=IJoinCourseInvitation,
+				component=invitation,
+				name=code)
+		logger.info('Course invitation "%s" has been registered', code)
 
 def registerJoinCourseInvitation(_context, code, course, scope=ES_PUBLIC):
-    """
-    Register an invitation with the given code that, at runtime,
-    will resolve and try to enroll in the named course.
+	"""
+	Register an invitation with the given code that, at runtime,
+	will resolve and try to enroll in the named course.
 
-    :param module module: The module to inspect.
-    """
-    scope = scope or ES_PUBLIC
-    assert scope in ENROLLMENT_SCOPE_NAMES, 'Invalid scope'
+	:param module module: The module to inspect.
+	"""
+	scope = scope or ES_PUBLIC
+	assert scope in ENROLLMENT_SCOPE_NAMES, 'Invalid scope'
 
-    _context.action(discriminator=('registerJoinCourseInvitation', code),
-                    callable=_register,
-                    args=(_context, code, course, scope))
+	_register(_context, code, course, scope)

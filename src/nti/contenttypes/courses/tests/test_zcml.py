@@ -7,6 +7,7 @@ __docformat__ = "restructuredtext en"
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
+from hamcrest import is_
 from hamcrest import none
 from hamcrest import is_not
 from hamcrest import assert_that
@@ -17,6 +18,8 @@ from zope import component
 from nti.invitations.interfaces import IInvitations
 
 from nti.invitations.utility import PersistentInvitations
+
+from nti.contenttypes.courses.interfaces import IJoinCourseInvitation
 
 import nti.testing.base
 
@@ -53,3 +56,6 @@ class TestZcml(nti.testing.base.ConfiguringTestBase):
 		assert_that(invitation, has_property('code', 'Alpha'))
 		assert_that(invitation, has_property('course', 'MyCourse'))
 		assert_that(invitation, has_property('scope', 'ForCredit'))
+		
+		registered = component.queryUtility(IJoinCourseInvitation, "Alpha")
+		assert_that(registered, is_(invitation))
