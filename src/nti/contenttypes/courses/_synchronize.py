@@ -183,8 +183,8 @@ class _GenericFolderSynchronizer(object):
 					and self._COURSE_INSTANCE_FACTORY is not None \
 					and isinstance(child_folder, self._COURSE_INSTANCE_FACTORY):
 					raise ContentRemovalException(
-							"Cannot remove course without explicitly allowing it (%s) (%s)",
-							folder_child_name, child_folder)
+							"Cannot remove course without explicitly allowing it (%s) (%s)" \
+							% (folder_child_name, child_folder))
 				else:
 					logger.info("Removing child %s (%r)", folder_child_name, child_folder)
 					del folder[folder_child_name]
