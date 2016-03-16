@@ -637,7 +637,7 @@ class ICourseCatalog(interface.Interface):
 
 from persistent.interfaces import IPersistent
 
-class IPersistentCourseCatalog(ICourseCatalog, IPersistent):
+class IPersistentCourseCatalog(ICourseCatalog, IPersistent, IContainer):
 	"""
 	A locally persistent course catalog; contrast with the global
 	course catalog.
