@@ -220,7 +220,7 @@ class _ContentCourseSynchronizer(object):
 	def __init__(self, course, bucket):
 		pass
 
-	def synchronize(self, course, bucket, **kwargs):
+	def synchronize(self, course, bucket, force=False, **kwargs):
 		__traceback_info__ = course, bucket
 		entry = ICourseCatalogEntry(course)
 
@@ -261,6 +261,7 @@ class _ContentCourseSynchronizer(object):
 		modified = sync_bundle_from_json_key(bundle_json_key, course.ContentPackageBundle,
 								  			 dc_meta_name='bundle_dc_metadata.xml',
 								  			 excluded_keys=('ntiid',))
+
 		if modified:
 			sync_results.ContentBundleUpdated = True
 
@@ -269,7 +270,8 @@ class _ContentCourseSynchronizer(object):
 
 		self.update_common_info(course, bucket,
 								sync_results=sync_results,
-								try_legacy_content_bundle=True)
+								try_legacy_content_bundle=True,
+								force=force)
 
 		self.update_deny_open_enrollment(course)
 
@@ -293,7 +295,8 @@ class _ContentCourseSynchronizer(object):
 	@classmethod
 	def update_common_info(cls, course, bucket,
 						   sync_results=None,
-						   try_legacy_content_bundle=False):
+						   try_legacy_content_bundle=False,
+						   force=False):
 		sync_results = _get_course_sync_results(course, sync_results)
 
 		course.SharingScopes.initScopes()
@@ -317,7 +320,8 @@ class _ContentCourseSynchronizer(object):
 		cls.update_outline(course=course,
 						   bucket=bucket,
 						   sync_results=sync_results,
-						   try_legacy_content_bundle=try_legacy_content_bundle)
+						   try_legacy_content_bundle=try_legacy_content_bundle,
+						   force=force)
 
 		cls.update_catalog_entry(course=course,
 								 bucket=bucket,
@@ -609,12 +613,13 @@ class _ContentCourseSubInstanceSynchronizer(object):
 	def __init__(self, subcourse, bucket):
 		pass
 
-	def synchronize(self, subcourse, bucket, **kwargs):
+	def synchronize(self, subcourse, bucket, force=False, **kwargs):
 		__traceback_info__ = subcourse, bucket
 
 		course_sync_results = _get_course_sync_results(subcourse, **kwargs)
 		_ContentCourseSynchronizer.update_common_info(subcourse, bucket,
-													  sync_results=course_sync_results)
+													  sync_results=course_sync_results,
+													  force=force)
 
 		# check for open enrollment
 		if has_deny_open_enrollment(subcourse):

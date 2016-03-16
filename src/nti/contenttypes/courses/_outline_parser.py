@@ -16,6 +16,8 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import component
 
+from nti.contentlibrary import ContentRemovalException
+
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 
 from nti.contenttypes.courses.interfaces import iface_of_node
@@ -228,7 +230,7 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 	_publish(lesson_node)
 	return lesson_node
 
-def _update_parent_children(parent_node, old_children, transactions):
+def _update_parent_children(parent_node, old_children, transactions, force=False):
 	"""
 	If there are old_children and the parent node is `move`
 	locked, we must preserve the existing order state. We do not
@@ -247,7 +249,7 @@ def _update_parent_children(parent_node, old_children, transactions):
 				new_child = None
 			if 		new_child is not None \
 				and old_child.ntiid != new_child.ntiid:
-				# TODO Event?
+				# TODO: Event?
 				logger.info('Found moved node on sync (old=%s) (new=%s)',
 							old_child.ntiid, new_child.ntiid)
 
@@ -260,13 +262,30 @@ def _update_parent_children(parent_node, old_children, transactions):
 				parent_node.append(new_child)
 				copy_records(new_child, transactions.get(old_child.ntiid, ()))
 
-		# Possibly sync-appended items that we are ignoring..
+		# Possibly sync-appended items that we are ignoring...
 		ignored_children = set(new_child_map.keys()) - set((x.ntiid for x in old_children))
 		for ignored_child in ignored_children:
-			# TODO Event
+			# TODO: Event
 			logger.info('Not appending new node (%s) since parent node (%s) has sync locked children',
 						ignored_child,
 						getattr(parent_node, 'ntiid', ''))
+	elif	old_children \
+		and len( old_children ) > len( parent_node.values() or ()):
+		# Our parent node may be losing children, including those with API
+		# created data underneath. We allow it only if none of those
+		# underlying elements are locked (or we have a force flag).
+		def _check_locked( node ):
+			for child in node.values():
+				if _is_node_locked( child ):
+					msg = 'Force removing user edited node during sync (node=%s) (parent=%s)' % \
+						  (child.ntiid, getattr(parent_node, 'ntiid', ''))
+					if not force:
+						raise ContentRemovalException(msg)
+					else:
+						logger.info(msg)
+				_check_locked( child )
+		for old_child in old_children:
+			_check_locked( old_child )
 
 def _is_outline_stub(lesson):
 	return lesson.get(bytes('isOutlineStubOnly')) == 'true'
@@ -303,7 +322,7 @@ def _use_or_create_node(node_ntiid, new_node, removed_nodes, builder, registry=N
 	return result, old_children
 
 def _handle_node(parent_lxml, parent_node, old_children, library,
-				 removed_nodes, transactions, registry=None):
+				 removed_nodes, transactions, force, registry=None):
 	"""
 	Recursively fill in outline nodes and their children.
 	"""
@@ -326,9 +345,9 @@ def _handle_node(parent_lxml, parent_node, old_children, library,
 		# Must add to our parent_node now to avoid NotYet exceptions.
 		parent_node.append(lesson_node)
 		_handle_node(lesson, lesson_node, old_lesson_children, library,
-					 removed_nodes, transactions, registry=registry)
+					 removed_nodes, transactions, force, registry=registry)
 
-	_update_parent_children(parent_node, old_children, transactions)
+	_update_parent_children(parent_node, old_children, transactions, force)
 
 def fill_outline_from_node(outline, course_element, force=False, registry=None, **kwargs):
 	"""
@@ -353,7 +372,7 @@ def fill_outline_from_node(outline, course_element, force=False, registry=None, 
 	# Get nodes that can be removed
 	removed_nodes = {x.ntiid:x for x in _get_nodes_to_remove(outline, force=force)}
 
-	old_children = list(outline.values())
+	old_children = tuple(outline.values())
 	outline.clear(event=False)
 
 	for idx, unit in enumerate(course_element.iterchildren(tag='unit')):
@@ -375,8 +394,8 @@ def fill_outline_from_node(outline, course_element, force=False, registry=None, 
 
 		outline.append(unit_node)
 		_handle_node(unit, unit_node, old_unit_children, library,
-					 removed_nodes, transactions, registry=registry)
-	_update_parent_children(outline, old_children, transactions)
+					 removed_nodes, transactions, force, registry=registry)
+	_update_parent_children(outline, old_children, transactions, force)
 
 	# Unregister removed and re-register
 	for removed_node in removed_nodes.values():
