@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import six
 from itertools import chain
 
 from zope import component
@@ -97,6 +98,22 @@ class AbstractInstanceWrapper(Contained):
 
 def get_courses_catalog():
 	return component.queryUtility(ICatalog, name=COURSES_CATALOG_NAME)
+
+def get_courses_for_packages(sites=(), packages=()):
+	result = set()
+	catalog = get_courses_catalog()
+	intids = component.getUtility(IIntIds)
+	sites = (sites,) if isinstance(sites, six.string_types) else sites
+	packages = (packages,) if isinstance(packages, six.string_types) else packages
+	query = {
+		IX_SITE: {'any_of': sites},
+		IX_PACKAGES: {'any_of': packages}
+	}
+	for uid in catalog.apply(query) or ():
+		course = ICourseInstance(intids.queryObject(uid))
+		result.add(course)
+	result.discard(None)
+	return tuple(result)
 
 def get_enrollment_catalog():
 	return component.queryUtility(ICatalog, name=ENROLLMENT_CATALOG_NAME)
