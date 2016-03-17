@@ -268,7 +268,7 @@ def _update_parent_children(parent_node, old_children, transactions, force=False
 			# TODO: Event
 			logger.info('Not appending new node (%s) since parent node (%s) has sync locked children',
 						ignored_child,
-						getattr(parent_node, 'ntiid', ''))
+						getattr(parent_node, 'ntiid', 'Outline'))
 	elif	old_children \
 		and len( old_children ) > len( new_child_map ):
 		# Our parent node may be losing children, including those with API
@@ -278,14 +278,19 @@ def _update_parent_children(parent_node, old_children, transactions, force=False
 			for child in node.values():
 				if _is_node_locked( child ):
 					msg = 'Force removing user edited node during sync (node=%s) (parent=%s)' % \
-						  (child.ntiid, getattr(parent_node, 'ntiid', ''))
+						  (child.ntiid, getattr(parent_node, 'ntiid', 'Outline'))
 					if not force:
 						raise ContentRemovalException(msg)
 					else:
 						logger.info(msg)
 				_check_locked( child )
-		for old_child in (x for x in old_children if x.ntiid not in new_child_map):
-			_check_locked( old_child )
+		for candidate in old_children:
+			try:
+				if candidate.ntiid not in new_child_map:
+					_check_locked( candidate )
+			except AttributeError:
+				# Some old courses (F 2014 BIOL), have nodes without ntiids.
+				pass
 
 def _is_outline_stub(lesson):
 	return lesson.get(bytes('isOutlineStubOnly')) == 'true'
