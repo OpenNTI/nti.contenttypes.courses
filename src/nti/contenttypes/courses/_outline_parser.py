@@ -236,9 +236,9 @@ def _update_parent_children(parent_node, old_children, transactions, force=False
 	locked, we must preserve the existing order state. We do not
 	support sync inserts when there are user-locked objects in play.
 	"""
+	new_children = list(parent_node.values())
+	new_child_map = {x.ntiid:x for x in new_children}
 	if old_children and _is_node_move_locked(parent_node, old_children):
-		new_children = list(parent_node.values())
-		new_child_map = {x.ntiid:x for x in new_children}
 		# Our children may already have their transactions recorded,
 		# make sure we don't clear them via wipe.
 		parent_node.clear(event=False)
@@ -270,7 +270,7 @@ def _update_parent_children(parent_node, old_children, transactions, force=False
 						ignored_child,
 						getattr(parent_node, 'ntiid', ''))
 	elif	old_children \
-		and len( old_children ) > len( parent_node.values() or ()):
+		and len( old_children ) > len( new_child_map ):
 		# Our parent node may be losing children, including those with API
 		# created data underneath. We allow it only if none of those
 		# underlying elements are locked (or we have a force flag).
@@ -284,7 +284,7 @@ def _update_parent_children(parent_node, old_children, transactions, force=False
 					else:
 						logger.info(msg)
 				_check_locked( child )
-		for old_child in old_children:
+		for old_child in (x for x in old_children if x.ntiid not in new_child_map):
 			_check_locked( old_child )
 
 def _is_outline_stub(lesson):
