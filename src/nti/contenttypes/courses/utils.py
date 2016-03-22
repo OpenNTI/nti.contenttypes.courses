@@ -204,24 +204,19 @@ def get_course_hierarchy(context):
 		result.extend(parent.SubInstances.values())
 	return result
 
-def content_unit_to_courses(context, include_sub_instances=True):
-	result = []
+def get_content_unit_courses(context, include_sub_instances=True):
+	result = ()
 	unit = IContentUnit(context, None)
 	package = find_interface(unit, IContentPackage, strict=False)
 	if package is not None:
-		catalog = get_courses_catalog()
-		intids = component.getUtility(IIntIds)
 		sites = get_component_hierarchy_names()
-		query = { IX_SITE: {'any_of':sites},
-				  IX_PACKAGES: {'any_of':(package.ntiid,) }}
-		for uid in catalog.apply(query) or ():
-			course = intids.queryObject(uid)
-			if not ICourseInstance.providedBy(course):
-				continue
-			if not include_sub_instances and ICourseSubInstance.providedBy(course):
-				continue
-			result.append(course)
+		courses = get_courses_for_packages(sites, package.ntiid)
+		if not include_sub_instances:
+			result = tuple(x for x in courses if not ICourseSubInstance.providedBy(x))
+		else:
+			result = courses
 	return result
+content_unit_to_courses = get_content_unit_courses
 
 def is_there_an_open_enrollment(course, user):
 	if user is None:
