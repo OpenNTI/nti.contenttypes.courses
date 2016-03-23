@@ -40,7 +40,7 @@ from nti.zope_catalog.index import AttributeSetIndex
 from nti.zope_catalog.index import SetIndex as RawSetIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
 
-### Deprecations
+# Deprecations
 
 deprecated('ValidatingUsernameID', 'Use lastest index implementation')
 class ValidatingUsernameID(object):
@@ -52,7 +52,7 @@ deprecated('SiteIndex', 'Replaced with SingleSiteIndex')
 class SiteIndex(RawSetIndex):
 	pass
 
-### Utilities
+# Utilities
 
 class KeepSetIndex(RawSetIndex):
 
@@ -80,7 +80,7 @@ class KeepSetIndex(RawSetIndex):
 		else:
 			super(KeepSetIndex, self).unindex_doc(doc_id)
 
-### Enrollment catalog
+# Enrollment catalog
 
 IndexRecord = namedtuple('IndexRecord', 'username ntiid Scope')
 
@@ -184,7 +184,7 @@ def install_enrollment_catalog(site_manager_container, intids=None):
 		catalog[name] = index
 	return catalog
 
-### Courses catalog
+# Courses catalog
 
 IX_PACKAGES = 'packages'
 COURSES_CATALOG_NAME = 'nti.dataserver.++etc++courses-catalog'

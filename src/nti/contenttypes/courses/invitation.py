@@ -23,7 +23,7 @@ from nti.contenttypes.courses.interfaces import IJoinCourseInvitationActor
 
 from nti.contenttypes.courses.utils import get_enrollment_in_hierarchy
 
-from nti.dataserver_core.interfaces import SYSTEM_USER_NAME
+from nti.coremetadata.interfaces import SYSTEM_USER_NAME
 
 from nti.invitations.invitation import ActorZcmlInvitation
 

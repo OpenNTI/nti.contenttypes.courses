@@ -41,6 +41,7 @@ from nti.contenttypes.courses.index import IX_SITE
 from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_COURSE
 from nti.contenttypes.courses.index import IX_PACKAGES
+from nti.contenttypes.courses.index import IX_USERNAME
 
 from nti.contenttypes.courses.index import IndexRecord
 from nti.contenttypes.courses.index import COURSES_CATALOG_NAME
@@ -61,6 +62,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IPrincipalEnrollments
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
+from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.vendorinfo import VENDOR_INFO_KEY
 
@@ -110,7 +112,7 @@ def get_courses_for_packages(sites=(), packages=()):
 		IX_PACKAGES: {'any_of': packages}
 	}
 	for uid in catalog.apply(query) or ():
-		course = ICourseInstance(intids.queryObject(uid))
+		course = ICourseInstance(intids.queryObject(uid), None)
 		result.add(course)
 	result.discard(None)
 	return tuple(result)
@@ -202,7 +204,7 @@ def get_course_hierarchy(context):
 	if parent is not None:
 		result.append(parent)
 		result.extend(parent.SubInstances.values())
-	return result
+	return tuple(result)
 
 def get_content_unit_courses(context, include_sub_instances=True):
 	result = ()
@@ -256,7 +258,7 @@ def drop_any_other_enrollments(context, user, ignore_existing=True):
 			logger.warn("User %s dropped from course '%s' open enrollment", user,
 						getattr(entry, 'ProviderUniqueID', None))
 			result.append(instance)
-	return result
+	return tuple(result)
 
 def get_instructors_in_roles(roles, setting=Allow):
 	"""
@@ -291,7 +293,7 @@ def get_course_editors(context, setting=Allow):
 				else:
 					if principal is not None:
 						result.append(principal)
-	return result
+	return tuple(result)
 
 def get_course_instructors(context, setting=Allow):
 	"""
@@ -437,6 +439,21 @@ def has_enrollments(user):
 			return True
 	return False
 
+def has_enrollments2(user, intids=None):
+	catalog = get_enrollment_catalog()
+	sites = get_component_hierarchy_names()
+	username = getattr(user, 'username', user)
+	intids = component.getUtility(IIntIds) if intids is None else intids
+	query = { 
+		IX_SITE: {'any_of':sites},
+		IX_USERNAME: {'any_of':(username,)}
+	}
+	for uid in catalog.apply(query) or ():
+		obj = intids.queryObject(uid)
+		if ICourseInstanceEnrollmentRecord.providedBy(obj):
+			return True
+	return False
+			
 import zope.deferredimport
 zope.deferredimport.initialize()
 zope.deferredimport.deprecatedFrom(
