@@ -17,6 +17,7 @@ from hamcrest import has_property
 from nti.testing.matchers import validly_provides
 from nti.testing.matchers import verifiably_provides
 
+import os
 import time
 from datetime import datetime
 
@@ -27,13 +28,18 @@ from zope.interface.interfaces import IMethod
 from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import ICalendarPublishable
 
+from nti.contentlibrary.filesystem import FilesystemKey
+
 from nti.contenttypes.courses import courses
 from nti.contenttypes.courses import outlines
 from nti.contenttypes.courses import interfaces
 
-from nti.externalization.internalization import find_factory_for, \
-	update_from_external_object
+from nti.contenttypes.courses._outline_parser import fill_outline_from_key
+
 from nti.externalization.externalization import to_external_object
+
+from nti.externalization.internalization import find_factory_for
+from nti.externalization.internalization import update_from_external_object
 
 from nti.recorder.interfaces import ITransactionRecordHistory
 
@@ -114,3 +120,22 @@ class TestCourseOutline(CourseLayerTest):
 		update_from_external_object(inst, ext_obj)
 		assert_that(inst, has_property('AvailableEnding'), is_(now))
 		assert_that(inst, has_property('AvailableBeginning'), is_(now))
+		
+	def xtest_outline_internalizes(self):
+		path = os.path.join(os.path.dirname(__file__),
+							'TestSynchronizeWithSubInstances',
+							'Spring2014',
+							'Gateway',
+							'course_outline.xml')
+		key = FilesystemKey()
+		key.absolute_path = path
+
+		outline = outlines.CourseOutline()
+		fill_outline_from_key(outline, key)
+		
+		ext_obj = to_external_object(outline)
+		import pprint
+		pprint.pprint(ext_obj, indent=3)
+		new_outline = outlines.CourseOutline()
+		update_from_external_object(new_outline, ext_obj)
+		

@@ -28,9 +28,11 @@ from zope import component
 
 from nti.contentlibrary.filesystem import FilesystemKey
 
+from nti.contenttypes.courses._outline_parser import fill_outline_from_key
+
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
-from nti.contenttypes.courses._outline_parser import fill_outline_from_key
+
 from nti.contenttypes.courses.outlines import CourseOutline
 
 from nti.contenttypes.courses.tests import CourseLayerTest
@@ -45,10 +47,10 @@ class TestOutlineParser(CourseLayerTest):
 
 	def test_parse(self):
 		path = os.path.join(os.path.dirname(__file__),
-							 'TestSynchronizeWithSubInstances',
-							 'Spring2014',
-							 'Gateway',
-							 'course_outline.xml')
+							'TestSynchronizeWithSubInstances',
+							'Spring2014',
+							'Gateway',
+							'course_outline.xml')
 		key = FilesystemKey()
 		key.absolute_path = path
 
@@ -82,12 +84,12 @@ class TestOutlineParser(CourseLayerTest):
 		# This one is a stub: now with a null src only, and a ContentNTIID.
 		lesson_2 = unit_1["tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.1"]
 		assert_that(lesson_2,
-					 externalizes(
+					externalizes(
 						 all_of(
-							 has_key('ContentNTIID'),
-							 has_entry('Class', 'CourseOutlineContentNode'),
-							 has_entry( 'src', none() ),
-							 has_entry('NTIID', 'tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.1'))))
+							has_key('ContentNTIID'),
+							has_entry('Class', 'CourseOutlineContentNode'),
+							has_entry( 'src', none() ),
+							has_entry('NTIID', 'tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.1'))))
 
 		unit_7 = outline['tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.7']
 		assert_that(unit_7, has_property('title', 'Dateless Resources'))
