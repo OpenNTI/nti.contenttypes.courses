@@ -24,6 +24,8 @@ from zope.container.constraints import checkObject
 
 from zope.container.ordered import OrderedContainer  # this is persistent
 
+from zope.schema.fieldproperty import FieldPropertyStoredThroughField as FP
+
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
@@ -120,6 +122,8 @@ class _AbstractCourseOutlineNode(Contained,
 class CourseOutlineNode(_AbstractCourseOutlineNode,
 						PersistentCreatedModDateTrackingObject,  # order mattters
 						OrderedContainer):
+
+	LessonOverviewNTIID = FP(ICourseOutlineNode['LessonOverviewNTIID'])
 
 	# XXX This class used to be persistent. Although there were
 	# never any references explicitly stored to them, because it

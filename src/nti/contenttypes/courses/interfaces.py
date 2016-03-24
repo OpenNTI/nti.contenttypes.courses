@@ -229,9 +229,13 @@ class ICourseOutlineNode(IRecordableContainer,
 
 	src = ValidTextLine(title="json file to populate the node overview",
 						required=False)
+
 	title = PlainTextLine( max_length=300, required=False,
 					title="The human-readable title of this object",
 					__name__='title')
+
+	LessonOverviewNTIID = ValidNTIID(title="The NTIID of the lesson overview",
+									 required=False)
 
 	def append(node):
 		"""
@@ -252,7 +256,7 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 									   "A non-schema place (so not externalized) that can store"
 									   "a placeholder content-ntiid, if it is known.")
 	ContentNTIID.setTaggedValue('_ext_excluded_out', True)
-
+	
 	AvailableBeginning = ValidDatetime(
 		title="This display time when this node should be active",
 		description="""When present, this specifies the time instant at which
@@ -282,7 +286,7 @@ class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 
 	ContentNTIID = ValidNTIID(title="The NTIID of the content this node uses",
 							  required=False)
-
+	
 _tag_iface_fields(ICourseOutlineContentNode, 'title', 'description', 'AvailableEnding',
 				  'AvailableBeginning' )
 
