@@ -134,9 +134,11 @@ class TestCourseOutline(CourseLayerTest):
 
 		outline = outlines.CourseOutline()
 		fill_outline_from_key(outline, key)
-		
+		assert_that(outline, has_length(7))
+
 		ext_obj = to_external_object(outline, name="exporter")
 		assert_that(ext_obj, has_entry('Items', has_length(7)))
 
 		new_outline = outlines.CourseOutline()
 		update_from_external_object(new_outline, ext_obj)
+		assert_that(new_outline, has_length(7))

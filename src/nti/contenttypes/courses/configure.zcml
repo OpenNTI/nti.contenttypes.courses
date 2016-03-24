@@ -70,6 +70,10 @@
 			 for=".interfaces.ICourseOutlineNode"
 			 name="exporter" />
 			 
+	<adapter factory=".internalization._CourseOutlineNodeUpdater"
+			 for=".interfaces.ICourseOutlineNode"
+			 provides="nti.externalization.interfaces.IInternalObjectUpdater" />
+
 	<!-- Decorators -->
 	<subscriber factory=".decorators._CourseOutlineNodeDecorator"
 				for=".interfaces.ICourseOutlineNode"
