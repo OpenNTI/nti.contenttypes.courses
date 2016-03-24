@@ -235,7 +235,8 @@ class ICourseOutlineNode(IRecordableContainer,
 					__name__='title')
 
 	LessonOverviewNTIID = ValidNTIID(title="The NTIID of the lesson overview",
-									 required=False)
+									 required=False,
+                                     default=None)
 
 	def append(node):
 		"""
