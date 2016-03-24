@@ -10,6 +10,8 @@ __docformat__ = "restructuredtext en"
 from hamcrest import is_
 from hamcrest import none
 from hamcrest import is_not
+from hamcrest import has_entry
+from hamcrest import has_length
 from hamcrest import has_entries
 from hamcrest import assert_that
 from hamcrest import has_property
@@ -121,7 +123,7 @@ class TestCourseOutline(CourseLayerTest):
 		assert_that(inst, has_property('AvailableEnding'), is_(now))
 		assert_that(inst, has_property('AvailableBeginning'), is_(now))
 		
-	def xtest_outline_internalizes(self):
+	def test_outline_exporter(self):
 		path = os.path.join(os.path.dirname(__file__),
 							'TestSynchronizeWithSubInstances',
 							'Spring2014',
@@ -133,9 +135,8 @@ class TestCourseOutline(CourseLayerTest):
 		outline = outlines.CourseOutline()
 		fill_outline_from_key(outline, key)
 		
-		ext_obj = to_external_object(outline)
-		import pprint
-		pprint.pprint(ext_obj, indent=3)
+		ext_obj = to_external_object(outline, name="exporter")
+		assert_that(ext_obj, has_entry('Items', has_length(7)))
+
 		new_outline = outlines.CourseOutline()
 		update_from_external_object(new_outline, ext_obj)
-		

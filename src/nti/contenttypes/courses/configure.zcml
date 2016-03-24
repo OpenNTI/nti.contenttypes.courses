@@ -66,6 +66,15 @@
 	<adapter factory="nti.dataserver.users.users_external._EntityExternalObject"
 			 for=".interfaces.ICourseInstanceSharingScope" />
 
+	<adapter factory=".externalization._CourseOutlineNodeExporter"
+			 for=".interfaces.ICourseOutlineNode"
+			 name="exporter" />
+			 
+	<!-- Decorators -->
+	<subscriber factory=".decorators._CourseOutlineNodeDecorator"
+				for=".interfaces.ICourseOutlineNode"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
+				
 	<!-- Events -->
 	<subscriber handler=".subscribers.install_site_course_catalog" />
 	<subscriber handler=".subscribers.uninstall_site_course_catalog" />
