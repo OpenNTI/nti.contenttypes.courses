@@ -53,6 +53,7 @@ from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
+from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_NAMES
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -433,27 +434,28 @@ def is_enrolled_in_hierarchy(context, user):
 	record = get_enrollment_record_in_hierarchy(context, user)
 	return record is not None
 
-def has_enrollments(user):		
-	for enrollments in component.subscribers((user,), IPrincipalEnrollments):
-		if enrollments.count_enrollments():
-			return True
-	return False
-
-def has_enrollments2(user, intids=None):
+def has_enrollments(user, intids=None):
 	catalog = get_enrollment_catalog()
 	sites = get_component_hierarchy_names()
 	username = getattr(user, 'username', user)
 	intids = component.getUtility(IIntIds) if intids is None else intids
 	query = { 
 		IX_SITE: {'any_of':sites},
-		IX_USERNAME: {'any_of':(username,)}
+		IX_USERNAME: {'any_of':(username,) },
+		IX_SCOPE: {'any_of':ENROLLMENT_SCOPE_NAMES}
 	}
 	for uid in catalog.apply(query) or ():
 		obj = intids.queryObject(uid)
 		if ICourseInstanceEnrollmentRecord.providedBy(obj):
 			return True
 	return False
-			
+	
+def has_enrollments2(user):		
+	for enrollments in component.subscribers((user,), IPrincipalEnrollments):
+		if enrollments.count_enrollments():
+			return True
+	return False
+	
 import zope.deferredimport
 zope.deferredimport.initialize()
 zope.deferredimport.deprecatedFrom(
