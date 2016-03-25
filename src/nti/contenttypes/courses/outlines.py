@@ -47,8 +47,8 @@ from nti.schema.fieldproperty import createDirectFieldProperties
 
 @total_ordering
 @interface.implementer(IAttributeAnnotatable)
-class _AbstractCourseOutlineNode(Contained, 
-								 RecordableContainerMixin, 
+class _AbstractCourseOutlineNode(Contained,
+								 RecordableContainerMixin,
 								 CalendarPublishableMixin):
 
 	createFieldProperties(ITitledDescribedContent)
@@ -120,10 +120,10 @@ class _AbstractCourseOutlineNode(Contained,
 
 @interface.implementer(ICourseOutlineNode, ILastModified)
 class CourseOutlineNode(_AbstractCourseOutlineNode,
-						PersistentCreatedModDateTrackingObject,  # order mattters
+						PersistentCreatedModDateTrackingObject,  # order matters
 						OrderedContainer):
 
-	LessonOverviewNTIID = FP(ICourseOutlineNode['LessonOverviewNTIID'])
+	LessonOverviewNTIID = None
 
 	# XXX This class used to be persistent. Although there were
 	# never any references explicitly stored to them, because it
@@ -151,7 +151,7 @@ class CourseOutlineNode(_AbstractCourseOutlineNode,
 		super(CourseOutlineNode, self).reset(event=event)
 		self.updateLastMod()
 	clear = reset
-	
+
 	def updateLastMod(self, t=None):
 		try:
 			t = time.time() if t is None else t
