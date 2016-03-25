@@ -24,8 +24,6 @@ from zope.container.constraints import checkObject
 
 from zope.container.ordered import OrderedContainer  # this is persistent
 
-from zope.schema.fieldproperty import FieldPropertyStoredThroughField as FP
-
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
