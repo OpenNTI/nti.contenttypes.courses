@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.ntiids.ntiids import is_valid_ntiid_string
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -142,3 +143,8 @@ class TestCourseOutline(CourseLayerTest):
 		new_outline = outlines.CourseOutline()
 		update_from_external_object(new_outline, ext_obj)
 		assert_that(new_outline, has_length(7))
+		
+		for node in new_outline.values():
+			assert_that(node, has_property('ntiid', is_not(none())))
+			assert_that(is_valid_ntiid_string(node.ntiid), is_(True))
+

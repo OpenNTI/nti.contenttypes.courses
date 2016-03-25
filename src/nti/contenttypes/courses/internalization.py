@@ -38,7 +38,8 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
 		return self._ext_self
 
 	def updateFromExternalObject(self, parsed, *args, **kwargs):
-		self.node.ntiid = parsed.get(NTIID) # capture NTIID
+		if 'ntiid' in parsed or NTIID in parsed:
+			self.node.ntiid = parsed.get('ntiid') or parsed.get(NTIID)
 		result = super(_CourseOutlineNodeUpdater, self).updateFromExternalObject(parsed, *args, **kwargs)
 		if ITEMS in parsed:
 			for item in parsed.get(ITEMS) or ():
