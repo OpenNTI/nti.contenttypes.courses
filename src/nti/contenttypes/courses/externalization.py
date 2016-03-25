@@ -37,11 +37,16 @@ class _CourseInstanceEnrollmentRecordExternalizer(object):
 
 	def toExternalObject(self, **kwargs):
 		result = LocatedExternalDict()
-		result['Scope'] = self.obj.Scope
 		result[MIMETYPE] = self.obj.mimeType
 		result[CLASS] = "CourseInstanceEnrollmentRecord"
-		result['Principal'] = IPrincipal(self.obj.Principal).id
-		result['Course'] = ICourseCatalogEntry(self.obj.CourseInstance).ntiid
+		# set fields
+		result['Scope'] = self.obj.Scope
+		principal = IPrincipal(self.obj.Principal, None)
+		if principal is not None:
+			result['Principal'] = principal.id
+		entry = ICourseCatalogEntry(self.obj.CourseInstance, None)
+		if entry is not None:
+			result['Course'] = entry.ntiid
 		return result
 
 @component.adapter(ICourseOutlineNode)
@@ -56,8 +61,11 @@ class _CourseOutlineNodeExporter(object):
 		mod_args['name'] = '' # set default
 		# use regular export
 		result = to_external_object(self.node, **mod_args)
+		# make sure we provide an ntiid field
+		if 'ntiid' not in result and getattr(self.node, 'ntiid', None):
+			result['ntiid'] = self.node.ntiid
 		items = []
-		# set again to exporter 
+		# set again to exporter and export children
 		mod_args['name'] = 'exporter'
 		for node in self.node.values():
 			ext_obj = to_external_object(node, **mod_args)

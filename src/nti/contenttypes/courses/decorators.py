@@ -27,3 +27,5 @@ class _CourseOutlineNodeDecorator(object):
 	def decorateExternalObject(self, original, external):
 		if not original.LessonOverviewNTIID:
 			external.pop('LessonOverviewNTIID', None)
+		if 'ntiid' not in external and getattr(original, 'ntiid', None):
+			external['ntiid'] = original.ntiid
