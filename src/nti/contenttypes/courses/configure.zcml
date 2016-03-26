@@ -302,7 +302,9 @@
 	</configure>
 	
 	<!-- Invitations -->
-	<utility factory=".invitation.JoinCourseInvitationActor" />
+	<configure zcml:condition="have testmode">
+		<utility factory=".invitation.JoinCourseInvitationActor" />
+	</configure>
 
 	<!-- Grading -->
 	<include package=".grading" />
