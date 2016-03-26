@@ -79,3 +79,6 @@ class JoinCourseInvitation(ActorZcmlInvitation):
 		actor = component.getUtility(self.actor_interface)
 		if actor.accept(user, self.course, self.scope):
 			super(JoinCourseInvitation, self).accept(user)
+			return True
+		return False
+
