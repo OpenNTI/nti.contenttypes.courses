@@ -300,6 +300,9 @@
 		<include package="nti.dataserver.contenttypes.forums"
 				 zcml:condition="installed nti.dataserver.contenttypes.forums" />
 	</configure>
+	
+	<!-- Invitations -->
+	<utility factory=".invitation.JoinCourseInvitationActor" />
 
 	<!-- Grading -->
 	<include package=".grading" />

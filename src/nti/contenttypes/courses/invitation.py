@@ -81,4 +81,3 @@ class JoinCourseInvitation(ActorZcmlInvitation):
 			super(JoinCourseInvitation, self).accept(user)
 			return True
 		return False
-
