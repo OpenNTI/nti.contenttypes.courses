@@ -46,6 +46,8 @@ from zope.securitypolicy.interfaces import IRolePermissionManager
 
 from zope.site.interfaces import IFolder
 
+from nti.cabinet.interfaces import ISourceFiler
+
 from nti.common.property import alias
 
 from nti.contentfragments.schema import PlainTextLine
@@ -1340,6 +1342,25 @@ class IJoinCourseInvitationActor(IInvitationActor):
 		:param course Course to join
 		:param scope Enrollment scope
 		:return true if user was enrolled
+		"""
+
+# Import / Export
+
+class ICourseExportFiler(ISourceFiler):
+	pass
+
+class ICourseExporter(interface.Interface):
+
+	def export(course, filer):
+		"""
+		Export the specified course
+		"""
+
+class ICourseSectionExporter(interface.Interface):
+
+	def export(course, filer):
+		"""
+		Export the specified course
 		"""
 
 #: All course outline node interfaces
