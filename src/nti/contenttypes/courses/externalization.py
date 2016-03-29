@@ -24,6 +24,8 @@ from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IInternalObjectExternalizer
 
+from nti.mimetype import decorateMimeType
+
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
 MIMETYPE = StandardExternalFields.MIMETYPE
@@ -61,6 +63,8 @@ class _CourseOutlineNodeExporter(object):
 		mod_args['name'] = '' # set default
 		# use regular export
 		result = to_external_object(self.node, **mod_args)
+		if MIMETYPE not in result:
+			decorateMimeType(self.node, result)
 		# make sure we provide an ntiid field
 		if 'ntiid' not in result and getattr(self.node, 'ntiid', None):
 			result['ntiid'] = self.node.ntiid
