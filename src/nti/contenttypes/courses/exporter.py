@@ -36,7 +36,7 @@ class CourseOutlineExporer(object):
 			bucket = None
 		# export to json
 		source = StringIO()
-		ext_obj = to_external_object(course.Outline, name='exporter')
+		ext_obj = to_external_object(course.Outline, name='exporter', decorate=False)
 		simplejson.dump(ext_obj, source, indent=4)
 		source.seek(0)
 		# save in filer

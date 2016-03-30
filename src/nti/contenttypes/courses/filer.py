@@ -25,7 +25,7 @@ from nti.contenttypes.courses.interfaces import ICourseExportFiler
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 def safe_filename(s):
-	return re.sub(r'[/<>:"\\|?*]+', '_', s) if s else s
+	return re.sub(r'[/<>:"\\|?*\s]+', '_', s) if s else s
 
 @interface.implementer(ICourseExportFiler)
 class CourseExportFiler(DirectoryFiler):
