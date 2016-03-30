@@ -154,6 +154,10 @@ SUPPORTED_PVE_INT_KEYS = ('maximum_time_allowed',)
 #: Supported date keys
 SUPPORTED_DATE_KEYS	= ('available_for_submission_beginning', 'available_for_submission_ending')
 
+#: NTI Course file scheme
+NTI_COURSE_FILE = u'nti-course-file'
+NTI_COURSE_FILE_SCHEME = u"%s:" % NTI_COURSE_FILE
+
 # Notes:
 #
 # How to determine available courses?
