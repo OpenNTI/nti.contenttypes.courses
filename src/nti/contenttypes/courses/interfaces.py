@@ -1357,6 +1357,11 @@ class ICourseExportFiler(ISourceFiler):
 		prepare filer for use
 		"""
 		
+	def reset():
+		"""
+		remove all content from this filer
+		"""
+
 	def asZip(path=None):
 		"""
 		zip all contents of this filer in a zipe file
