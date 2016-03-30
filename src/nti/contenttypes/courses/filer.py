@@ -25,7 +25,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 @interface.implementer(ICourseExportFiler)
 class CourseExportFiler(DirectoryFiler):
 
-	def __init__(self, context, path):
+	def __init__(self, context, path=None):
 		super(CourseExportFiler, self).__init__(path)
 		self.course = ICourseInstance(context)
 		

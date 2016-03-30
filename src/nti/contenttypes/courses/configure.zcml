@@ -301,6 +301,11 @@
 				 zcml:condition="installed nti.dataserver.contenttypes.forums" />
 	</configure>
 	
+	<!-- Export Filer -->
+	<adapter factory=".filer.CourseExportFiler"
+			 for=".interfaces.ICourseInstance"
+			 provides=".interfaces.ICourseExportFiler" />
+
 	<!-- Exporter -->
 	<utility factory=".exporter.CourseExporter" />
 	<utility factory=".exporter.CourseOutlineExporer" name="outlines" />
