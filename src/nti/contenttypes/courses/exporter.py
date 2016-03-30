@@ -11,6 +11,8 @@ logger = __import__('logging').getLogger(__name__)
 
 from StringIO import StringIO
 
+import simplejson
+
 from zope import interface
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -24,17 +26,20 @@ from nti.externalization.externalization import to_external_object
 @interface.implementer(ICourseSectionExporter)
 class CourseOutlineExporer(object):
 
-    def export(self, context, filer):
-        course = ICourseInstance(context)
-        if ICourseSubInstance.providedBy(course):
-            bucket = "Sections/%s" % course.__name__
-        else:
-            bucket = None
-
-        ojson = to_external_object(course.Outline, name='exporter', decorate=False)
-        filter.save("outline.json", StringIO(ojson), bucket=bucket, overrite=True)
-
-        # save outlines for subinstances
-        for sub_instance in get_course_subinstances(course):
-            if sub_instance.Outline is not course.Outline:
-                self.export(sub_instance, filer)
+	def export(self, context, filer):
+		course = ICourseInstance(context)
+		if ICourseSubInstance.providedBy(course):
+			bucket = "Sections/%s" % course.__name__
+		else:
+			bucket = None
+		# export to json
+		source = StringIO()
+		ext_obj = to_external_object(course.Outline, name='exporter')
+		simplejson.dump(ext_obj, source, indent=4)
+		source.seek(0)
+		# save in filer
+		filter.save("outline.json", source, bucket=bucket, overwrite=True)
+		# save outlines for subinstances
+		for sub_instance in get_course_subinstances(course):
+			if sub_instance.Outline is not course.Outline:
+				self.export(sub_instance, filer)

@@ -61,6 +61,7 @@ class _CourseOutlineNodeExporter(object):
 	def toExternalObject(self, **kwargs):
 		mod_args = dict(**kwargs)
 		mod_args['name'] = '' # set default
+		mod_args['decorate'] = False # no decoration
 		# use regular export
 		result = to_external_object(self.node, **mod_args)
 		if MIMETYPE not in result:
