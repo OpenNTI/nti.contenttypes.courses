@@ -11,6 +11,7 @@ logger = __import__('logging').getLogger(__name__)
 
 import os
 import shutil
+import tempfile
 
 from zope import interface
 
@@ -32,6 +33,10 @@ class CourseExportFiler(DirectoryFiler):
 	@Lazy
 	def entry(self):
 		return ICourseCatalogEntry(self.course)
+
+	def prepare(self):
+		if self.path is None:
+			self.path = tempfile.mkdtemp()
 
 	def asZip(self, path=None):
 		base_name = path or './'

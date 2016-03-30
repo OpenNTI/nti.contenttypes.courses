@@ -1351,7 +1351,11 @@ class IJoinCourseInvitationActor(IInvitationActor):
 # Import / Export
 
 class ICourseExportFiler(ISourceFiler):
-	pass
+	
+	def prepare():
+		"""
+		prepare filer for use
+		"""
 
 class ICourseExporter(interface.Interface):
 
