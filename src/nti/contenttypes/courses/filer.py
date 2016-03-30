@@ -30,8 +30,8 @@ def safe_filename(s):
 @interface.implementer(ICourseExportFiler)
 class CourseExportFiler(DirectoryFiler):
 
-	def __init__(self, context, path=None):
-		super(CourseExportFiler, self).__init__(path)
+	def __init__(self, context, path=None, native=True):
+		super(CourseExportFiler, self).__init__(path, native)
 		self.course = ICourseInstance(context)
 
 	@Lazy
