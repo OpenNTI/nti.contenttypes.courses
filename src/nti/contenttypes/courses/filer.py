@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 import os
+import re
 import shutil
 import tempfile
 
@@ -23,13 +24,16 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseExportFiler
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
+def safe_filename(s):
+	return re.sub(r'[/<>:"\\|?*]+', '_', s) if s else s
+
 @interface.implementer(ICourseExportFiler)
 class CourseExportFiler(DirectoryFiler):
 
 	def __init__(self, context, path=None):
 		super(CourseExportFiler, self).__init__(path)
 		self.course = ICourseInstance(context)
-		
+
 	@Lazy
 	def entry(self):
 		return ICourseCatalogEntry(self.course)
@@ -39,8 +43,8 @@ class CourseExportFiler(DirectoryFiler):
 			self.path = tempfile.mkdtemp()
 
 	def asZip(self, path=None):
-		base_name = path or './'
-		base_name = os.path.join(base_name, self.course.__name__)
+		base_name = path or tempfile.mkdtemp()
+		base_name = os.path.join(base_name, safe_filename(self.course.__name__))
 		if os.path.exists(base_name + ".zip"):
 			os.remove(base_name + ".zip")
 		result = shutil.make_archive(base_name, 'zip', self.path)

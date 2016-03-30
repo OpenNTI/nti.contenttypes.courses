@@ -1356,6 +1356,14 @@ class ICourseExportFiler(ISourceFiler):
 		"""
 		prepare filer for use
 		"""
+		
+	def asZip(path=None):
+		"""
+		zip all contents of this filer in a zipe file
+		
+		:parm path export path
+		:return a zile file name
+		"""
 
 class ICourseExporter(interface.Interface):
 

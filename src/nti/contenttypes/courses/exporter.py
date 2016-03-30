@@ -40,7 +40,8 @@ class CourseOutlineExporer(object):
 		simplejson.dump(ext_obj, source, indent=4)
 		source.seek(0)
 		# save in filer
-		filter.save("outline.json", source, bucket=bucket, overwrite=True)
+		filer.save("outline.json", source, contentType="text/json", 
+				   bucket=bucket, overwrite=True)
 		# save outlines for subinstances
 		for sub_instance in get_course_subinstances(course):
 			if sub_instance.Outline is not course.Outline:
