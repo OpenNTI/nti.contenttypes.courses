@@ -301,6 +301,10 @@
 				 zcml:condition="installed nti.dataserver.contenttypes.forums" />
 	</configure>
 	
+	<!-- Exporter -->
+	<utility factory=".exporter.CourseExporter" />
+	<utility factory=".exporter.CourseOutlineExporer" name="outlines" />
+
 	<!-- Invitations -->
 	<configure zcml:condition="have testmode">
 		<utility factory=".invitation.JoinCourseInvitationActor" />
@@ -313,3 +317,4 @@
 	<include package=".discussions" />
 
 </configure>
+
