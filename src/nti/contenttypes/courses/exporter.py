@@ -26,7 +26,7 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.externalization.externalization import to_external_object
 
 @interface.implementer(ICourseSectionExporter)
-class CourseOutlineExporer(object):
+class CourseOutlineExporter(object):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)

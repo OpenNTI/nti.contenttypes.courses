@@ -13,10 +13,7 @@ import os
 
 import simplejson
 
-from zope import component
 from zope import lifecycleevent
-
-from zope.intid import IIntIds
 
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
@@ -53,7 +50,28 @@ def prepare_json_text(s):
 	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
 	return result
 
-def parse_discussions(course, bucket, intids=None):
+def load_discussion(name, source, discussions, discussion=None):
+	if hasattr(source, "read"):
+		json = simplejson.load(source)
+	else:
+		json = simplejson.loads(prepare_json_text(source))
+	factory = find_factory_for(json)
+	if factory is None:
+		raise InvalidDiscussionException(
+				"Cannot find factory for discussion in json file. Check MimeType")
+	new_discussion = factory() if discussion is None else discussion
+	update_from_external_object(new_discussion, json, notify=False)
+
+	if discussion is None:
+		lifecycleevent.created(new_discussion)
+		discussions[name] = new_discussion
+	else:
+		discussions._p_changed = True
+		discussions.updateLastMod()
+		lifecycleevent.modified(new_discussion)
+	return discussions
+
+def parse_discussions(course, bucket, *args, **kwargs):
 	__traceback_info__ = bucket, course
 	discussions = ICourseDiscussions(course)
 
@@ -71,31 +89,22 @@ def parse_discussions(course, bucket, intids=None):
 			del discussions[child_name]
 			result = True
 
-	intids = component.queryUtility(IIntIds) if intids is None else intids
 	for name, key in child_files.items():
 		discussion = discussions.get(name)
 		if discussion is not None and key.lastModified <= discussion.lastModified:
 			continue
 
-		json = simplejson.loads(prepare_json_text(key.readContents()))
-		factory = find_factory_for(json)
-		if factory is None:
-			raise InvalidDiscussionException(
-					"Cannot find factory for discussion in json file. Check MimeType")
-		new_discussion = factory() if discussion is None else discussion
-		update_from_external_object(new_discussion, json, notify=False)
+		# parse and discussion
+		discussion = load_discussion(name,
+									 key.readContents(),
+									 discussions,
+									 discussion=discussion)
 
+		# set discusion course bundle id
 		path = path_to_course(key)
-		new_discussion.id = "%s://%s" % (NTI_COURSE_BUNDLE, path)
-		if discussion is None:
-			lifecycleevent.created(new_discussion)
-			discussions[name] = new_discussion
-		else:
-			discussions._p_changed = True
-			discussions.updateLastMod()
-			lifecycleevent.modified(new_discussion)
+		discussion.id = "%s://%s" % (NTI_COURSE_BUNDLE, path)
 
-		# set to key last modified
-		new_discussion.lastModified = key.lastModified
+		# set last mod from key
+		discussion.lastModified = key.lastModified
 		result = True
 	return result

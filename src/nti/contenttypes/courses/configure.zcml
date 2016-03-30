@@ -308,7 +308,7 @@
 
 	<!-- Exporter -->
 	<utility factory=".exporter.CourseExporter" />
-	<utility factory=".exporter.CourseOutlineExporer" name="outlines" />
+	<utility factory=".exporter.CourseOutlineExporter" name="outlines" />
 
 	<!-- Invitations -->
 	<configure zcml:condition="have testmode">
