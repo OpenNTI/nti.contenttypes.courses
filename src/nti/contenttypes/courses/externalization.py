@@ -66,6 +66,8 @@ class _CourseOutlineNodeExporter(object):
 		result = to_external_object(self.node, **mod_args)
 		if MIMETYPE not in result:
 			decorateMimeType(self.node, result)
+		if not getattr(self.node, 'LessonOverviewNTIID', None):
+			result.pop('LessonOverviewNTIID', None)
 		# make sure we provide an ntiid field
 		if 'ntiid' not in result and getattr(self.node, 'ntiid', None):
 			result['ntiid'] = self.node.ntiid
