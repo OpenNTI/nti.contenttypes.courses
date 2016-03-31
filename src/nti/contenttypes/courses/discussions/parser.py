@@ -69,7 +69,7 @@ def load_discussion(name, source, discussions, discussion=None):
 		discussions._p_changed = True
 		discussions.updateLastMod()
 		lifecycleevent.modified(new_discussion)
-	return discussions
+	return new_discussion
 
 def parse_discussions(course, bucket, *args, **kwargs):
 	__traceback_info__ = bucket, course
