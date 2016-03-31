@@ -63,7 +63,7 @@ class CourseDiscussion(SchemaConfigured,
 			if self.id:
 				result = "%s(id=%s)" % (self.__class__.__name__, self.id)
 			else:
-				result = super(CourseDiscussion, self).__str__(self, *args, **kwargs)
+				result = super(CourseDiscussion, self).__str__(*args, **kwargs)
 			return result
 		except ConnectionStateError:
 			return"<%s object at %s>" % (type(self).__name__, hex(id(self)))
