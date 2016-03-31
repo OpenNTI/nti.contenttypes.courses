@@ -23,6 +23,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
 
+from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.externalization.externalization import to_external_object
@@ -42,12 +43,36 @@ class CourseOutlineExporter(object):
 		simplejson.dump(ext_obj, source, indent=4)
 		source.seek(0)
 		# save in filer
-		filer.save("outline.json", source, contentType="text/json",
+		filer.save("outline.json", source, contentType="application/json",
 				   bucket=bucket, overwrite=True)
 		# save outlines for subinstances
 		for sub_instance in get_course_subinstances(course):
 			if sub_instance.Outline is not course.Outline:
 				self.export(sub_instance, filer)
+
+@interface.implementer(ICourseSectionExporter)
+class VendorInfoExporter(object):
+
+	def export(self, context, filer):
+		course = ICourseInstance(context)
+		if ICourseSubInstance.providedBy(course):
+			bucket = "%s/%s" % (SECTIONS, course.__name__)
+		else:
+			bucket = None
+		verdor_info = get_course_vendor_info(course, False)
+		if verdor_info:
+			# export to json
+			source = StringIO()
+			ext_obj = to_external_object(verdor_info, decorate=False)
+			simplejson.dump(ext_obj, source, indent=4)
+			source.seek(0)
+			# save in filer
+			filer.save("vendor_info.json", source, contentType="application/json",
+					   bucket=bucket, overwrite=True)
+			# save outlines for subinstances
+			for sub_instance in get_course_subinstances(course):
+				if sub_instance.Outline is not course.Outline:
+					self.export(sub_instance, filer)
 
 @interface.implementer(ICourseExporter)
 class CourseExporter(object):
