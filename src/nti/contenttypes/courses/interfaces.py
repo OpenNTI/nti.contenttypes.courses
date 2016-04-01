@@ -1386,14 +1386,14 @@ class ICourseSectionExporter(interface.Interface):
 
 class ICourseImporter(interface.Interface):
 
-	def import(course, filer):
+	def process(course, filer):
 		"""
 		Import the specified course
 		"""
 
 class ICourseSectionImporter(interface.Interface):
 
-	def import(course, filer):
+	def process(course, filer):
 		"""
 		Import the specified course
 		"""
