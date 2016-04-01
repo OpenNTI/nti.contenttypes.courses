@@ -1384,6 +1384,20 @@ class ICourseSectionExporter(interface.Interface):
 		Export the specified course
 		"""
 
+class ICourseImporter(interface.Interface):
+
+	def import(course, filer):
+		"""
+		Import the specified course
+		"""
+
+class ICourseSectionImporter(interface.Interface):
+
+	def import(course, filer):
+		"""
+		Import the specified course
+		"""
+		
 #: All course outline node interfaces
 ALL_COURSE_OUTLINE_INTERFACES = (ICourseOutlineContentNode,
 								 ICourseOutlineCalendarNode, 
