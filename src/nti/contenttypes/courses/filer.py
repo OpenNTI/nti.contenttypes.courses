@@ -10,7 +10,6 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 import os
-import re
 import shutil
 import tempfile
 
@@ -18,14 +17,13 @@ from zope import interface
 
 from nti.cabinet.filer import DirectoryFiler
 
+from nti.common.file import safe_filename
+
 from nti.common.property import Lazy
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseExportFiler
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-
-def safe_filename(s):
-	return re.sub(r'[/<>:"\\|?*\s]+', '_', s) if s else s
 
 @interface.implementer(ICourseExportFiler)
 class CourseExportFiler(DirectoryFiler):

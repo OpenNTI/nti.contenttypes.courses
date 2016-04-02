@@ -9,12 +9,12 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import re
-
 from zope import component
 from zope import interface
 
 from zope.security.interfaces import IPrincipal
+
+from nti.common.file import safe_filename
 
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -31,9 +31,6 @@ from nti.mimetype import decorateMimeType
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
 MIMETYPE = StandardExternalFields.MIMETYPE
-
-def safe_filename(s):
-	return re.sub(r'[/<>:"\\|?*]+', '_', s) if s else s
 
 @component.adapter(ICourseInstanceEnrollmentRecord)
 @interface.implementer(IInternalObjectExternalizer)
