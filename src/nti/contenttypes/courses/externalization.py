@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import re
+
 from zope import component
 from zope import interface
 
@@ -29,6 +31,9 @@ from nti.mimetype import decorateMimeType
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
 MIMETYPE = StandardExternalFields.MIMETYPE
+
+def safe_filename(s):
+	return re.sub(r'[/<>:"\\|?*]+', '_', s) if s else s
 
 @component.adapter(ICourseInstanceEnrollmentRecord)
 @interface.implementer(IInternalObjectExternalizer)
@@ -60,8 +65,8 @@ class _CourseOutlineNodeExporter(object):
 
 	def toExternalObject(self, **kwargs):
 		mod_args = dict(**kwargs)
-		mod_args['name'] = '' # set default
-		mod_args['decorate'] = False # no decoration
+		mod_args['name'] = ''  # set default
+		mod_args['decorate'] = False  # no decoration
 		# use regular export
 		result = to_external_object(self.node, **mod_args)
 		if MIMETYPE not in result:
@@ -71,6 +76,12 @@ class _CourseOutlineNodeExporter(object):
 		# make sure we provide an ntiid field
 		if 'ntiid' not in result and getattr(self.node, 'ntiid', None):
 			result['ntiid'] = self.node.ntiid
+		# point to a valid .json source file
+		name = result.get('src')
+		if name:
+			name = safe_filename(name)
+			name = name + '.json' if not name.endswith('.json') else name
+			result['src'] = name
 		items = []
 		# set again to exporter and export children
 		mod_args['name'] = 'exporter'
