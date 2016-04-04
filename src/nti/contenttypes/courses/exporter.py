@@ -20,7 +20,12 @@ import simplejson
 from zope import component
 from zope import interface
 
+from zope.securitypolicy.interfaces import Allow
+from zope.securitypolicy.interfaces import IPrincipalRoleMap
+
+from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import SECTIONS
+from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 
 from nti.contenttypes.courses.interfaces import ICourseExporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -161,6 +166,43 @@ class BundlePresentationAssetsExporter(object):
 				contentType = mimetypes.guess_type(name) or u'application/octet-stream'
 				filer.save(name, source, bucket=bucket_path,
 						   contentType=contentType, overwrite=True)
+
+@interface.implementer(ICourseSectionExporter)
+class RoleInfoExporter(object):
+
+	def _role_export_map(self, course):
+		result = {}
+		roles = IPrincipalRoleMap(course)
+		for name in (RID_TA, RID_INSTRUCTOR):
+			deny = []
+			allow = []
+			for principal, setting in roles.getPrincipalsForRole(name) or ():
+				pid = getattr(principal, 'id', str(principal))
+				if setting == Allow:
+					allow.append(pid)
+				else:
+					deny.append(pid)
+			if allow or deny:
+				role_data = result[name] = {}
+				for name, users in (('allow', allow), ('deny', deny)):
+					if users:
+						role_data[name] = users
+		return result
+
+	def export(self, context, filer):
+		course = ICourseInstance(context)
+		if ICourseSubInstance.providedBy(course):
+			bucket = u'%s/%s/' % (SECTIONS, course.__name__)
+		else:
+			bucket = None
+
+		result = self._role_export_map(course)
+		source = StringIO()
+		simplejson.dump(result, source, indent=4)
+		source.seek(0)
+		# save in filer
+		filer.save("role_info.json", source, bucket=bucket,
+					contentType="application/json", overwrite=True)
 
 @interface.implementer(ICourseExporter)
 class CourseExporter(object):
