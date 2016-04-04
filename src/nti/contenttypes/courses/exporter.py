@@ -20,11 +20,12 @@ import simplejson
 from zope import component
 from zope import interface
 
-from nti.contenttypes.courses.interfaces import SECTIONS, ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import SECTIONS
 
 from nti.contenttypes.courses.interfaces import ICourseExporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
 
 from nti.contenttypes.courses.common import get_course_packages
@@ -146,7 +147,7 @@ class BundlePresentationAssetsExporter(object):
 	def export(self, context, filer):
 		course = ICourseInstance(context)
 		if ICourseSubInstance.providedBy(course):
-			bucket = u'Sections/%s/' % course.__name__
+			bucket = u'%s/%s/' % (SECTIONS, course.__name__)
 		else:
 			bucket = u''
 
