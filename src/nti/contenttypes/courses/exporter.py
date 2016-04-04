@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import mimetypes
+
 from StringIO import StringIO
 
 from xml.dom import minidom
@@ -122,6 +124,42 @@ class BundleDCMetadataExporter(object):
 		source = xmldoc.toprettyxml(encoding="UTF-8")
 		for name in ("dc_metadata.xml", "bundle_dc_metadata.xml"):
 			filer.save(name, source, contentType="application/xml", overwrite=True)
+
+@interface.implementer(ICourseSectionExporter)
+class BundlePresentationAssetsExporter(object):
+
+	__PA__ = 'presentation-assets'
+
+	def get_path(self, current):
+		result = []
+		while True:
+			try:
+				result.append(current.__name__)
+				if current.__name__ == self.__PA__:
+					break
+				current = current.__parent__
+			except AttributeError:
+				break
+		result.reverse()
+		return '/'.join(result)
+
+	def export(self, context, filer):
+		course = ICourseInstance(context)
+		if ICourseSubInstance.providedBy(course):
+			bucket = u'Sections/%s/' % course.__name__
+		else:
+			bucket = u''
+
+		for resource in course.PlatformPresentationResources or ():
+			root = resource.root
+			root_path = self.get_path(root)
+			for key in root.enumerateChildren():
+				name = key.__name__
+				source = key.readContents()
+				bucket_path = bucket + root_path
+				contentType = mimetypes.guess_type(name) or u'application/octet-stream'
+				filer.save(name, source, bucket=bucket_path,
+						   contentType=contentType, overwrite=True)
 
 @interface.implementer(ICourseExporter)
 class CourseExporter(object):
