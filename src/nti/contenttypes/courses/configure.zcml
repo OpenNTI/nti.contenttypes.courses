@@ -310,6 +310,8 @@
 	<utility factory=".exporter.CourseExporter" />
 	<utility factory=".exporter.CourseOutlineExporter" name="outline" />
 	<utility factory=".exporter.VendorInfoExporter" name="vendor_info" />
+	<utility factory=".exporter.BundleMetaInfoExporter" name="bundle_meta_info" />
+	<utility factory=".exporter.BundleDCMetadataExporter" name="bundle_dc_metadata" />
 
 	<!-- Invitations -->
 	<configure zcml:condition="have testmode">
