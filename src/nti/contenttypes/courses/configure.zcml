@@ -313,6 +313,7 @@
 	<utility factory=".exporter.VendorInfoExporter" name="vendor_info" />
 	<utility factory=".exporter.BundleMetaInfoExporter" name="bundle_meta_info" />
 	<utility factory=".exporter.BundleDCMetadataExporter" name="bundle_dc_metadata" />
+	<utility factory=".exporter.AssignmentPoliciesExporter" name="assignment_policies" />
 	<utility factory=".exporter.BundlePresentationAssetsExporter" name="presentation-assets" />
 
 	<!-- Invitations -->

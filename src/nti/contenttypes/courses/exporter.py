@@ -23,6 +23,11 @@ from zope import interface
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 
+from nti.assessment.interfaces import IQAssessmentPolicies
+
+from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
+from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
+
 from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import SECTIONS
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
@@ -40,6 +45,7 @@ from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.externalization.externalization import to_external_object
+from nti.externalization.interfaces import IInternalObjectExternalizer
 
 @interface.implementer(ICourseSectionExporter)
 class CourseOutlineExporter(object):
@@ -136,7 +142,7 @@ class BundlePresentationAssetsExporter(object):
 
 	__PA__ = 'presentation-assets'
 
-	def get_path(self, current):
+	def _get_path(self, current):
 		result = []
 		while True:
 			try:
@@ -149,6 +155,20 @@ class BundlePresentationAssetsExporter(object):
 		result.reverse()
 		return '/'.join(result)
 
+	def _process_root(self, root, bucket, filer):
+		if IEnumerableDelimitedHierarchyBucket.providedBy(root):
+			root_path = self._get_path(root)
+			for child in root.enumerateChildren():
+				if IDelimitedHierarchyKey.providedBy(child):
+					name = child.__name__
+					source = child.readContents()
+					bucket_path = bucket + root_path
+					contentType = mimetypes.guess_type(name) or u'application/octet-stream'
+					filer.save(name, source, bucket=bucket_path,
+							   contentType=contentType, overwrite=True)
+				elif IEnumerableDelimitedHierarchyBucket.providedBy(child):
+					self._process_root(child, bucket, filer)
+
 	def export(self, context, filer):
 		course = ICourseInstance(context)
 		if ICourseSubInstance.providedBy(course):
@@ -157,15 +177,7 @@ class BundlePresentationAssetsExporter(object):
 			bucket = u''
 
 		for resource in course.PlatformPresentationResources or ():
-			root = resource.root
-			root_path = self.get_path(root)
-			for key in root.enumerateChildren():
-				name = key.__name__
-				source = key.readContents()
-				bucket_path = bucket + root_path
-				contentType = mimetypes.guess_type(name) or u'application/octet-stream'
-				filer.save(name, source, bucket=bucket_path,
-						   contentType=contentType, overwrite=True)
+			self._process_root(resource.root, bucket, filer)
 
 @interface.implementer(ICourseSectionExporter)
 class RoleInfoExporter(object):
@@ -203,6 +215,25 @@ class RoleInfoExporter(object):
 		# save in filer
 		filer.save("role_info.json", source, bucket=bucket,
 					contentType="application/json", overwrite=True)
+
+@interface.implementer(ICourseSectionExporter)
+class AssignmentPoliciesExporter(object):
+
+	def export(self, context, filer):
+		course = ICourseInstance(context)
+		if ICourseSubInstance.providedBy(course):
+			bucket = u'%s/%s/' % (SECTIONS, course.__name__)
+		else:
+			bucket = None
+
+		policies = IQAssessmentPolicies(course)
+		if IInternalObjectExternalizer.providedBy(policies) and len(policies) > 0:
+			source = StringIO()
+			result = policies.toExternalObject()
+			simplejson.dump(result, source, indent=4)
+			source.seek(0)
+			filer.save("assignment_policies.json", source, bucket=bucket,
+						contentType="application/json", overwrite=True)
 
 @interface.implementer(ICourseExporter)
 class CourseExporter(object):

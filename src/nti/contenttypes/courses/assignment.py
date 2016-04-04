@@ -30,6 +30,10 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
+from nti.externalization.externalization import to_external_object
+
+from nti.externalization.interfaces import IInternalObjectExternalizer
+
 from nti.externalization.persistence import NoPickle
 
 @interface.implementer(IQAssessmentDateContext)
@@ -80,7 +84,7 @@ class _Dates(object):
 		except KeyError:
 			return getattr(self._asg, name)
 
-@interface.implementer(IItemMapping, IWriteMapping)
+@interface.implementer(IItemMapping, IWriteMapping, IInternalObjectExternalizer)
 class MappingAssessmentMixin(Contained, PersistentCreatedAndModifiedTimeObject):
 
 	_SET_CREATED_MODTIME_ON_INIT = False
@@ -136,6 +140,9 @@ class MappingAssessmentMixin(Contained, PersistentCreatedAndModifiedTimeObject):
 	def __conform__(self, iface):
 		if ICourseInstance.isOrExtends(iface):
 			return self.__parent__
+
+	def toExternalObject(self, **kwargs):
+		return to_external_object(self._mapping)
 
 @component.adapter(ICourseInstance)
 @interface.implementer(IQAssessmentDateContext)
