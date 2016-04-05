@@ -9,10 +9,13 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import time
 import simplejson
 
 from zope import component
 from zope import interface
+
+from zope.event import notify
 
 from nti.contenttypes.courses.interfaces import SECTIONS
 
@@ -20,6 +23,7 @@ from nti.contenttypes.courses.interfaces import ICourseImporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseSectionImporter
+from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
 
 from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
@@ -51,6 +55,8 @@ class VendorInfoImporter(BaseSectionImporter):
 			verdor_info = get_course_vendor_info(course, True)
 			verdor_info.clear()
 			verdor_info.update(self.load(source))
+			verdor_info.lastModified = time.time()
+			notify(CourseVendorInfoSynchronized(course))
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer)
 
