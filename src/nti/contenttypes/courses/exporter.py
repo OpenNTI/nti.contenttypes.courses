@@ -48,7 +48,16 @@ from nti.externalization.externalization import to_external_object
 from nti.externalization.interfaces import IInternalObjectExternalizer
 
 @interface.implementer(ICourseSectionExporter)
-class CourseOutlineExporter(object):
+class BaseSectionExporter(object):
+	
+	def dump(self, ext_obj):
+		source = StringIO()
+		simplejson.dump(ext_obj, source, indent=4, sort_keys=True)
+		source.seek(0)
+		return source
+
+@interface.implementer(ICourseSectionExporter)
+class CourseOutlineExporter(BaseSectionExporter):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
@@ -56,21 +65,16 @@ class CourseOutlineExporter(object):
 			bucket = "%s/%s" % (SECTIONS, course.__name__)
 		else:
 			bucket = None
-		# export to json
-		source = StringIO()
 		ext_obj = to_external_object(course.Outline, name='exporter', decorate=False)
-		simplejson.dump(ext_obj, source, indent=4)
-		source.seek(0)
-		# save in filer
+		source = self.dump(ext_obj)
 		filer.save("outline.json", source, contentType="application/json",
 				   bucket=bucket, overwrite=True)
-		# save outlines for subinstances
 		for sub_instance in get_course_subinstances(course):
 			if sub_instance.Outline is not course.Outline:
 				self.export(sub_instance, filer)
 
 @interface.implementer(ICourseSectionExporter)
-class VendorInfoExporter(object):
+class VendorInfoExporter(BaseSectionExporter):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
@@ -80,21 +84,15 @@ class VendorInfoExporter(object):
 			bucket = None
 		verdor_info = get_course_vendor_info(course, False)
 		if verdor_info:
-			# export to json
-			source = StringIO()
 			ext_obj = to_external_object(verdor_info, decorate=False)
-			simplejson.dump(ext_obj, source, indent=4)
-			source.seek(0)
-			# save in filer
+			source = self.dump(ext_obj)
 			filer.save("vendor_info.json", source, contentType="application/json",
 					   bucket=bucket, overwrite=True)
-			# save outlines for subinstances
-			for sub_instance in get_course_subinstances(course):
-				if sub_instance.Outline is not course.Outline:
-					self.export(sub_instance, filer)
+		for sub_instance in get_course_subinstances(course):
+			self.export(sub_instance, filer)
 
 @interface.implementer(ICourseSectionExporter)
-class BundleMetaInfoExporter(object):
+class BundleMetaInfoExporter(BaseSectionExporter):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
@@ -103,16 +101,13 @@ class BundleMetaInfoExporter(object):
 		data = {u'ntiid':u'',
 				u'title': entry.Title,
 				u"ContentPackages": [x.ntiid for x in get_course_packages(course)]}
-		source = StringIO()
 		ext_obj = to_external_object(data, decorate=False)
-		simplejson.dump(ext_obj, source, indent=4)
-		source.seek(0)
-		# save in filer
+		source = self.dump(ext_obj)
 		filer.save("bundle_meta_info.json", source,
 					contentType="application/json", overwrite=True)
 
 @interface.implementer(ICourseSectionExporter)
-class BundleDCMetadataExporter(object):
+class BundleDCMetadataExporter(BaseSectionExporter):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
@@ -138,7 +133,7 @@ class BundleDCMetadataExporter(object):
 			filer.save(name, source, contentType="application/xml", overwrite=True)
 
 @interface.implementer(ICourseSectionExporter)
-class BundlePresentationAssetsExporter(object):
+class BundlePresentationAssetsExporter(BaseSectionExporter):
 
 	__PA__ = 'presentation-assets'
 
@@ -175,12 +170,11 @@ class BundlePresentationAssetsExporter(object):
 			bucket = u'%s/%s/' % (SECTIONS, course.__name__)
 		else:
 			bucket = u''
-
 		for resource in course.PlatformPresentationResources or ():
 			self._process_root(resource.root, bucket, filer)
 
 @interface.implementer(ICourseSectionExporter)
-class RoleInfoExporter(object):
+class RoleInfoExporter(BaseSectionExporter):
 
 	def _role_export_map(self, course):
 		result = {}
@@ -207,17 +201,15 @@ class RoleInfoExporter(object):
 			bucket = u'%s/%s/' % (SECTIONS, course.__name__)
 		else:
 			bucket = None
-
 		result = self._role_export_map(course)
-		source = StringIO()
-		simplejson.dump(result, source, indent=4)
-		source.seek(0)
-		# save in filer
+		source = self.dump(result)
 		filer.save("role_info.json", source, bucket=bucket,
 					contentType="application/json", overwrite=True)
+		for sub_instance in get_course_subinstances(course):
+			self.export(sub_instance, filer)
 
 @interface.implementer(ICourseSectionExporter)
-class AssignmentPoliciesExporter(object):
+class AssignmentPoliciesExporter(BaseSectionExporter):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
@@ -225,18 +217,17 @@ class AssignmentPoliciesExporter(object):
 			bucket = u'%s/%s/' % (SECTIONS, course.__name__)
 		else:
 			bucket = None
-
 		policies = IQAssessmentPolicies(course)
-		if IInternalObjectExternalizer.providedBy(policies) and len(policies) > 0:
-			source = StringIO()
+		if policies and IInternalObjectExternalizer.providedBy(policies):
 			result = policies.toExternalObject()
-			simplejson.dump(result, source, indent=4)
-			source.seek(0)
+			source = self.dump(result)
 			filer.save("assignment_policies.json", source, bucket=bucket,
 						contentType="application/json", overwrite=True)
+		for sub_instance in get_course_subinstances(course):
+			self.export(sub_instance, filer)
 
 @interface.implementer(ICourseSectionExporter)
-class CourseInfoExporter(object):
+class CourseInfoExporter(BaseSectionExporter):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
@@ -245,10 +236,8 @@ class CourseInfoExporter(object):
 		else:
 			bucket = None
 		entry = ICourseCatalogEntry(course)
-		source = StringIO()
 		ext_obj = to_external_object(entry, name="exporter", decorate=False)
-		simplejson.dump(ext_obj, source, indent=4, sort_keys=True)
-		source.seek(0)
+		source = self.dump(ext_obj)
 		filer.save("course_info.json", source, bucket=bucket,
 					contentType="application/json", overwrite=True)
 		for sub_instance in get_course_subinstances(course):
