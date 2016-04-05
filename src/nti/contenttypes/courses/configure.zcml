@@ -325,6 +325,9 @@
 	<utility factory=".exporter.AssignmentPoliciesExporter" name="assignment_policies" />
 	<utility factory=".exporter.BundlePresentationAssetsExporter" name="presentation-assets" />
 
+	<!-- Importer -->
+	<utility factory=".importer.CourseImporter" />
+	
 	<!-- Invitations -->
 	<configure zcml:condition="have testmode">
 		<utility factory=".invitation.JoinCourseInvitationActor" />
