@@ -31,6 +31,7 @@ from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import SECTIONS
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
+from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
 
 from nti.contenttypes.courses.interfaces import ICourseExporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -180,7 +181,7 @@ class RoleInfoExporter(BaseSectionExporter):
 	def _role_export_map(self, course):
 		result = {}
 		roles = IPrincipalRoleMap(course)
-		for name in (RID_TA, RID_INSTRUCTOR):
+		for name in (RID_TA, RID_INSTRUCTOR, RID_CONTENT_EDITOR):
 			deny = []
 			allow = []
 			for principal, setting in roles.getPrincipalsForRole(name) or ():
