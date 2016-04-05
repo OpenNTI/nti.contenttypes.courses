@@ -21,5 +21,6 @@ class CourseImporter(object):
 
 	def process(self, context, filer):
 		course = ICourseInstance(context)
-		for _, importer in list(component.getUtilitiesFor(ICourseSectionImporter)):
+		for name, importer in sorted(component.getUtilitiesFor(ICourseSectionImporter)):
+			logger.info("Processing %s", name)
 			importer.process(course, filer)
