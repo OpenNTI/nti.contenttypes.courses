@@ -250,5 +250,6 @@ class CourseExporter(object):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
-		for _, exporter in list(component.getUtilitiesFor(ICourseSectionExporter)):
+		for name, exporter in sorted(component.getUtilitiesFor(ICourseSectionExporter)):
+			logger.info("Processing %s", name)
 			exporter.export(course, filer)

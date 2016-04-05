@@ -316,14 +316,14 @@
 
 	<!-- Exporter -->
 	<utility factory=".exporter.CourseExporter" />
-	<utility factory=".exporter.RoleInfoExporter" name="role_info" />
-	<utility factory=".exporter.CourseOutlineExporter" name="outline" />
-	<utility factory=".exporter.VendorInfoExporter" name="vendor_info" />
-	<utility factory=".exporter.CourseInfoExporter" name="course_info" />
-	<utility factory=".exporter.BundleMetaInfoExporter" name="bundle_meta_info" />
-	<utility factory=".exporter.BundleDCMetadataExporter" name="bundle_dc_metadata" />
-	<utility factory=".exporter.AssignmentPoliciesExporter" name="assignment_policies" />
-	<utility factory=".exporter.BundlePresentationAssetsExporter" name="presentation-assets" />
+	<utility factory=".exporter.RoleInfoExporter" name="006:Role_Info" />
+	<utility factory=".exporter.VendorInfoExporter" name="005:Vendor_Info" />
+	<utility factory=".exporter.CourseInfoExporter" name="004:Course_Info" />
+	<utility factory=".exporter.CourseOutlineExporter" name="008:Course_Outline" />
+	<utility factory=".exporter.BundleMetaInfoExporter" name="001:Bundle_Metainfo" />
+	<utility factory=".exporter.BundleDCMetadataExporter" name="002:Bundle_DC_Metadata" />
+	<utility factory=".exporter.AssignmentPoliciesExporter" name="100:Assignment_Policies" />
+	<utility factory=".exporter.BundlePresentationAssetsExporter" name="003:Presentation_Assets" />
 
 	<!-- Importer -->
 	<utility factory=".importer.CourseImporter" />
