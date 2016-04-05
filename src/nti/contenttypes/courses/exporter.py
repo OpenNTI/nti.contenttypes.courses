@@ -9,8 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import mimetypes
-
 from StringIO import StringIO
 
 from xml.dom import minidom
@@ -24,6 +22,8 @@ from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 
 from nti.assessment.interfaces import IQAssessmentPolicies
+
+from nti.common import mimetypes
 
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
