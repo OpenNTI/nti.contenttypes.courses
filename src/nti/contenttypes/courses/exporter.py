@@ -235,6 +235,25 @@ class AssignmentPoliciesExporter(object):
 			filer.save("assignment_policies.json", source, bucket=bucket,
 						contentType="application/json", overwrite=True)
 
+@interface.implementer(ICourseSectionExporter)
+class CourseInfoExporter(object):
+
+	def export(self, context, filer):
+		course = ICourseInstance(context)
+		if ICourseSubInstance.providedBy(course):
+			bucket = u'%s/%s/' % (SECTIONS, course.__name__)
+		else:
+			bucket = None
+		entry = ICourseCatalogEntry(course)
+		source = StringIO()
+		ext_obj = to_external_object(entry, name="exporter", decorate=False)
+		simplejson.dump(ext_obj, source, indent=4, sort_keys=True)
+		source.seek(0)
+		filer.save("course_info.json", source, bucket=bucket,
+					contentType="application/json", overwrite=True)
+		for sub_instance in get_course_subinstances(course):
+			self.export(sub_instance, filer)
+
 @interface.implementer(ICourseExporter)
 class CourseExporter(object):
 

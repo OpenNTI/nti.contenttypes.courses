@@ -69,7 +69,11 @@
 	<adapter factory=".externalization._CourseOutlineNodeExporter"
 			 for=".interfaces.ICourseOutlineNode"
 			 name="exporter" />
-			 
+	
+	<adapter factory=".externalization._CourseCatalogEntryExporter"
+			 for=".interfaces.ICourseCatalogEntry"
+			 name="exporter" />
+		 
 	<adapter factory=".internalization._CourseOutlineNodeUpdater"
 			 for=".interfaces.ICourseOutlineNode"
 			 provides="nti.externalization.interfaces.IInternalObjectUpdater" />
@@ -311,6 +315,7 @@
 	<utility factory=".exporter.RoleInfoExporter" name="role_info" />
 	<utility factory=".exporter.CourseOutlineExporter" name="outline" />
 	<utility factory=".exporter.VendorInfoExporter" name="vendor_info" />
+	<utility factory=".exporter.CourseInfoExporter" name="course_info" />
 	<utility factory=".exporter.BundleMetaInfoExporter" name="bundle_meta_info" />
 	<utility factory=".exporter.BundleDCMetadataExporter" name="bundle_dc_metadata" />
 	<utility factory=".exporter.AssignmentPoliciesExporter" name="assignment_policies" />
