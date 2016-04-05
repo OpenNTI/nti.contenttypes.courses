@@ -74,6 +74,10 @@
 			 for=".interfaces.ICourseCatalogEntry"
 			 name="exporter" />
 		 
+	<adapter factory=".externalization._CourseVendorInfoExporter"
+			 for=".interfaces.ICourseInstanceVendorInfo"
+			 name="exporter" />
+
 	<adapter factory=".internalization._CourseOutlineNodeUpdater"
 			 for=".interfaces.ICourseOutlineNode"
 			 provides="nti.externalization.interfaces.IInternalObjectUpdater" />

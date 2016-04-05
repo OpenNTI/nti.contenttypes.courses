@@ -21,6 +21,7 @@ from nti.common.file import safe_filename
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
+from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.externalization.externalization import to_external_object
@@ -31,10 +32,13 @@ from nti.externalization.interfaces import IInternalObjectExternalizer
 
 from nti.mimetype import decorateMimeType
 
+OID = StandardExternalFields.OID
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
+CREATED_TIME = StandardExternalFields.CREATED_TIME
+LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
 @component.adapter(ICourseInstanceEnrollmentRecord)
 @interface.implementer(IInternalObjectExternalizer)
@@ -149,4 +153,28 @@ class _CourseCatalogEntryExporter(object):
 		self._fix_instructors(result.get('instructors'))
 		# extra keys
 		result['is_non_public'] = INonPublicCourseInstance.providedBy(self.entry)
+		return result
+
+@component.adapter(ICourseInstanceVendorInfo)
+@interface.implementer(IInternalObjectExternalizer)
+class _CourseVendorInfoExporter(object):
+
+	REMOVAL = (OID, CLASS, NTIID, CREATED_TIME, LAST_MODIFIED)
+
+	def __init__(self, obj):
+		self.obj = obj
+
+	def _remover(self, result):
+		if isinstance(result, Mapping):
+			for key in list(result.keys()) : # mutating
+				if key in self.REMOVAL:
+					result.pop(key, None)
+		return result
+
+	def toExternalObject(self, **kwargs):
+		mod_args = dict(**kwargs)
+		mod_args['name'] = ''  # set default
+		mod_args['decorate'] = False  # no decoration
+		result = to_external_object(self.obj, **mod_args)
+		self._remover(result)
 		return result

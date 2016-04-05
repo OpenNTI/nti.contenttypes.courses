@@ -45,6 +45,7 @@ from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.externalization.externalization import to_external_object
+
 from nti.externalization.interfaces import IInternalObjectExternalizer
 
 @interface.implementer(ICourseSectionExporter)
@@ -67,7 +68,7 @@ class CourseOutlineExporter(BaseSectionExporter):
 			bucket = None
 		ext_obj = to_external_object(course.Outline, name='exporter', decorate=False)
 		source = self.dump(ext_obj)
-		filer.save("outline.json", source, contentType="application/json",
+		filer.save("course_outline.json", source, contentType="application/json",
 				   bucket=bucket, overwrite=True)
 		for sub_instance in get_course_subinstances(course):
 			if sub_instance.Outline is not course.Outline:
@@ -84,7 +85,7 @@ class VendorInfoExporter(BaseSectionExporter):
 			bucket = None
 		verdor_info = get_course_vendor_info(course, False)
 		if verdor_info:
-			ext_obj = to_external_object(verdor_info, decorate=False)
+			ext_obj = to_external_object(verdor_info, name="exporter", decorate=False)
 			source = self.dump(ext_obj)
 			filer.save("vendor_info.json", source, contentType="application/json",
 					   bucket=bucket, overwrite=True)
