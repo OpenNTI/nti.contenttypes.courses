@@ -55,7 +55,7 @@ from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_NAMES
 
-from nti.contenttypes.courses.interfaces import iface_of_node 
+from nti.contenttypes.courses.interfaces import iface_of_node
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -107,6 +107,23 @@ class AbstractInstanceWrapper(Contained):
 		if ICourseInstance.isOrExtends(iface):
 			return self._private_course_instance
 
+# vendor info
+
+def get_course_vendor_info(context, create=True):
+	result = None
+	course = ICourseInstance(context, None)
+	if create:
+		result = ICourseInstanceVendorInfo(context, None)
+	elif course is not None:
+		try:
+			annotations = course.__annotations__
+			result = annotations.get(VENDOR_INFO_KEY, None)
+		except AttributeError:
+			pass
+	return result
+
+# index
+
 def get_courses_catalog():
 	return component.queryUtility(ICatalog, name=COURSES_CATALOG_NAME)
 
@@ -128,19 +145,6 @@ def get_courses_for_packages(sites=(), packages=()):
 
 def get_enrollment_catalog():
 	return component.queryUtility(ICatalog, name=ENROLLMENT_CATALOG_NAME)
-
-def get_course_vendor_info(context, create=True):
-	result = None
-	course = ICourseInstance(context, None)
-	if create:
-		result = ICourseInstanceVendorInfo(context, None)
-	elif course is not None:
-		try:
-			annotations = course.__annotations__
-			result = annotations.get(VENDOR_INFO_KEY, None)
-		except AttributeError:
-			pass
-	return result
 
 def unindex_course_roles(context, catalog=None):
 	course = ICourseInstance(context, None)
@@ -195,6 +199,8 @@ def index_course_roles(context, catalog=None, intids=None):
 	result += _index_editors(course, catalog, entry, doc_id)
 	return result
 
+# course & hierarchy
+
 def get_parent_course(context):
 	course = ICourseInstance(context, None)
 	if ICourseSubInstance.providedBy(course):
@@ -228,6 +234,8 @@ def get_content_unit_courses(context, include_sub_instances=True):
 			result = courses
 	return result
 content_unit_to_courses = get_content_unit_courses
+
+# enrollments
 
 def is_there_an_open_enrollment(course, user):
 	if user is None:
@@ -268,6 +276,62 @@ def drop_any_other_enrollments(context, user, ignore_existing=True):
 						getattr(entry, 'ProviderUniqueID', None))
 			result.append(instance)
 	return tuple(result)
+
+def get_catalog_entry(ntiid, safe=True):
+	try:
+		catalog = component.getUtility(ICourseCatalog)
+		entry = catalog.getCatalogEntry(ntiid) if ntiid else None
+		return entry
+	except (ComponentLookupError, KeyError) as e:
+		if not safe:
+			raise e
+	return None
+
+def get_enrollment_record(context, user):
+	course = ICourseInstance(context, None)
+	enrollments = ICourseEnrollments(course, None)
+	record = enrollments.get_enrollment_for_principal(user) \
+			 if user is not None and enrollments is not None else None
+	return record
+
+def get_enrollment_record_in_hierarchy(context, user):
+	for instance in get_course_hierarchy(context):
+		record = get_enrollment_record(instance, user)
+		if record is not None:
+			return record
+	return None
+
+def is_enrolled(context, user):
+	record = get_enrollment_record(context, user)
+	return record is not None
+
+def is_enrolled_in_hierarchy(context, user):
+	record = get_enrollment_record_in_hierarchy(context, user)
+	return record is not None
+
+def has_enrollments(user, intids=None):
+	catalog = get_enrollment_catalog()
+	sites = get_component_hierarchy_names()
+	username = getattr(user, 'username', user)
+	intids = component.getUtility(IIntIds) if intids is None else intids
+	query = {
+		IX_SITE: {'any_of':sites},
+		IX_USERNAME: {'any_of':(username,) },
+		IX_SCOPE: {'any_of':ENROLLMENT_SCOPE_NAMES}
+	}
+	for uid in catalog.apply(query) or ():
+		obj = intids.queryObject(uid)
+		if ICourseInstanceEnrollmentRecord.providedBy(obj):
+			return True
+	return False
+
+def has_enrollments2(user):
+	for enrollments in component.subscribers((user,), IPrincipalEnrollments):
+		if enrollments.count_enrollments():
+			return True
+	return False
+
+# instructors & editors
 
 def get_instructors_in_roles(roles, setting=Allow):
 	"""
@@ -410,60 +474,6 @@ def is_course_instructor_or_editor(context, user):
 	result = is_course_instructor(context, user) or is_course_editor(context, user)
 	return result
 
-def get_catalog_entry(ntiid, safe=True):
-	try:
-		catalog = component.getUtility(ICourseCatalog)
-		entry = catalog.getCatalogEntry(ntiid) if ntiid else None
-		return entry
-	except (ComponentLookupError, KeyError) as e:
-		if not safe:
-			raise e
-	return None
-
-def get_enrollment_record(context, user):
-	course = ICourseInstance(context, None)
-	enrollments = ICourseEnrollments(course, None)
-	record = enrollments.get_enrollment_for_principal(user) \
-			 if user is not None and enrollments is not None else None
-	return record
-
-def get_enrollment_record_in_hierarchy(context, user):
-	for instance in get_course_hierarchy(context):
-		record = get_enrollment_record(instance, user)
-		if record is not None:
-			return record
-	return None
-
-def is_enrolled(context, user):
-	record = get_enrollment_record(context, user)
-	return record is not None
-
-def is_enrolled_in_hierarchy(context, user):
-	record = get_enrollment_record_in_hierarchy(context, user)
-	return record is not None
-
-def has_enrollments(user, intids=None):
-	catalog = get_enrollment_catalog()
-	sites = get_component_hierarchy_names()
-	username = getattr(user, 'username', user)
-	intids = component.getUtility(IIntIds) if intids is None else intids
-	query = { 
-		IX_SITE: {'any_of':sites},
-		IX_USERNAME: {'any_of':(username,) },
-		IX_SCOPE: {'any_of':ENROLLMENT_SCOPE_NAMES}
-	}
-	for uid in catalog.apply(query) or ():
-		obj = intids.queryObject(uid)
-		if ICourseInstanceEnrollmentRecord.providedBy(obj):
-			return True
-	return False
-	
-def has_enrollments2(user):		
-	for enrollments in component.subscribers((user,), IPrincipalEnrollments):
-		if enrollments.count_enrollments():
-			return True
-	return False
-	
 # outlines
 
 def unregister_outline_nodes(course):
@@ -476,7 +486,7 @@ def unregister_outline_nodes(course):
 			recur(child)
 		if not ICourseOutline.providedBy(node):
 			unregisterUtility(registry,
-							  name=node.ntiid, 
+							  name=node.ntiid,
 							  provided=iface_of_node(node))
 
 	if course.Outline:
@@ -485,7 +495,7 @@ def unregister_outline_nodes(course):
 def clear_course_outline(course):
 	if course.Outline:
 		unregister_outline_nodes(course)
-		course.Outline.clear() # clear outline
+		course.Outline.clear()  # clear outline
 
 import zope.deferredimport
 zope.deferredimport.initialize()
