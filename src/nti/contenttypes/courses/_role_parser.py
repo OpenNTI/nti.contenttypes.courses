@@ -30,6 +30,7 @@ from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
+
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 
 from nti.contenttypes.courses.sharing import add_principal_to_course_content_roles
@@ -39,7 +40,7 @@ from nti.dataserver.interfaces import IUser
 
 from nti.dataserver.users import User
 
-def _fill_roles_from_json(course, manager, json):
+def _populate_roles_from_json(course, manager, json):
 	"""
 	A json dict that looks like::
 
@@ -95,46 +96,12 @@ def _check_scopes(course):
 					delattr(scope, intids.attribute)
 				intids.register(scope)
 
-def fill_roles_from_key(course, key):
-	"""
-	XXX Fill in description
-
-	Unlike that function, this function does set the last modified
-	time to the time of that key (and sets the root of the catalog entry to
-	the key). It also only does anything if the modified time has
-	changed.
-
-	:return: The entry
-	"""
-
-	# RoleManagers are not required to have lastModified by default...
-
+def fill_roles_from_json(course, json):
 	_check_scopes(course)
-
+		
 	role_manager = IPrincipalRoleManager(course)
-	role_last_mod = getattr(course, '__principalRoleslastModified__', 0)
-
-	if key.lastModified <= role_last_mod:
-		# JAM: XXX: We had some environments that got set up
-		# before instructors were properly added to content roles;
-		# rather than force environments to remove the role files and
-		# sync, then put them back and sync again, I'm temporarily
-		# setting roles each time we get here. It's an idempotent process,
-		# though, so we won't be churning the database.
-		for instructor in course.instructors:
-			user = IUser(instructor)
-			add_principal_to_course_content_roles(user, course)
-		return False
-
-	logger.info( 'Syncing course roles for key (%s)', key )
 	reset_roles_missing_key(role_manager)
-
-	__traceback_info__ = key, course
-	json = key.readContentsAsYaml()
-	_fill_roles_from_json(course, role_manager, json)
-
-	# save it on the course as roles managers are not always persistent
-	course.__principalRoleslastModified__ = key.lastModified
+	_populate_roles_from_json(course, role_manager, json)
 
 	# We must update the instructor list too, it's still used internally
 	# in a few places...plus it's how we know who to remove from the scopes
@@ -203,3 +170,24 @@ def fill_roles_from_key(course, key):
 				user.stop_following(public_scope)
 
 	return True
+
+def fill_roles_from_key(course, key):
+	role_last_mod = getattr(course, '__principalRoleslastModified__', 0)
+	if key.lastModified <= role_last_mod:
+		# JAM: XXX: We had some environments that got set up
+		# before instructors were properly added to content roles;
+		# rather than force environments to remove the role files and
+		# sync, then put them back and sync again, I'm temporarily
+		# setting roles each time we get here. It's an idempotent process,
+		# though, so we won't be churning the database.
+		for instructor in course.instructors:
+			user = IUser(instructor)
+			add_principal_to_course_content_roles(user, course)
+		return False
+
+	logger.info( 'Syncing course roles for key (%s)', key )
+	
+	__traceback_info__ = key, course
+	json = key.readContentsAsYaml()
+	result = fill_roles_from_json(course, json)
+	return result
