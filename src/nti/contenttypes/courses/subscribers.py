@@ -59,6 +59,7 @@ from nti.contenttypes.courses.interfaces import iface_of_node
 
 from nti.contenttypes.courses.utils import index_course_roles
 from nti.contenttypes.courses.utils import unindex_course_roles
+from nti.contenttypes.courses.utils import unregister_outline_nodes
 
 from nti.dataserver.interfaces import IUser
 
@@ -68,7 +69,6 @@ from nti.site.localutility import install_utility
 from nti.site.localutility import uninstall_utility_on_unregistration
 
 from nti.site.utils import registerUtility
-from nti.site.utils import unregisterUtility
 
 # XXX: This is very similar to nti.contentlibrary.subscribers
 
@@ -218,24 +218,15 @@ def unindex_enrollment_records(course):
 		for uid in catalog.apply(query) or ():
 			catalog.unindex_doc(uid)
 
-def unregister_outline_nodes(course):
-	registry = component.getSiteManager()
-	def recur(node):
-		for child in node.values():
-			recur(child)
-		if not ICourseOutline.providedBy(node):
-			unregisterUtility(registry,
-							  name=node.ntiid,
-							  provided=iface_of_node(node))
-
+def clear_course_outline(course):
 	if course.Outline:
-		recur(course.Outline)
+		unregister_outline_nodes(course)
 		course.Outline.clear() # clear outline
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def on_course_instance_removed(course, event):
 	unindex_enrollment_records(course)
-	unregister_outline_nodes(course)
+	clear_course_outline(course)
 
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
 def course_default_roles(course, event):

@@ -55,7 +55,9 @@ from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_NAMES
 
+from nti.contenttypes.courses.interfaces import iface_of_node 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseEnrollments
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
@@ -69,7 +71,13 @@ from nti.contenttypes.courses.vendorinfo import VENDOR_INFO_KEY
 
 from nti.dataserver.users import User
 
+from nti.site.hostpolicy import get_host_site
+
+from nti.site.interfaces import IHostPolicyFolder
+
 from nti.site.site import get_component_hierarchy_names
+
+from nti.site.utils import unregisterUtility
 
 from nti.traversal.traversal import find_interface
 
@@ -456,6 +464,22 @@ def has_enrollments2(user):
 			return True
 	return False
 	
+def unregister_outline_nodes(course):
+	folder = find_interface(course, IHostPolicyFolder, strict=False)
+	site = get_host_site(folder.__name__)
+	registry = site.getSiteManager()
+	def recur(node):
+		for child in node.values():
+			recur(child)
+		if not ICourseOutline.providedBy(node):
+			unregisterUtility(registry,
+							  name=node.ntiid, 
+							  provided=iface_of_node(node))
+
+	if course.Outline:
+		recur(course.Outline)
+		course.Outline.clear() # clear outline
+
 import zope.deferredimport
 zope.deferredimport.initialize()
 zope.deferredimport.deprecatedFrom(
