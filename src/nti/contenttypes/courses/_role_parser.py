@@ -98,9 +98,10 @@ def _check_scopes(course):
 
 def fill_roles_from_json(course, json):
 	_check_scopes(course)
-		
+
 	role_manager = IPrincipalRoleManager(course)
 	reset_roles_missing_key(role_manager)
+
 	_populate_roles_from_json(course, role_manager, json)
 
 	# We must update the instructor list too, it's still used internally
@@ -172,6 +173,7 @@ def fill_roles_from_json(course, json):
 	return True
 
 def fill_roles_from_key(course, key):
+	__traceback_info__ = key, course
 	role_last_mod = getattr(course, '__principalRoleslastModified__', 0)
 	if key.lastModified <= role_last_mod:
 		# JAM: XXX: We had some environments that got set up
@@ -185,9 +187,7 @@ def fill_roles_from_key(course, key):
 			add_principal_to_course_content_roles(user, course)
 		return False
 
-	logger.info( 'Syncing course roles for key (%s)', key )
-	
-	__traceback_info__ = key, course
+	logger.info('Syncing course roles for key (%s)', key)
 	json = key.readContentsAsYaml()
 	result = fill_roles_from_json(course, json)
 	return result
