@@ -100,7 +100,10 @@ def get_topic_key(discussion):
 	name = discussion.id  # use id so title can be changed
 	title = discussion.title
 	__traceback_info__ = title, id
-	title = title.decode('utf-8', 'ignore') if title else u''
+	if not title:
+		title = u''
+	elif not isinstance(title, unicode):
+		title = title.decode('utf-8', 'ignore')
 	if is_nti_course_bundle(discussion):
 		name = get_discussion_path(name)
 	name = make_specific_safe(name or title)
