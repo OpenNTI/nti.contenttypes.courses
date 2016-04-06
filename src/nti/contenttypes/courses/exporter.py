@@ -54,7 +54,7 @@ class BaseSectionExporter(object):
 	
 	def dump(self, ext_obj):
 		source = StringIO()
-		simplejson.dump(ext_obj, source, indent=4, sort_keys=True)
+		simplejson.dump(ext_obj, source, indent='\t', sort_keys=True)
 		source.seek(0)
 		return source
 

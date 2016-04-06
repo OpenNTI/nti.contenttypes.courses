@@ -327,6 +327,7 @@
 
 	<!-- Importer -->
 	<utility factory=".importer.CourseImporter" />
+	<utility factory=".importer.VendorInfoImporter" name="999:Vendor_Info" />
 	
 	<!-- Invitations -->
 	<configure zcml:condition="have testmode">

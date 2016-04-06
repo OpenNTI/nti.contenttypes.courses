@@ -30,6 +30,7 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
 
 from nti.coremetadata.interfaces import ILastModified
+
 from nti.coremetadata.mixins import CalendarPublishableMixin
 from nti.coremetadata.mixins import RecordableContainerMixin
 

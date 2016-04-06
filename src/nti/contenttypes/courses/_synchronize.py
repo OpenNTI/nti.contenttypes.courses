@@ -32,7 +32,6 @@ from nti.contentlibrary import ContentRemovalException
 
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
-from nti.contentlibrary.bundle import PersistentContentPackageBundle
 
 from nti.contentlibrary.interfaces import ISynchronizationParams
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
@@ -44,6 +43,8 @@ from nti.contenttypes.courses._assessment_override_parser import fill_asg_from_k
 from nti.contenttypes.courses._assessment_override_parser import reset_asg_missing_key
 
 from nti.contenttypes.courses._assessment_policy_validator import validate_assigment_policies
+
+from nti.contenttypes.courses._bundle import created_content_package_bundle
 
 from nti.contenttypes.courses._catalog_entry_parser import fill_entry_from_legacy_key
 
@@ -87,8 +88,6 @@ from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CatalogEntrySynchronized
 from nti.contenttypes.courses.interfaces import CourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
-
-from nti.contenttypes.courses.legacy_catalog import _ntiid_from_entry
 
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
@@ -239,26 +238,14 @@ class _ContentCourseSynchronizer(object):
 		# prepare sync results
 		sync_results = _get_course_sync_results(entry, **kwargs)
 
-		bundle = None
-		created_bundle = False
-		if course.ContentPackageBundle is None:
-			# mark results
-			created_bundle = True
-			sync_results.ContentBundleCreated = True
-			# create bundle
-			bundle = PersistentContentPackageBundle()
-			bundle.root = bucket
-			bundle.__parent__ = course
-			bundle.createdTime = bundle.lastModified = 0
-			bundle.ntiid = _ntiid_from_entry(bundle, 'Bundle:CourseBundle')
-			# register w/ course and notify
-			course.ContentPackageBundle = bundle
-			lifecycleevent.created(bundle)
+		created_bundle = created_content_package_bundle(course, bucket)
+		bundle = course.ContentPackageBundle
 
 		# The catalog entry gets the default DublinCore metadata file name,
 		# in this bucket, since it really describes the data.
 		# The content bundle, on the other hand, gets a custom file
-		modified = sync_bundle_from_json_key(bundle_json_key, course.ContentPackageBundle,
+		modified = sync_bundle_from_json_key(bundle_json_key, 
+											 course.ContentPackageBundle,
 								  			 dc_meta_name='bundle_dc_metadata.xml',
 								  			 excluded_keys=('ntiid',))
 
