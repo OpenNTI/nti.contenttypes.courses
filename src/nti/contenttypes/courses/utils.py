@@ -464,10 +464,13 @@ def has_enrollments2(user):
 			return True
 	return False
 	
+# outlines
+
 def unregister_outline_nodes(course):
 	folder = find_interface(course, IHostPolicyFolder, strict=False)
 	site = get_host_site(folder.__name__)
 	registry = site.getSiteManager()
+
 	def recur(node):
 		for child in node.values():
 			recur(child)
@@ -478,6 +481,10 @@ def unregister_outline_nodes(course):
 
 	if course.Outline:
 		recur(course.Outline)
+
+def clear_course_outline(course):
+	if course.Outline:
+		unregister_outline_nodes(course)
 		course.Outline.clear() # clear outline
 
 import zope.deferredimport

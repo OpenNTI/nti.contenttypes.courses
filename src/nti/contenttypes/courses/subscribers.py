@@ -58,8 +58,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import iface_of_node
 
 from nti.contenttypes.courses.utils import index_course_roles
+from nti.contenttypes.courses.utils import clear_course_outline
 from nti.contenttypes.courses.utils import unindex_course_roles
-from nti.contenttypes.courses.utils import unregister_outline_nodes
 
 from nti.dataserver.interfaces import IUser
 
@@ -217,11 +217,6 @@ def unindex_enrollment_records(course):
 				  IX_COURSE: {'any_of':(ntiid,)} }
 		for uid in catalog.apply(query) or ():
 			catalog.unindex_doc(uid)
-
-def clear_course_outline(course):
-	if course.Outline:
-		unregister_outline_nodes(course)
-		course.Outline.clear() # clear outline
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def on_course_instance_removed(course, event):
