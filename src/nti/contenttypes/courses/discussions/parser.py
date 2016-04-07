@@ -15,13 +15,15 @@ import simplejson
 
 from zope import lifecycleevent
 
-from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
-from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 from nti.contentlibrary.synchronize import SynchronizationException
 
 from nti.contenttypes.courses.discussions.interfaces import NTI_COURSE_BUNDLE
 from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
+
+from nti.contenttypes.courses.interfaces import SECTIONS 
+from nti.contenttypes.courses.interfaces import DISCUSSIONS
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
 
 from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
@@ -31,20 +33,12 @@ INVALID_DISCUSSION_CODE = 300
 class InvalidDiscussionException(SynchronizationException):
 	code = INVALID_DISCUSSION_CODE
 
-def path_to_course(resource):
-	result = []
-	while resource is not None:
-		if 	IDelimitedHierarchyBucket.providedBy(resource) and \
-			resource.getChildNamed(BUNDLE_META_NAME):
-			break
-		try:
-			result.append(resource.__name__)
-			resource = resource.__parent__
-		except AttributeError:
-			resource = None
-	result.reverse()
-	result = os.path.sep.join(result)
-	return result
+def path_to_discussions(course):
+	if ICourseSubInstance.providedBy(course):
+		path = "%s/%s/%s" % (SECTIONS, course.__name__, DISCUSSIONS)
+	else:
+		path = DISCUSSIONS
+	return path
 
 def prepare_json_text(s):
 	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
@@ -85,7 +79,7 @@ def parse_discussions(course, bucket, *args, **kwargs):
 	for child_name in list(discussions):
 		if child_name not in child_files:
 			logger.info("Removing discussion %s (%r)", child_name,
-						 discussions[child_name])
+						discussions[child_name])
 			del discussions[child_name]
 			result = True
 
@@ -101,7 +95,8 @@ def parse_discussions(course, bucket, *args, **kwargs):
 									 discussion=discussion)
 
 		# set discusion course bundle id
-		path = path_to_course(key)
+		path = path_to_discussions(course)
+		path = os.path.join(path, name)
 		discussion.id = "%s://%s" % (NTI_COURSE_BUNDLE, path)
 
 		# set last mod from key

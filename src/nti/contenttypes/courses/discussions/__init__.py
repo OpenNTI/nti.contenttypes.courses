@@ -9,4 +9,4 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from .parser import parse_discussions
+from nti.contenttypes.courses.discussions.parser import parse_discussions
