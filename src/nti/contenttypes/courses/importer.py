@@ -51,7 +51,7 @@ class BaseSectionImporter(object):
 		return result
 
 @interface.implementer(ICourseSectionImporter)
-class CourseOutlineExporter(BaseSectionImporter):
+class CourseOutlineImporter(BaseSectionImporter):
 
 	def process(self, context, filer):
 		course = ICourseInstance(context)
