@@ -327,8 +327,10 @@
 
 	<!-- Importer -->
 	<utility factory=".importer.CourseImporter" />
-	<utility factory=".importer.VendorInfoImporter" name="999:Vendor_Info" />
-	
+	<utility factory=".importer.RoleInfoImporter" name="666:Role_Info" />
+	<utility factory=".importer.VendorInfoImporter" name="777:Vendor_Info" />
+	<utility factory=".importer.CourseOutlineExporter" name="111:Course_Outline" />
+
 	<!-- Invitations -->
 	<configure zcml:condition="have testmode">
 		<utility factory=".invitation.JoinCourseInvitationActor" />
