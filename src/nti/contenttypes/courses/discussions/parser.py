@@ -47,6 +47,8 @@ def prepare_json_text(s):
 def load_discussion(name, source, discussions, discussion=None):
 	if hasattr(source, "read"):
 		json = simplejson.load(source)
+	elif hasattr(source, "readContents"):
+		json = simplejson.loads(prepare_json_text(source.readContents()))
 	else:
 		json = simplejson.loads(prepare_json_text(source))
 	factory = find_factory_for(json)
