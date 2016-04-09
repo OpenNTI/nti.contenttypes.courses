@@ -5,6 +5,7 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from _abcoll import Container
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -66,3 +67,8 @@ class ICourseDiscussions(IContainer, IContained, ILastModified):
 	A container for all the discussions
 	"""
 	contains(str('.ICourseDiscussion'))
+
+	def clear():
+		"""
+		clear all entries in this Container
+		"""

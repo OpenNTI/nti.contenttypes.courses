@@ -14,18 +14,21 @@ from hamcrest import assert_that
 from hamcrest import has_entries
 from hamcrest import has_property
 
+from nti.testing.matchers import verifiably_provides
+
 import os
 import simplejson
 
-from nti.contenttypes.courses.discussions.model import CourseDiscussion
 from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussion
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
+
+from nti.contenttypes.courses.discussions.model import CourseDiscussion
+from nti.contenttypes.courses.discussions.model import DefaultCourseDiscussions
 
 from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
 
 from nti.externalization.tests import externalizes
-
-from nti.testing.matchers import verifiably_provides
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 
@@ -35,9 +38,12 @@ class TestModel(CourseLayerTest):
 		assert_that(CourseDiscussion(),
 					verifiably_provides(ICourseDiscussion))
 
+		assert_that(DefaultCourseDiscussions(),
+					verifiably_provides(ICourseDiscussions))
+
 	def test_extenalizes(self):
 		assert_that(CourseDiscussion(),
-					 externalizes(has_entries(
+					externalizes(has_entries(
 								  'Class', 'Discussion',
 								  'MimeType', 'application/vnd.nextthought.courses.discussion',
 								  'body', is_(none()),
