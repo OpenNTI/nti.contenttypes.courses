@@ -36,7 +36,8 @@ class CourseExportFiler(DirectoryFiler):
 	def entry(self):
 		return ICourseCatalogEntry(self.course)
 
-	def prepare(self):
+	def prepare(self, path=None):
+		self.path = path if path else self.path
 		if self.path is None:
 			self.path = tempfile.mkdtemp()
 

@@ -1352,7 +1352,7 @@ class IJoinCourseInvitationActor(IInvitationActor):
 
 class ICourseExportFiler(ISourceFiler):
 	
-	def prepare():
+	def prepare(**kwargs):
 		"""
 		prepare filer for use
 		"""
