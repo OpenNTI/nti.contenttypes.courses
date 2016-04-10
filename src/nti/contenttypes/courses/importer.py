@@ -114,7 +114,7 @@ class RoleInfoImporter(BaseSectionImporter):
 			self.process(sub_instance, filer)
 
 @interface.implementer(ICourseSectionImporter)
-class BundlePresentationAssetsExporter(BaseSectionImporter):
+class BundlePresentationAssetsImporter(BaseSectionImporter):
 
 	__PA__ = 'presentation-assets'
 
