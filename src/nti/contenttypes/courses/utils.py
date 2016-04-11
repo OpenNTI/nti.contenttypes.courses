@@ -478,8 +478,8 @@ def is_course_instructor_or_editor(context, user):
 
 def unregister_outline_nodes(course):
 	folder = find_interface(course, IHostPolicyFolder, strict=False)
-	site = get_host_site(folder.__name__)
-	registry = site.getSiteManager()
+	site = get_host_site(folder.__name__) if folder is not None else None
+	registry = site.getSiteManager() if site is not None else None
 
 	def recur(node):
 		for child in node.values():
@@ -489,7 +489,7 @@ def unregister_outline_nodes(course):
 							  name=node.ntiid,
 							  provided=iface_of_node(node))
 
-	if course.Outline:
+	if registry is not None and course.Outline:
 		recur(course.Outline)
 
 def clear_course_outline(course):
