@@ -128,7 +128,7 @@ class AssignmentPoliciesImporter(BaseSectionImporter):
 		source = filer.get(path)
 		if source is not None:
 			source = self.load(source)
-			fill_asg_from_json(course, source)
+			fill_asg_from_json(course, source, time.time())
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer)
 
