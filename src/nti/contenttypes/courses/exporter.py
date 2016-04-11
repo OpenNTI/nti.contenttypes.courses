@@ -58,15 +58,19 @@ class BaseSectionExporter(object):
 		source.seek(0)
 		return source
 
+	def course_bucket(self, course):
+		if ICourseSubInstance.providedBy(course):
+			bucket = "%s/%s" % (SECTIONS, course.__name__)
+		else:
+			bucket = None
+		return bucket
+
 @interface.implementer(ICourseSectionExporter)
 class CourseOutlineExporter(BaseSectionExporter):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
-		if ICourseSubInstance.providedBy(course):
-			bucket = "%s/%s" % (SECTIONS, course.__name__)
-		else:
-			bucket = None
+		bucket = self.course_bucket(course)
 		ext_obj = to_external_object(course.Outline, name='exporter', decorate=False)
 		source = self.dump(ext_obj)
 		filer.save("course_outline.json", source, contentType="application/json",
@@ -80,10 +84,7 @@ class VendorInfoExporter(BaseSectionExporter):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
-		if ICourseSubInstance.providedBy(course):
-			bucket = "%s/%s" % (SECTIONS, course.__name__)
-		else:
-			bucket = None
+		bucket = self.course_bucket(course)
 		verdor_info = get_course_vendor_info(course, False)
 		if verdor_info:
 			ext_obj = to_external_object(verdor_info, name="exporter", decorate=False)
@@ -168,10 +169,8 @@ class BundlePresentationAssetsExporter(BaseSectionExporter):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
-		if ICourseSubInstance.providedBy(course):
-			bucket = u'%s/%s/' % (SECTIONS, course.__name__)
-		else:
-			bucket = u''
+		bucket = self.course_bucket(course)
+		bucket = u'' if not bucket else bucket + '/'
 		for resource in course.PlatformPresentationResources or ():
 			self._process_root(resource.root, bucket, filer)
 
@@ -199,10 +198,7 @@ class RoleInfoExporter(BaseSectionExporter):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
-		if ICourseSubInstance.providedBy(course):
-			bucket = u'%s/%s/' % (SECTIONS, course.__name__)
-		else:
-			bucket = None
+		bucket = self.course_bucket(course)
 		result = self._role_export_map(course)
 		source = self.dump(result)
 		filer.save("role_info.json", source, bucket=bucket,
@@ -215,10 +211,7 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
-		if ICourseSubInstance.providedBy(course):
-			bucket = u'%s/%s/' % (SECTIONS, course.__name__)
-		else:
-			bucket = None
+		bucket = self.course_bucket(course)
 		policies = IQAssessmentPolicies(course)
 		if policies and IInternalObjectExternalizer.providedBy(policies):
 			result = policies.toExternalObject()
@@ -233,10 +226,7 @@ class CourseInfoExporter(BaseSectionExporter):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
-		if ICourseSubInstance.providedBy(course):
-			bucket = u'%s/%s/' % (SECTIONS, course.__name__)
-		else:
-			bucket = None
+		bucket = self.course_bucket(course)
 		entry = ICourseCatalogEntry(course)
 		ext_obj = to_external_object(entry, name="exporter", decorate=False)
 		source = self.dump(ext_obj)
