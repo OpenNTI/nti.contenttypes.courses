@@ -81,6 +81,7 @@ from nti.contenttypes.courses.interfaces import ICourseSynchronizationResults
 from nti.contenttypes.courses.interfaces import IEnrollmentMappedCourseInstance
 
 from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
+from nti.contenttypes.courses.interfaces import CatalogEntrySynchronized
 from nti.contenttypes.courses.interfaces import CourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
 
@@ -478,6 +479,7 @@ class _ContentCourseSynchronizer(object):
 													catalog_json_key, 
 													bucket=bucket)
 		if modified:
+			notify(CatalogEntrySynchronized(catalog_entry))
 			sync_results.CatalogEntryUpdated = True
 
 	@classmethod

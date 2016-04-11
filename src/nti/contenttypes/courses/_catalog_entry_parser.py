@@ -18,8 +18,6 @@ from collections import Mapping
 
 from zope import interface
 
-from zope.event import notify
-
 from zope.interface.common.idatetime import IDateTime
 
 from nti.contentlibrary.dublincore import read_dublincore_from_named_key
@@ -27,8 +25,6 @@ from nti.contentlibrary.dublincore import read_dublincore_from_named_key
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
-
-from nti.contenttypes.courses.interfaces import CatalogEntrySynchronized
 
 from nti.contenttypes.courses.legacy_catalog import CourseCreditLegacyInfo
 from nti.contenttypes.courses.legacy_catalog import CourseCatalogInstructorLegacyInfo
@@ -242,7 +238,4 @@ def update_entry_from_legacy_key(entry, key, bucket, base_href='/', force=False)
 	elif IAnonymouslyAccessibleCourseInstance.providedBy(course):
 		interface.noLongerProvides(course, IAnonymouslyAccessibleCourseInstance)
 
-	# notified if modified
-	if modified:
-		notify(CatalogEntrySynchronized(entry))
 	return modified
