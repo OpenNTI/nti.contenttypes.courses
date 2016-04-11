@@ -18,10 +18,17 @@ from collections import Mapping
 
 from zope import interface
 
+from zope.event import notify
+
 from zope.interface.common.idatetime import IDateTime
 
+from nti.contentlibrary.dublincore import read_dublincore_from_named_key
+
+from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
+
+from nti.contenttypes.courses.interfaces import CatalogEntrySynchronized
 
 from nti.contenttypes.courses.legacy_catalog import CourseCreditLegacyInfo
 from nti.contenttypes.courses.legacy_catalog import CourseCatalogInstructorLegacyInfo
@@ -171,7 +178,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		catalog_entry.Prerequisites = info_json_dict.get('prerequisites', [])
 	else:
 		_quiet_delattr(catalog_entry, 'Prerequisites')
-		
+
 	if 'additionalProperties' in info_json_dict:
 		catalog_entry.AdditionalProperties = info_json_dict.get('additionalProperties', {})
 		assert 	isinstance(catalog_entry.AdditionalProperties, Mapping), \
@@ -181,7 +188,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 
 	return catalog_entry
 
-def fill_entry_from_legacy_key(catalog_entry, key, base_href='/'):
+def fill_entry_from_legacy_key(catalog_entry, key, base_href='/', force=False):
 	"""
 	Given a course catalog entry and a :class:`.IDelimitedHierarchyKey`,
 	read the JSON from the key's contents
@@ -195,7 +202,7 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/'):
 	:return: The entry
 	"""
 
-	if key.lastModified > catalog_entry.lastModified:
+	if force or key.lastModified > catalog_entry.lastModified:
 		__traceback_info__ = key, catalog_entry
 		logger.info("Updating catalog entry %s with [legacy] json %s. (dates: key=%s, ce=%s)",
 					catalog_entry.ntiid, key, key.lastModified, catalog_entry.lastModified)
@@ -209,3 +216,33 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/'):
 		logger.info("Skipping catalog entry %s update. (dates: key=%s, ce=%s)",
 					catalog_entry.ntiid, key.lastModified, catalog_entry.lastModified)
 	return False
+
+def update_entry_from_legacy_key(entry, key, bucket, base_href='/', force=False):
+	modified = fill_entry_from_legacy_key(entry, key, base_href=base_href, force=force)
+
+	# The catalog entry gets the default dublincore info
+	# file; for the bundle, we use a different name
+	modified = (read_dublincore_from_named_key(entry,
+											   bucket,
+											   force=force) != None) or modified
+
+	if not getattr(entry, 'root', None):
+		entry.root = bucket
+		modified = True
+
+	# update course interfaces
+	course = ICourseInstance(entry)
+	if INonPublicCourseInstance.providedBy(entry):
+		interface.alsoProvides(course, INonPublicCourseInstance)
+	elif INonPublicCourseInstance.providedBy(course):
+		interface.noLongerProvides(course, INonPublicCourseInstance)
+
+	if IAnonymouslyAccessibleCourseInstance.providedBy(entry):
+		interface.alsoProvides(course, IAnonymouslyAccessibleCourseInstance)
+	elif IAnonymouslyAccessibleCourseInstance.providedBy(course):
+		interface.noLongerProvides(course, IAnonymouslyAccessibleCourseInstance)
+
+	# notified if modified
+	if modified:
+		notify(CatalogEntrySynchronized(entry))
+	return modified

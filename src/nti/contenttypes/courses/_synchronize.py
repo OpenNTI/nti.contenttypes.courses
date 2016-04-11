@@ -37,8 +37,6 @@ from nti.contentlibrary.interfaces import ISynchronizationParams
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
 from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 
-from nti.contentlibrary.dublincore import read_dublincore_from_named_key
-
 from nti.contenttypes.courses._assessment_override_parser import fill_asg_from_key
 from nti.contenttypes.courses._assessment_override_parser import reset_asg_missing_key
 
@@ -46,7 +44,7 @@ from nti.contenttypes.courses._assessment_policy_validator import validate_assig
 
 from nti.contenttypes.courses._bundle import created_content_package_bundle
 
-from nti.contenttypes.courses._catalog_entry_parser import fill_entry_from_legacy_key
+from nti.contenttypes.courses._catalog_entry_parser import update_entry_from_legacy_key
 
 from nti.contenttypes.courses._outline_parser import fill_outline_from_key
 
@@ -76,16 +74,13 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSubInstances
 from nti.contenttypes.courses.interfaces import IDenyOpenEnrollment
-from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
 from nti.contenttypes.courses.interfaces import IContentCourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseSynchronizationResults
 from nti.contenttypes.courses.interfaces import IEnrollmentMappedCourseInstance
-from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
 from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
-from nti.contenttypes.courses.interfaces import CatalogEntrySynchronized
 from nti.contenttypes.courses.interfaces import CourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
 
@@ -479,27 +474,10 @@ class _ContentCourseSynchronizer(object):
 		modified = False
 		catalog_entry = ICourseCatalogEntry(course)
 		if catalog_json_key:
-			modified = fill_entry_from_legacy_key(catalog_entry, catalog_json_key)
-			# The catalog entry gets the default dublincore info
-			# file; for the bundle, we use a different name
-			modified = (read_dublincore_from_named_key(catalog_entry, bucket) != None) or modified
-
-		if not getattr(catalog_entry, 'root', None):
-			catalog_entry.root = bucket
-			modified = True
-
-		if INonPublicCourseInstance.providedBy(catalog_entry):
-			interface.alsoProvides(course, INonPublicCourseInstance)
-		elif INonPublicCourseInstance.providedBy(course):
-			interface.noLongerProvides(course, INonPublicCourseInstance)
-
-		if IAnonymouslyAccessibleCourseInstance.providedBy(catalog_entry):
-			interface.alsoProvides(course, IAnonymouslyAccessibleCourseInstance)
-		elif IAnonymouslyAccessibleCourseInstance.providedBy(course):
-			interface.noLongerProvides(course, IAnonymouslyAccessibleCourseInstance)
-
+			modified = update_entry_from_legacy_key(catalog_entry, 
+													catalog_json_key, 
+													bucket=bucket)
 		if modified:
-			notify(CatalogEntrySynchronized(catalog_entry))
 			sync_results.CatalogEntryUpdated = True
 
 	@classmethod
