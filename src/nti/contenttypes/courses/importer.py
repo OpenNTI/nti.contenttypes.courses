@@ -58,16 +58,19 @@ class BaseSectionImporter(object):
 			result = simplejson.loads(source)
 		return result
 
+	def course_bucket_path(self, course):
+		if ICourseSubInstance.providedBy(course):
+			bucket = "%s/%s/" % (SECTIONS, course.__name__)
+		else:
+			bucket = u''
+		return bucket
+
 @interface.implementer(ICourseSectionImporter)
 class CourseOutlineImporter(BaseSectionImporter):
 
 	def process(self, context, filer):
 		course = ICourseInstance(context)
-		if ICourseSubInstance.providedBy(course):
-			bucket = "%s/%s/" % (SECTIONS, course.__name__)
-		else:
-			bucket = u''
-		path = bucket + 'course_outline.json'
+		path = self.course_bucket_path(course) + 'course_outline.json'
 		source = filer.get(path)
 		if source is not None:
 			ext_obj = self.load(source)
@@ -82,11 +85,7 @@ class VendorInfoImporter(BaseSectionImporter):
 
 	def process(self, context, filer):
 		course = ICourseInstance(context)
-		if ICourseSubInstance.providedBy(course):
-			bucket = "%s/%s/" % (SECTIONS, course.__name__)
-		else:
-			bucket = u''
-		path = bucket + 'vendor_info.json'
+		path = self.course_bucket_path(course) + 'vendor_info.json'
 		source = filer.get(path)
 		if source is not None:
 			verdor_info = get_course_vendor_info(course, True)
@@ -102,11 +101,7 @@ class RoleInfoImporter(BaseSectionImporter):
 
 	def process(self, context, filer):
 		course = ICourseInstance(context)
-		if ICourseSubInstance.providedBy(course):
-			bucket = "%s/%s/" % (SECTIONS, course.__name__)
-		else:
-			bucket = u''
-		path = bucket + 'role_info.json'
+		path = self.course_bucket_path(course) + 'role_info.json'
 		source = filer.get(path)
 		if source is not None:
 			source = self.load(source)
@@ -120,11 +115,7 @@ class AssignmentPoliciesImporter(BaseSectionImporter):
 
 	def process(self, context, filer):
 		course = ICourseInstance(context)
-		if ICourseSubInstance.providedBy(course):
-			bucket = "%s/%s/" % (SECTIONS, course.__name__)
-		else:
-			bucket = u''
-		path = bucket + 'assignment_policies.json'
+		path = self.course_bucket_path(course) + 'assignment_policies.json'
 		source = filer.get(path)
 		if source is not None:
 			source = self.load(source)
@@ -154,12 +145,7 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
 		root = course.root # must exists
 		if root is None or not IFilesystemBucket.providedBy(root):
 			return
-		# course path
-		if ICourseSubInstance.providedBy(course):
-			bucket = "%s/%s/" % (SECTIONS, course.__name__)
-		else:
-			bucket = u''
-		path = bucket + self.__PA__
+		path = self.course_bucket_path(course) + self.__PA__
 		if filer.is_bucket(path):
 			root_path = os.path.join(root.absolute_path, self.__PA__)
 			shutil.rmtree(root_path, True) # not merging
