@@ -23,6 +23,8 @@ from nti.cabinet.filer import transfer_to_native_file
 
 from nti.contentlibrary.interfaces import IFilesystemBucket
 
+from nti.contenttypes.courses._assessment_override_parser import fill_asg_from_json
+
 from nti.contenttypes.courses._role_parser import fill_roles_from_json
 
 from nti.contenttypes.courses.interfaces import SECTIONS
@@ -110,6 +112,23 @@ class RoleInfoImporter(BaseSectionImporter):
 			source = self.load(source)
 			fill_roles_from_json(course, source)
 			notify(CourseRolesSynchronized(course))
+		for sub_instance in get_course_subinstances(course):
+			self.process(sub_instance, filer)
+
+@interface.implementer(ICourseSectionImporter)
+class AssignmentPoliciesImporter(BaseSectionImporter):
+
+	def process(self, context, filer):
+		course = ICourseInstance(context)
+		if ICourseSubInstance.providedBy(course):
+			bucket = "%s/%s/" % (SECTIONS, course.__name__)
+		else:
+			bucket = u''
+		path = bucket + 'assignment_policies.json'
+		source = filer.get(path)
+		if source is not None:
+			source = self.load(source)
+			fill_asg_from_json(course, source)
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer)
 

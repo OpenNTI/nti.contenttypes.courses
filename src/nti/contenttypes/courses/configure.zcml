@@ -330,6 +330,7 @@
 	<utility factory=".importer.RoleInfoImporter" name="666:Role_Info" />
 	<utility factory=".importer.VendorInfoImporter" name="777:Vendor_Info" />
 	<utility factory=".importer.CourseOutlineImporter" name="008:Course_Outline" />
+	<utility factory=".importer.AssignmentPoliciesImporter" name="100:Assignment_Policies" />
 	<utility factory=".importer.BundlePresentationAssetsImporter" name="003:Presentation_Assets" />
 
 	<!-- Invitations -->

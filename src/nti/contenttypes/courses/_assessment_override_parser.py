@@ -35,35 +35,18 @@ def reset_asg_missing_key(course, full=True):
 				del policies[key]
 	return policies
 
-def fill_asg_from_key(course, key):
-	"""
-	XXX Fill in description
-
-	Unlike that function, this function does set the last modified
-	time to the time of that key (and sets the root of the catalog entry to
-	the key). It also only does anything if the modified time has
-	changed.
-
-	:return: The entry
-	"""
-
-	# Note that regular courses do not track date contexts, so
-	# we do the comparison of dates based on the policies
-
-	__traceback_info__ = key, course
+def fill_asg_from_json(course, index, lastModified=0):
+	# remove previous data
+	reset_asg_missing_key(course, full=False)
 
 	dates = IQAssessmentDateContext(course)
 	policies = IQAssessmentPolicies(course)
-	if key.lastModified <= policies.lastModified:
-		return False
 
-	reset_asg_missing_key(course, full=False)
-	json = key.readContentsAsYaml()
-	dates.lastModified = key.lastModified
-	policies.lastModified = key.lastModified
+	dates.lastModified = lastModified
+	policies.lastModified = lastModified
 
 	dropped_policies_keys = SUPPORTED_DATE_KEYS + ('Title', 'locked')
-	for key, val in json.items():
+	for key, val in index.items():
 		if policies.get(key, 'locked', False):
 			logger.warn("Policy for %s is locked", key)
 			continue
@@ -98,4 +81,15 @@ def fill_asg_from_key(course, key):
 		policies[key] = PersistentMapping({k: v for k, v in val.items()
 						 				   if k not in dropped_policies_keys})
 
+	return policies
+
+def fill_asg_from_key(course, key):
+	# Note that regular courses do not track date contexts, so
+	# we do the comparison of dates based on the policies
+	__traceback_info__ = key, course
+	policies = IQAssessmentPolicies(course)
+	if key.lastModified <= policies.lastModified:
+		return False
+	index = key.readContentsAsYaml()
+	fill_asg_from_json(course, index, key.lastModified)
 	return True
