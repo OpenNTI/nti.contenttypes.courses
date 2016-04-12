@@ -67,7 +67,7 @@ def load_discussion(name, source, discussions, discussion=None):
 		lifecycleevent.modified(new_discussion)
 	return new_discussion
 
-def parse_discussions(course, bucket, *args, **kwargs):
+def parse_discussions(course, bucket, force=False, *args, **kwargs):
 	__traceback_info__ = bucket, course
 	discussions = ICourseDiscussions(course)
 
@@ -87,7 +87,9 @@ def parse_discussions(course, bucket, *args, **kwargs):
 
 	for name, key in child_files.items():
 		discussion = discussions.get(name)
-		if discussion is not None and key.lastModified <= discussion.lastModified:
+		if 		not force \
+			and discussion is not None \
+			and key.lastModified <= discussion.lastModified:
 			continue
 
 		# parse and discussion
