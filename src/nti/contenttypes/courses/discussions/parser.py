@@ -44,7 +44,7 @@ def prepare_json_text(s):
 	result = unicode(s, 'utf-8') if isinstance(s, bytes) else s
 	return result
 
-def load_discussion(name, source, discussions, discussion=None):
+def load_discussion(name, source, discussions, path, discussion=None):
 	if hasattr(source, "read"):
 		json = simplejson.load(source)
 	elif hasattr(source, "readContents"):
@@ -57,6 +57,10 @@ def load_discussion(name, source, discussions, discussion=None):
 				"Cannot find factory for discussion in json file. Check MimeType")
 	new_discussion = factory() if discussion is None else discussion
 	update_from_external_object(new_discussion, json, notify=False)
+
+	# set discusion course bundle id before firing events
+	path = os.path.join(path, name)
+	new_discussion.id = "%s://%s" % (NTI_COURSE_BUNDLE, path)
 
 	if discussion is None:
 		lifecycleevent.created(new_discussion)
@@ -96,13 +100,8 @@ def parse_discussions(course, bucket, force=False, *args, **kwargs):
 		discussion = load_discussion(name,
 									 key.readContents(),
 									 discussions,
-									 discussion=discussion)
-
-		# set discusion course bundle id
-		path = path_to_discussions(course)
-		path = os.path.join(path, name)
-		discussion.id = "%s://%s" % (NTI_COURSE_BUNDLE, path)
-
+									 discussion=discussion,
+									 path=path_to_discussions(course))
 		# set last mod from key
 		discussion.lastModified = key.lastModified
 		result = True
