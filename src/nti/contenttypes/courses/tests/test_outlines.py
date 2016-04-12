@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.ntiids.ntiids import is_valid_ntiid_string
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -43,6 +42,8 @@ from nti.externalization.externalization import to_external_object
 
 from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
+
+from nti.ntiids.ntiids import is_valid_ntiid_string
 
 from nti.recorder.interfaces import ITransactionRecordHistory
 
@@ -124,7 +125,7 @@ class TestCourseOutline(CourseLayerTest):
 		assert_that(inst, has_property('AvailableEnding'), is_(now))
 		assert_that(inst, has_property('AvailableBeginning'), is_(now))
 		
-	def test_outline_exporter(self):
+	def test_outline_io_exporter(self):
 		path = os.path.join(os.path.dirname(__file__),
 							'TestSynchronizeWithSubInstances',
 							'Spring2014',
@@ -147,4 +148,3 @@ class TestCourseOutline(CourseLayerTest):
 		for node in new_outline.values():
 			assert_that(node, has_property('ntiid', is_not(none())))
 			assert_that(is_valid_ntiid_string(node.ntiid), is_(True))
-
