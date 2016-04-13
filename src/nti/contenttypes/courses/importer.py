@@ -49,17 +49,24 @@ from nti.externalization.internalization import update_from_external_object
 
 @interface.implementer(ICourseSectionImporter)
 class BaseSectionImporter(object):
+	
+	def _prepare(self, data):
+		if isinstance(data, bytes):
+			data = unicode(data, 'utf-8')
+		return data
 
 	def load(self, source):
 		if hasattr(source, "read"):
-			result = simplejson.load(source)
+			data = self._prepare(source.read())
+			result = simplejson.loads(data)
 		elif hasattr(source, "readContents"):
-			data = source.readContents()
+			data = self._prepare(source.readContents())
 			result = simplejson.loads(data)
 		elif hasattr(source, "data"):
-			result = simplejson.loads(source.data)
+			data = self._prepare(source.data)
+			result = simplejson.loads(data)
 		else:
-			result = simplejson.loads(source)
+			result = simplejson.loads(self._prepare(source))
 		return result
 
 	def course_bucket_path(self, course):
