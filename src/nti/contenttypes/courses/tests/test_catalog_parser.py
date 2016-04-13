@@ -65,14 +65,14 @@ class TestCatalogParser(CourseLayerTest):
 
 		assert_that( entry,
 					 externalizes( has_entries(
-							 'DisableOverviewCalendar', True) ) ) 
-		
+							 'DisableOverviewCalendar', True) ) )
+
 		fill_entry_from_legacy_key(entry, key)
 		assert_that( entry,
 					 has_properties( 'ProviderUniqueID', 'CLC 3403',
 									 'Title', 'Law and Justice',
 									 'AdditionalProperties', {"section":"parent"}) )
-		
+
 	def test_start_and_duration_parse(self):
 		key = self.key
 
@@ -82,18 +82,26 @@ class TestCatalogParser(CourseLayerTest):
 		json = key.readContentsAsJson()
 		json['startDate'] = '2015-06-29T05:00:00+00:00'
 		del json['duration']
-		
+
 		fill_entry_from_legacy_json(entry, json)
-		
+
 		assert_that(entry.StartDate, is_not(none()))
 		assert_that(entry.Duration, is_(none()))
 		assert_that(entry.EndDate, is_(none()))
-		
+
 		json['duration'] = '1 Weeks'
 		fill_entry_from_legacy_json(entry, json)
 		assert_that(entry.Duration, equal_to(timedelta(days=7)))
 		assert_that(entry.EndDate, equal_to(IDateTime('2015-07-06T05:00:00+00:00')))
-		
+
+		# Now pop
+		del json['startDate']
+		fill_entry_from_legacy_json(entry, json)
+
+		assert_that(entry.StartDate, none())
+		assert_that(entry.Duration, is_not(none()))
+		assert_that(entry.EndDate, none())
+
 	def test_start_and_end_date_parse(self):
 		key = self.key
 
@@ -105,7 +113,7 @@ class TestCatalogParser(CourseLayerTest):
 		json['duration'] = '1 Weeks'
 		json['endDate'] = '2015-06-30T05:00:00+00:00'
 		fill_entry_from_legacy_json(entry, json)
-		
+
 		assert_that(entry.StartDate, equal_to(IDateTime('2015-06-29T05:00:00+00:00')))
 		assert_that(entry.Duration, equal_to(timedelta(days=7)))
 		assert_that(entry.EndDate, equal_to(IDateTime('2015-06-30T05:00:00+00:00')))

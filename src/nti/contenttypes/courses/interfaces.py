@@ -263,7 +263,7 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
 									   "A non-schema place (so not externalized) that can store"
 									   "a placeholder content-ntiid, if it is known.")
 	ContentNTIID.setTaggedValue('_ext_excluded_out', True)
-	
+
 	AvailableBeginning = ValidDatetime(
 		title="This display time when this node should be active",
 		description="""When present, this specifies the time instant at which
@@ -293,7 +293,7 @@ class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 
 	ContentNTIID = ValidNTIID(title="The NTIID of the content this node uses",
 							  required=False)
-	
+
 _tag_iface_fields(ICourseOutlineContentNode, 'title', 'description', 'AvailableEnding',
 				  'AvailableBeginning' )
 
@@ -1305,7 +1305,7 @@ class IUserAdministeredCourses(interface.Interface):
 
 	def iter_admin(user):
 		"""
-		return an interable with the users administered courses
+		return an iterable with the users administered courses
 		"""
 
 def get_course_assessment_predicate_for_user(user, course):
@@ -1337,11 +1337,11 @@ class IJoinCourseInvitationActor(IInvitationActor):
 	"""
 	Actor to enroll a user in a course
 	"""
-	
+
 	def accept(user, course, scope):
 		"""
 		Perform the enrollment invitation
-		
+
 		:param user User being invited
 		:param course Course to join
 		:param scope Enrollment scope
@@ -1351,12 +1351,12 @@ class IJoinCourseInvitationActor(IInvitationActor):
 # Import / Export
 
 class ICourseExportFiler(ISourceFiler):
-	
+
 	def prepare(**kwargs):
 		"""
 		prepare filer for use
 		"""
-		
+
 	def reset():
 		"""
 		remove all content from this filer
@@ -1365,7 +1365,7 @@ class ICourseExportFiler(ISourceFiler):
 	def asZip(path=None):
 		"""
 		zip all contents of this filer in a zipe file
-		
+
 		:parm path export path
 		:return a zile file name
 		"""
@@ -1397,10 +1397,10 @@ class ICourseSectionImporter(interface.Interface):
 		"""
 		Import the specified course
 		"""
-		
+
 #: All course outline node interfaces
 ALL_COURSE_OUTLINE_INTERFACES = (ICourseOutlineContentNode,
-								 ICourseOutlineCalendarNode, 
+								 ICourseOutlineCalendarNode,
 								 ICourseOutlineNode)
 
 def iface_of_outline_node(node):

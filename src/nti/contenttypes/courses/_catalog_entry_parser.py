@@ -34,7 +34,14 @@ from nti.dataserver.users import Entity
 def _quiet_delattr(o, k):
 	try:
 		delattr(o, k)
-	except (AttributeError, TypeError):
+	except AttributeError:
+		# We have seen cases of an attribute error (__delete__ ?)in python 2.7 even
+		# if the attribute is in the object __dict__
+		if k in o.__dict__:
+			o._p_activate()
+			o.__dict__.pop(k, None)
+			o._p_changed = 1
+	except TypeError:
 		# TypeError is raised when pure-python persistence on PyPy
 		# tries to delete a non-data-descriptor like a FieldProperty
 		# https://bitbucket.org/pypy/pypy/issue/2039/delattr-and-del-can-raise-typeerror-when
