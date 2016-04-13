@@ -167,14 +167,16 @@ class CourseInfoImporter(BaseSectionImporter):
 		root = course.root # must exists
 		if root is None or not IFilesystemBucket.providedBy(root):
 			return
-		source = filer.get(self.__CI__)
+		path = self.course_bucket_path(course) + self.__CI__
+		source = filer.get(path)
 		if source is None:
 			return
 		new_path = os.path.join(root.absolute_path, self.__CI__)
 		transfer_to_native_file(source, new_path)
 		key = root.getChildNamed(self.__CI__)
 	
-		source = filer.get(DCMETA_FILENAME)
+		path = self.course_bucket_path(course) + DCMETA_FILENAME
+		source = filer.get(path)
 		if source is not None:
 			new_path = os.path.join(root.absolute_path, DCMETA_FILENAME)
 			transfer_to_native_file(source, new_path)
