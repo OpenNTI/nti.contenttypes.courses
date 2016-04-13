@@ -15,6 +15,8 @@ import os
 import shutil
 import tempfile
 
+from zope import component
+
 from nti.cabinet.filer import DirectoryFiler
 
 from nti.cabinet.mixins import get_file_size
@@ -29,9 +31,18 @@ from nti.contenttypes.courses.courses import ContentCourseInstance
 from nti.contenttypes.courses.exporter import CourseOutlineExporter
 from nti.contenttypes.courses.exporter import BundlePresentationAssetsExporter
 
+from nti.contenttypes.courses.interfaces import iface_of_node
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+
 from nti.contenttypes.courses.tests import CourseLayerTest
 
 class TestExporter(CourseLayerTest):
+
+	def _cleanup(self):
+		registry = component.getGlobalSiteManager()
+		for ntiid, node in list(registry.getUtilitiesFor(ICourseOutlineNode)):
+			provided = iface_of_node(node)
+			registry.unregisterUtility(provided=provided, name=ntiid)
 
 	def test_export_outline(self):
 		path = os.path.join(os.path.dirname(__file__),
@@ -56,6 +67,7 @@ class TestExporter(CourseLayerTest):
 			assert_that(os.path.exists(path), is_(True))
 			assert_that(get_file_size(path), is_(greater_than(0)))
 		finally:
+			self._cleanup()
 			shutil.rmtree(tmp_dir)
 
 	def test_export_presentation_assets(self):

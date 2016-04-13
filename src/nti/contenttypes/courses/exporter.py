@@ -25,6 +25,8 @@ from nti.assessment.interfaces import IQAssessmentPolicies
 
 from nti.common import mimetypes
 
+from nti.contentlibrary.dublincore import DCMETA_FILENAME
+
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
@@ -132,7 +134,7 @@ class BundleDCMetadataExporter(BaseSectionExporter):
 		doc_root.appendChild(node)
 
 		source = xmldoc.toprettyxml(encoding="UTF-8")
-		for name in ("dc_metadata.xml", "bundle_dc_metadata.xml"):
+		for name in (DCMETA_FILENAME, "bundle_dc_metadata.xml"):
 			filer.save(name, source, contentType="application/xml", overwrite=True)
 
 @interface.implementer(ICourseSectionExporter)

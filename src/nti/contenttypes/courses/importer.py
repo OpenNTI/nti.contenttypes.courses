@@ -21,13 +21,17 @@ from zope.event import notify
 
 from nti.cabinet.filer import transfer_to_native_file
 
+from nti.contentlibrary.dublincore import DCMETA_FILENAME
+
 from nti.contentlibrary.interfaces import IFilesystemBucket
 
 from nti.contenttypes.courses._assessment_override_parser import fill_asg_from_json
 
+from nti.contenttypes.courses._catalog_entry_parser import update_entry_from_legacy_key
+
 from nti.contenttypes.courses._role_parser import fill_roles_from_json
 
-from nti.contenttypes.courses.interfaces import SECTIONS
+from nti.contenttypes.courses.interfaces import SECTIONS, ICourseCatalogEntry
 
 from nti.contenttypes.courses.interfaces import ICourseImporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -150,6 +154,34 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
 			root_path = os.path.join(root.absolute_path, self.__PA__)
 			shutil.rmtree(root_path, True) # not merging
 			self._transfer(filer, path, root_path)
+		for sub_instance in get_course_subinstances(course):
+			self.process(sub_instance, filer)
+
+@interface.implementer(ICourseSectionImporter)
+class CourseInfoImporter(BaseSectionImporter):
+
+	__CI__ = "course_info.json"
+	
+	def process(self, context, filer):
+		course = ICourseInstance(context)
+		root = course.root # must exists
+		if root is None or not IFilesystemBucket.providedBy(root):
+			return
+		source = filer.get(self.__CI__)
+		if source is None:
+			return
+		new_path = os.path.join(root.absolute_path, self.__CI__)
+		transfer_to_native_file(source, new_path)
+		key = root.getChildNamed(self.__CI__)
+	
+		source = filer.get(DCMETA_FILENAME)
+		if source is not None:
+			new_path = os.path.join(root.absolute_path, DCMETA_FILENAME)
+			transfer_to_native_file(source, new_path)
+		
+		entry = ICourseCatalogEntry(course)
+		update_entry_from_legacy_key(entry, key, root, force=True)
+
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer)
 
