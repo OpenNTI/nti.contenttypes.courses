@@ -34,6 +34,7 @@ from nti.contenttypes.courses._assessment_override_parser import fill_asg_from_j
 from nti.contenttypes.courses._bundle import created_content_package_bundle
 
 from nti.contenttypes.courses._enrollment import update_deny_open_enrollment
+from nti.contenttypes.courses._enrollment import check_enrollment_mapped_course
 
 from nti.contenttypes.courses._catalog_entry_parser import update_entry_from_legacy_key
 
@@ -49,11 +50,10 @@ from nti.contenttypes.courses import ASSIGNMENT_POLICIES_NAME
 
 from nti.contenttypes.courses.interfaces import SECTIONS
 
-from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-
 from nti.contenttypes.courses.interfaces import ICourseImporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSectionImporter
 
 from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
@@ -140,7 +140,10 @@ class VendorInfoImporter(BaseSectionImporter):
 
 			# update deny open enrollment
 			update_deny_open_enrollment(course)
-			
+
+			# check mapped enrollment
+			check_enrollment_mapped_course(course)
+
 		# process subinstances
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer)
@@ -276,6 +279,8 @@ class CourseImporter(object):
 
 	def process(self, context, filer):
 		course = ICourseInstance(context)
+		entry = ICourseCatalogEntry(course)
 		for name, importer in sorted(component.getUtilitiesFor(ICourseSectionImporter)):
 			logger.info("Processing %s", name)
 			importer.process(course, filer)
+		entry.lastSynchronized = course.lastSynchronized = time.time()

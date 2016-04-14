@@ -45,6 +45,7 @@ from nti.contenttypes.courses._assessment_policy_validator import validate_assig
 from nti.contenttypes.courses._bundle import created_content_package_bundle
 
 from nti.contenttypes.courses._enrollment import update_deny_open_enrollment
+from nti.contenttypes.courses._enrollment import check_enrollment_mapped_course
 
 from nti.contenttypes.courses._catalog_entry_parser import update_entry_from_legacy_key
 
@@ -67,8 +68,6 @@ from nti.contenttypes.courses.courses import CourseAdministrativeLevel
 
 from nti.contenttypes.courses.discussions import parse_discussions
 
-from nti.contenttypes.courses.enrollment import check_enrollment_mapped
-
 from nti.contenttypes.courses.grading import reset_grading_policy
 from nti.contenttypes.courses.grading import fill_grading_policy_from_key
 
@@ -85,7 +84,6 @@ from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
 from nti.contenttypes.courses.interfaces import IContentCourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseSynchronizationResults
-from nti.contenttypes.courses.interfaces import IEnrollmentMappedCourseInstance
 
 from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CatalogEntrySynchronized
@@ -264,10 +262,7 @@ class _ContentCourseSynchronizer(object):
 		sync.synchronize(course.SubInstances, sections_bucket, **kwargs)
 
 		# After we've loaded all the sections, check to see if we should map enrollment
-		if check_enrollment_mapped(course):
-			interface.alsoProvides(course, IEnrollmentMappedCourseInstance)
-		else:
-			interface.noLongerProvides(course, IEnrollmentMappedCourseInstance)
+		check_enrollment_mapped_course(course)
 
 		# mark last sync time
 		course.lastSynchronized = entry.lastSynchronized = time.time()
