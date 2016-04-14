@@ -49,7 +49,7 @@ from nti.externalization.internalization import update_from_external_object
 
 @interface.implementer(ICourseSectionImporter)
 class BaseSectionImporter(object):
-	
+
 	def _prepare(self, data):
 		if isinstance(data, bytes):
 			data = unicode(data, 'utf-8')
@@ -76,16 +76,27 @@ class BaseSectionImporter(object):
 			bucket = u''
 		return bucket
 
+	def safe_get(self, filer, href):
+		path, _ = os.path.split(href)
+		if path:
+			if filer.is_bucket(path):
+				result = filer.get(href)
+			else:
+				result = None
+		else:
+			result = filer.get(href)
+		return result
+
 @interface.implementer(ICourseSectionImporter)
 class CourseOutlineImporter(BaseSectionImporter):
 
 	def process(self, context, filer):
 		course = ICourseInstance(context)
 		path = self.course_bucket_path(course) + 'course_outline.json'
-		source = filer.get(path)
+		source = self.safe_get(filer, path)
 		if source is not None:
 			ext_obj = self.load(source)
-			clear_course_outline(course.Outline) # not merging
+			clear_course_outline(course.Outline)  # not merging
 			update_from_external_object(course.Outline, ext_obj, notify=False)
 		for sub_instance in get_course_subinstances(course):
 			if sub_instance.Outline is not course.Outline:
@@ -97,7 +108,7 @@ class VendorInfoImporter(BaseSectionImporter):
 	def process(self, context, filer):
 		course = ICourseInstance(context)
 		path = self.course_bucket_path(course) + 'vendor_info.json'
-		source = filer.get(path)
+		source = self.safe_get(filer, path)
 		if source is not None:
 			verdor_info = get_course_vendor_info(course, True)
 			verdor_info.clear()  # not merging
@@ -113,7 +124,7 @@ class RoleInfoImporter(BaseSectionImporter):
 	def process(self, context, filer):
 		course = ICourseInstance(context)
 		path = self.course_bucket_path(course) + 'role_info.json'
-		source = filer.get(path)
+		source = self.safe_get(filer, path)
 		if source is not None:
 			source = self.load(source)
 			fill_roles_from_json(course, source)
@@ -127,7 +138,7 @@ class AssignmentPoliciesImporter(BaseSectionImporter):
 	def process(self, context, filer):
 		course = ICourseInstance(context)
 		path = self.course_bucket_path(course) + 'assignment_policies.json'
-		source = filer.get(path)
+		source = self.safe_get(filer, path)
 		if source is not None:
 			source = self.load(source)
 			fill_asg_from_json(course, source, time.time())
@@ -150,16 +161,16 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
 			else:
 				source = filer.get(path)
 				transfer_to_native_file(source, new_path)
-				
+
 	def process(self, context, filer):
 		course = ICourseInstance(context)
-		root = course.root # must exists
+		root = course.root  # must exists
 		if root is None or not IFilesystemBucket.providedBy(root):
 			return
 		path = self.course_bucket_path(course) + self.__PA__
 		if filer.is_bucket(path):
 			root_path = os.path.join(root.absolute_path, self.__PA__)
-			shutil.rmtree(root_path, True) # not merging
+			shutil.rmtree(root_path, True)  # not merging
 			self._transfer(filer, path, root_path)
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer)
@@ -168,26 +179,26 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
 class CourseInfoImporter(BaseSectionImporter):
 
 	__CI__ = "course_info.json"
-	
+
 	def process(self, context, filer):
 		course = ICourseInstance(context)
-		root = course.root # must exists
+		root = course.root  # must exists
 		if root is None or not IFilesystemBucket.providedBy(root):
 			return
 		path = self.course_bucket_path(course) + self.__CI__
-		source = filer.get(path)
+		source = self.safe_get(filer, path)
 		if source is None:
 			return
 		new_path = os.path.join(root.absolute_path, self.__CI__)
 		transfer_to_native_file(source, new_path)
 		key = root.getChildNamed(self.__CI__)
-	
+
 		path = self.course_bucket_path(course) + DCMETA_FILENAME
-		source = filer.get(path)
+		source = self.safe_get(filer, path)
 		if source is not None:
 			new_path = os.path.join(root.absolute_path, DCMETA_FILENAME)
 			transfer_to_native_file(source, new_path)
-		
+
 		entry = ICourseCatalogEntry(course)
 		update_entry_from_legacy_key(entry, key, root, force=True)
 
