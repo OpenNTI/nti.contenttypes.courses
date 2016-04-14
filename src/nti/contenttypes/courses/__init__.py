@@ -19,3 +19,25 @@ from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_enrollment_catalog
 
 from nti.contenttypes.courses.vendorinfo import VENDOR_INFO_KEY
+
+#: Course role info file name
+ROLE_INFO_NAME = 'role_info.json'
+
+#: Course vendor info file name
+VENDOR_INFO_NAME = 'vendor_info.json'
+
+#: Course catalog/course info file name
+CATALOG_INFO_NAME = 'course_info.json'
+
+#: Course grading policy file name
+GRADING_POLICY_NAME = 'grading_policy.json'
+
+#: Course instructor info file name
+INSTRUCTOR_INFO_NAME = 'instructor_info.json'
+
+#: Course assignment policies file name
+ASSIGNMENT_POLICIES_NAME = ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
+
+#: Course outline file name
+COURSE_OUTLINE_NAME = 'course_outline.json'
+

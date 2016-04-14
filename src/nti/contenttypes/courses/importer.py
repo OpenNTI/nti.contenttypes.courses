@@ -16,14 +16,20 @@ import simplejson
 
 from zope import component
 from zope import interface
+from zope import lifecycleevent
 
 from zope.event import notify
 
 from nti.cabinet.filer import transfer_to_native_file
 
+from nti.contentlibrary.bundle import BUNDLE_META_NAME
+from nti.contentlibrary.bundle import sync_bundle_from_json_key
+
 from nti.contentlibrary.dublincore import DCMETA_FILENAME
 
 from nti.contentlibrary.interfaces import IFilesystemBucket
+
+from nti.contenttypes.courses._bundle import created_content_package_bundle
 
 from nti.contenttypes.courses._assessment_override_parser import fill_asg_from_json
 
@@ -31,7 +37,17 @@ from nti.contenttypes.courses._catalog_entry_parser import update_entry_from_leg
 
 from nti.contenttypes.courses._role_parser import fill_roles_from_json
 
-from nti.contenttypes.courses.interfaces import SECTIONS, ICourseCatalogEntry
+from nti.contenttypes.courses._sharing_scopes import update_sharing_scopes_friendly_names
+
+from nti.contenttypes.courses import ROLE_INFO_NAME
+from nti.contenttypes.courses import VENDOR_INFO_NAME
+from nti.contenttypes.courses import CATALOG_INFO_NAME
+from nti.contenttypes.courses import COURSE_OUTLINE_NAME
+from nti.contenttypes.courses import ASSIGNMENT_POLICIES_NAME
+
+from nti.contenttypes.courses.interfaces import SECTIONS
+
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.interfaces import ICourseImporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -92,7 +108,7 @@ class CourseOutlineImporter(BaseSectionImporter):
 
 	def process(self, context, filer):
 		course = ICourseInstance(context)
-		path = self.course_bucket_path(course) + 'course_outline.json'
+		path = self.course_bucket_path(course) + COURSE_OUTLINE_NAME
 		source = self.safe_get(filer, path)
 		if source is not None:
 			ext_obj = self.load(source)
@@ -107,7 +123,7 @@ class VendorInfoImporter(BaseSectionImporter):
 
 	def process(self, context, filer):
 		course = ICourseInstance(context)
-		path = self.course_bucket_path(course) + 'vendor_info.json'
+		path = self.course_bucket_path(course) + VENDOR_INFO_NAME
 		source = self.safe_get(filer, path)
 		if source is not None:
 			verdor_info = get_course_vendor_info(course, True)
@@ -115,6 +131,11 @@ class VendorInfoImporter(BaseSectionImporter):
 			verdor_info.update(self.load(source))
 			verdor_info.lastModified = time.time()
 			notify(CourseVendorInfoSynchronized(course))
+
+			# update sharing scope names
+			update_sharing_scopes_friendly_names(course)
+
+		# process subinstances
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer)
 
@@ -123,7 +144,7 @@ class RoleInfoImporter(BaseSectionImporter):
 
 	def process(self, context, filer):
 		course = ICourseInstance(context)
-		path = self.course_bucket_path(course) + 'role_info.json'
+		path = self.course_bucket_path(course) + ROLE_INFO_NAME
 		source = self.safe_get(filer, path)
 		if source is not None:
 			source = self.load(source)
@@ -137,7 +158,7 @@ class AssignmentPoliciesImporter(BaseSectionImporter):
 
 	def process(self, context, filer):
 		course = ICourseInstance(context)
-		path = self.course_bucket_path(course) + 'assignment_policies.json'
+		path = self.course_bucket_path(course) + ASSIGNMENT_POLICIES_NAME
 		source = self.safe_get(filer, path)
 		if source is not None:
 			source = self.load(source)
@@ -178,20 +199,23 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
 @interface.implementer(ICourseSectionImporter)
 class CourseInfoImporter(BaseSectionImporter):
 
-	__CI__ = "course_info.json"
-
 	def process(self, context, filer):
 		course = ICourseInstance(context)
+		course.SharingScopes.initScopes()
+
+		# make sure Discussions are initialized
+		getattr(course, 'Discussions')
+
 		root = course.root  # must exists
-		if root is None or not IFilesystemBucket.providedBy(root):
+		if not IFilesystemBucket.providedBy(root):
 			return
-		path = self.course_bucket_path(course) + self.__CI__
+		path = self.course_bucket_path(course) + CATALOG_INFO_NAME
 		source = self.safe_get(filer, path)
 		if source is None:
 			return
-		new_path = os.path.join(root.absolute_path, self.__CI__)
+		new_path = os.path.join(root.absolute_path, CATALOG_INFO_NAME)
 		transfer_to_native_file(source, new_path)
-		key = root.getChildNamed(self.__CI__)
+		key = root.getChildNamed(CATALOG_INFO_NAME)
 
 		path = self.course_bucket_path(course) + DCMETA_FILENAME
 		source = self.safe_get(filer, path)
@@ -202,8 +226,44 @@ class CourseInfoImporter(BaseSectionImporter):
 		entry = ICourseCatalogEntry(course)
 		update_entry_from_legacy_key(entry, key, root, force=True)
 
+		# process subinstances
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer)
+
+@interface.implementer(ICourseSectionImporter)
+class BundleMetaInfoImporter(BaseSectionImporter):
+
+	def process(self, context, filer):
+		course = ICourseInstance(context)
+		root = course.root
+		if 		ICourseSubInstance.providedBy(course) \
+			or	not IFilesystemBucket.providedBy(root):
+			return
+		source = self.safe_get(filer, BUNDLE_META_NAME)
+		if source is None:
+			return
+
+		# save on disk
+		new_path = os.path.join(root.absolute_path, BUNDLE_META_NAME)
+		transfer_to_native_file(source, new_path)
+
+		source = self.safe_get(filer, "bundle_dc_metadata.xml")
+		if source is not None:
+			new_path = os.path.join(root.absolute_path, "bundle_dc_metadata.xml")
+			transfer_to_native_file(source, new_path)
+
+		# create bundle if required
+		created_bundle = created_content_package_bundle(course, root)
+		if created_bundle:
+			lifecycleevent.created(course.ContentPackageBundle)
+
+		# sync
+		bundle_json_key = root.getChildNamed(BUNDLE_META_NAME)
+		sync_bundle_from_json_key(bundle_json_key,
+								  course.ContentPackageBundle,
+								  dc_meta_name='bundle_dc_metadata.xml',
+								  excluded_keys=('ntiid',),
+								  dc_bucket=root)
 
 @interface.implementer(ICourseImporter)
 class CourseImporter(object):

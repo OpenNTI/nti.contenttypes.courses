@@ -51,6 +51,14 @@ from nti.contenttypes.courses._outline_parser import fill_outline_from_key
 from nti.contenttypes.courses._role_parser import fill_roles_from_key
 from nti.contenttypes.courses._role_parser import reset_roles_missing_key
 
+from nti.contenttypes.courses._sharing_scopes import update_sharing_scopes_friendly_names
+
+from nti.contenttypes.courses import ROLE_INFO_NAME
+from nti.contenttypes.courses import VENDOR_INFO_NAME
+from nti.contenttypes.courses import CATALOG_INFO_NAME
+from nti.contenttypes.courses import GRADING_POLICY_NAME
+from nti.contenttypes.courses import ASSIGNMENT_DATES_NAME
+
 from nti.contenttypes.courses.courses import ContentCourseInstance
 from nti.contenttypes.courses.courses import ContentCourseSubInstance
 from nti.contenttypes.courses.courses import CourseAdministrativeLevel
@@ -66,7 +74,6 @@ from nti.contenttypes.courses.grading import fill_grading_policy_from_key
 
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import COURSE_OUTLINE_NAME
-from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 from nti.contenttypes.courses.interfaces import SECTIONS as SECTION_FOLDER_NAME
 from nti.contenttypes.courses.interfaces import DISCUSSIONS as DISCUSSION_FOLDER_NAME
 
@@ -85,22 +92,14 @@ from nti.contenttypes.courses.interfaces import CatalogEntrySynchronized
 from nti.contenttypes.courses.interfaces import CourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
 
+from nti.contenttypes.courses.utils import get_parent_course
+
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
-from nti.dataserver.users.interfaces import IAvatarURL
-from nti.dataserver.users.interfaces import IBackgroundURL
-from nti.dataserver.users.interfaces import IFriendlyNamed
-
-from nti.schema.schema import EqHash
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
 
-ROLE_INFO_NAME = 'role_info.json'
-VENDOR_INFO_NAME = 'vendor_info.json'
-CATALOG_INFO_NAME = 'course_info.json'
-GRADING_POLICY_NAME = 'grading_policy.json'
-INSTRUCTOR_INFO_NAME = 'instructor_info.json'
-ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
+from nti.schema.schema import EqHash
 
 @WithRepr
 @EqHash('NTIID')
@@ -330,70 +329,9 @@ class _ContentCourseSynchronizer(object):
 	@classmethod
 	def update_sharing_scopes_friendly_names(cls, course, sync_results=None):
 		sync_results = _get_course_sync_results(course, sync_results)
-		cce = ICourseCatalogEntry(course)
-		sharing_scopes_data = (ICourseInstanceVendorInfo(course)
-							   .get('NTI', {})
-							   .get("SharingScopesDisplayInfo", {}))
-		for scope in course.SharingScopes.values():
-			scope_name = scope.__name__
-			sharing_scope_data = sharing_scopes_data.get(scope_name, {})
-
-			friendly_scope = IFriendlyNamed(scope)
-			friendly_title = ENROLLMENT_SCOPE_VOCABULARY.getTerm(scope_name).title
-
-			if sharing_scope_data.get('alias'):
-				alias = sharing_scope_data['alias']
-			elif cce.ProviderUniqueID:
-				alias = cce.ProviderUniqueID + ' - ' + friendly_title
-			else:
-				alias = friendly_scope.alias
-
-			if sharing_scope_data.get('realname'):
-				realname = sharing_scope_data['realname']
-			elif cce.title:
-				realname = cce.title + ' - ' + friendly_title
-			else:
-				realname = friendly_scope.realname
-
-			modified_scope = False
-			if (realname, alias) != (friendly_scope.realname, friendly_scope.alias):
-				friendly_scope.realname = realname
-				friendly_scope.alias = alias
-				lifecycleevent.modified(friendly_scope)
-				modified_scope = True
-
-			def _imageURL(scope, image_iface, image_attr):
-				result = False
-				scope_imageURL = getattr(scope, image_attr, None)
-				inputed_imageURL = sharing_scope_data.get(image_attr, None)
-				if inputed_imageURL:
-					if scope_imageURL != inputed_imageURL:
-						logger.info("Adjusting scope %s %s to %s for course %s",
-									scope_name, image_attr, inputed_imageURL, cce.ntiid)
-						interface.alsoProvides(scope, image_iface)
-						setattr(scope, image_attr, inputed_imageURL)
-						result = True
-				else:
-					removed = False
-					if hasattr(scope, image_attr):
-						removed = True
-						delattr(scope, image_attr)
-						result = True
-					if image_iface.providedBy(scope):
-						removed = True
-						interface.noLongerProvides(scope, image_iface)
-						result = True
-					if removed:
-						logger.warn("Scope %s %s was removed for course %s",
-									 scope_name, image_attr, cce.ntiid)
-				return result
-
-			modified_scope = _imageURL(scope, IAvatarURL, 'avatarURL') or modified_scope
-			modified_scope = _imageURL(scope, IBackgroundURL, 'backgroundURL') or modified_scope
-
-			if modified_scope:
-				lifecycleevent.modified(scope)
-				sync_results.SharingScopesUpdated = True
+		scopes = update_sharing_scopes_friendly_names(course)
+		if scopes:
+			sync_results.SharingScopesUpdated = True
 
 	@classmethod
 	def update_vendor_info(cls, course, bucket, sync_results=None):
@@ -593,7 +531,7 @@ class _ContentCourseSubInstanceSynchronizer(object):
 			_ContentCourseSynchronizer.update_deny_open_enrollment(subcourse)
 		else:
 			# inherit from parent
-			deny = check_deny_open_enrollment(subcourse.__parent__.__parent__)
+			deny = check_deny_open_enrollment(get_parent_course(subcourse))
 			_ContentCourseSynchronizer.set_deny_open_enrollment(subcourse, deny)
 
 		# mark last sync time

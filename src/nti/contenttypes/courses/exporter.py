@@ -25,10 +25,18 @@ from nti.assessment.interfaces import IQAssessmentPolicies
 
 from nti.common import mimetypes
 
+from nti.contentlibrary.bundle import BUNDLE_META_NAME
+
 from nti.contentlibrary.dublincore import DCMETA_FILENAME
 
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
+
+from nti.contenttypes.courses import ROLE_INFO_NAME 
+from nti.contenttypes.courses import VENDOR_INFO_NAME 
+from nti.contenttypes.courses import CATALOG_INFO_NAME
+from nti.contenttypes.courses import COURSE_OUTLINE_NAME
+from nti.contenttypes.courses import ASSIGNMENT_POLICIES_NAME
 
 from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import SECTIONS
@@ -43,7 +51,6 @@ from nti.contenttypes.courses.interfaces import ICourseSectionExporter
 
 from nti.contenttypes.courses.common import get_course_packages
 
-from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
 
@@ -75,7 +82,7 @@ class CourseOutlineExporter(BaseSectionExporter):
 		bucket = self.course_bucket(course)
 		ext_obj = to_external_object(course.Outline, name='exporter', decorate=False)
 		source = self.dump(ext_obj)
-		filer.save("course_outline.json", source, contentType="application/json",
+		filer.save(COURSE_OUTLINE_NAME, source, contentType="application/json",
 				   bucket=bucket, overwrite=True)
 		for sub_instance in get_course_subinstances(course):
 			if sub_instance.Outline is not course.Outline:
@@ -91,7 +98,7 @@ class VendorInfoExporter(BaseSectionExporter):
 		if verdor_info:
 			ext_obj = to_external_object(verdor_info, name="exporter", decorate=False)
 			source = self.dump(ext_obj)
-			filer.save("vendor_info.json", source, contentType="application/json",
+			filer.save(VENDOR_INFO_NAME, source, contentType="application/json",
 					   bucket=bucket, overwrite=True)
 		for sub_instance in get_course_subinstances(course):
 			self.export(sub_instance, filer)
@@ -101,22 +108,24 @@ class BundleMetaInfoExporter(BaseSectionExporter):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
-		course = get_parent_course(course)
+		if ICourseSubInstance.providedBy(course):
+			return
 		entry = ICourseCatalogEntry(course)
 		data = {u'ntiid':u'',
 				u'title': entry.Title,
 				u"ContentPackages": [x.ntiid for x in get_course_packages(course)]}
 		ext_obj = to_external_object(data, decorate=False)
 		source = self.dump(ext_obj)
-		filer.save("bundle_meta_info.json", source,
-					contentType="application/json", overwrite=True)
+		filer.save(BUNDLE_META_NAME, source,
+				   contentType="application/json", overwrite=True)
 
 @interface.implementer(ICourseSectionExporter)
 class BundleDCMetadataExporter(BaseSectionExporter):
 
 	def export(self, context, filer):
 		course = ICourseInstance(context)
-		course = get_parent_course(course)
+		if ICourseSubInstance.providedBy(course):
+			return
 		entry = ICourseCatalogEntry(course)
 
 		DOMimpl = minidom.getDOMImplementation()
@@ -203,8 +212,8 @@ class RoleInfoExporter(BaseSectionExporter):
 		bucket = self.course_bucket(course)
 		result = self._role_export_map(course)
 		source = self.dump(result)
-		filer.save("role_info.json", source, bucket=bucket,
-					contentType="application/json", overwrite=True)
+		filer.save(ROLE_INFO_NAME, source, bucket=bucket,
+				   contentType="application/json", overwrite=True)
 		for sub_instance in get_course_subinstances(course):
 			self.export(sub_instance, filer)
 
@@ -218,8 +227,8 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
 		if policies and IInternalObjectExternalizer.providedBy(policies):
 			result = policies.toExternalObject()
 			source = self.dump(result)
-			filer.save("assignment_policies.json", source, bucket=bucket,
-						contentType="application/json", overwrite=True)
+			filer.save(ASSIGNMENT_POLICIES_NAME, source, bucket=bucket,
+					   contentType="application/json", overwrite=True)
 		for sub_instance in get_course_subinstances(course):
 			self.export(sub_instance, filer)
 
@@ -232,8 +241,8 @@ class CourseInfoExporter(BaseSectionExporter):
 		entry = ICourseCatalogEntry(course)
 		ext_obj = to_external_object(entry, name="exporter", decorate=False)
 		source = self.dump(ext_obj)
-		filer.save("course_info.json", source, bucket=bucket,
-					contentType="application/json", overwrite=True)
+		filer.save(CATALOG_INFO_NAME, source, bucket=bucket,
+				   contentType="application/json", overwrite=True)
 		for sub_instance in get_course_subinstances(course):
 			self.export(sub_instance, filer)
 
