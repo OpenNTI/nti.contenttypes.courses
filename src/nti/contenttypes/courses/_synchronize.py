@@ -44,6 +44,8 @@ from nti.contenttypes.courses._assessment_policy_validator import validate_assig
 
 from nti.contenttypes.courses._bundle import created_content_package_bundle
 
+from nti.contenttypes.courses._enrollment import update_deny_open_enrollment
+
 from nti.contenttypes.courses._catalog_entry_parser import update_entry_from_legacy_key
 
 from nti.contenttypes.courses._outline_parser import fill_outline_from_key
@@ -66,8 +68,6 @@ from nti.contenttypes.courses.courses import CourseAdministrativeLevel
 from nti.contenttypes.courses.discussions import parse_discussions
 
 from nti.contenttypes.courses.enrollment import check_enrollment_mapped
-from nti.contenttypes.courses.enrollment import has_deny_open_enrollment
-from nti.contenttypes.courses.enrollment import check_deny_open_enrollment
 
 from nti.contenttypes.courses.grading import reset_grading_policy
 from nti.contenttypes.courses.grading import fill_grading_policy_from_key
@@ -91,8 +91,6 @@ from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CatalogEntrySynchronized
 from nti.contenttypes.courses.interfaces import CourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
-
-from nti.contenttypes.courses.utils import get_parent_course
 
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
@@ -470,8 +468,7 @@ class _ContentCourseSynchronizer(object):
 
 	@classmethod
 	def update_deny_open_enrollment(cls, course):
-		deny = check_deny_open_enrollment(course)
-		cls.set_deny_open_enrollment(course, deny)
+		update_deny_open_enrollment(course)
 
 	@classmethod
 	def update_course_discussions(cls, course, bucket, sync_results=None):
@@ -526,14 +523,8 @@ class _ContentCourseSubInstanceSynchronizer(object):
 													  sync_results=course_sync_results,
 													  force=force)
 
-		# check for open enrollment
-		if has_deny_open_enrollment(subcourse):
-			_ContentCourseSynchronizer.update_deny_open_enrollment(subcourse)
-		else:
-			# inherit from parent
-			deny = check_deny_open_enrollment(get_parent_course(subcourse))
-			_ContentCourseSynchronizer.set_deny_open_enrollment(subcourse, deny)
-
+		_ContentCourseSynchronizer.update_deny_open_enrollment(subcourse)
+		
 		# mark last sync time
 		entry = ICourseCatalogEntry(subcourse)
 		subcourse.lastSynchronized = entry.lastSynchronized = time.time()

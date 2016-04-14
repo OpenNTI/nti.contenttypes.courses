@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+.. $Id$
+"""
+
+from __future__ import print_function, unicode_literals, absolute_import, division
+__docformat__ = "restructuredtext en"
+
+logger = __import__('logging').getLogger(__name__)
+
+from zope import interface
+
+from nti.contenttypes.courses.enrollment import has_deny_open_enrollment
+from nti.contenttypes.courses.enrollment import check_deny_open_enrollment
+
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import IDenyOpenEnrollment
+
+from nti.contenttypes.courses.utils import get_parent_course
+
+def set_deny_open_enrollment(course, deny):
+	entry = ICourseCatalogEntry(course)
+	if deny:
+		if not IDenyOpenEnrollment.providedBy(course):
+			interface.alsoProvides(entry, IDenyOpenEnrollment)
+			interface.alsoProvides(course, IDenyOpenEnrollment)
+	elif IDenyOpenEnrollment.providedBy(course):
+		interface.noLongerProvides(entry, IDenyOpenEnrollment)
+		interface.noLongerProvides(course, IDenyOpenEnrollment)
+
+def update_deny_open_enrollment(course):
+	if not ICourseSubInstance.providedBy(course):
+		reference = course
+	else:
+		if has_deny_open_enrollment(course):
+			reference = course
+		else:
+			# inherit from parent
+			reference = get_parent_course(course)
+	deny = check_deny_open_enrollment(reference)
+	set_deny_open_enrollment(course, deny)

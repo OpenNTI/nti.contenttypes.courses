@@ -29,9 +29,11 @@ from nti.contentlibrary.dublincore import DCMETA_FILENAME
 
 from nti.contentlibrary.interfaces import IFilesystemBucket
 
+from nti.contenttypes.courses._assessment_override_parser import fill_asg_from_json
+
 from nti.contenttypes.courses._bundle import created_content_package_bundle
 
-from nti.contenttypes.courses._assessment_override_parser import fill_asg_from_json
+from nti.contenttypes.courses._enrollment import update_deny_open_enrollment
 
 from nti.contenttypes.courses._catalog_entry_parser import update_entry_from_legacy_key
 
@@ -126,6 +128,7 @@ class VendorInfoImporter(BaseSectionImporter):
 		path = self.course_bucket_path(course) + VENDOR_INFO_NAME
 		source = self.safe_get(filer, path)
 		if source is not None:
+			# update vendor info
 			verdor_info = get_course_vendor_info(course, True)
 			verdor_info.clear()  # not merging
 			verdor_info.update(self.load(source))
@@ -135,6 +138,9 @@ class VendorInfoImporter(BaseSectionImporter):
 			# update sharing scope names
 			update_sharing_scopes_friendly_names(course)
 
+			# update deny open enrollment
+			update_deny_open_enrollment(course)
+			
 		# process subinstances
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer)
