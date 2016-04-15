@@ -20,6 +20,8 @@ from zope import lifecycleevent
 
 from zope.event import notify
 
+from ZODB.interfaces import IConnection
+
 from nti.cabinet.filer import transfer_to_native_file
 
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
@@ -48,8 +50,11 @@ from nti.contenttypes.courses import CATALOG_INFO_NAME
 from nti.contenttypes.courses import COURSE_OUTLINE_NAME
 from nti.contenttypes.courses import ASSIGNMENT_POLICIES_NAME
 
-from nti.contenttypes.courses.interfaces import SECTIONS
+from nti.contenttypes.courses.interfaces import SECTIONS, ICourseOutlineNode
 
+from nti.contenttypes.courses.interfaces import iface_of_node
+
+from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseImporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
@@ -59,12 +64,20 @@ from nti.contenttypes.courses.interfaces import ICourseSectionImporter
 from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
 
-from nti.contenttypes.courses.utils import clear_course_outline,\
-	get_parent_course
+from nti.contenttypes.courses.utils import get_parent_course
+from nti.contenttypes.courses.utils import clear_course_outline
 from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.externalization.internalization import update_from_external_object
+
+from nti.site.hostpolicy import get_host_site
+
+from nti.site.interfaces import IHostPolicyFolder
+
+from nti.site.utils import registerUtility
+
+from nti.traversal.traversal import find_interface
 
 @interface.implementer(ICourseSectionImporter)
 class BaseSectionImporter(object):
@@ -109,6 +122,34 @@ class BaseSectionImporter(object):
 @interface.implementer(ICourseSectionImporter)
 class CourseOutlineImporter(BaseSectionImporter):
 
+	def _update_and_register(self, course, ext_obj):
+		# require connection
+		connection = IConnection(course)
+		def _object_hook(k, v, x):
+			if ICourseOutlineNode.providedBy(v) and not ICourseOutline.providedBy(v):
+				connection.add(v)
+		update_from_external_object(course.Outline,
+									ext_obj,
+									notify=False,
+									object_hook=_object_hook)
+
+		# get site registry
+		folder = find_interface(course, IHostPolicyFolder, strict=False)
+		site = get_host_site(folder.__name__)
+		registry = site.getSiteManager()
+
+		# register nodes
+		def _recur(node):
+			if not ICourseOutline.providedBy(node):
+				registerUtility(registry,
+								node,
+							  	name=node.ntiid,
+							  	provided=iface_of_node(node))
+
+			for child in node.values():
+				_recur(child)
+		_recur(course.Outline)
+
 	def process(self, context, filer):
 		course = ICourseInstance(context)
 		path = self.course_bucket_path(course) + COURSE_OUTLINE_NAME
@@ -116,7 +157,7 @@ class CourseOutlineImporter(BaseSectionImporter):
 		if source is not None:
 			ext_obj = self.load(source)
 			clear_course_outline(course)  # not merging
-			update_from_external_object(course.Outline, ext_obj, notify=False)
+			self._update_and_register(course, ext_obj)
 		for sub_instance in get_course_subinstances(course):
 			if sub_instance.Outline is not course.Outline:
 				self.process(sub_instance, filer)
