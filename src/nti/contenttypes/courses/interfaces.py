@@ -327,10 +327,11 @@ class CourseOutlineNodeMovedEvent(ObjectEvent):
 
 	node = alias('object')
 
-	def __init__(self, obj, principal=None, index=None):
+	def __init__(self, obj, principal=None, index=None, old_parent_ntiid=None):
 		super(CourseOutlineNodeMovedEvent, self).__init__(obj)
 		self.index = index
 		self.principal = principal
+		self.old_parent_ntiid = old_parent_ntiid
 
 # Sharing
 
