@@ -59,7 +59,8 @@ from nti.contenttypes.courses.interfaces import ICourseSectionImporter
 from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
 
-from nti.contenttypes.courses.utils import clear_course_outline
+from nti.contenttypes.courses.utils import clear_course_outline,\
+	get_parent_course
 from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
 
@@ -114,7 +115,7 @@ class CourseOutlineImporter(BaseSectionImporter):
 		source = self.safe_get(filer, path)
 		if source is not None:
 			ext_obj = self.load(source)
-			clear_course_outline(course.Outline)  # not merging
+			clear_course_outline(course)  # not merging
 			update_from_external_object(course.Outline, ext_obj, notify=False)
 		for sub_instance in get_course_subinstances(course):
 			if sub_instance.Outline is not course.Outline:
@@ -244,6 +245,7 @@ class BundleMetaInfoImporter(BaseSectionImporter):
 
 	def process(self, context, filer):
 		course = ICourseInstance(context)
+		course = get_parent_course(course)
 		root = course.root
 		if 		ICourseSubInstance.providedBy(course) \
 			or	not IFilesystemBucket.providedBy(root):
