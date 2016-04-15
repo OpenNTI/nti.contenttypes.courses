@@ -62,7 +62,6 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseEnrollments
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-from nti.contenttypes.courses.interfaces import IPrincipalEnrollments
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
@@ -80,6 +79,8 @@ from nti.site.site import get_component_hierarchy_names
 from nti.site.utils import unregisterUtility
 
 from nti.traversal.traversal import find_interface
+
+from nti.zope_catalog.catalog import ResultSet
 
 class AbstractInstanceWrapper(Contained):
 
@@ -309,9 +310,12 @@ def is_enrolled_in_hierarchy(context, user):
 	record = get_enrollment_record_in_hierarchy(context, user)
 	return record is not None
 
-def has_enrollments(user, intids=None):
+def get_enrollments(user, sites=None, intids=None):
+	if not sites:
+		sites = get_component_hierarchy_names()
+	elif isinstance(sites, six.string_types):
+		sites = sites.split()
 	catalog = get_enrollment_catalog()
-	sites = get_component_hierarchy_names()
 	username = getattr(user, 'username', user)
 	intids = component.getUtility(IIntIds) if intids is None else intids
 	query = {
@@ -319,15 +323,13 @@ def has_enrollments(user, intids=None):
 		IX_USERNAME: {'any_of':(username,) },
 		IX_SCOPE: {'any_of':ENROLLMENT_SCOPE_NAMES}
 	}
-	for uid in catalog.apply(query) or ():
-		obj = intids.queryObject(uid)
-		if ICourseInstanceEnrollmentRecord.providedBy(obj):
-			return True
-	return False
+	uids = catalog.apply(query) or ()
+	result = ResultSet(uids, intids, True)
+	return result
 
-def has_enrollments2(user):
-	for enrollments in component.subscribers((user,), IPrincipalEnrollments):
-		if enrollments.count_enrollments():
+def has_enrollments(user, intids=None):
+	for obj in get_enrollments(user, intids):
+		if ICourseInstanceEnrollmentRecord.providedBy(obj):
 			return True
 	return False
 
