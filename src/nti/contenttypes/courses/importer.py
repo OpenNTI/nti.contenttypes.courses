@@ -128,6 +128,7 @@ class CourseOutlineImporter(BaseSectionImporter):
 		def _object_hook(k, v, x):
 			if ICourseOutlineNode.providedBy(v) and not ICourseOutline.providedBy(v):
 				connection.add(v)
+			return v
 		update_from_external_object(course.Outline,
 									ext_obj,
 									notify=False,
@@ -153,10 +154,6 @@ class CourseOutlineImporter(BaseSectionImporter):
 	def _delete_outline(self, course):
 		clear_course_outline(course)
 		if ICourseSubInstance.providedBy(course):
-			try:
-				del course.Outline
-			except AttributeError:
-				pass
 			course.prepare_own_outline()
 		
 	def process(self, context, filer):
