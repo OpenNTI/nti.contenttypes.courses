@@ -11,6 +11,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from collections import Mapping
+
 from zope import component
 from zope import interface
 
@@ -144,13 +146,14 @@ class MappingAssessmentMixin(Contained, PersistentCreatedAndModifiedTimeObject):
 			return self.__parent__
 
 	def toExternalObject(self, **kwargs):
+		REMOVAL = getattr(StandardExternalFields, 'ALL')
 		def _remover(result):
-			REMOVAL = getattr(StandardExternalFields, 'ALL')
-			for key in list(result.keys()) : # mutating
+			for key, value in list(result.items()) : # mutating
 				if key in REMOVAL:
 					result.pop(key, None)
+				if isinstance(value, Mapping):
+					_remover(value)
 			return result
-	
 		result = to_external_object(self._mapping)
 		return _remover(result)
 
