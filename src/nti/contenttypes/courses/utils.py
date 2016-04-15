@@ -128,16 +128,17 @@ def get_course_vendor_info(context, create=True):
 def get_courses_catalog():
 	return component.queryUtility(ICatalog, name=COURSES_CATALOG_NAME)
 
-def get_courses_for_packages(sites=(), packages=()):
+def get_courses_for_packages(sites=(), packages=(), intids=None):
 	result = set()
 	catalog = get_courses_catalog()
-	intids = component.getUtility(IIntIds)
-	sites = (sites,) if isinstance(sites, six.string_types) else sites
-	packages = (packages,) if isinstance(packages, six.string_types) else packages
+	sites = get_component_hierarchy_names() if not sites else sites
+	sites = sites.split() if isinstance(sites, six.string_types) else sites
+	packages = packages.split() if isinstance(packages, six.string_types) else packages
 	query = {
 		IX_SITE: {'any_of': sites},
 		IX_PACKAGES: {'any_of': packages}
 	}
+	intids = component.getUtility(IIntIds) if intids is None else intids
 	for uid in catalog.apply(query) or ():
 		course = ICourseInstance(intids.queryObject(uid), None)
 		result.add(course)
@@ -227,8 +228,7 @@ def get_content_unit_courses(context, include_sub_instances=True):
 	unit = IContentUnit(context, None)
 	package = find_interface(unit, IContentPackage, strict=False)
 	if package is not None:
-		sites = get_component_hierarchy_names()
-		courses = get_courses_for_packages(sites, package.ntiid)
+		courses = get_courses_for_packages(packages=package.ntiid)
 		if not include_sub_instances:
 			result = tuple(x for x in courses if not ICourseSubInstance.providedBy(x))
 		else:
