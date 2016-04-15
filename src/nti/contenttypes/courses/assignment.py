@@ -32,6 +32,8 @@ from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
 from nti.externalization.externalization import to_external_object
 
+from nti.externalization.interfaces import StandardExternalFields
+
 from nti.externalization.interfaces import IInternalObjectExternalizer
 
 from nti.externalization.persistence import NoPickle
@@ -142,7 +144,15 @@ class MappingAssessmentMixin(Contained, PersistentCreatedAndModifiedTimeObject):
 			return self.__parent__
 
 	def toExternalObject(self, **kwargs):
-		return to_external_object(self._mapping)
+		def _remover(self, result):
+			REMOVAL = getattr(StandardExternalFields, 'ALL')
+			for key in list(result.keys()) : # mutating
+				if key in REMOVAL:
+					result.pop(key, None)
+			return result
+	
+		result = to_external_object(self._mapping)
+		return _remover(result)
 
 @component.adapter(ICourseInstance)
 @interface.implementer(IQAssessmentDateContext)
