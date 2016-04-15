@@ -150,17 +150,25 @@ class CourseOutlineImporter(BaseSectionImporter):
 				_recur(child)
 		_recur(course.Outline)
 
+	def _delete_outline(self, course):
+		clear_course_outline(course)
+		if ICourseSubInstance.providedBy(course):
+			try:
+				del course.Outline
+			except AttributeError:
+				pass
+			course.prepare_own_outline()
+		
 	def process(self, context, filer):
 		course = ICourseInstance(context)
 		path = self.course_bucket_path(course) + COURSE_OUTLINE_NAME
 		source = self.safe_get(filer, path)
 		if source is not None:
 			ext_obj = self.load(source)
-			clear_course_outline(course)  # not merging
+			self._delete_outline(course) # not merging
 			self._update_and_register(course, ext_obj)
 		for sub_instance in get_course_subinstances(course):
-			if sub_instance.Outline is not course.Outline:
-				self.process(sub_instance, filer)
+			self.process(sub_instance, filer)
 
 @interface.implementer(ICourseSectionImporter)
 class VendorInfoImporter(BaseSectionImporter):
