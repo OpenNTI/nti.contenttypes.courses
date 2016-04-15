@@ -46,7 +46,7 @@ def prepare_json_text(s):
 
 def load_discussion(name, source, discussions, path, discussion=None):
 	if hasattr(source, "read"):
-		json = simplejson.load(source)
+		json = simplejson.load(prepare_json_text(source.read()))
 	elif hasattr(source, "readContents"):
 		json = simplejson.loads(prepare_json_text(source.readContents()))
 	else:
