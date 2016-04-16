@@ -303,12 +303,17 @@ def get_enrollment_record_in_hierarchy(context, user):
 	return None
 
 def is_enrolled(context, user):
-	record = get_enrollment_record(context, user)
-	return record is not None
+	course = ICourseInstance(context, None)
+	enrollments = ICourseEnrollments(course, None)
+	if user is not None and enrollments is not None:
+		return enrollments.is_principal_enrolled(user)
+	return False
 
 def is_enrolled_in_hierarchy(context, user):
-	record = get_enrollment_record_in_hierarchy(context, user)
-	return record is not None
+	for instance in get_course_hierarchy(context):
+		if is_enrolled(instance, user):
+			return True
+	return False
 
 def get_enrollments(user, sites=None, intids=None):
 	if not sites:

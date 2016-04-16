@@ -11,8 +11,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from . import MessageFactory as _
-
 import six
 import sys
 import random
@@ -57,6 +55,8 @@ from nti.common.property import CachedProperty
 from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
 from nti.contentlibrary.bundle import _readCurrent
+
+from nti.contenttypes.courses import MessageFactory as _
 
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ES_CREDIT
@@ -429,7 +429,6 @@ class DefaultCourseEnrollmentManager(object):
 	reset = drop_all
 
 from nti.contenttypes.courses import get_course_vendor_info
-
 from nti.contenttypes.courses.interfaces import IEnrollmentMappedCourseInstance
 
 def get_vendor_info(context):
@@ -570,8 +569,8 @@ class EnrollmentMappedCourseEnrollmentManager(DefaultCourseEnrollmentManager):
 			return manager.enroll(principal, scope=scope, context=context)
 
 		return super(EnrollmentMappedCourseEnrollmentManager, self).enroll(principal,
-																		  scope=scope,
-																		  context=context)
+																		   scope=scope,
+																		   context=context)
 
 	# Dropping does nothing special: we never get here if we
 	# didn't actually wind up enrolling in this course instance itself
@@ -641,6 +640,10 @@ class DefaultCourseEnrollments(object):
 	def count_enrollments(self):
 		return len(self._inst_enrollment_storage)
 
+	def is_principal_enrolled(self, principal):
+		principal_id = IPrincipal(principal).id
+		return principal_id in self._inst_enrollment_storage
+	
 	def get_enrollment_for_principal(self, principal):
 		principal_id = IPrincipal(principal).id
 		return self._inst_enrollment_storage.get(principal_id)

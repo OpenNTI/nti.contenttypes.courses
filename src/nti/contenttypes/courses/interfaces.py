@@ -992,6 +992,13 @@ class ICourseEnrollments(interface.Interface):
 		This may be more efficient than iterating all enrollments.
 		"""
 
+	def is_principal_enrolled(principal):
+		"""
+		Given the same kind of principal that was enrolled
+		with the course enrollment manager, return
+		true of the principal is enrolled; false otherwise
+		"""
+
 	def get_enrollment_for_principal(principal):
 		"""
 		Given the same kind of principal that was enrolled
