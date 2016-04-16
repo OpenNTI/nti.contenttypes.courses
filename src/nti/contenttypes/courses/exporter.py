@@ -22,6 +22,7 @@ from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 
 from nti.assessment.interfaces import IQAssessmentPolicies
+from nti.assessment.interfaces import IQAssessmentDateContext	
 
 from nti.common import mimetypes
 
@@ -55,8 +56,6 @@ from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.externalization.externalization import to_external_object
-
-from nti.externalization.interfaces import IInternalObjectExternalizer
 
 @interface.implementer(ICourseSectionExporter)
 class BaseSectionExporter(object):
@@ -220,12 +219,24 @@ class RoleInfoExporter(BaseSectionExporter):
 @interface.implementer(ICourseSectionExporter)
 class AssignmentPoliciesExporter(BaseSectionExporter):
 
+	def _process(self, course):
+		policies = IQAssessmentPolicies(course)
+		result = to_external_object(policies, decorate=False)
+		date_context = IQAssessmentDateContext(course)
+		date_context = to_external_object(date_context, decorate=False)
+		for key, value in date_context.items():
+			entry = result.get(key)
+			if entry is not None:
+				entry.update(value)
+			else:
+				result[key] = entry
+		return result
+
 	def export(self, context, filer):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
-		policies = IQAssessmentPolicies(course)
-		if policies and IInternalObjectExternalizer.providedBy(policies):
-			result = policies.toExternalObject()
+		result = self._process(course)
+		if result:
 			source = self.dump(result)
 			filer.save(ASSIGNMENT_POLICIES_NAME, source, bucket=bucket,
 					   contentType="application/json", overwrite=True)

@@ -110,9 +110,13 @@ class MappingAssessmentMixin(Contained, PersistentCreatedAndModifiedTimeObject):
 			m.clear()
 		self._mapping.clear()
 		return size > 0
+	
+	def get_ntiid(self, assessment):
+		ntiid = getattr(assessment, 'ntiid', assessment)
+		return ntiid
 
 	def get(self, assessment, key, default=None):
-		ntiid = getattr(assessment, 'ntiid', assessment)
+		ntiid = self.get_ntiid(assessment)
 		try:
 			result = self[ntiid][key]
 		except KeyError:
@@ -120,11 +124,11 @@ class MappingAssessmentMixin(Contained, PersistentCreatedAndModifiedTimeObject):
 		return result
 
 	def set(self, assessment, name, value):
-		ntiid = getattr(assessment, 'ntiid', assessment)
-		dates = self._mapping.get(ntiid)
-		if dates is None:
-			dates = self._mapping[ntiid] = PersistentMapping()
-		dates[name] = value
+		ntiid = self.get_ntiid(assessment)
+		data = self._mapping.get(ntiid)
+		if data is None:
+			data = self._mapping[ntiid] = PersistentMapping()
+		data[name] = value
 
 	def __contains__(self, key):
 		return key in self._mapping
