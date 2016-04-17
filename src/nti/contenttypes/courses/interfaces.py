@@ -1406,6 +1406,20 @@ class ICourseSectionImporter(interface.Interface):
 		Import the specified course
 		"""
 
+class ICourseInstanceExportedEvent(IObjectEvent):
+	pass
+
+@interface.implementer(ICourseInstanceExportedEvent)
+class CourseInstanceExportedEvent(ObjectEvent):
+	pass
+
+class ICourseInstanceImportedEvent(IObjectEvent):
+	pass
+
+@interface.implementer(ICourseInstanceImportedEvent)
+class CourseInstanceImportedEvent(ObjectEvent):
+	pass
+
 #: All course outline node interfaces
 ALL_COURSE_OUTLINE_INTERFACES = (ICourseOutlineContentNode,
 								 ICourseOutlineCalendarNode,

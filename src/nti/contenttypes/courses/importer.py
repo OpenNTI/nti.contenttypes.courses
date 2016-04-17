@@ -62,6 +62,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSectionImporter
 
 from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
+from nti.contenttypes.courses.interfaces import CourseInstanceImportedEvent
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
 
 from nti.contenttypes.courses.utils import get_parent_course
@@ -332,3 +333,6 @@ class CourseImporter(object):
 			logger.info("Processing %s", name)
 			importer.process(course, filer)
 		entry.lastSynchronized = course.lastSynchronized = time.time()
+		notify(CourseInstanceImportedEvent(course))
+		for subinstance in get_course_subinstances(course):
+			notify(CourseInstanceImportedEvent(subinstance))

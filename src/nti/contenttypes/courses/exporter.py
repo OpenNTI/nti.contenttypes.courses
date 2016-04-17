@@ -18,6 +18,8 @@ import simplejson
 from zope import component
 from zope import interface
 
+from zope.event import notify
+
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 
@@ -49,6 +51,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
+
+from nti.contenttypes.courses.interfaces import CourseInstanceExportedEvent
 
 from nti.contenttypes.courses.common import get_course_packages
 
@@ -265,3 +269,6 @@ class CourseExporter(object):
 		for name, exporter in sorted(component.getUtilitiesFor(ICourseSectionExporter)):
 			logger.info("Processing %s", name)
 			exporter.export(course, filer)
+		notify(CourseInstanceExportedEvent(course))
+		for subinstance in get_course_subinstances(course):
+			notify(CourseInstanceExportedEvent(subinstance))
