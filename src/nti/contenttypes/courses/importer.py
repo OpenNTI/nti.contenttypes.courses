@@ -120,6 +120,10 @@ class BaseSectionImporter(object):
 			result = filer.get(href)
 		return result
 
+	def makedirs(self, path):
+		if path and not os.path.exists(path):
+			os.makedirs(path)
+
 @interface.implementer(ICourseSectionImporter)
 class CourseOutlineImporter(BaseSectionImporter):
 
@@ -162,9 +166,18 @@ class CourseOutlineImporter(BaseSectionImporter):
 		path = self.course_bucket_path(course) + COURSE_OUTLINE_NAME
 		source = self.safe_get(filer, path)
 		if source is not None:
+			# import
 			ext_obj = self.load(source)
 			self._delete_outline(course) # not merging
 			self._update_and_register(course, ext_obj)
+
+			# save source
+			if IFilesystemBucket.providedBy(course.root):
+				source = self.safe_get(filer, path) # reload
+				self.makedirs(course.root.absolute_path)
+				new_path = os.path.join(course.root.absolute_path, COURSE_OUTLINE_NAME)
+				transfer_to_native_file(source, new_path)
+				
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer)
 
@@ -191,6 +204,13 @@ class VendorInfoImporter(BaseSectionImporter):
 
 			# check mapped enrollment
 			check_enrollment_mapped_course(course)
+			
+			# save source
+			if IFilesystemBucket.providedBy(course.root):
+				source = self.safe_get(filer, path) # reload
+				self.makedirs(course.root.absolute_path)
+				new_path = os.path.join(course.root.absolute_path, VENDOR_INFO_NAME)
+				transfer_to_native_file(source, new_path)
 
 		# process subinstances
 		for sub_instance in get_course_subinstances(course):
@@ -204,9 +224,18 @@ class RoleInfoImporter(BaseSectionImporter):
 		path = self.course_bucket_path(course) + ROLE_INFO_NAME
 		source = self.safe_get(filer, path)
 		if source is not None:
+			# do import
 			source = self.load(source)
 			fill_roles_from_json(course, source)
 			notify(CourseRolesSynchronized(course))
+
+			# save source
+			if IFilesystemBucket.providedBy(course.root):
+				source = self.safe_get(filer, path) # reload
+				self.makedirs(course.root.absolute_path)
+				new_path = os.path.join(course.root.absolute_path, ROLE_INFO_NAME)
+				transfer_to_native_file(source, new_path)
+		
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer)
 
@@ -218,8 +247,18 @@ class AssignmentPoliciesImporter(BaseSectionImporter):
 		path = self.course_bucket_path(course) + ASSIGNMENT_POLICIES_NAME
 		source = self.safe_get(filer, path)
 		if source is not None:
+			# do import
 			source = self.load(source)
 			fill_asg_from_json(course, source, time.time())
+			
+			# save source
+			if IFilesystemBucket.providedBy(course.root):
+				source = self.safe_get(filer, path) # reload
+				self.makedirs(course.root.absolute_path)
+				new_path = os.path.join(course.root.absolute_path,
+										ASSIGNMENT_POLICIES_NAME)
+				transfer_to_native_file(source, new_path)
+
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer)
 
@@ -229,8 +268,7 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
 	__PA__ = 'presentation-assets'
 
 	def _transfer(self, filer, filer_path, disk_path):
-		if not os.path.exists(disk_path):
-			os.makedirs(disk_path)
+		self.makedirs(disk_path)
 		for path in filer.list(filer_path):
 			name = filer.key_name(path)
 			new_path = os.path.join(disk_path, name)
@@ -243,7 +281,7 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
 	def process(self, context, filer):
 		course = ICourseInstance(context)
 		root = course.root  # must exists
-		if root is None or not IFilesystemBucket.providedBy(root):
+		if not IFilesystemBucket.providedBy(root):
 			return
 		path = self.course_bucket_path(course) + self.__PA__
 		if filer.is_bucket(path):
@@ -277,6 +315,7 @@ class CourseInfoImporter(BaseSectionImporter):
 		path = self.course_bucket_path(course) + DCMETA_FILENAME
 		source = self.safe_get(filer, path)
 		if source is not None:
+			self.makedirs(root.absolute_path)
 			new_path = os.path.join(root.absolute_path, DCMETA_FILENAME)
 			transfer_to_native_file(source, new_path)
 
