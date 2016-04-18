@@ -181,11 +181,12 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 		catalog_entry.Prerequisites = info_json_dict.get('prerequisites', [])
 	else:
 		_quiet_delattr(catalog_entry, 'Prerequisites')
-
-	if 'additionalProperties' in info_json_dict:
-		catalog_entry.AdditionalProperties = info_json_dict.get('additionalProperties', {})
-		assert 	isinstance(catalog_entry.AdditionalProperties, Mapping), \
+		
+	additionalProperties = info_json_dict.get('additionalProperties')
+	if additionalProperties is not None:
+		assert 	isinstance(additionalProperties, Mapping), \
 				"Invalid additionalProperties entry"
+		catalog_entry.AdditionalProperties = additionalProperties
 	else:
 		_quiet_delattr(catalog_entry, 'AdditionalProperties')
 
