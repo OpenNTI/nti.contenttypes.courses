@@ -121,6 +121,8 @@ def do_evolve(context, generation=generation):
 		catalog = install_enrollment_catalog(dataserver_folder)
 
 		do_reindex(sites, catalog, intids)
+	
+	component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
 
 def evolve(context):
 	"""

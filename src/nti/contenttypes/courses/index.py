@@ -25,6 +25,7 @@ from zope.location import locate
 
 from nti.common.string import safestr
 
+from nti.contenttypes.courses.common import get_course_site
 from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -32,8 +33,6 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.site.interfaces import IHostPolicyFolder
-
-from nti.traversal.traversal import find_interface
 
 from nti.zope_catalog.catalog import Catalog
 from nti.zope_catalog.index import AttributeSetIndex
@@ -90,7 +89,7 @@ IX_SITE = 'site'
 IX_SCOPE = 'scope'
 IX_ENTRY = IX_COURSE = 'course'
 IX_USERNAME = IX_STUDENT = IX_INSTRUCTOR = 'username'
-
+	
 class ValidatingSiteName(object):
 
 	__slots__ = (b'site',)
@@ -99,8 +98,8 @@ class ValidatingSiteName(object):
 		if isinstance(obj, IndexRecord):
 			self.site = unicode(getSite().__name__)
 		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
-			# record the site where enrollment occurred on
-			self.site = unicode(getSite().__name__)
+			course = ICourseInstance(obj, None)
+			self.site = get_course_site(course)
 		elif IHostPolicyFolder.providedBy(obj):
 			self.site = unicode(obj.__name__)
 
@@ -195,8 +194,7 @@ class ValidatingCourseSiteName(object):
 
 	def __init__(self, obj, default=None):
 		if ICourseInstance.providedBy(obj):
-			folder = find_interface(obj, IHostPolicyFolder, strict=False)
-			self.site = unicode(getattr(folder, '__name__', None) or u'')
+			self.site = get_course_site(obj) or u''
 
 	def __reduce__(self):
 		raise TypeError()

@@ -11,6 +11,10 @@ logger = __import__('logging').getLogger(__name__)
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
+from nti.site.interfaces import IHostPolicyFolder
+
+from nti.traversal.traversal import find_interface
+
 def get_course_packages(context):
 	course = ICourseInstance(context, None)
 	if course is not None:
@@ -24,3 +28,7 @@ def get_course_packages(context):
 		return packs or ()
 	return ()
 get_course_content_packages = get_course_packages
+
+def get_course_site(course):
+	folder = find_interface(course, IHostPolicyFolder, strict=False)
+	return folder.__name__ if folder is not None else None

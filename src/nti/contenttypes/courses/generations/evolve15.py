@@ -89,6 +89,7 @@ def do_evolve(context, generation=generation):
 			with current_site(site):
 				_publish_catalog_objects( site )
 
+	component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
 	logger.info('Evolution %s done.', generation)
 
 def evolve(context):

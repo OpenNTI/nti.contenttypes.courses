@@ -37,6 +37,8 @@ from nti.common.property import Lazy
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
 
+from nti.contenttypes.courses.common import get_course_site
+
 from nti.contenttypes.courses.index import IX_SITE
 from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_COURSE
@@ -71,8 +73,6 @@ from nti.contenttypes.courses.vendorinfo import VENDOR_INFO_KEY
 from nti.dataserver.users import User
 
 from nti.site.hostpolicy import get_host_site
-
-from nti.site.interfaces import IHostPolicyFolder
 
 from nti.site.site import get_component_hierarchy_names
 
@@ -484,8 +484,8 @@ def is_course_instructor_or_editor(context, user):
 # outlines
 
 def unregister_outline_nodes(course):
-	folder = find_interface(course, IHostPolicyFolder, strict=False)
-	site = get_host_site(folder.__name__) if folder is not None else None
+	site = get_course_site(course)
+	site = get_host_site(site) if site else None
 	registry = site.getSiteManager() if site is not None else None
 
 	def recur(node):

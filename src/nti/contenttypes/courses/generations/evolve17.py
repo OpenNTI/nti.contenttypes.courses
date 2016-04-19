@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 16
+generation = 17
 
 from zope import component
 from zope import interface
@@ -18,10 +18,10 @@ from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
-from nti.contenttypes.courses.index import install_courses_catalog
+from nti.contenttypes.courses.index import IX_SITE 
+from nti.contenttypes.courses.index import install_enrollment_catalog
 
-from nti.contenttypes.courses.interfaces import ICourseCatalog
-from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
@@ -39,16 +39,6 @@ class MockDataserver(object):
 			return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
 		return None
 
-def _index_courses(site, index, intids):
-	catalog = component.queryUtility(ICourseCatalog)
-	if catalog is None or catalog.isEmpty():
-		return
-	for entry in catalog.iterCatalogEntries():
-		course = ICourseInstance(entry)
-		doc_id = intids.queryId(course)
-		if doc_id is not None:
-			index.index_doc(doc_id, course)
-
 def do_evolve(context, generation=generation):
 	conn = context.connection
 	ds_folder = conn.root()['nti.dataserver']
@@ -63,18 +53,17 @@ def do_evolve(context, generation=generation):
 
 		lsm = ds_folder.getSiteManager()
 		intids = lsm.getUtility(IIntIds)
-		catalog = install_courses_catalog(ds_folder, intids)
-
-		sites = ds_folder['++etc++hostsites']
-		for site in sites.values():
-			with current_site(site):
-				_index_courses(site, catalog, intids)
+		catalog = install_enrollment_catalog(ds_folder, intids)
+		index = catalog[IX_SITE]
+		for doc_id, value in index.zip():
+			if ICourseInstanceEnrollmentRecord.providedBy(value):
+				index.index_doc(doc_id, value)
 
 	component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
 	logger.info('Evolution %s done.', generation)
 
 def evolve(context):
 	"""
-	Evolve to generation 16 by installing the courses catalog
+	Evolve to generation 17 by reindexing the sites for the enrollment catalog
 	"""
 	do_evolve(context, generation)
