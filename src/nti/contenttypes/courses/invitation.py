@@ -15,13 +15,15 @@ from zope import interface
 from nti.contenttypes.courses import MessageFactory as _
 
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
+
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import IJoinCourseInvitation
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import IJoinCourseInvitationActor
 
-from nti.contenttypes.courses import CourseInvitationException
+from nti.contenttypes.courses.interfaces import AlreadyEnrolledException
+from nti.contenttypes.courses.interfaces import CourseInvitationException
 
 from nti.contenttypes.courses.utils import get_enrollment_in_hierarchy
 
@@ -55,7 +57,7 @@ class JoinCourseInvitationActor(object):
 
 		record = get_enrollment_in_hierarchy(course, user)
 		if record is not None:
-			raise CourseInvitationException(_("User already enrolled in course."))
+			raise AlreadyEnrolledException(_("User already enrolled in course."))
 
 		enrollment_manager = ICourseEnrollmentManager(course)
 		enrollment_manager.enroll(user, scope=scope)

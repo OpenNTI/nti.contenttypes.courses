@@ -1336,6 +1336,9 @@ def get_course_assessment_predicate_for_user(user, course):
 
 # Invitations
 
+class CourseInvitationException(ValueError):
+	pass
+
 class IJoinCourseInvitation(IInvitation):
 	"""
 	Marker interface for a invitation to join a course
