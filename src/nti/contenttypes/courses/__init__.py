@@ -41,3 +41,5 @@ ASSIGNMENT_POLICIES_NAME = ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
 #: Course outline file name
 COURSE_OUTLINE_NAME = 'course_outline.json'
 
+class CourseInvitationException(ValueError):
+    pass

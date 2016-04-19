@@ -21,6 +21,8 @@ from nti.contenttypes.courses.interfaces import IJoinCourseInvitation
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import IJoinCourseInvitationActor
 
+from nti.contenttypes.courses import CourseInvitationException
+
 from nti.contenttypes.courses.utils import get_enrollment_in_hierarchy
 
 from nti.coremetadata.interfaces import SYSTEM_USER_NAME
@@ -40,7 +42,7 @@ class JoinCourseInvitationActor(object):
 		scope = scope or ES_PUBLIC
 		catalog = component.queryUtility(ICourseCatalog)
 		if catalog is None:
-			raise ValueError(_("Course catalog not available."))
+			raise CourseInvitationException(_("Course catalog not available."))
 
 		# find course
 		course = find_object_with_ntiid(entry)
@@ -49,11 +51,11 @@ class JoinCourseInvitationActor(object):
 
 		course = ICourseInstance(course, None)
 		if course is None:
-			raise ValueError(_("Course not found."))
+			raise CourseInvitationException(_("Course not found."))
 
 		record = get_enrollment_in_hierarchy(course, user)
 		if record is not None:
-			raise ValueError(_("User already enrolled in course."))
+			raise CourseInvitationException(_("User already enrolled in course."))
 
 		enrollment_manager = ICourseEnrollmentManager(course)
 		enrollment_manager.enroll(user, scope=scope)
