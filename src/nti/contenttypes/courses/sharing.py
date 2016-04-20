@@ -16,6 +16,10 @@ logger = __import__('logging').getLogger(__name__)
 # object for sharing purposes. This is largely for compatibility
 # and will change.
 
+from itertools import chain
+
+from ZODB.POSException import POSError
+
 from zope import component
 from zope import interface
 
@@ -26,8 +30,6 @@ from zope.intid.interfaces import IIntIdRemovedEvent
 
 from zope.lifecycleevent import IObjectMovedEvent
 from zope.lifecycleevent import IObjectModifiedEvent
-
-from ZODB.POSException import POSError
 
 from nti.containers.containers import CheckingLastModifiedBTreeContainer
 
@@ -45,6 +47,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScopes
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.utils import get_enrollments
+from nti.contenttypes.courses.utils import get_course_editors
+from nti.contenttypes.courses.utils import get_course_instructors
 
 from nti.dataserver.authorization import _CommunityGroup
 from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
@@ -54,6 +58,7 @@ from nti.dataserver.interfaces import IUser
 from nti.dataserver.interfaces import IMutableGroupMember
 from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
 
+from nti.dataserver.users import User
 from nti.dataserver.users import Community
 
 from nti.externalization.oids import to_external_ntiid_oid
@@ -464,23 +469,28 @@ def on_moved_between_courses_update_scope_membership(record, event):
 @component.adapter(ICourseBundleUpdatedEvent)
 def update_package_permissions(event):
 	"""
-	Update the package permissions for the enrollments of this
-	course since packages may have been added/removed.
+	Update the package permissions for the enrollees, instructors
+	and editors of this course if packages have been added/removed.
 	"""
-	enrollments = ICourseEnrollments( event.course )
+	course = event.course
+	enrollments = ICourseEnrollments( course )
 	if not event.added_packages and not event.removed_packages:
 		# Nothing to do
 		return
 
-	for record in enrollments.iter_enrollments():
+	for principal in chain( enrollments.iter_principals(),
+							get_course_instructors( course ),
+							get_course_editors( course )):
+		if not IUser.providedBy( principal ):
+			principal = User.get_user( principal )
 		if event.added_packages:
-			add_principal_to_course_content_roles(record.Principal,
-										  		  event.course,
+			add_principal_to_course_content_roles(principal,
+										  		  course,
 										  		  event.added_packages)
 
 		if event.removed_packages:
-			remove_principal_from_course_content_roles(record.Principal,
-													   event.course,
+			remove_principal_from_course_content_roles(principal,
+													   course,
 													   event.removed_packages)
 
 def get_default_sharing_scope(context):
