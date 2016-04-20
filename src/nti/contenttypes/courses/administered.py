@@ -164,7 +164,7 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
 	iter_enrollments = iter_administrations  # for convenience
 
 	def count_administrations(self):
-		result = list(self._iter_admin_courses())
+		result = tuple(self._iter_admin_courses())
 		return len(result)
 
 	count_enrollments = count_administrations
