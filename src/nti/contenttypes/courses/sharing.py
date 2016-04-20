@@ -16,8 +16,6 @@ logger = __import__('logging').getLogger(__name__)
 # object for sharing purposes. This is largely for compatibility
 # and will change.
 
-from ZODB.POSException import POSError
-
 from zope import component
 from zope import interface
 
@@ -28,6 +26,8 @@ from zope.intid.interfaces import IIntIdRemovedEvent
 
 from zope.lifecycleevent import IObjectMovedEvent
 from zope.lifecycleevent import IObjectModifiedEvent
+
+from ZODB.POSException import POSError
 
 from nti.containers.containers import CheckingLastModifiedBTreeContainer
 
@@ -281,7 +281,6 @@ def _principal_is_enrolled_in_related_course(principal, course):
 	If the principal is enrolled in a parent or sibling course,
 	return those courses.
 	"""
-
 	result = []
 	potential_other_courses = []
 	potential_other_courses.extend(course.SubInstances.values())
@@ -297,7 +296,7 @@ def _principal_is_enrolled_in_related_course(principal, course):
 			enrollments = ICourseEnrollments(other)
 			if enrollments.get_enrollment_for_principal(principal) is not None:
 				result.append(other)
-	return result
+	return tuple(result)
 
 def add_principal_to_course_content_roles(principal, course, packages=None):
 	if get_principal(principal) is None:
@@ -317,12 +316,13 @@ def _get_principal_enrollment_packages( principal ):
 	"""
 	Gather the set of course packages for the principal's enrollments.
 	"""
-	enrollments = get_enrollments( principal.username )
 	result = set()
+	enrollments = get_enrollments( principal.username )
 	for record in enrollments:
-		course = record.CourseInstance
-		packages = get_course_packages( course )
-		result.update( packages )
+		course = ICourseInstance(record, None) # dup enrollment
+		if course is not None:
+			packages = get_course_packages( course )
+			result.update( packages )
 	return result
 
 def remove_principal_from_course_content_roles(principal, course, packages=None):

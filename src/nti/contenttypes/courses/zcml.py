@@ -67,7 +67,7 @@ def _get_invitiation(code):
 		return invitations.getInvitationByCode(code)
 	return None
 
-def registerJoinCourseInvitation(_context, code, course, scope=ES_PUBLIC):
+def registerJoinCourseInvitation(_context, code, course, scope=ES_PUBLIC, description=None):
 	"""
 	Register an invitation with the given code that, at runtime,
 	will resolve and try to enroll in the named course.
@@ -79,7 +79,7 @@ def registerJoinCourseInvitation(_context, code, course, scope=ES_PUBLIC):
 
 	_context.action(discriminator=('registerJoinCourseInvitation', code),
 					callable=_register,
-					args=(code, course, scope))
+					args=(code, course, scope, description))
 
 	factory = partial(_get_invitiation, code=code)
 	utility(_context, provides=IJoinCourseInvitation, factory=factory, name=code)
