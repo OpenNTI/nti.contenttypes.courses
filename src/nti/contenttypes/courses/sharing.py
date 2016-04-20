@@ -40,6 +40,7 @@ from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseEnrollments
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
@@ -478,6 +479,8 @@ def update_package_permissions(event):
 		# Nothing to do
 		return
 
+	entry = ICourseCatalogEntry( course )
+	logger.info( 'Updating package permissions for course (%s)', entry.ntiid )
 	for principal in chain( enrollments.iter_principals(),
 							get_course_instructors( course ),
 							get_course_editors( course )):
