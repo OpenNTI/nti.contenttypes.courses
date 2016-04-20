@@ -88,6 +88,10 @@
 				for=".interfaces.ICourseOutlineNode"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
 
+	<subscriber factory=".decorators._JoinCourseInvitationDecorator"
+				for=".interfaces.IJoinCourseInvitation"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
+
 	<!-- Events -->
 	<subscriber handler=".subscribers.install_site_course_catalog" />
 	<subscriber handler=".subscribers.uninstall_site_course_catalog" />
