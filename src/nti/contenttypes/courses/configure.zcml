@@ -40,11 +40,12 @@
 						 .interfaces.ICourseInstance
 						 .interfaces.ICourseOutlineNode
 						 .interfaces.ICourseCatalogEntry
+						 .interfaces.IJoinCourseInvitation
 						 .interfaces.ICourseLessonSyncResults
 						 .interfaces.ICourseCatalogInstructorInfo
 						 .interfaces.ICourseSynchronizationResults
 						 .interfaces.ICourseInstanceAdministrativeRole"
-		modules=".administered .catalog .courses .outlines .sharing ._synchronize" />
+		modules=".administered .catalog .courses .outlines .sharing ._synchronize .invitation" />
 
 	<ext:registerAutoPackageIO
 		root_interfaces=".legacy_catalog.ICourseCatalogLegacyEntry

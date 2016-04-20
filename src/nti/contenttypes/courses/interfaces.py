@@ -1343,9 +1343,9 @@ class IJoinCourseInvitation(IInvitation):
 	"""
 	Marker interface for a invitation to join a course
 	"""
-
-	scope = ValidTextLine(title="The enrollment scope", required=False)
-	description = ValidTextLine(title="The invitation description", required=False)
+	code = ValidTextLine(title="Unique invitation code.", required=True)
+	scope = ValidTextLine(title="The enrollment scope.", required=False)
+	description = ValidTextLine(title="The invitation description.", required=False)
 	
 class IJoinCourseInvitationActor(IInvitationActor):
 	"""
