@@ -98,7 +98,7 @@ class ValidatingSiteName(object):
 			self.site = unicode(getSite().__name__)
 		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
 			course = ICourseInstance(obj, None)
-			self.site = get_course_site(course)
+			self.site = get_course_site(course) or getSite().__name__
 
 	def __reduce__(self):
 		raise TypeError()
