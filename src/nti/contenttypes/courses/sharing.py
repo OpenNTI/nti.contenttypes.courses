@@ -16,26 +16,56 @@ logger = __import__('logging').getLogger(__name__)
 # object for sharing purposes. This is largely for compatibility
 # and will change.
 
+from ZODB.POSException import POSError
+
 from zope import component
 from zope import interface
 
 from zope.cachedescriptors.property import cachedIn
 
+from zope.intid.interfaces import IIntIdAddedEvent
+from zope.intid.interfaces import IIntIdRemovedEvent
+
+from zope.lifecycleevent import IObjectMovedEvent
+from zope.lifecycleevent import IObjectModifiedEvent
+
 from nti.containers.containers import CheckingLastModifiedBTreeContainer
+
+from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseEnrollments
+from nti.contenttypes.courses.interfaces import ICourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
 from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScopes
+from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
+
+from nti.contenttypes.courses.utils import get_enrollments
+
+from nti.dataserver.authorization import _CommunityGroup
+from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
+from nti.dataserver.authorization import role_for_providers_content
+
+from nti.dataserver.interfaces import IUser
+from nti.dataserver.interfaces import IMutableGroupMember
+from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
 
 from nti.dataserver.users import Community
 
 from nti.externalization.oids import to_external_ntiid_oid
 
+from nti.intid.wref import ArbitraryOrderableWeakRef
+
 from nti.ntiids.ntiids import TYPE_OID
+from nti.ntiids.ntiids import get_parts
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.traversal.traversal import find_interface
 
 @interface.implementer(ICourseInstanceSharingScope)
 class CourseInstanceSharingScope(Community):
@@ -87,8 +117,6 @@ class CourseInstanceSharingScope(Community):
 # named or resolvable by username, so we need to use a better
 # weak ref. Plus, there are parts of the code that expect
 # IWeakRef to entity to have a username...
-from nti.intid.wref import ArbitraryOrderableWeakRef
-
 class _CourseInstanceSharingScopeWeakRef(ArbitraryOrderableWeakRef):
 
 	@property
@@ -98,9 +126,6 @@ class _CourseInstanceSharingScopeWeakRef(ArbitraryOrderableWeakRef):
 			return o.NTIID
 
 # Similarly for acting as principals
-from nti.dataserver.authorization import _CommunityGroup
-from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
-
 @interface.implementer(IUseNTIIDAsExternalUsername)
 class _CourseInstanceSharingScopePrincipal(_CommunityGroup):
 
@@ -182,20 +207,6 @@ class CourseSubInstanceSharingScopes(CourseInstanceSharingScopes):
 				for i in scopes:
 					yield i
 
-# Event handling to get sharing correct.
-
-from zope.lifecycleevent import IObjectMovedEvent
-from zope.lifecycleevent import IObjectModifiedEvent
-
-# We may have intid-weak references to these things,
-# so we need to catch them on the IntIdRemoved event
-# for dependable ordering
-
-from zope.intid.interfaces import IIntIdAddedEvent
-from zope.intid.interfaces import IIntIdRemovedEvent
-
-from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
-
 def _adjust_scope_membership(record, course,
 							 join, follow,
 							 ignored_exceptions=(),
@@ -239,19 +250,6 @@ def _adjust_scope_membership(record, course,
 		except ignored_exceptions:
 			pass
 
-from ZODB.POSException import POSError
-
-from nti.contenttypes.courses.interfaces import ICourseSubInstance
-from nti.contenttypes.courses.interfaces import ICourseEnrollments
-
-from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
-from nti.dataserver.authorization import role_for_providers_content
-
-from nti.dataserver.interfaces import IUser
-from nti.dataserver.interfaces import IMutableGroupMember
-
-from nti.ntiids import ntiids
-
 def get_principal(principal):
 	try:
 		if principal is None or IUser(principal, None) is None:
@@ -260,19 +258,19 @@ def get_principal(principal):
 		principal = None
 	return principal
 
-def _content_roles_for_course_instance(course):
+def _content_roles_for_course_instance(course, packages=None):
 	"""
 	Returns the content roles for all the content packages
 	in the course, if there are any.
 
 	:return: A set.
 	"""
-	bundle = getattr(course, 'ContentPackageBundle', None)
-	packs = getattr(bundle, 'ContentPackages', ())
+	if packages is None:
+		packages = get_course_packages( course )
 	roles = []
-	for pack in packs:
+	for pack in packages:
 		ntiid = pack.ntiid
-		ntiid = ntiids.get_parts(ntiid)
+		ntiid = get_parts(ntiid)
 		provider = ntiid.provider
 		specific = ntiid.specific
 		roles.append(role_for_providers_content(provider, specific))
@@ -301,25 +299,49 @@ def _principal_is_enrolled_in_related_course(principal, course):
 				result.append(other)
 	return result
 
-def add_principal_to_course_content_roles(principal, course):
+def add_principal_to_course_content_roles(principal, course, packages=None):
 	if get_principal(principal) is None:
 		return
 
 	membership = component.getAdapter(principal, IMutableGroupMember,
 									  CONTENT_ROLE_PREFIX)
 	orig_groups = set(membership.groups)
-	new_groups = _content_roles_for_course_instance(course)
+	new_groups = _content_roles_for_course_instance(course, packages)
 
 	final_groups = orig_groups | new_groups
 	if final_groups != orig_groups:
 		# be idempotent
 		membership.setGroups(final_groups)
 
-def remove_principal_from_course_content_roles(principal, course):
+def _get_principal_enrollment_packages( principal ):
+	"""
+	Gather the set of course packages for the principal's enrollments.
+	"""
+	enrollments = get_enrollments( principal.username )
+	result = set()
+	for record in enrollments:
+		course = record.CourseInstance
+		packages = get_course_packages( course )
+		result.update( packages )
+	return result
+
+def remove_principal_from_course_content_roles(principal, course, packages=None):
+	"""
+	Remove the principal from the given course roles (and optional packages).
+	We must verify the principal does not have access to this content
+	outside of the given course.
+	"""
 	if get_principal(principal) is None:
 		return
 
-	roles_to_remove = _content_roles_for_course_instance(course)
+	if not packages:
+		packages = get_course_packages( course )
+
+	# Get the minimal set of packages to remove roles for.
+	enrollment_packages = _get_principal_enrollment_packages( principal )
+	to_remove = set( packages ) - enrollment_packages
+
+	roles_to_remove = _content_roles_for_course_instance(course, to_remove)
 	membership = component.getAdapter(principal, IMutableGroupMember,
 									  CONTENT_ROLE_PREFIX)
 	groups = set(membership.groups)
@@ -340,6 +362,9 @@ def on_enroll_record_scope_membership(record, event, course=None):
 	add_principal_to_course_content_roles(record.Principal,
 										  course or record.CourseInstance)
 
+# We may have intid-weak references to these things,
+# so we need to catch them on the IntIdRemoved event
+# for dependable ordering
 @component.adapter(ICourseInstanceEnrollmentRecord, IIntIdRemovedEvent)
 def on_drop_exit_scope_membership(record, event, course=None):
 	"""
@@ -367,8 +392,7 @@ def on_drop_exit_scope_membership(record, event, course=None):
 							 ignored_exceptions=(KeyError,),
 							 related_enrolled_courses=related_enrolled_courses)
 
-	if not related_enrolled_courses:
-		remove_principal_from_course_content_roles(principal, course)
+	remove_principal_from_course_content_roles(principal, course)
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectModifiedEvent)
 def on_modified_update_scope_membership(record, event):
@@ -415,10 +439,6 @@ def on_modified_update_scope_membership(record, event):
 							 currently_in=currently_in,
 							 relevant_scopes=scopes_i_should_be_in)
 
-from nti.contenttypes.courses.interfaces import ICourseInstance
-
-from nti.traversal.traversal import find_interface
-
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectMovedEvent)
 def on_moved_between_courses_update_scope_membership(record, event):
 	"""
@@ -440,6 +460,28 @@ def on_moved_between_courses_update_scope_membership(record, event):
 
 	on_drop_exit_scope_membership(record, event, old_course)
 	on_enroll_record_scope_membership(record, event, new_course)
+
+@component.adapter(ICourseBundleUpdatedEvent)
+def update_package_permissions(event):
+	"""
+	Update the package permissions for the enrollments of this
+	course since packages may have been added/removed.
+	"""
+	enrollments = ICourseEnrollments( event.course )
+	if not event.added_packages and not event.removed_packages:
+		# Nothing to do
+		return
+
+	for record in enrollments.iter_enrollments():
+		if event.added_packages:
+			add_principal_to_course_content_roles(record.Principal,
+										  		  event.course,
+										  		  event.added_packages)
+
+		if event.removed_packages:
+			remove_principal_from_course_content_roles(record.Principal,
+													   event.course,
+													   event.removed_packages)
 
 def get_default_sharing_scope(context):
 	"""

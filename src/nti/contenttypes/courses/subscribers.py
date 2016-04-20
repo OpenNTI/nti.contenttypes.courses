@@ -236,7 +236,7 @@ def on_course_instance_available(course, event):
 @component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
 def on_course_instance_imported(course, event):
 	course_default_roles(course)
-		
+
 @component.adapter(ICourseOutlineNode, ICourseOutlineNodeMovedEvent)
 def on_course_outline_node_moved(node, event):
 	ntiid = getattr(node, 'ntiid', None)

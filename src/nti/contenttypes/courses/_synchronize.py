@@ -87,6 +87,7 @@ from nti.contenttypes.courses.interfaces import ICourseSynchronizationResults
 
 from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CatalogEntrySynchronized
+from nti.contenttypes.courses.interfaces import CourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import CourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
 
@@ -235,12 +236,17 @@ class _ContentCourseSynchronizer(object):
 		# The catalog entry gets the default DublinCore metadata file name,
 		# in this bucket, since it really describes the data.
 		# The content bundle, on the other hand, gets a custom file
-		modified = sync_bundle_from_json_key(bundle_json_key, 
+		old_packages = set(bundle.ContentPackages)
+		modified = sync_bundle_from_json_key(bundle_json_key,
 											 course.ContentPackageBundle,
 								  			 dc_meta_name='bundle_dc_metadata.xml',
 								  			 excluded_keys=('ntiid',))
 
 		if modified:
+			new_packages = set(bundle.ContentPackages)
+			added_packages = new_packages - old_packages
+			removed_packages = old_packages - new_packages
+			notify( CourseBundleUpdatedEvent(course, added_packages, removed_packages) )
 			sync_results.ContentBundleUpdated = True
 
 		if created_bundle:
@@ -406,8 +412,8 @@ class _ContentCourseSynchronizer(object):
 		modified = False
 		catalog_entry = ICourseCatalogEntry(course)
 		if catalog_json_key:
-			modified = update_entry_from_legacy_key(catalog_entry, 
-													catalog_json_key, 
+			modified = update_entry_from_legacy_key(catalog_entry,
+													catalog_json_key,
 													bucket=bucket)
 		if modified:
 			notify(CatalogEntrySynchronized(catalog_entry))
@@ -519,7 +525,7 @@ class _ContentCourseSubInstanceSynchronizer(object):
 													  force=force)
 
 		_ContentCourseSynchronizer.update_deny_open_enrollment(subcourse)
-		
+
 		# mark last sync time
 		entry = ICourseCatalogEntry(subcourse)
 		subcourse.lastSynchronized = entry.lastSynchronized = time.time()

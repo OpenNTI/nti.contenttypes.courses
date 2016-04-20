@@ -1060,6 +1060,22 @@ class CourseInstanceAvailableEvent(ObjectEvent):
 		self.bucket = bucket
 		self.results = results
 
+class ICourseBundleUpdatedEvent(IObjectEvent):
+	"""
+	An event that is sent, usually during startup or synchronization,
+	to notify that a course instance bundle has been updated, typically
+	by adding or removing IContentPackages.
+	"""
+
+@interface.implementer(ICourseBundleUpdatedEvent)
+class CourseBundleUpdatedEvent(ObjectEvent):
+	course = alias( 'object' )
+
+	def __init__(self, obj, added_packages, removed_packages):
+		super(CourseBundleUpdatedEvent, self).__init__(obj)
+		self.added_packages = added_packages
+		self.removed_packages = removed_packages
+
 from zope.lifecycleevent import ObjectCreatedEvent
 from zope.lifecycleevent.interfaces import IObjectCreatedEvent
 

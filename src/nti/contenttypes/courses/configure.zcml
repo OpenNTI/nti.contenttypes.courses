@@ -70,11 +70,11 @@
 	<adapter factory=".externalization._CourseOutlineNodeExporter"
 			 for=".interfaces.ICourseOutlineNode"
 			 name="exporter" />
-	
+
 	<adapter factory=".externalization._CourseCatalogEntryExporter"
 			 for=".interfaces.ICourseCatalogEntry"
 			 name="exporter" />
-		 
+
 	<adapter factory=".externalization._CourseVendorInfoExporter"
 			 for=".interfaces.ICourseInstanceVendorInfo"
 			 name="exporter" />
@@ -87,7 +87,7 @@
 	<subscriber factory=".decorators._CourseOutlineNodeDecorator"
 				for=".interfaces.ICourseOutlineNode"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
-				
+
 	<!-- Events -->
 	<subscriber handler=".subscribers.install_site_course_catalog" />
 	<subscriber handler=".subscribers.uninstall_site_course_catalog" />
@@ -197,11 +197,11 @@
 	<configure zcml:condition="have testmode">
 		<utility factory=".administered.IterableAdminCourses" />
 	</configure>
-	
+
 	<!-- A subscriber for getting admin roles -->
 	<subscriber factory=".administered._DefaultPrincipalAdministrativeRoleCatalog"
 				provides=".interfaces.IPrincipalAdministrativeRoleCatalog" />
-				
+
 	<!-- anything that can become a Principal... -->
 	<subscriber factory=".enrollment.DefaultPrincipalEnrollments"
 				provides=".interfaces.IPrincipalEnrollments"
@@ -228,6 +228,7 @@
 	<subscriber handler=".enrollment.on_modified_potentially_move_courses" />
 
 	<!-- managing the scope as you enroll/drop/modify -->
+	<subscriber handler=".sharing.update_package_permissions" />
 	<subscriber handler=".sharing.on_drop_exit_scope_membership" />
 	<subscriber handler=".sharing.on_enroll_record_scope_membership" />
 	<subscriber handler=".sharing.on_modified_update_scope_membership" />
@@ -310,7 +311,7 @@
 		<include package="nti.dataserver.contenttypes.forums"
 				 zcml:condition="installed nti.dataserver.contenttypes.forums" />
 	</configure>
-	
+
 	<!-- Export Filer -->
 	<adapter factory=".filer.CourseExportFiler"
 			 for=".interfaces.ICourseInstance"

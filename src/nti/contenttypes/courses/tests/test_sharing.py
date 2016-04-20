@@ -7,6 +7,8 @@ __docformat__ = "restructuredtext en"
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
+import fudge
+
 from hamcrest import is_
 from hamcrest import is_in
 from hamcrest import is_not
@@ -76,6 +78,8 @@ from nti.dataserver.authorization import role_for_providers_content
 
 from nti.ntiids import ntiids
 
+from nti.schema.schema import EqHash
+
 from nti.wref.interfaces import IWeakRef
 
 from persistent import Persistent
@@ -105,6 +109,7 @@ class MockPrincipal(SharingSourceMixin, Persistent):
 			return True
 		return False
 
+@EqHash( 'ntiid' )
 class MockContentPackage(object):
 	ntiid = "tag:nextthought.com,2011-10:USSC-HTML-Cohen.cohen_v._california."
 
@@ -144,6 +149,7 @@ class TestFunctionalSharing(CourseLayerTest):
 			assert_that( course.ContentPackageBundle, is_( same_instance(bundle)))
 
 			sub = course.SubInstances['child'] = courses.ContentCourseSubInstance()
+			sub.__dict__[str('ContentPackageBundle')] = bundle
 			sub.SharingScopes.initScopes()
 
 		self.principal  = principal
@@ -177,34 +183,37 @@ class TestFunctionalSharing(CourseLayerTest):
 	def test_usernames_of_dynamic_memberships(self):
 		self._shared_setup()
 		user = User.create_user(username="nti@nti.com")
-		
+
 		course = self.course
 		manager = interfaces.ICourseEnrollmentManager(course)
 		manager.enroll(user, scope=ES_CREDIT_DEGREE)
 		degree = course.SharingScopes[ES_CREDIT_DEGREE]
 		ntiid = degree.NTIID
-		
+
 		names = list(user.usernames_of_dynamic_memberships)
 		assert_that(ntiid, is_in(names))
-		
+
 	@WithMockDSTrans
 	def test_purchased(self):
 		self._shared_setup()
 		principal = self.principal
-		
+
 		course = self.course
 		manager = interfaces.ICourseEnrollmentManager(course)
 		manager.enroll(principal, scope=ES_PURCHASED)
-		
+
 		public = course.SharingScopes[ES_PUBLIC]
 		purchased = course.SharingScopes[ES_PURCHASED]
 
 		assert_that( principal, is_in(public) )
 		assert_that( principal, is_in(purchased) )
-		
+
 	@WithMockDSTrans
-	def test_sub_and_parent_drop_parent(self):
+	@fudge.patch( 'nti.contenttypes.courses.sharing.get_enrollments' )
+	def test_sub_and_parent_drop_parent(self, mock_get_enroll):
 		self._shared_setup()
+		# Need to mock out enrollments since these are mock courses.
+		mock_get_enroll.is_callable().returns(())
 
 		provider = ntiids.get_provider(MockContentPackage.ntiid)
 		specific = ntiids.get_specific(MockContentPackage.ntiid)
@@ -231,12 +240,14 @@ class TestFunctionalSharing(CourseLayerTest):
 		assert_that( principal, is_not(is_in(ndgree)) )
 
 		submanager = interfaces.ICourseEnrollmentManager(sub_course)
-		submanager.enroll(principal, scope=ES_CREDIT_DEGREE)
+		record2 = submanager.enroll(principal, scope=ES_CREDIT_DEGREE)
 		assert_that( list(member.groups), contains(role))
-		# drop the parent first
+		# Drop the parent first; this is mocked for the underlying subscribers
+		# of drop.
+		mock_get_enroll.is_callable().returns( (record2,) )
 		manager.drop(principal)
 
-		# still in the role
+		# Unenrolling does not lose our role
 		assert_that( list(member.groups), contains(role))
 
 		# and still in the correct scopes
@@ -260,6 +271,7 @@ class TestFunctionalSharing(CourseLayerTest):
 		assert_that( principal, is_in(sub_degree) )
 		assert_that( principal, is_not(is_in(sub_ndgree)) )
 
+		mock_get_enroll.is_callable().returns( () )
 		submanager.drop(principal)
 		# Now gone from the roles
 		assert_that( list(member.groups), is_empty() )
