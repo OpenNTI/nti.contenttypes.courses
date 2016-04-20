@@ -32,9 +32,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
-from nti.site.interfaces import IHostPolicyFolder
-
 from nti.zope_catalog.catalog import Catalog
+
 from nti.zope_catalog.index import AttributeSetIndex
 from nti.zope_catalog.index import SetIndex as RawSetIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
@@ -89,7 +88,7 @@ IX_SITE = 'site'
 IX_SCOPE = 'scope'
 IX_ENTRY = IX_COURSE = 'course'
 IX_USERNAME = IX_STUDENT = IX_INSTRUCTOR = 'username'
-	
+
 class ValidatingSiteName(object):
 
 	__slots__ = (b'site',)
@@ -100,8 +99,6 @@ class ValidatingSiteName(object):
 		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
 			course = ICourseInstance(obj, None)
 			self.site = get_course_site(course)
-		elif IHostPolicyFolder.providedBy(obj):
-			self.site = unicode(obj.__name__)
 
 	def __reduce__(self):
 		raise TypeError()

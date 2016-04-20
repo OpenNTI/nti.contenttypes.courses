@@ -26,6 +26,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
 
+from nti.site.interfaces import IHostPolicyFolder
+
 @interface.implementer(IDataserver)
 class MockDataserver(object):
 
@@ -55,8 +57,11 @@ def do_evolve(context, generation=generation):
 		intids = lsm.getUtility(IIntIds)
 		catalog = install_enrollment_catalog(ds_folder, intids)
 		index = catalog[IX_SITE]
-		for doc_id, value in index.zip():
-			if ICourseInstanceEnrollmentRecord.providedBy(value):
+		for doc_id in tuple(index.ids()): # mutating
+			value = intids.queryObject(doc_id)
+			if IHostPolicyFolder.providedBy(value):
+				catalog.unindex_doc(doc_id) # remove crud
+			elif ICourseInstanceEnrollmentRecord.providedBy(value):
 				index.index_doc(doc_id, value)
 
 	component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
