@@ -48,12 +48,17 @@ class IRegisterJoinCourseInvitationDirective(interface.Interface):
 		title="The enrollment scope",
 		required=False,
 		)
+	
+	description = TextLine(
+		title="The invitation description",
+		required=False,
+		)
 
-def _register(code, course, scope=ES_PUBLIC):
+def _register(code, course, scope=ES_PUBLIC, description=None):
 	invitations = component.queryUtility(IInvitations)
 	if invitations is not None:
 		# register w/ invitations
-		invitation = JoinCourseInvitation(code, course, scope)
+		invitation = JoinCourseInvitation(code, course, scope, description)
 		invitations.registerInvitation(invitation)
 
 def _get_invitiation(code):

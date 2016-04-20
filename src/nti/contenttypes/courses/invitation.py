@@ -73,10 +73,11 @@ class JoinCourseInvitation(ActorZcmlInvitation):
 	creator = SYSTEM_USER_NAME
 	actor_interface = IJoinCourseInvitationActor
 
-	def __init__(self, code, course, scope=None):
+	def __init__(self, code, course, scope=None, description=None):
 		super(JoinCourseInvitation, self).__init__()
 		self.code = code
 		self.course = course
+		self.description = description
 		self.scope = scope or ES_PUBLIC
 
 	def accept(self, user):
