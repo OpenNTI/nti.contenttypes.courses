@@ -80,9 +80,10 @@ from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 from nti.externalization.persistence import NoPickle
 from nti.externalization.representation import WithRepr
 
+from nti.schema.fieldproperty import FieldProperty
+
 from nti.schema.schema import EqHash
 from nti.schema.schema import SchemaConfigured
-from nti.schema.fieldproperty import FieldProperty
 
 from nti.wref.interfaces import IWeakRef
 

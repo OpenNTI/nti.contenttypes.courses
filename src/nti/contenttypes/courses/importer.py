@@ -160,7 +160,7 @@ class CourseOutlineImporter(BaseSectionImporter):
 		clear_course_outline(course)
 		if ICourseSubInstance.providedBy(course):
 			course.prepare_own_outline()
-		
+
 	def process(self, context, filer):
 		course = ICourseInstance(context)
 		path = self.course_bucket_path(course) + COURSE_OUTLINE_NAME
@@ -168,16 +168,16 @@ class CourseOutlineImporter(BaseSectionImporter):
 		if source is not None:
 			# import
 			ext_obj = self.load(source)
-			self._delete_outline(course) # not merging
+			self._delete_outline(course)  # not merging
 			self._update_and_register(course, ext_obj)
 
 			# save source
 			if IFilesystemBucket.providedBy(course.root):
-				source = self.safe_get(filer, path) # reload
+				source = self.safe_get(filer, path)  # reload
 				self.makedirs(course.root.absolute_path)
 				new_path = os.path.join(course.root.absolute_path, COURSE_OUTLINE_NAME)
 				transfer_to_native_file(source, new_path)
-				
+
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer)
 
@@ -204,10 +204,10 @@ class VendorInfoImporter(BaseSectionImporter):
 
 			# check mapped enrollment
 			check_enrollment_mapped_course(course)
-			
+
 			# save source
 			if IFilesystemBucket.providedBy(course.root):
-				source = self.safe_get(filer, path) # reload
+				source = self.safe_get(filer, path)  # reload
 				self.makedirs(course.root.absolute_path)
 				new_path = os.path.join(course.root.absolute_path, VENDOR_INFO_NAME)
 				transfer_to_native_file(source, new_path)
@@ -231,11 +231,11 @@ class RoleInfoImporter(BaseSectionImporter):
 
 			# save source
 			if IFilesystemBucket.providedBy(course.root):
-				source = self.safe_get(filer, path) # reload
+				source = self.safe_get(filer, path)  # reload
 				self.makedirs(course.root.absolute_path)
 				new_path = os.path.join(course.root.absolute_path, ROLE_INFO_NAME)
 				transfer_to_native_file(source, new_path)
-		
+
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer)
 
@@ -250,10 +250,10 @@ class AssignmentPoliciesImporter(BaseSectionImporter):
 			# do import
 			source = self.load(source)
 			fill_asg_from_json(course, source, time.time())
-			
+
 			# save source
 			if IFilesystemBucket.providedBy(course.root):
-				source = self.safe_get(filer, path) # reload
+				source = self.safe_get(filer, path)  # reload
 				self.makedirs(course.root.absolute_path)
 				new_path = os.path.join(course.root.absolute_path,
 										ASSIGNMENT_POLICIES_NAME)
@@ -366,12 +366,14 @@ class BundleMetaInfoImporter(BaseSectionImporter):
 class CourseImporter(object):
 
 	def process(self, context, filer):
+		now = time.time()
 		course = ICourseInstance(context)
-		entry = ICourseCatalogEntry(course)
 		for name, importer in sorted(component.getUtilitiesFor(ICourseSectionImporter)):
 			logger.info("Processing %s", name)
 			importer.process(course, filer)
+		entry = ICourseCatalogEntry(course)
 		entry.lastSynchronized = course.lastSynchronized = time.time()
 		notify(CourseInstanceImportedEvent(course))
 		for subinstance in get_course_subinstances(course):
 			notify(CourseInstanceImportedEvent(subinstance))
+		logger.info("Course %s imported in %s(s)", entry.ntiid, time.time() - now)

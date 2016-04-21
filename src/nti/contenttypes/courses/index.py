@@ -23,7 +23,7 @@ from zope.intid.interfaces import IIntIds
 
 from zope.location import locate
 
-from nti.common.string import safestr
+from nti.common.string import to_unicode
 
 from nti.contenttypes.courses.common import get_course_site
 from nti.contenttypes.courses.common import get_course_packages
@@ -111,7 +111,7 @@ class UsernameIndex(KeepSetIndex):
 
 	def to_iterable(self, value):
 		if isinstance(value, IndexRecord):
-			result = (safestr(value.username),)
+			result = (to_unicode(value.username),)
 		elif ICourseInstanceEnrollmentRecord.providedBy(value):
 			result = (value.Principal.id,) if value.Principal is not None else ()
 		else:
@@ -124,7 +124,7 @@ class ValidatingScope(object):
 
 	def __init__(self, obj, default=None):
 		if isinstance(obj, IndexRecord):
-			self.scope = safestr(obj.Scope)
+			self.scope = to_unicode(obj.Scope)
 		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
 			self.scope = obj.Scope
 
@@ -141,7 +141,7 @@ class ValidatingCatalogEntryID(object):
 
 	def __init__(self, obj, default=None):
 		if isinstance(obj, IndexRecord):
-			self.ntiid = safestr(obj.ntiid)
+			self.ntiid = to_unicode(obj.ntiid)
 		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
 			entry = ICourseCatalogEntry(obj.CourseInstance, None)
 			if entry is not None:

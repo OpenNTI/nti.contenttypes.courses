@@ -82,7 +82,7 @@ class IterableAdminCourses(object):
 		catalog = component.getUtility(ICourseCatalog)
 		for entry in catalog.iterCatalogEntries():
 			instance = ICourseInstance(entry)
-			if		 principal in instance.instructors \
+			if		principal in instance.instructors \
 				or	principal in get_course_editors(instance):
 				yield instance
 

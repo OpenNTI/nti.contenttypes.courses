@@ -9,7 +9,11 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from StringIO import StringIO
+import time
+try:
+	from cStringIO import StringIO
+except ImportError:
+	from StringIO import StringIO
 
 from xml.dom import minidom
 
@@ -24,7 +28,7 @@ from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 
 from nti.assessment.interfaces import IQAssessmentPolicies
-from nti.assessment.interfaces import IQAssessmentDateContext	
+from nti.assessment.interfaces import IQAssessmentDateContext
 
 from nti.common import mimetypes
 
@@ -35,11 +39,13 @@ from nti.contentlibrary.dublincore import DCMETA_FILENAME
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
-from nti.contenttypes.courses import ROLE_INFO_NAME 
-from nti.contenttypes.courses import VENDOR_INFO_NAME 
+from nti.contenttypes.courses import ROLE_INFO_NAME
+from nti.contenttypes.courses import VENDOR_INFO_NAME
 from nti.contenttypes.courses import CATALOG_INFO_NAME
 from nti.contenttypes.courses import COURSE_OUTLINE_NAME
 from nti.contenttypes.courses import ASSIGNMENT_POLICIES_NAME
+
+from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import SECTIONS
@@ -54,8 +60,6 @@ from nti.contenttypes.courses.interfaces import ICourseSectionExporter
 
 from nti.contenttypes.courses.interfaces import CourseInstanceExportedEvent
 
-from nti.contenttypes.courses.common import get_course_packages
-
 from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
 
@@ -63,7 +67,7 @@ from nti.externalization.externalization import to_external_object
 
 @interface.implementer(ICourseSectionExporter)
 class BaseSectionExporter(object):
-	
+
 	def dump(self, ext_obj):
 		source = StringIO()
 		simplejson.dump(ext_obj, source, indent='\t', sort_keys=True)
@@ -265,10 +269,13 @@ class CourseInfoExporter(BaseSectionExporter):
 class CourseExporter(object):
 
 	def export(self, context, filer):
+		now = time.time()
 		course = ICourseInstance(context)
+		entry = ICourseCatalogEntry(course)
 		for name, exporter in sorted(component.getUtilitiesFor(ICourseSectionExporter)):
 			logger.info("Processing %s", name)
 			exporter.export(course, filer)
 		notify(CourseInstanceExportedEvent(course))
 		for subinstance in get_course_subinstances(course):
 			notify(CourseInstanceExportedEvent(subinstance))
+		logger.info("Course %s exported in %s(s)", entry.ntiid, time.time() - now)
