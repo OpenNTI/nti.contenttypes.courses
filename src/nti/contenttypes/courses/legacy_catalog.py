@@ -219,11 +219,11 @@ class PersistentCourseCatalogLegacyEntry(CourseCatalogLegacyEntry,
 
 from zope.annotation.factory import factory as an_factory
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
+
 from nti.schema.schema import EqHash
 
 from nti.traversal.traversal import find_interface
-
-from nti.contenttypes.courses.interfaces import ICourseInstance
 
 @component.adapter(ICourseInstance)
 class _CourseInstanceCatalogLegacyEntry(PersistentCourseCatalogLegacyEntry):
@@ -248,9 +248,9 @@ from zope.container.contained import Contained
 
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
 
-from nti.links.links import Link
-
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
+
+from nti.links.links import Link
 
 @WithRepr
 @total_ordering
