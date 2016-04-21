@@ -593,6 +593,12 @@ catalog entry.
 		  of the course.
 
 
+``Lessons`` (optional)
+---------------------------------------------
+
+This optional directory is used to store course lesson overview json files.
+Such files will be processed during course synchronization.
+
 Course Sections
 ===============
 
