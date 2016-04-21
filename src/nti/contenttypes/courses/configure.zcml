@@ -233,6 +233,7 @@
 
 	<!-- managing the scope as you enroll/drop/modify -->
 	<subscriber handler=".sharing.update_package_permissions" />
+	<subscriber handler=".sharing.on_course_instance_imported" />
 	<subscriber handler=".sharing.on_drop_exit_scope_membership" />
 	<subscriber handler=".sharing.on_enroll_record_scope_membership" />
 	<subscriber handler=".sharing.on_modified_update_scope_membership" />

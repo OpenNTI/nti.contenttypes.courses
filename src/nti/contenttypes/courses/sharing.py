@@ -18,8 +18,6 @@ logger = __import__('logging').getLogger(__name__)
 
 from itertools import chain
 
-from ZODB.POSException import POSError
-
 from zope import component
 from zope import interface
 
@@ -30,6 +28,10 @@ from zope.intid.interfaces import IIntIdRemovedEvent
 
 from zope.lifecycleevent import IObjectMovedEvent
 from zope.lifecycleevent import IObjectModifiedEvent
+
+from zope.security.interfaces import IPrincipal
+
+from ZODB.POSException import POSError
 
 from nti.containers.containers import CheckingLastModifiedBTreeContainer
 
@@ -45,6 +47,7 @@ from nti.contenttypes.courses.interfaces import ICourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
 from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScopes
+from nti.contenttypes.courses.interfaces import ICourseInstanceImportedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.utils import get_enrollments
@@ -272,7 +275,7 @@ def _content_roles_for_course_instance(course, packages=None):
 	:return: A set.
 	"""
 	if packages is None:
-		packages = get_course_packages( course )
+		packages = get_course_packages(course)
 	roles = []
 	for pack in packages:
 		ntiid = pack.ntiid
@@ -318,17 +321,17 @@ def add_principal_to_course_content_roles(principal, course, packages=None):
 		# be idempotent
 		membership.setGroups(final_groups)
 
-def _get_principal_enrollment_packages( principal ):
+def _get_principal_enrollment_packages(principal):
 	"""
 	Gather the set of course packages for the principal's enrollments.
 	"""
 	result = set()
-	enrollments = get_enrollments( principal.username )
+	enrollments = get_enrollments(principal.username)
 	for record in enrollments:
-		course = ICourseInstance(record, None) # dup enrollment
+		course = ICourseInstance(record, None)  # dup enrollment
 		if course is not None:
-			packages = get_course_packages( course )
-			result.update( packages )
+			packages = get_course_packages(course)
+			result.update(packages)
 	return result
 
 def remove_principal_from_course_content_roles(principal, course, packages=None):
@@ -341,11 +344,11 @@ def remove_principal_from_course_content_roles(principal, course, packages=None)
 		return
 
 	if not packages:
-		packages = get_course_packages( course )
+		packages = get_course_packages(course)
 
 	# Get the minimal set of packages to remove roles for.
-	enrollment_packages = _get_principal_enrollment_packages( principal )
-	to_remove = set( packages ) - enrollment_packages
+	enrollment_packages = _get_principal_enrollment_packages(principal)
+	to_remove = set(packages) - enrollment_packages
 
 	roles_to_remove = _content_roles_for_course_instance(course, to_remove)
 	membership = component.getAdapter(principal, IMutableGroupMember,
@@ -467,25 +470,26 @@ def on_moved_between_courses_update_scope_membership(record, event):
 	on_drop_exit_scope_membership(record, event, old_course)
 	on_enroll_record_scope_membership(record, event, new_course)
 
-@component.adapter(ICourseBundleUpdatedEvent)
-def update_package_permissions(event):
+@component.adapter(ICourseInstance, ICourseBundleUpdatedEvent)
+def update_package_permissions(course, event):
 	"""
 	Update the package permissions for the enrollees, instructors
 	and editors of this course if packages have been added/removed.
 	"""
-	course = event.course
-	enrollments = ICourseEnrollments( course )
+	enrollments = ICourseEnrollments(course)
 	if not event.added_packages and not event.removed_packages:
 		# Nothing to do
 		return
 
-	entry = ICourseCatalogEntry( course )
-	logger.info( 'Updating package permissions for course (%s)', entry.ntiid )
-	for principal in chain( enrollments.iter_principals(),
-							get_course_instructors( course ),
-							get_course_editors( course )):
-		if not IUser.providedBy( principal ):
-			principal = User.get_user( principal )
+	entry = ICourseCatalogEntry(course)
+	logger.info('Updating package permissions for course (%s)', entry.ntiid)
+	for principal in chain(enrollments.iter_principals(),
+							get_course_instructors(course),
+							get_course_editors(course)):
+		if IPrincipal.providedBy(principal):
+			principal = principal.id
+		if not IUser.providedBy(principal):
+			principal = User.get_user(principal)
 		if event.added_packages:
 			add_principal_to_course_content_roles(principal,
 										  		  course,
@@ -495,6 +499,18 @@ def update_package_permissions(event):
 			remove_principal_from_course_content_roles(principal,
 													   course,
 													   event.removed_packages)
+
+@component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
+def on_course_instance_imported(course, event):
+	enrollments = ICourseEnrollments(course)
+	for principal in chain(enrollments.iter_principals(),
+							get_course_instructors(course),
+							get_course_editors(course)):
+		if IPrincipal.providedBy(principal):
+			principal = principal.id
+		if not IUser.providedBy(principal):
+			principal = User.get_user(principal)
+		add_principal_to_course_content_roles(principal, course)
 
 def get_default_sharing_scope(context):
 	"""
@@ -519,8 +535,8 @@ def get_default_sharing_scope(context):
 			if len(parts) > 1:
 				# We reference a scope in our parent.
 				scope = parts[1]
-				assert ICourseSubInstance.providedBy(context), \
-					"DefaultSharingScope referencing parent of top-level course."
+				assert	ICourseSubInstance.providedBy(context), \
+						"DefaultSharingScope referencing parent of top-level course."
 				# TODO Is this correct, or only correct for Public?
 				course = context.__parent__.__parent__
 			result = course.SharingScopes[ scope ]
