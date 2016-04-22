@@ -117,7 +117,7 @@ class _CourseCatalogEntryExporter(object):
 	def _remover(self, result, required=None):
 		required = required or self.REQUIRED
 		if isinstance(result, Mapping):
-			for key in list(result.keys()) : # mutating
+			for key in tuple(result.keys()) : # mutating
 				if key not in required:
 					result.pop(key, None)
 
@@ -166,7 +166,7 @@ class _CourseVendorInfoExporter(object):
 
 	def _remover(self, result):
 		if isinstance(result, Mapping):
-			for key in list(result.keys()) : # mutating
+			for key in tuple(result.keys()) : # mutating
 				if key in self.REMOVAL:
 					result.pop(key, None)
 		return result

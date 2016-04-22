@@ -153,7 +153,7 @@ class MappingAssessmentMixin(Contained, PersistentCreatedAndModifiedTimeObject):
 		REMOVAL = getattr(StandardExternalFields, 'ALL')
 		def _remover(result):
 			if isinstance(result, Mapping):
-				for key, value in list(result.items()): # mutating
+				for key, value in tuple(result.items()): # mutating
 					if key in REMOVAL:
 						result.pop(key, None)
 					else:

@@ -851,7 +851,7 @@ def remove_user_enroll_data(principal):
 	catalog = get_enrollment_catalog()
 	intids = component.getUtility(IIntIds)
 	query = { IX_USERNAME: {'any_of':(username,)} }
-	for uid in list(catalog.apply(query) or ()): # mutating
+	for uid in tuple(catalog.apply(query) or ()): # mutating
 		context = intids.queryObject(uid)
 		if ICourseInstanceEnrollmentRecord.providedBy(context):
 			course = ICourseInstance(context, None)
