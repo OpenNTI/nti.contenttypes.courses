@@ -1237,6 +1237,15 @@ class ICourseAssessmentItemCatalog(interface.Interface):
 		content unit in their lineage.
 		"""
 
+class ICourseSelfAssessmentItemCatalog(ICourseAssessmentItemCatalog):
+	"""
+	Provides access to the assessment items (questions, question sets,
+	assignments) related to a course.
+
+	Typically this will be registered as an adapter
+	from the :class:`.ICourseInstance`.
+	"""
+
 class ICourseAssignmentCatalog(interface.Interface):
 	"""
 	Provides access to the assignments related to a course.
@@ -1362,7 +1371,7 @@ class IJoinCourseInvitation(IInvitation):
 	code = ValidTextLine(title="Unique invitation code.", required=True)
 	scope = ValidTextLine(title="The enrollment scope.", required=False)
 	description = ValidTextLine(title="The invitation description.", required=False)
-	
+
 class IJoinCourseInvitationActor(IInvitationActor):
 	"""
 	Actor to enroll a user in a course
