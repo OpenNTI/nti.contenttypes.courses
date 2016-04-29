@@ -35,6 +35,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 from nti.zope_catalog.catalog import Catalog
 
 from nti.zope_catalog.index import AttributeSetIndex
+from nti.zope_catalog.index import NormalizingKeywordIndex
 from nti.zope_catalog.index import SetIndex as RawSetIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
 
@@ -232,6 +233,10 @@ class ValidatingCoursePackages(object):
 class CoursePackagesIndex(AttributeSetIndex):
 	default_field_name = 'packages'
 	default_interface = ValidatingCoursePackages
+
+class CourseKeywordsIndex(NormalizingKeywordIndex):
+	default_field_name = 'words'
+	# default_interface = ValidatingCoursePackages
 
 @interface.implementer(ICatalog)
 class CoursesCatalog(Catalog):
