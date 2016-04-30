@@ -19,7 +19,7 @@ from nti.contenttypes.courses.utils import get_course_vendor_info
 
 class _Keywords(object):
     
-    __slots__ = b'keywords'
+    __slots__ = (b'keywords',)
     
     def __init__(self, keywords=()):
         self.keywords = keywords
