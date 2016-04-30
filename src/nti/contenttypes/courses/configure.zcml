@@ -354,5 +354,7 @@
 	<!-- Discussions -->
 	<include package=".discussions" />
 
-</configure>
+	<!-- Index -->
+	<adapter factory=".adapters._course_keywords" />
 
+</configure>

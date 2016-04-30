@@ -29,13 +29,14 @@ from nti.contenttypes.courses.common import get_course_site
 from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseKeywords
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.zope_catalog.catalog import Catalog
 
 from nti.zope_catalog.index import AttributeSetIndex
-from nti.zope_catalog.index import NormalizingKeywordIndex
+from nti.zope_catalog.index import AttributeKeywordIndex
 from nti.zope_catalog.index import SetIndex as RawSetIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
 
@@ -184,6 +185,7 @@ def install_enrollment_catalog(site_manager_container, intids=None):
 # Courses catalog
 
 IX_PACKAGES = 'packages'
+IX_KEYWORDS = 'keywords'
 COURSES_CATALOG_NAME = 'nti.dataserver.++etc++courses-catalog'
 
 class ValidatingCourseSiteName(object):
@@ -234,9 +236,9 @@ class CoursePackagesIndex(AttributeSetIndex):
 	default_field_name = 'packages'
 	default_interface = ValidatingCoursePackages
 
-class CourseKeywordsIndex(NormalizingKeywordIndex):
-	default_field_name = 'words'
-	# default_interface = ValidatingCoursePackages
+class CourseKeywordsIndex(AttributeKeywordIndex):
+	default_field_name = 'keywords'
+	default_interface = ICourseKeywords
 
 @interface.implementer(ICatalog)
 class CoursesCatalog(Catalog):
@@ -255,8 +257,9 @@ def install_courses_catalog(site_manager_container, intids=None):
 	lsm.registerUtility(catalog, provided=ICatalog, name=COURSES_CATALOG_NAME)
 
 	for name, clazz in ((IX_SITE, CourseSiteIndex),
-						(IX_ENTRY, CourseCatalogEntryIndex),
-						(IX_PACKAGES, CoursePackagesIndex)):
+						(IX_PACKAGES, CoursePackagesIndex),
+						(IX_KEYWORDS, CourseKeywordsIndex),
+						(IX_ENTRY, CourseCatalogEntryIndex)):
 		index = clazz(family=intids.family)
 		intids.register(index)
 		locate(index, catalog, name)

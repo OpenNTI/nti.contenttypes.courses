@@ -84,6 +84,7 @@ from nti.schema.field import Dict
 from nti.schema.field import Choice
 from nti.schema.field import Object
 from nti.schema.field import Number
+from nti.schema.field import Iterable
 from nti.schema.field import Timedelta
 from nti.schema.field import ValidText
 from nti.schema.field import ListOrTuple
@@ -1450,6 +1451,11 @@ class ICourseInstanceImportedEvent(IObjectEvent):
 @interface.implementer(ICourseInstanceImportedEvent)
 class CourseInstanceImportedEvent(ObjectEvent):
 	pass
+
+# index
+
+class ICourseKeywords(interface.Interface):
+	keywords = Iterable(title="Course key words")
 
 #: All course outline node interfaces
 ALL_COURSE_OUTLINE_INTERFACES = (ICourseOutlineContentNode,
