@@ -102,6 +102,7 @@
 	<subscriber handler=".subscribers.on_user_removed" />
 	<subscriber handler=".subscribers.on_course_instance_removed" />
 
+	<subscriber handler=".subscribers.on_course_vendor_info_synced" />
 	<subscriber handler=".subscribers.roles_sync_on_course_instance" />
 	<subscriber handler=".subscribers.sync_catalog_when_library_synched" />
 

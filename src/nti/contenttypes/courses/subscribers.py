@@ -55,10 +55,12 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceImportedEvent
 from nti.contenttypes.courses.interfaces import ICourseOutlineNodeMovedEvent
 from nti.contenttypes.courses.interfaces import ICourseRolePermissionManager
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
+from nti.contenttypes.courses.interfaces import ICourseVendorInfoSynchronized
 
 from nti.contenttypes.courses.interfaces import iface_of_node
 
 from nti.contenttypes.courses.utils import index_course_roles
+from nti.contenttypes.courses.utils import get_courses_catalog
 from nti.contenttypes.courses.utils import clear_course_outline
 from nti.contenttypes.courses.utils import unindex_course_roles
 
@@ -199,6 +201,14 @@ def roles_sync_on_course_instance(course, event):
 	if catalog is not None and intids is not None:
 		unindex_course_roles(course, catalog)
 		index_course_roles(course, catalog=catalog, intids=intids)
+
+@component.adapter(ICourseInstance, ICourseVendorInfoSynchronized)
+def on_course_vendor_info_synced(course, event):
+	catalog = get_courses_catalog()
+	intids = component.queryUtility(IIntIds)
+	doc_id = intids.queryId(course) if intids is not None else None
+	if doc_id is not None:
+		catalog.index_doc(doc_id, course)
 
 @component.adapter(IUser, IObjectRemovedEvent)
 def on_user_removed(user, event):
