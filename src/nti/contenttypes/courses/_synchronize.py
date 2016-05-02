@@ -26,7 +26,7 @@ from zope.site.interfaces import ILocalSiteManager
 
 from nti.common.representation import WithRepr
 
-from nti.common.string import safestr
+from nti.common.string import to_unicode
 
 from nti.contentlibrary import ContentRemovalException
 
@@ -110,7 +110,7 @@ def _site_name(registry=None):
 		result = registry.__parent__.__name__
 	else:
 		result = getattr(registry, '__name__', None)
-	return safestr(result)
+	return to_unicode(result)
 
 def _get_sync_ntiids(**kwargs):
 	params = kwargs.get('params')  # sync params
