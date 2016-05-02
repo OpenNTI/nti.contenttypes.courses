@@ -18,10 +18,12 @@ from zope.security.interfaces import IPrincipal
 
 from nti.common.file import safe_filename
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
+from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.externalization.externalization import to_external_object
@@ -31,6 +33,8 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IInternalObjectExternalizer
 
 from nti.mimetype import decorateMimeType
+
+from nti.traversal.traversal import find_interface
 
 OID = StandardExternalFields.OID
 CLASS = StandardExternalFields.CLASS
@@ -177,4 +181,24 @@ class _CourseVendorInfoExporter(object):
 		mod_args['decorate'] = False  # no decoration
 		result = to_external_object(self.obj, **mod_args)
 		self._remover(result)
+		return result
+
+@component.adapter(ICourseInstanceSharingScope)
+@interface.implementer(IInternalObjectExternalizer)
+class _CourseInstanceSharingScopeExporter(object):
+
+	def __init__(self, obj):
+		self.obj = obj
+
+	def toExternalObject(self, **kwargs):
+		mod_args = dict(**kwargs)
+		mod_args['name'] = ''  # set default
+		mod_args['decorate'] = False  # no decoration
+		result = to_external_object(self.obj, **mod_args)
+		if MIMETYPE not in result:
+			decorateMimeType(self.obj, result)
+		result['Scope'] = self.obj.__name__ # by definition
+		course = find_interface(self.obj, ICourseInstance, strict=False)
+		entry = ICourseCatalogEntry(course, None)
+		result['Course'] = getattr(entry, 'ntiid', None)
 		return result

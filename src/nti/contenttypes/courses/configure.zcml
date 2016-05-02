@@ -67,6 +67,10 @@
 	<adapter factory="nti.dataserver.users.users_external._EntityExternalObject"
 			 for=".interfaces.ICourseInstanceSharingScope" />
 
+	<adapter factory=".externalization._CourseInstanceSharingScopeExporter"
+			 for=".interfaces.ICourseInstanceSharingScope"
+			 name="exporter" />
+
 	<adapter factory=".externalization._CourseOutlineNodeExporter"
 			 for=".interfaces.ICourseOutlineNode"
 			 name="exporter" />
