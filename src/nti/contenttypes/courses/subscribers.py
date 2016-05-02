@@ -155,7 +155,6 @@ def sync_catalog_when_library_synched(library, event):
 	we also synchronize the corresponding course catalog. (Because they could
 	change independently and in unknown ways)
 	"""
-
 	# sync params/results
 	params = event.params
 	results = event.results
