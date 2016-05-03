@@ -37,6 +37,7 @@ from nti.coremetadata.interfaces import IRecordable
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.recorder.record import copy_records
 from nti.recorder.record import get_transactions
@@ -70,8 +71,19 @@ def _outline_nodes(outline):
 	return result
 outline_nodes = _outline_nodes
 
+def _is_locked( obj ):
+	return IRecordable.providedBy(obj) and obj.isLocked()
+
 def _is_node_locked(node):
-	return IRecordable.providedBy(node) and node.isLocked()
+	result = _is_locked( node )
+	if not result:
+		# Check lesson to make sure we do not remove a node
+		# that may have an edited lesson.
+		lesson = node.LessonOverviewNTIID
+		if lesson:
+			lesson = find_object_with_ntiid( lesson )
+			result = _is_locked( lesson )
+	return result
 
 def _is_node_move_locked(container, children):
 	# Ideally, the child_order_locked field alone will indicate locked,
