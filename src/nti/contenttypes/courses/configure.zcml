@@ -150,7 +150,7 @@
 	<adapter factory=".principalrole.CourseInstancePrincipalRoleMap" />
 
 	<adapter factory=".principalrole.CourseRolePermissionManager"
-				provides=".interfaces.ICourseRolePermissionManager" />
+			 provides=".interfaces.ICourseRolePermissionManager" />
 
 	<!-- Catalog -->
 	<!--
