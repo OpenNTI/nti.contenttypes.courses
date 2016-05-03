@@ -26,6 +26,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
+from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
+
 from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import LocatedExternalDict
@@ -188,17 +190,21 @@ class _CourseVendorInfoExporter(object):
 class _CourseInstanceSharingScopeExporter(object):
 
 	def __init__(self, obj):
-		self.obj = obj
+		self.entity = obj
 
 	def toExternalObject(self, **kwargs):
-		mod_args = dict(**kwargs)
-		mod_args['name'] = ''  # set default
-		mod_args['decorate'] = False  # no decoration
-		result = to_external_object(self.obj, **mod_args)
-		if MIMETYPE not in result:
-			decorateMimeType(self.obj, result)
-		result['Scope'] = self.obj.__name__ # by definition
-		course = find_interface(self.obj, ICourseInstance, strict=False)
+		result = LocatedExternalDict()
+		cls = getattr(self.entity, '__external_class_name__', None)
+		if cls:
+			result[StandardExternalFields.CLASS] = cls
+		else:
+			result[StandardExternalFields.CLASS] = self.entity.__class__.__name__
+		decorateMimeType(self.entity, result)
+		result['Username'] = self.entity.username
+		if IUseNTIIDAsExternalUsername.providedBy(self.entity):
+			result[StandardExternalFields.ID] = self.entity.NTIID
+		result['Scope'] = self.entity.__name__ # by definition
+		course = find_interface(self.entity, ICourseInstance, strict=False)
 		entry = ICourseCatalogEntry(course, None)
 		result['Course'] = getattr(entry, 'ntiid', None)
 		return result
