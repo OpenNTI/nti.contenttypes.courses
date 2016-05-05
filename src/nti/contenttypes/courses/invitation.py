@@ -70,6 +70,11 @@ class JoinCourseInvitation(ActorZcmlInvitation):
 	course. Intended to be configured with ZCML and not stored persistently.
 	"""
 
+	expiryTime = 0
+	inviter = None
+	receiver = None
+	accepted = False
+	
 	creator = SYSTEM_USER_NAME
 	actor_interface = IJoinCourseInvitationActor
 
