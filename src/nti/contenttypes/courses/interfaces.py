@@ -787,6 +787,12 @@ IN_CLASS = 'In-Class'
 #: Vendor key prefix Credit Enrollment
 IN_CLASS_PREFIX = 'InClass'
 
+#: Scope 
+SCOPE = 'Scope'
+
+#: Scope Description 
+DESCRIPTION = 'Description'
+
 #: Now we list the scopes and create a vocabulary
 #: for them. In the future, we can use a vocabularyregistry
 #: to have these be site-specific.
