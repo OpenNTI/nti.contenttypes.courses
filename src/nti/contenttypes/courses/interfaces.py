@@ -40,6 +40,8 @@ from zope.interface.interfaces import IMethod
 from zope.interface.interfaces import ObjectEvent
 from zope.interface.interfaces import IObjectEvent
 
+from zope.schema import ValidationError
+
 from zope.security.interfaces import IPrincipal
 
 from zope.securitypolicy.interfaces import IRolePermissionManager
@@ -1044,8 +1046,9 @@ class IEnrollmentException(interface.Interface):
 	"""
 
 @interface.implementer(IEnrollmentException)
-class AlreadyEnrolledException(ValueError):
-	pass
+class AlreadyEnrolledException(ValidationError):
+	__doc__ = _('User already enrolled in course.')
+	i18n_message = __doc__
 
 class ICourseInstanceAvailableEvent(IObjectEvent):
 	"""
@@ -1368,8 +1371,16 @@ def get_course_assessment_predicate_for_user(user, course):
 
 # Invitations
 
-class CourseInvitationException(ValueError):
+class CourseInvitationException(ValidationError):
 	pass
+
+class CourseCatalogUnavailableException(CourseInvitationException):
+	__doc__ = _("Course catalog not available.")
+	i18n_message = __doc__
+	
+class CourseNotFoundException(CourseInvitationException):
+	__doc__ = _("Course not found.")
+	i18n_message = __doc__
 
 class IJoinCourseInvitation(IInvitation):
 	"""

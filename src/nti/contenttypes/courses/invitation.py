@@ -12,8 +12,6 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
-from nti.contenttypes.courses import MessageFactory as _
-
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
@@ -22,8 +20,9 @@ from nti.contenttypes.courses.interfaces import IJoinCourseInvitation
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import IJoinCourseInvitationActor
 
+from nti.contenttypes.courses.interfaces import CourseNotFoundException
 from nti.contenttypes.courses.interfaces import AlreadyEnrolledException
-from nti.contenttypes.courses.interfaces import CourseInvitationException
+from nti.contenttypes.courses.interfaces import CourseCatalogUnavailableException
 
 from nti.contenttypes.courses.utils import get_enrollment_in_hierarchy
 
@@ -44,7 +43,7 @@ class JoinCourseInvitationActor(object):
 		scope = scope or ES_PUBLIC
 		catalog = component.queryUtility(ICourseCatalog)
 		if catalog is None:
-			raise CourseInvitationException(_("Course catalog not available."))
+			raise CourseCatalogUnavailableException()
 
 		# find course
 		course = find_object_with_ntiid(entry)
@@ -53,11 +52,11 @@ class JoinCourseInvitationActor(object):
 
 		course = ICourseInstance(course, None)
 		if course is None:
-			raise CourseInvitationException(_("Course not found."))
+			raise CourseNotFoundException()
 
 		record = get_enrollment_in_hierarchy(course, user)
 		if record is not None:
-			raise AlreadyEnrolledException(_("User already enrolled in course."))
+			raise AlreadyEnrolledException()
 
 		enrollment_manager = ICourseEnrollmentManager(course)
 		enrollment_manager.enroll(user, scope=scope)
