@@ -53,7 +53,11 @@ class JoinCourseInvitation(Invitation):
 @interface.implementer(IJoinCourseInvitationActor)
 class JoinCourseInvitationActor(object):
 
-	def accept(self, user, invitation):
+	def __init__(self, invitation=None):
+		self.invitation = invitation
+
+	def accept(self, user, invitation=None):
+		invitation = self.invitation if invitation is None else invitation
 		entry = invitation.course
 		scope = invitation.scope or ES_PUBLIC
 		catalog = component.queryUtility(ICourseCatalog)
