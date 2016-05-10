@@ -1394,16 +1394,7 @@ class IJoinCourseInvitationActor(IInvitationActor):
 	"""
 	Actor to enroll a user in a course
 	"""
-
-	def accept(user, course, scope):
-		"""
-		Perform the enrollment invitation
-
-		:param user User being invited
-		:param course Course to join
-		:param scope Enrollment scope
-		:return true if user was enrolled
-		"""
+	pass
 
 # Import / Export
 

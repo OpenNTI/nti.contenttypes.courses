@@ -10,8 +10,6 @@
 	<include package="zope.component" />
 	<include package="zope.security" />
 
-	<include package="." file="meta.zcml" />
-
 	<!-- for the annotation-based role maps -->
 	<include package="zope.securitypolicy" />
 
@@ -301,6 +299,11 @@
 
 	<adapter factory="nti.traversal.traversal.ContainerAdapterTraversable"
 			 for=".interfaces.ICourseInstance" />
+
+	<!-- Invitations -->
+	<adapter factory=".invitations.JoinCourseInvitationActor"
+			 provides=".interfaces.IJoinCourseInvitationActor"
+			 for=".interfaces.IJoinCourseInvitation" />
 
 	<!-- Metadata -->
 	<configure zcml:condition="installed nti.metadata">

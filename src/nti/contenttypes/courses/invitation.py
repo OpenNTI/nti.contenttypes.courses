@@ -26,21 +26,22 @@ from nti.contenttypes.courses.interfaces import CourseCatalogUnavailableExceptio
 
 from nti.contenttypes.courses.utils import get_enrollment_in_hierarchy
 
-from nti.coremetadata.interfaces import SYSTEM_USER_NAME
-
-from nti.invitations.invitation import ActorZcmlInvitation
+from nti.invitations.model import Invitation
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+from nti.schema.fieldproperty import createDirectFieldProperties
+
+@interface.implementer(IJoinCourseInvitation)
+class JoinCourseInvitation(Invitation):
+	createDirectFieldProperties(IJoinCourseInvitation)
+
 @interface.implementer(IJoinCourseInvitationActor)
 class JoinCourseInvitationActor(object):
-	"""
-	Default enrollment course invitation actor utility
-	it should be registered per site
-	"""
 
-	def accept(self, user, entry, scope=None):
-		scope = scope or ES_PUBLIC
+	def accept(self, user, invitation):
+		entry = invitation.course
+		scope = invitation.scope or ES_PUBLIC
 		catalog = component.queryUtility(ICourseCatalog)
 		if catalog is None:
 			raise CourseCatalogUnavailableException()
@@ -61,32 +62,3 @@ class JoinCourseInvitationActor(object):
 		enrollment_manager = ICourseEnrollmentManager(course)
 		enrollment_manager.enroll(user, scope=scope)
 		return True
-
-@interface.implementer(IJoinCourseInvitation)
-class JoinCourseInvitation(ActorZcmlInvitation):
-	"""
-	Simple first pass at a pre-configured invitation to enroll in a
-	course. Intended to be configured with ZCML and not stored persistently.
-	"""
-
-	expiryTime = 0
-	inviter = None
-	receiver = None
-	accepted = False
-	
-	creator = SYSTEM_USER_NAME
-	actor_interface = IJoinCourseInvitationActor
-
-	def __init__(self, code, course, scope=None, description=None):
-		super(JoinCourseInvitation, self).__init__()
-		self.code = code
-		self.course = course
-		self.description = description
-		self.scope = scope or ES_PUBLIC
-
-	def accept(self, user):
-		actor = component.getUtility(self.actor_interface)
-		if actor.accept(user, self.course, self.scope):
-			super(JoinCourseInvitation, self).accept(user)
-			return True
-		return False
