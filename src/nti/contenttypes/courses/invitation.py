@@ -38,6 +38,8 @@ from nti.schema.fieldproperty import createDirectFieldProperties
 class JoinCourseInvitation(Invitation):
 	createDirectFieldProperties(IJoinCourseInvitation)
 
+	mimeType = mime_type = u"application/vnd.nextthought.joincourseinvitation"
+
 	@readproperty
 	def scope(self):
 		return ES_PUBLIC
