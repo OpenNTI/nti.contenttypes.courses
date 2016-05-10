@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from zope.cachedescriptors.property import readproperty
+
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
@@ -36,6 +38,18 @@ from nti.schema.fieldproperty import createDirectFieldProperties
 class JoinCourseInvitation(Invitation):
 	createDirectFieldProperties(IJoinCourseInvitation)
 
+	@readproperty
+	def scope(self):
+		return ES_PUBLIC
+	
+	@readproperty
+	def name(self):
+		return self.receiver
+	
+	@readproperty
+	def email(self):
+		return self.receiver
+	
 @interface.implementer(IJoinCourseInvitationActor)
 class JoinCourseInvitationActor(object):
 
