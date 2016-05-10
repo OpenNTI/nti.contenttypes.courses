@@ -90,10 +90,6 @@
 				for=".interfaces.ICourseOutlineNode"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
 
-	<subscriber factory=".decorators._JoinCourseInvitationDecorator"
-				for=".interfaces.IJoinCourseInvitation"
-				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
-
 	<!-- Events -->
 	<subscriber handler=".subscribers.install_site_course_catalog" />
 	<subscriber handler=".subscribers.uninstall_site_course_catalog" />
@@ -301,7 +297,7 @@
 			 for=".interfaces.ICourseInstance" />
 
 	<!-- Invitations -->
-	<adapter factory=".invitations.JoinCourseInvitationActor"
+	<adapter factory=".invitation.JoinCourseInvitationActor"
 			 provides=".interfaces.IJoinCourseInvitationActor"
 			 for=".interfaces.IJoinCourseInvitation" />
 
@@ -350,11 +346,6 @@
 	<utility factory=".importer.BundleMetaInfoImporter" name="001:Bundle_Metainfo" />
 	<utility factory=".importer.AssignmentPoliciesImporter" name="100:Assignment_Policies" />
 	<utility factory=".importer.BundlePresentationAssetsImporter" name="003:Presentation_Assets" />
-
-	<!-- Invitations -->
-	<configure zcml:condition="have testmode">
-		<utility factory=".invitation.JoinCourseInvitationActor" />
-	</configure>
 
 	<!-- Grading -->
 	<include package=".grading" />
