@@ -297,7 +297,6 @@ class _ContentCourseSynchronizer(object):
 				interface.alsoProvides(course.SharingScopes[ES_CREDIT],
 									   ISharingTargetEntityIterable)
 
-		cls.update_vendor_info(course, bucket, sync_results)
 		cls.update_outline(course=course,
 						   bucket=bucket,
 						   sync_results=sync_results,
@@ -309,6 +308,8 @@ class _ContentCourseSynchronizer(object):
 								 sync_results=sync_results,
 								 try_legacy_content_bundle=try_legacy_content_bundle)
 
+		cls.update_vendor_info(course, bucket, sync_results)
+				
 		cls.update_instructor_roles(course, bucket, sync_results=sync_results)
 		cls.update_assignment_policies(course, bucket, sync_results=sync_results)
 
