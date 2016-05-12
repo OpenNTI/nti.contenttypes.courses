@@ -510,17 +510,16 @@ show_assignments_by_outline
 	Note: it is invalid to set this to false and have assignments in the course
 
 Invitations
-	An arry with dictionary entries containing information pertaining to how 
-	invitation/access tokens are set for a course.
-	This entry is optional
+	An array with dictionary entries containing information pertaining to how 
+	invitation/access tokens are set for a course. This entry is optional
 	
 	Each access/invitation dictionary entry has the following fields
 	
-	* ``Code`: Access token, unique per site. This field is required
+	* ``Code`: Access/Invitation token, unique per site. This field is required
 	* ``Scope``: Enrollment scope when an access token is granted. This field is optional
 	* ``Description``: Access token/invitation description. This field is optional
-	* ``IsGeneric": Boolean indicating that the ``Code`` can be used to send send/redeem invitations
-	 
+	* ``IsGeneric": Boolean indicating that the ``Code`` can be used to send/redeem invitations.
+	This field is optional.
 
 ``assignment_policies.json`` (optional)
 ---------------------------------------------
