@@ -33,7 +33,7 @@ def _keyword_gatherer(data):
 	result = set()
 	if isinstance(data, six.string_types):
 		result.update(data.split())
-	elif isinstance(data, (list, tuple, set)):
+	elif isinstance(data, (list, tuple)):
 		for value in data:
 			result.update(_keyword_gatherer(value))
 	elif isinstance(data, Mapping):
@@ -49,7 +49,7 @@ def _invitation_gatherer(data):
 	result = set()
 	if isinstance(data, six.string_types):
 		result.update(data.split())
-	elif isinstance(data, (list, tuple, set)):
+	elif isinstance(data, (list, tuple)):
 		for value in data:
 			if isinstance(value, six.string_types):
 				result.add(value)
@@ -64,11 +64,13 @@ def _invitation_gatherer(data):
 def _course_keywords(context):
 	result = set()
 	data = get_course_vendor_info(context, create=False) or {}
-	data = traverse(data, 'NTI/Keywords', default=None)
-	result.update(_keyword_gatherer(data))
-	data = traverse(data, 'NTI/Tags', default=None)
-	result.update(_keyword_gatherer(data))
+	# keyword and tags
+	for path in ('NTI/Keywords', 'NTI/Tags'):
+		data = traverse(data, path, default=None)
+		result.update(_keyword_gatherer(data))
+	# invitation codes
 	data = traverse(data, 'NTI/Invitations', default=None)
 	result.update(_invitation_gatherer(data))
+	# clean and return
 	result.discard(u'')
 	return _Keywords(sorted(result))
