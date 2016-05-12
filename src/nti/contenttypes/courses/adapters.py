@@ -45,6 +45,20 @@ def _keyword_gatherer(data):
 	result = tuple(x.strip().lower() for x in result if x)
 	return result
 
+def _invitation_gatherer(data):
+	result = set()
+	if isinstance(data, six.string_types):
+		result.update(data.split())
+	elif isinstance(data, (list, tuple, set)):
+		for value in data:
+			if isinstance(value, six.string_types):
+				result.add(value)
+			elif isinstance(value, Mapping):
+				code = value.get('code') or value.get('Code')
+				result.add(code)
+	result = tuple(x.strip().lower() for x in result if x)
+	return result
+
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseKeywords)
 def _course_keywords(context):
@@ -54,5 +68,7 @@ def _course_keywords(context):
 	result.update(_keyword_gatherer(data))
 	data = traverse(data, 'NTI/Tags', default=None)
 	result.update(_keyword_gatherer(data))
+	data = traverse(data, 'NTI/Invitations', default=None)
+	result.update(_invitation_gatherer(data))
 	result.discard(u'')
 	return _Keywords(sorted(result))
