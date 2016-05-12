@@ -42,7 +42,7 @@ def _keyword_gatherer(data):
 			result.update(_keyword_gatherer(value))
 	elif data is not None:
 		result.add(str(data))
-	result = tuple(x.strip().lower() for x in result if x)
+	result = tuple(x.strip() for x in result if x)
 	return result
 
 def _invitation_gatherer(data):
@@ -56,20 +56,20 @@ def _invitation_gatherer(data):
 			elif isinstance(value, Mapping):
 				code = value.get('code') or value.get('Code')
 				result.add(code)
-	result = tuple(x.strip().lower() for x in result if x)
+	result = tuple(x.strip() for x in result if x)
 	return result
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseKeywords)
 def _course_keywords(context):
 	result = set()
-	data = get_course_vendor_info(context, create=False) or {}
+	info = get_course_vendor_info(context, create=False) or {}
 	# keyword and tags
 	for path in ('NTI/Keywords', 'NTI/Tags'):
-		data = traverse(data, path, default=None)
+		data = traverse(info, path, default=None)
 		result.update(_keyword_gatherer(data))
 	# invitation codes
-	data = traverse(data, 'NTI/Invitations', default=None)
+	data = traverse(info, 'NTI/Invitations', default=None)
 	result.update(_invitation_gatherer(data))
 	# clean and return
 	result.discard(u'')
