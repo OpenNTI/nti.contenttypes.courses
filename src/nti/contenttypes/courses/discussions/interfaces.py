@@ -30,6 +30,7 @@ from nti.coremetadata.interfaces import ILastModified
 from nti.dataserver_fragments.interfaces import ITaggedContent
 
 from nti.namedfile.interfaces import INamedFile
+from nti.namedfile.interfaces import IFileConstrained
 
 from nti.schema.field import Choice
 from nti.schema.field import Object
@@ -51,7 +52,8 @@ def href_schema_field(title=u'', required=False, default=None):
 					default=default,
 					required=required)
 
-class ICourseDiscussion(ITitled, ITaggedContent, ILastModified, IContained, ICreated):
+class ICourseDiscussion(ITitled, ITaggedContent, ILastModified, IContained,
+						ICreated, IFileConstrained):
 	title = ValidTextLine(title="Discussion title", required=True)
 	icon = href_schema_field(title="Discussion icon href")
 	label = ValidTextLine(title="The label", required=False, default=u'')
