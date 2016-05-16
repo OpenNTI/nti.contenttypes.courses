@@ -41,7 +41,7 @@ class CourseExportFiler(DirectoryFiler):
 		if not self.path:
 			self.path = tempfile.mkdtemp()
 		else:
-			super(CourseExportFiler, self).prepare(self.path)
+			self.path = super(CourseExportFiler, self).prepare(self.path)
 
 	def asZip(self, path=None):
 		base_name = path or tempfile.mkdtemp()
