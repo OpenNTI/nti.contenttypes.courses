@@ -102,11 +102,16 @@ class BaseSectionImporter(object):
 			result = simplejson.loads(self._prepare(source))
 		return result
 
-	def course_bucket_path(self, course):
+	def course_bucket(self, course):
 		if ICourseSubInstance.providedBy(course):
-			bucket = "%s/%s/" % (SECTIONS, course.__name__)
+			bucket = "%s/%s" % (SECTIONS, course.__name__)
 		else:
-			bucket = u''
+			bucket = None
+		return bucket
+
+	def course_bucket_path(self, course):
+		bucket = self.course_bucket(course)
+		bucket = bucket + "/" if bucket else u''
 		return bucket
 
 	def safe_get(self, filer, href):
