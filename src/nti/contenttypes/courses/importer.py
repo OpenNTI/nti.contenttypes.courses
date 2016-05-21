@@ -11,7 +11,10 @@ logger = __import__('logging').getLogger(__name__)
 
 import os
 import time
+import uuid
 import shutil
+from hashlib import md5
+
 import simplejson
 
 from zope import component
@@ -50,13 +53,15 @@ from nti.contenttypes.courses import CATALOG_INFO_NAME
 from nti.contenttypes.courses import COURSE_OUTLINE_NAME
 from nti.contenttypes.courses import ASSIGNMENT_POLICIES_NAME
 
-from nti.contenttypes.courses.interfaces import SECTIONS, ICourseOutlineNode
+from nti.contenttypes.courses.interfaces import SECTIONS
+from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
 
 from nti.contenttypes.courses.interfaces import iface_of_node
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseImporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSectionImporter
@@ -71,6 +76,10 @@ from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.externalization.internalization import update_from_external_object
+
+from nti.ntiids.ntiids import TYPE_UUID
+from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import make_specific_safe
 
 from nti.site.hostpolicy import get_host_site
 
@@ -132,6 +141,14 @@ class BaseSectionImporter(object):
 @interface.implementer(ICourseSectionImporter)
 class CourseOutlineImporter(BaseSectionImporter):
 
+	def make_ntiid(self):
+		digest = md5(str(uuid.uuid4())).hexdigest().upper()
+		specific = make_specific_safe(TYPE_UUID + ".%s" % digest)
+		result = make_ntiid(provider='NTI',
+							nttype=NTI_COURSE_OUTLINE_NODE,
+							specific=specific)
+		return result
+
 	def _update_and_register(self, course, ext_obj):
 		# require connection
 		connection = IConnection(course)
@@ -152,6 +169,8 @@ class CourseOutlineImporter(BaseSectionImporter):
 		# register nodes
 		def _recur(node):
 			if not ICourseOutline.providedBy(node):
+				if not getattr(node, "ntiid", None):
+					node.ntiid = self.make_ntiid()
 				registerUtility(registry,
 								node,
 							  	name=node.ntiid,
