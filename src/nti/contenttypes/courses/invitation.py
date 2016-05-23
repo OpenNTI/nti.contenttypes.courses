@@ -14,6 +14,8 @@ from zope import interface
 
 from zope.cachedescriptors.property import readproperty
 
+from nti.contenttypes.courses import MessageFactory as _
+
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
@@ -43,15 +45,15 @@ class JoinCourseInvitation(Invitation):
 	@readproperty
 	def scope(self):
 		return ES_PUBLIC
-	
+
 	@readproperty
 	def name(self):
 		return self.receiver
-	
+
 	@readproperty
 	def email(self):
 		return self.receiver
-	
+
 @interface.implementer(IJoinCourseInvitationActor)
 class JoinCourseInvitationActor(object):
 
@@ -77,7 +79,7 @@ class JoinCourseInvitationActor(object):
 
 		record = get_enrollment_in_hierarchy(course, user)
 		if record is not None:
-			raise AlreadyEnrolledException()
+			raise AlreadyEnrolledException(_("You are already enrolled in this course."))
 
 		enrollment_manager = ICourseEnrollmentManager(course)
 		enrollment_manager.enroll(user, scope=scope)
