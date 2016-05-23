@@ -184,11 +184,11 @@ class _GenericFolderSynchronizer(object):
 		# have a factory for it
 		for bucket_child_name in child_buckets:
 			__traceback_info__ = folder, bucket, bucket_child_name
+			child_bucket = child_buckets[bucket_child_name]
+			factory = self._get_factory_for(child_bucket)
 			if bucket_child_name not in folder:
 				# NOTE: We don't handle the case of a bucket
 				# changing the type it should be
-				child_bucket = child_buckets[bucket_child_name]
-				factory = self._get_factory_for(child_bucket)
 				if not factory:
 					continue
 				new_child_object = factory()
@@ -196,6 +196,15 @@ class _GenericFolderSynchronizer(object):
 				# Fire the added event
 				__traceback_info__ = folder, child_bucket, new_child_object
 				folder[bucket_child_name] = new_child_object
+			else:
+				folder_obj = folder.get( bucket_child_name )
+				if factory and not isinstance( folder_obj, factory ):
+					# Should we automatically delete here and rebuild?
+					# Maybe if going from admin to something else and allow_removal?
+					logger.warn( 'Type of course folder structure changed (old=%s) (new=%s) (name=%s)',
+								 bucket_child_name,
+								 type( folder_obj ),
+								 factory )
 
 		# Synchronize everything
 		for child_name, child in folder.items():
@@ -309,7 +318,7 @@ class _ContentCourseSynchronizer(object):
 								 try_legacy_content_bundle=try_legacy_content_bundle)
 
 		cls.update_vendor_info(course, bucket, sync_results)
-				
+
 		cls.update_instructor_roles(course, bucket, sync_results=sync_results)
 		cls.update_assignment_policies(course, bucket, sync_results=sync_results)
 
