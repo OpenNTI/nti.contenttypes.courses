@@ -321,15 +321,17 @@ def add_principal_to_course_content_roles(principal, course, packages=None):
 		# be idempotent
 		membership.setGroups(final_groups)
 
-def _get_principal_enrollment_packages(principal):
+def _get_principal_enrollment_packages(principal, courses_to_exclude=()):
 	"""
-	Gather the set of course packages for the principal's enrollments.
+	Gather the set of course packages for the principal's enrollments,
+	excluding any courses given.
 	"""
 	result = set()
 	enrollments = get_enrollments(principal.username)
 	for record in enrollments:
 		course = ICourseInstance(record, None)  # dup enrollment
-		if course is not None:
+		if 		course is not None \
+			and course not in courses_to_exclude:
 			packages = get_course_packages(course)
 			result.update(packages)
 	return result
@@ -347,7 +349,8 @@ def remove_principal_from_course_content_roles(principal, course, packages=None)
 		packages = get_course_packages(course)
 
 	# Get the minimal set of packages to remove roles for.
-	enrollment_packages = _get_principal_enrollment_packages(principal)
+	enrollment_packages = _get_principal_enrollment_packages(principal,
+															 courses_to_exclude=(course,))
 	to_remove = set(packages) - enrollment_packages
 
 	roles_to_remove = _content_roles_for_course_instance(course, to_remove)
