@@ -204,7 +204,7 @@ from nti.common.property import CachedProperty
 
 class PersistentCourseCatalogLegacyEntry(CourseCatalogLegacyEntry,
 										 PersistentCreatedAndModifiedTimeObject):
-	
+
 	def __init__(self, *args, **kwargs):
 		# Schema configured is not cooperative
 		CourseCatalogLegacyEntry.__init__(self, *args, **kwargs)
@@ -366,7 +366,7 @@ class _LegacyCatalogAutoPackageSearchingScopedInterfaceObjectIO(object):
 	@classmethod
 	def _ap_find_package_interface_module(cls):
 		return dottedname.resolve('nti.contenttypes.courses.legacy_catalog')
-	
+
 # legacy course
 
 class ILegacyCourseCatalogEntry(ICourseCatalogLegacyEntry):

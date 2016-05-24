@@ -336,7 +336,7 @@ def _get_principal_enrollment_packages(principal, courses_to_exclude=()):
 			result.update(packages)
 	return result
 
-def remove_principal_from_course_content_roles(principal, course, packages=None):
+def remove_principal_from_course_content_roles(principal, course, packages=None, unenroll=False):
 	"""
 	Remove the principal from the given course roles (and optional packages).
 	We must verify the principal does not have access to this content
@@ -348,9 +348,11 @@ def remove_principal_from_course_content_roles(principal, course, packages=None)
 	if not packages:
 		packages = get_course_packages(course)
 
+	courses_to_exclude = (course,) if unenroll else ()
+
 	# Get the minimal set of packages to remove roles for.
 	enrollment_packages = _get_principal_enrollment_packages(principal,
-															 courses_to_exclude=(course,))
+															 courses_to_exclude=courses_to_exclude)
 	to_remove = set(packages) - enrollment_packages
 
 	roles_to_remove = _content_roles_for_course_instance(course, to_remove)
@@ -404,7 +406,7 @@ def on_drop_exit_scope_membership(record, event, course=None):
 							 ignored_exceptions=(KeyError,),
 							 related_enrolled_courses=related_enrolled_courses)
 
-	remove_principal_from_course_content_roles(principal, course)
+	remove_principal_from_course_content_roles(principal, course, unenroll=True)
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectModifiedEvent)
 def on_modified_update_scope_membership(record, event):
@@ -501,7 +503,7 @@ def update_package_permissions(course, event):
 		if event.removed_packages:
 			remove_principal_from_course_content_roles(principal,
 													   course,
-													   event.removed_packages)
+													   packages=event.removed_packages)
 
 @component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
 def on_course_instance_imported(course, event):
