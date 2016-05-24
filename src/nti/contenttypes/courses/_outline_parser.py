@@ -345,17 +345,6 @@ def _handle_node(parent_lxml, parent_node, old_children, library,
 	"""
 	parent_node.clear(event=False)
 
-# 	outline_xml_key = bucket.getChildNamed(COURSE_OUTLINE_NAME)
-# 		if not outline_xml_key and try_legacy_content_bundle:
-# 			# Only want to do this for root courses
-# 			if course.ContentPackageBundle:
-# 				# Just take the first one. That should be all there
-# 				# is in legacy cases
-# 				for package in course.ContentPackageBundle.ContentPackages:
-# 					outline_xml_key = package.index
-# 					outline_xml_node = 'course'
-# 					break
-
 	for idx, lesson in enumerate(parent_lxml.iterchildren(tag='lesson')):
 		lesson_ntiid = _get_lesson_ntiid(parent_node, idx)
 		def builder():
