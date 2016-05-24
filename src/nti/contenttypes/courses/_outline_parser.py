@@ -205,15 +205,23 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 	# If the XML itself has a value, that overrides
 	content_units = library.pathToNTIID(topic_ntiid, skip_cache=True) if library else None
 	if not content_units:
+		# XXX: Might be common if lessons are stored under bundle.
 		logger.warn("Unable to find referenced course node %s", topic_ntiid)
 		content_unit = None
 	else:
 		content_unit = content_units[-1]
 
-	for attr in 'title', 'description':
+	# Use either title or label for lesson titles.
+	for attr in 'title', 'label':
 		val = _attr_val(lesson, attr) or getattr(content_unit, attr, None)
 		if val:
-			setattr(lesson_node, attr, val)
+			setattr(lesson_node, 'title', val)
+			break
+
+	desc_val = _attr_val(lesson, 'description') \
+			or getattr(content_unit, 'description', None)
+	if desc_val:
+		setattr(lesson_node, 'description', desc_val)
 
 	# Now, if our node is supposed to have the NTIID, expose it.
 	# Even if it doesn't (and won't be in the schema and won't be
