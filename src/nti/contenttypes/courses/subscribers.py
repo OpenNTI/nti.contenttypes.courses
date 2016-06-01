@@ -46,6 +46,7 @@ from nti.contenttypes.courses.interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
@@ -59,6 +60,7 @@ from nti.contenttypes.courses.interfaces import ICourseVendorInfoSynchronized
 
 from nti.contenttypes.courses.interfaces import iface_of_node
 
+from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import index_course_roles
 from nti.contenttypes.courses.utils import get_courses_catalog
 from nti.contenttypes.courses.utils import clear_course_outline
@@ -223,15 +225,19 @@ def unindex_enrollment_records(course):
 	ntiid = getattr(entry, 'ntiid', None)
 	if catalog is not None and ntiid:
 		site = getSite().__name__
-		query = { IX_SITE: {'any_of':(site,)},
-				  IX_COURSE: {'any_of':(ntiid,)} }
+		query = { 
+			IX_SITE: {'any_of':(site,)},
+			IX_COURSE: {'any_of':(ntiid,)} 
+		}
 		for uid in catalog.apply(query) or ():
 			catalog.unindex_doc(uid)
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def on_course_instance_removed(course, event):
 	unindex_enrollment_records(course)
-	clear_course_outline(course)
+	if 		not ICourseSubInstance.providedBy(course) \
+		or	course.Outline is not get_parent_course(course).Outline:
+		clear_course_outline(course)
 
 def course_default_roles(course):
 	course_role_manager = ICourseRolePermissionManager( course )
