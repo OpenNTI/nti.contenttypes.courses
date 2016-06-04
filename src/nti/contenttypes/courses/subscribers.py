@@ -37,10 +37,12 @@ from nti.contenttypes.courses import get_enrollment_catalog
 from nti.contenttypes.courses.catalog import CourseCatalogFolder
 
 from nti.contenttypes.courses.index import IX_SITE
+from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_COURSE
 from nti.contenttypes.courses.index import IX_USERNAME
 
 from nti.contenttypes.courses.interfaces import COURSE_CATALOG_NAME
+from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_NAMES
 from nti.contenttypes.courses.interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
@@ -215,9 +217,20 @@ def on_course_vendor_info_synced(course, event):
 def on_user_removed(user, event):
 	catalog = get_enrollment_catalog()
 	if catalog is not None:
-		query = { IX_USERNAME: {'any_of':(user.username,)} }
+		# remove enrollment records
+		query = { 
+			IX_USERNAME: {'any_of':(user.username,)},
+			IX_SCOPE: {'any_of':ENROLLMENT_SCOPE_NAMES }
+		}
 		for uid in catalog.apply(query) or ():
 			catalog.unindex_doc(uid)
+		# remove instructor/ editor roles
+		index = catalog[IX_USERNAME]
+		query = { 
+			IX_USERNAME: {'any_of':(user.username,)},
+		}
+		for uid in catalog.apply(query) or ():
+			index.remove(uid, (user.username,)) # KeepSet index
 
 def unindex_enrollment_records(course):
 	catalog = get_enrollment_catalog()
