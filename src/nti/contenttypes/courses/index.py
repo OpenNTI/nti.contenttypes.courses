@@ -116,8 +116,6 @@ class UsernameIndex(KeepSetIndex):
 			result = (to_unicode(value.username),)
 		elif ICourseInstanceEnrollmentRecord.providedBy(value):
 			result = (value.Principal.id,) if value.Principal is not None else ()
-		elif isinstance(value, (list, tuple, set)):
-			result = value
 		else:
 			result = ()
 		return result

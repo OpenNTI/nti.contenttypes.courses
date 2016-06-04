@@ -41,6 +41,8 @@ from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_COURSE
 from nti.contenttypes.courses.index import IX_USERNAME
 
+from nti.contenttypes.courses.index import IndexRecord
+
 from nti.contenttypes.courses.interfaces import COURSE_CATALOG_NAME
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_NAMES
 from nti.contenttypes.courses.interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
@@ -230,7 +232,8 @@ def on_user_removed(user, event):
 			IX_USERNAME: {'any_of':(user.username,)},
 		}
 		for uid in catalog.apply(query) or ():
-			index.remove(uid, (user.username,)) # KeepSet index
+			record = IndexRecord(user.username, None, None)
+			index.remove(uid, record) # KeepSet index
 
 def unindex_enrollment_records(course):
 	catalog = get_enrollment_catalog()
