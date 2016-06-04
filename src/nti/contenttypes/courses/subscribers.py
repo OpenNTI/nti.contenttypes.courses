@@ -71,6 +71,7 @@ from nti.contenttypes.courses.utils import clear_course_outline
 from nti.contenttypes.courses.utils import unindex_course_roles
 
 from nti.dataserver.interfaces import IUser
+from nti.dataserver.users.interfaces import IWillDeleteEntityEvent
 
 from nti.recorder.utils import record_transaction
 
@@ -215,7 +216,7 @@ def on_course_vendor_info_synced(course, event):
 	if doc_id is not None:
 		catalog.index_doc(doc_id, course)
 
-@component.adapter(IUser, IObjectRemovedEvent)
+@component.adapter(IUser, IWillDeleteEntityEvent)
 def on_user_removed(user, event):
 	catalog = get_enrollment_catalog()
 	if catalog is not None:
