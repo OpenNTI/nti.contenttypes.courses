@@ -25,6 +25,7 @@ from zope.interface.interfaces import IUnregistered
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
 
 from nti.assessment.interfaces import IQAssessmentPolicies
+from nti.assessment.interfaces import IQAssessmentPoliciesModified
 from nti.assessment.interfaces import IQAssessmentDateContextModified
 
 from nti.contentlibrary.interfaces import IContentPackageLibrary
@@ -222,7 +223,7 @@ def on_user_removed(user, event):
 	catalog = get_enrollment_catalog()
 	if catalog is not None:
 		# remove enrollment records
-		query = { 
+		query = {
 			IX_USERNAME: {'any_of':(user.username,)},
 			IX_SCOPE: {'any_of':ENROLLMENT_SCOPE_NAMES }
 		}
@@ -230,7 +231,7 @@ def on_user_removed(user, event):
 			catalog.unindex_doc(uid)
 		# remove instructor/ editor roles
 		index = catalog[IX_USERNAME]
-		query = { 
+		query = {
 			IX_USERNAME: {'any_of':(user.username,)},
 		}
 		for uid in catalog.apply(query) or ():
@@ -290,10 +291,17 @@ def on_course_outline_node_added(node, event):
 							provided=iface_of_node(node),
 						 	name=ntiid)
 
-@component.adapter(IQAssessmentDateContextModified)
-def on_assessment_date_context_modified(event):
+def _lock_assessment_policy( event ):
 	context = event.object
 	course = ICourseInstance(context, None)
 	if course is not None and event.assesment:
 		policies = IQAssessmentPolicies(course)
-		policies.set(event.assesment, 'locked', True)
+		policies.set(event.assessment, 'locked', True)
+
+@component.adapter(IQAssessmentPoliciesModified)
+def on_assessment_policy_modified(event):
+	_lock_assessment_policy( event )
+
+@component.adapter(IQAssessmentDateContextModified)
+def on_assessment_date_context_modified(event):
+	_lock_assessment_policy( event )
