@@ -296,7 +296,7 @@ def _lock_assessment_policy( event ):
 	course = ICourseInstance(context, None)
 	if course is not None and event.assesment:
 		policies = IQAssessmentPolicies(course)
-		policies.set(event.assessment, 'locked', True)
+		policies.set(event.assesment, 'locked', True)
 
 @component.adapter(IQAssessmentPoliciesModified)
 def on_assessment_policy_modified(event):
