@@ -218,6 +218,7 @@ def on_course_vendor_info_synced(course, event):
 
 @component.adapter(IUser, IWillDeleteEntityEvent)
 def on_user_removed(user, event):
+	logger.info( 'Removing enrollment records for %s', user.username )
 	catalog = get_enrollment_catalog()
 	if catalog is not None:
 		# remove enrollment records
@@ -240,11 +241,12 @@ def unindex_enrollment_records(course):
 	catalog = get_enrollment_catalog()
 	entry = ICourseCatalogEntry(course, None)
 	ntiid = getattr(entry, 'ntiid', None)
+	logger.info( 'Removing enrollment records for %s', ntiid )
 	if catalog is not None and ntiid:
 		site = getSite().__name__
-		query = { 
+		query = {
 			IX_SITE: {'any_of':(site,)},
-			IX_COURSE: {'any_of':(ntiid,)} 
+			IX_COURSE: {'any_of':(ntiid,)}
 		}
 		for uid in catalog.apply(query) or ():
 			catalog.unindex_doc(uid)

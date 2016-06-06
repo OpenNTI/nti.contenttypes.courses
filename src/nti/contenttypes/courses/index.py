@@ -42,7 +42,7 @@ from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
 
 # Deprecations
 
-deprecated('ValidatingUsernameID', 'Use lastest index implementation')
+deprecated('ValidatingUsernameID', 'Use latest index implementation')
 class ValidatingUsernameID(object):
 
 	def __init__(self, *args, **kwargs):
