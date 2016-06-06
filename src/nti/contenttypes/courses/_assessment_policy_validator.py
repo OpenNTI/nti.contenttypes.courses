@@ -5,6 +5,7 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
+from nti.common.string import is_true, is_false
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -40,6 +41,16 @@ class DefaultAssessmentPolicyValidator(object):
 		except (AssertionError, TypeError, ValueError):
 			msg = "Invalid total points in policy for %s" % ntiid
 			raise ValueError(msg)
+		
+		disable = auto_grade.get('disable')
+		if disable is not None:
+			if not (is_true(disable) or is_false(disable)):
+				msg = "Invalid disable flag in policy for %s" % ntiid
+				raise ValueError(msg)
+			elif is_true(disable):
+				auto_grade['disable'] = True
+			elif is_false(disable):
+				auto_grade['disable'] = False
 		return auto_grade
 
 	def validate_pointbased_policy(self, auto_grade, assignment, ntiid):
