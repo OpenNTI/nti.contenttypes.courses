@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from nti.common.string import is_true, is_false
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -18,6 +17,9 @@ from ZODB import loglevels
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentPolicyValidator
+
+from nti.common.string import is_true
+from nti.common.string import is_false
 
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
@@ -41,7 +43,7 @@ class DefaultAssessmentPolicyValidator(object):
 		except (AssertionError, TypeError, ValueError):
 			msg = "Invalid total points in policy for %s" % ntiid
 			raise ValueError(msg)
-		
+
 		disable = auto_grade.get('disable')
 		if disable is not None:
 			if not (is_true(disable) or is_false(disable)):
