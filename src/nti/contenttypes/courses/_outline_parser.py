@@ -190,7 +190,7 @@ def _get_lesson_ntiid(parent, idx):
 
 def _publish(node):
 	try:
-		node.publish()
+		node.publish(event=False)
 	except AttributeError:
 		pass
 
