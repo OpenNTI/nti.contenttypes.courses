@@ -175,6 +175,7 @@ class CourseOutlineImporter(BaseSectionImporter):
 								node,
 							  	name=node.ntiid,
 							  	provided=iface_of_node(node))
+				node.publish(event=False)
 
 			for child in node.values():
 				_recur(child)
