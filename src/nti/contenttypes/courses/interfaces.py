@@ -1434,16 +1434,24 @@ class ICourseSectionExporter(interface.Interface):
 
 class ICourseImporter(interface.Interface):
 
-	def process(course, filer):
+	def process(course, filer, writeout=True):
 		"""
 		Import the specified course
+		
+		:param course Course to import
+		:param filer: External source filer
+		:param writeout: Boolean to save source files to disk
 		"""
 
 class ICourseSectionImporter(interface.Interface):
 
-	def process(course, filer):
+	def process(course, filer, writeout=True):
 		"""
 		Import the specified course
+		
+		:param course Course to import
+		:param filer: External source filer
+		:param writeout: Boolean to save source files to disk
 		"""
 
 class ICourseInstanceExportedEvent(IObjectEvent):

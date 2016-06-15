@@ -186,7 +186,7 @@ class CourseOutlineImporter(BaseSectionImporter):
 		if ICourseSubInstance.providedBy(course):
 			course.prepare_own_outline()
 
-	def process(self, context, filer):
+	def process(self, context, filer, writeout=True):
 		course = ICourseInstance(context)
 		path = self.course_bucket_path(course) + COURSE_OUTLINE_NAME
 		source = self.safe_get(filer, path)
@@ -197,7 +197,7 @@ class CourseOutlineImporter(BaseSectionImporter):
 			self._update_and_register(course, ext_obj)
 
 			# save source
-			if IFilesystemBucket.providedBy(course.root):
+			if writeout and IFilesystemBucket.providedBy(course.root):
 				source = self.safe_get(filer, path)  # reload
 				self.makedirs(course.root.absolute_path)
 				new_path = os.path.join(course.root.absolute_path, COURSE_OUTLINE_NAME)
@@ -209,7 +209,7 @@ class CourseOutlineImporter(BaseSectionImporter):
 @interface.implementer(ICourseSectionImporter)
 class VendorInfoImporter(BaseSectionImporter):
 
-	def process(self, context, filer):
+	def process(self, context, filer, writeout=True):
 		course = ICourseInstance(context)
 		path = self.course_bucket_path(course) + VENDOR_INFO_NAME
 		source = self.safe_get(filer, path)
@@ -231,7 +231,7 @@ class VendorInfoImporter(BaseSectionImporter):
 			check_enrollment_mapped_course(course)
 
 			# save source
-			if IFilesystemBucket.providedBy(course.root):
+			if writeout and IFilesystemBucket.providedBy(course.root):
 				source = self.safe_get(filer, path)  # reload
 				self.makedirs(course.root.absolute_path)
 				new_path = os.path.join(course.root.absolute_path, VENDOR_INFO_NAME)
@@ -244,7 +244,7 @@ class VendorInfoImporter(BaseSectionImporter):
 @interface.implementer(ICourseSectionImporter)
 class RoleInfoImporter(BaseSectionImporter):
 
-	def process(self, context, filer):
+	def process(self, context, filer, writeout=True):
 		course = ICourseInstance(context)
 		path = self.course_bucket_path(course) + ROLE_INFO_NAME
 		source = self.safe_get(filer, path)
@@ -255,7 +255,7 @@ class RoleInfoImporter(BaseSectionImporter):
 			notify(CourseRolesSynchronized(course))
 
 			# save source
-			if IFilesystemBucket.providedBy(course.root):
+			if writeout and IFilesystemBucket.providedBy(course.root):
 				source = self.safe_get(filer, path)  # reload
 				self.makedirs(course.root.absolute_path)
 				new_path = os.path.join(course.root.absolute_path, ROLE_INFO_NAME)
@@ -267,7 +267,7 @@ class RoleInfoImporter(BaseSectionImporter):
 @interface.implementer(ICourseSectionImporter)
 class AssignmentPoliciesImporter(BaseSectionImporter):
 
-	def process(self, context, filer):
+	def process(self, context, filer, writeout=True):
 		course = ICourseInstance(context)
 		path = self.course_bucket_path(course) + ASSIGNMENT_POLICIES_NAME
 		source = self.safe_get(filer, path)
@@ -277,7 +277,7 @@ class AssignmentPoliciesImporter(BaseSectionImporter):
 			fill_asg_from_json(course, source, time.time())
 
 			# save source
-			if IFilesystemBucket.providedBy(course.root):
+			if writeout and IFilesystemBucket.providedBy(course.root):
 				source = self.safe_get(filer, path)  # reload
 				self.makedirs(course.root.absolute_path)
 				new_path = os.path.join(course.root.absolute_path,
@@ -303,10 +303,10 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
 				source = filer.get(path)
 				transfer_to_native_file(source, new_path)
 
-	def process(self, context, filer):
+	def process(self, context, filer, writeout=True):
 		course = ICourseInstance(context)
 		root = course.root  # must exists
-		if not IFilesystemBucket.providedBy(root):
+		if not IFilesystemBucket.providedBy(root) or not writeout:
 			return
 		path = self.course_bucket_path(course) + self.__PA__
 		if filer.is_bucket(path):
@@ -319,7 +319,7 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
 @interface.implementer(ICourseSectionImporter)
 class CourseInfoImporter(BaseSectionImporter):
 
-	def process(self, context, filer):
+	def process(self, context, filer, writeout=True):
 		course = ICourseInstance(context)
 		course.SharingScopes.initScopes()
 
@@ -333,13 +333,15 @@ class CourseInfoImporter(BaseSectionImporter):
 		source = self.safe_get(filer, path)
 		if source is None:
 			return
-		new_path = os.path.join(root.absolute_path, CATALOG_INFO_NAME)
-		transfer_to_native_file(source, new_path)
+		if writeout:
+			new_path = os.path.join(root.absolute_path, CATALOG_INFO_NAME)
+			transfer_to_native_file(source, new_path)
 		key = root.getChildNamed(CATALOG_INFO_NAME)
-
+		if key is None:
+			return
 		path = self.course_bucket_path(course) + DCMETA_FILENAME
 		source = self.safe_get(filer, path)
-		if source is not None:
+		if writeout and source is not None:
 			self.makedirs(root.absolute_path)
 			new_path = os.path.join(root.absolute_path, DCMETA_FILENAME)
 			transfer_to_native_file(source, new_path)
@@ -354,7 +356,7 @@ class CourseInfoImporter(BaseSectionImporter):
 @interface.implementer(ICourseSectionImporter)
 class BundleMetaInfoImporter(BaseSectionImporter):
 
-	def process(self, context, filer):
+	def process(self, context, filer, writeout=True):
 		course = ICourseInstance(context)
 		course = get_parent_course(course)
 		root = course.root
@@ -365,12 +367,12 @@ class BundleMetaInfoImporter(BaseSectionImporter):
 		if source is None:
 			return
 
-		# save on disk
-		new_path = os.path.join(root.absolute_path, BUNDLE_META_NAME)
-		transfer_to_native_file(source, new_path)
+		if writeout: # save on disk
+			new_path = os.path.join(root.absolute_path, BUNDLE_META_NAME)
+			transfer_to_native_file(source, new_path)
 
 		source = self.safe_get(filer, "bundle_dc_metadata.xml")
-		if source is not None:
+		if source is not None and writeout:
 			new_path = os.path.join(root.absolute_path, "bundle_dc_metadata.xml")
 			transfer_to_native_file(source, new_path)
 
@@ -381,21 +383,22 @@ class BundleMetaInfoImporter(BaseSectionImporter):
 
 		# sync
 		bundle_json_key = root.getChildNamed(BUNDLE_META_NAME)
-		sync_bundle_from_json_key(bundle_json_key,
-								  course.ContentPackageBundle,
-								  dc_meta_name='bundle_dc_metadata.xml',
-								  excluded_keys=('ntiid',),
-								  dc_bucket=root)
+		if bundle_json_key is not None:
+			sync_bundle_from_json_key(bundle_json_key,
+									  course.ContentPackageBundle,
+									  dc_meta_name='bundle_dc_metadata.xml',
+									  excluded_keys=('ntiid',),
+									  dc_bucket=root)
 
 @interface.implementer(ICourseImporter)
 class CourseImporter(object):
 
-	def process(self, context, filer):
+	def process(self, context, filer, writeout=True):
 		now = time.time()
 		course = ICourseInstance(context)
 		for name, importer in sorted(component.getUtilitiesFor(ICourseSectionImporter)):
 			logger.info("Processing %s", name)
-			importer.process(course, filer)
+			importer.process(course, filer, writeout)
 		entry = ICourseCatalogEntry(course)
 		entry.lastSynchronized = course.lastSynchronized = time.time()
 		notify(CourseInstanceImportedEvent(course))
