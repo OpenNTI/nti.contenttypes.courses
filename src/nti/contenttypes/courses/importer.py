@@ -351,6 +351,9 @@ class CourseInfoImporter(BaseSectionImporter):
 		try:
 			key = root.getChildNamed(CATALOG_INFO_NAME)
 			if key is None:
+				# CS: We need to save and import the filer source in case
+				#  we are creating a course, in which case the catalog 
+				# entry object has to be correctly updated
 				key = FilesystemKey()
 				tmp_file = tempfile.mkstemp()[1]
 				key.absolute_path = tmp_file
@@ -360,7 +363,7 @@ class CourseInfoImporter(BaseSectionImporter):
 			entry = ICourseCatalogEntry(course)
 			update_entry_from_legacy_key(entry, key, root, force=True)
 		finally:
-			if tmp_file is not None:
+			if tmp_file is not None: # clean up
 				os.remove(tmp_file)
 
 		# process subinstances
