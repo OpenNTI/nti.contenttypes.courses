@@ -13,6 +13,7 @@ import os
 import time
 import uuid
 import shutil
+import tempfile
 from hashlib import md5
 
 import simplejson
@@ -31,6 +32,8 @@ from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
 
 from nti.contentlibrary.dublincore import DCMETA_FILENAME
+
+from nti.contentlibrary.filesystem import FilesystemKey
 
 from nti.contentlibrary.interfaces import IFilesystemBucket
 
@@ -336,18 +339,29 @@ class CourseInfoImporter(BaseSectionImporter):
 		if writeout:
 			new_path = os.path.join(root.absolute_path, CATALOG_INFO_NAME)
 			transfer_to_native_file(source, new_path)
-		key = root.getChildNamed(CATALOG_INFO_NAME)
-		if key is None:
-			return
+
 		path = self.course_bucket_path(course) + DCMETA_FILENAME
-		source = self.safe_get(filer, path)
-		if writeout and source is not None:
+		dc_source = self.safe_get(filer, path)
+		if writeout and dc_source is not None:
 			self.makedirs(root.absolute_path)
 			new_path = os.path.join(root.absolute_path, DCMETA_FILENAME)
-			transfer_to_native_file(source, new_path)
+			transfer_to_native_file(dc_source, new_path)
 
-		entry = ICourseCatalogEntry(course)
-		update_entry_from_legacy_key(entry, key, root, force=True)
+		tmp_file = None
+		try:
+			key = root.getChildNamed(CATALOG_INFO_NAME)
+			if key is None:
+				key = FilesystemKey()
+				tmp_file = tempfile.mkstemp()[1]
+				key.absolute_path = tmp_file
+				transfer_to_native_file(source, tmp_file)
+
+			# process source
+			entry = ICourseCatalogEntry(course)
+			update_entry_from_legacy_key(entry, key, root, force=True)
+		finally:
+			if tmp_file is not None:
+				os.remove(tmp_file)
 
 		# process subinstances
 		for sub_instance in get_course_subinstances(course):
