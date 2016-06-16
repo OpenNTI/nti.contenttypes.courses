@@ -82,7 +82,7 @@ def parse_discussions(course, bucket, force=False, *args, **kwargs):
 			child_files[item.__name__] = item
 
 	# Remove anything the discussions has that aren't on the filesystem
-	for child_name in list(discussions):
+	for child_name in list(discussions): # snapshot
 		if child_name not in child_files:
 			logger.info("Removing discussion %s (%r)", child_name,
 						discussions[child_name])
@@ -97,6 +97,7 @@ def parse_discussions(course, bucket, force=False, *args, **kwargs):
 			continue
 
 		# parse and discussion
+		__traceback_info__ = name, key
 		discussion = load_discussion(name,
 									 key.readContents(),
 									 discussions,
