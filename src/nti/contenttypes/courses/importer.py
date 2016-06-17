@@ -399,13 +399,23 @@ class BundleMetaInfoImporter(BaseSectionImporter):
 			lifecycleevent.created(course.ContentPackageBundle)
 
 		# sync
-		bundle_json_key = root.getChildNamed(BUNDLE_META_NAME)
-		if bundle_json_key is not None:
-			sync_bundle_from_json_key(bundle_json_key,
-									  course.ContentPackageBundle,
-									  dc_meta_name='bundle_dc_metadata.xml',
-									  excluded_keys=('ntiid',),
-									  dc_bucket=root)
+		tmp_file = None
+		try:
+			bundle_json_key = root.getChildNamed(BUNDLE_META_NAME)
+			if bundle_json_key is None:
+				bundle_json_key = FilesystemKey()
+				tmp_file = tempfile.mkstemp()[1]
+				bundle_json_key.absolute_path = tmp_file
+				transfer_to_native_file(source, tmp_file)
+			if bundle_json_key is not None:
+				sync_bundle_from_json_key(bundle_json_key,
+										  course.ContentPackageBundle,
+										  dc_meta_name='bundle_dc_metadata.xml',
+										  excluded_keys=('ntiid',),
+										  dc_bucket=root)
+		finally:
+			if tmp_file is not None: # clean up
+				os.remove(tmp_file)
 
 @interface.implementer(ICourseImporter)
 class CourseImporter(object):
