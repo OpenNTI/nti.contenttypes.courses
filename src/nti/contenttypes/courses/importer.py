@@ -33,7 +33,7 @@ from nti.contentlibrary.bundle import sync_bundle_from_json_key
 
 from nti.contentlibrary.dublincore import DCMETA_FILENAME
 
-from nti.contentlibrary.filesystem import FilesystemKey
+from nti.contentlibrary.filesystem import FilesystemKey, FilesystemBucket
 
 from nti.contentlibrary.interfaces import IFilesystemBucket
 
@@ -91,6 +91,8 @@ from nti.site.interfaces import IHostPolicyFolder
 from nti.site.utils import registerUtility
 
 from nti.traversal.traversal import find_interface
+
+BUNDLE_DC_METADATA = u"bundle_dc_metadata.xml"
 
 @interface.implementer(ICourseSectionImporter)
 class BaseSectionImporter(object):
@@ -352,7 +354,7 @@ class CourseInfoImporter(BaseSectionImporter):
 			key = root.getChildNamed(CATALOG_INFO_NAME)
 			if key is None:
 				# CS: We need to save and import the filer source in case
-				#  we are creating a course, in which case the catalog 
+				#  we are creating a course, in which case the catalog
 				# entry object has to be correctly updated
 				key = FilesystemKey()
 				tmp_file = tempfile.mkstemp()[1]
@@ -363,7 +365,7 @@ class CourseInfoImporter(BaseSectionImporter):
 			entry = ICourseCatalogEntry(course)
 			update_entry_from_legacy_key(entry, key, root, force=True)
 		finally:
-			if tmp_file is not None: # clean up
+			if tmp_file is not None:  # clean up
 				os.remove(tmp_file)
 
 		# process subinstances
@@ -373,6 +375,13 @@ class CourseInfoImporter(BaseSectionImporter):
 @interface.implementer(ICourseSectionImporter)
 class BundleMetaInfoImporter(BaseSectionImporter):
 
+	def _to_fs_key(self, source, path, name):
+		result = FilesystemKey()
+		out_path = os.path.join(path, name)
+		result.absolute_path = out_path
+		transfer_to_native_file(source, out_path)
+		return result
+
 	def process(self, context, filer, writeout=True):
 		course = ICourseInstance(context)
 		course = get_parent_course(course)
@@ -380,18 +389,18 @@ class BundleMetaInfoImporter(BaseSectionImporter):
 		if 		ICourseSubInstance.providedBy(course) \
 			or	not IFilesystemBucket.providedBy(root):
 			return
-		source = self.safe_get(filer, BUNDLE_META_NAME)
-		if source is None:
+		name_source = self.safe_get(filer, BUNDLE_META_NAME)
+		if name_source is None:
 			return
 
-		if writeout: # save on disk
+		if writeout:  # save on disk
 			new_path = os.path.join(root.absolute_path, BUNDLE_META_NAME)
-			transfer_to_native_file(source, new_path)
+			transfer_to_native_file(name_source, new_path)
 
-		source = self.safe_get(filer, "bundle_dc_metadata.xml")
-		if source is not None and writeout:
-			new_path = os.path.join(root.absolute_path, "bundle_dc_metadata.xml")
-			transfer_to_native_file(source, new_path)
+		dc_source = self.safe_get(filer, BUNDLE_DC_METADATA)
+		if dc_source is not None and writeout:
+			new_path = os.path.join(root.absolute_path, BUNDLE_DC_METADATA)
+			transfer_to_native_file(dc_source, new_path)
 
 		# create bundle if required
 		created_bundle = created_content_package_bundle(course, root)
@@ -399,23 +408,31 @@ class BundleMetaInfoImporter(BaseSectionImporter):
 			lifecycleevent.created(course.ContentPackageBundle)
 
 		# sync
-		tmp_file = None
+		tmp_dir = None
 		try:
 			bundle_json_key = root.getChildNamed(BUNDLE_META_NAME)
+			dc_meta_json_key = root.getChildNamed(BUNDLE_DC_METADATA)
 			if bundle_json_key is None:
-				bundle_json_key = FilesystemKey()
-				tmp_file = tempfile.mkstemp()[1]
-				bundle_json_key.absolute_path = tmp_file
-				transfer_to_native_file(source, tmp_file)
-			if bundle_json_key is not None:
-				sync_bundle_from_json_key(bundle_json_key,
-										  course.ContentPackageBundle,
-										  dc_meta_name='bundle_dc_metadata.xml',
-										  excluded_keys=('ntiid',),
-										  dc_bucket=root)
+				# create a tmp directory root for bundle files
+				tmp_dir = tempfile.mkdtemp()
+				# XXX copy bundle files to new temp root
+				bundle_json_key = self._to_fs_key(name_source, tmp_dir, BUNDLE_META_NAME)
+				if dc_meta_json_key is None:
+					self._to_fs_key(dc_source, tmp_dir, BUNDLE_DC_METADATA)
+				else:
+					self._to_fs_key(dc_meta_json_key, tmp_dir, BUNDLE_DC_METADATA)
+				# XXX new import root
+				root = FilesystemBucket()
+				root.absolute_path = tmp_dir
+
+			sync_bundle_from_json_key(bundle_json_key,
+									  course.ContentPackageBundle,
+									  dc_meta_name=BUNDLE_DC_METADATA,
+									  excluded_keys=('ntiid',),
+									  dc_bucket=root)
 		finally:
-			if tmp_file is not None: # clean up
-				os.remove(tmp_file)
+			if tmp_dir is not None:  # clean up
+				shutil.rmtree(tmp_dir)
 
 @interface.implementer(ICourseImporter)
 class CourseImporter(object):
