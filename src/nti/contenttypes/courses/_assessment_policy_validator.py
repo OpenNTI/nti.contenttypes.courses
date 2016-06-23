@@ -60,7 +60,7 @@ class DefaultAssessmentPolicyValidator(object):
 		if not name or (assignment and not IQAssignment.providedBy(assignment)):
 			return
 
-		if name.lower() in ('pointbased'):
+		if name.lower() in ('pointbased',):
 			if assignment is None:
 				raise AssertionError('Could not find assignment %s' % ntiid)
 

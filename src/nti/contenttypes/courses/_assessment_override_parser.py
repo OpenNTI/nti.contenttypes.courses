@@ -50,11 +50,13 @@ def fill_asg_from_json(course, index, lastModified=0):
 		if policies.get(key, 'locked', False):
 			logger.warn("Policy for %s is locked", key)
 			continue
-
+		if val is None:
+			continue
 		validate_ntiid_string(key)
 		if not isinstance(val, dict):
 			raise ValueError("Expected a dictionary")
-
+		elif not val:
+			continue
 		stored_dates = PersistentMapping()
 		for k in SUPPORTED_DATE_KEYS:
 			if k in val:
