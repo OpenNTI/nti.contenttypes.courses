@@ -165,6 +165,10 @@
 				for=".interfaces.ICourseInstance
 					 zope.lifecycleevent.IObjectRemovedEvent" />
 
+	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
+				for=".interfaces.ICourseInstance
+					 .interfaces.ICourseInstanceImportedEvent" />
+
 	<!-- By default, courses store their own catalog entries -->
 	<adapter factory=".legacy_catalog.CourseInstanceCatalogLegacyEntryFactory" />
 	<adapter factory=".legacy_catalog.CourseSubInstanceCatalogLegacyEntryFactory" />
