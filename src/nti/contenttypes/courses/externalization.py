@@ -115,11 +115,11 @@ class _CourseOutlineNodeExporter(object):
 			
 		# don't leak internal OIDs
 		for name in (NTIID, NTIID.lower(), OID, LESSON_OVERVIEW_NTIID, CONTENT_NTIID):
-			value = ext_obj.get(name)
+			value = result.get(name)
 			if 		value \
 				and	is_valid_ntiid_string(value) \
 				and is_ntiid_of_type(value, TYPE_OID):
-				ext_obj.pop(name, None)
+				result.pop(name, None)
 		return result
 
 @component.adapter(ICourseCatalogEntry)
