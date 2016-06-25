@@ -36,6 +36,10 @@ from nti.externalization.interfaces import IInternalObjectExternalizer
 
 from nti.mimetype import decorateMimeType
 
+from nti.ntiids.ntiids import TYPE_OID
+from nti.ntiids.ntiids import is_ntiid_of_type
+from nti.ntiids.ntiids import is_valid_ntiid_string
+
 from nti.traversal.traversal import find_interface
 
 OID = StandardExternalFields.OID
@@ -45,6 +49,9 @@ NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
 CREATED_TIME = StandardExternalFields.CREATED_TIME
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
+
+CONTENT_NTIID = u'ContentNTIID'
+LESSON_OVERVIEW_NTIID = u'LessonOverviewNTIID'
 
 @component.adapter(ICourseInstanceEnrollmentRecord)
 @interface.implementer(IInternalObjectExternalizer)
@@ -78,29 +85,41 @@ class _CourseOutlineNodeExporter(object):
 		mod_args = dict(**kwargs)
 		mod_args['name'] = ''  # set default
 		mod_args['decorate'] = False  # no decoration
+
 		# use regular export
 		result = to_external_object(self.node, **mod_args)
 		if MIMETYPE not in result:
 			decorateMimeType(self.node, result)
-		if not getattr(self.node, 'LessonOverviewNTIID', None):
-			result.pop('LessonOverviewNTIID', None)
+		if not getattr(self.node, LESSON_OVERVIEW_NTIID, None):
+			result.pop(LESSON_OVERVIEW_NTIID, None)
+
 		# make sure we provide an ntiid field
 		if 'ntiid' not in result and getattr(self.node, 'ntiid', None):
 			result['ntiid'] = self.node.ntiid
+
 		# point to a valid .json source file
 		name = result.get('src')
 		if name:
 			name = safe_filename(name)
 			name = name + '.json' if not name.endswith('.json') else name
 			result['src'] = name
-		items = []
+
 		# set again to exporter and export children
+		items = []
 		mod_args['name'] = 'exporter'
 		for node in self.node.values():
 			ext_obj = to_external_object(node, **mod_args)
 			items.append(ext_obj)
 		if items:
 			result[ITEMS] = items
+			
+		# don't leak internal OIDs
+		for name in (NTIID, NTIID.lower(), OID, LESSON_OVERVIEW_NTIID, CONTENT_NTIID):
+			value = ext_obj.get(name)
+			if 		value \
+				and	is_valid_ntiid_string(value) \
+				and is_ntiid_of_type(value, TYPE_OID):
+				ext_obj.pop(name, None)
 		return result
 
 @component.adapter(ICourseCatalogEntry)
