@@ -168,17 +168,17 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 	if 'credit' in info_json_dict:
 		catalog_entry.Credit = \
 			 [	CourseCreditLegacyInfo(Hours=d['hours'], Enrollment=d['enrollment'])
-				for d in info_json_dict.get('credit', []) ]
+				for d in info_json_dict.get('credit') or () ]
 	else:
 		_quiet_delattr(catalog_entry, 'Credit')
 
 	if 'schedule' in info_json_dict:
-		catalog_entry.Schedule = info_json_dict.get('schedule', {})
+		catalog_entry.Schedule = info_json_dict.get('schedule') or {}
 	else:
 		_quiet_delattr(catalog_entry, 'Schedule')
 
 	if 'prerequisites' in info_json_dict:
-		catalog_entry.Prerequisites = info_json_dict.get('prerequisites', [])
+		catalog_entry.Prerequisites = info_json_dict.get('prerequisites') or []
 	else:
 		_quiet_delattr(catalog_entry, 'Prerequisites')
 		
