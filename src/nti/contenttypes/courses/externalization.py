@@ -118,6 +118,12 @@ class _CourseOutlineNodeExporter(object):
 			result.pop('publishBeginning', None)
 			result.pop('publishEnding', None)
 		
+		# if content points to lesson pop both
+		if 		result.get(CONTENT_NTIID) \
+			and result.get(LESSON_OVERVIEW_NTIID) == result.get(CONTENT_NTIID):
+			result.pop(CONTENT_NTIID, None)
+			result.pop(LESSON_OVERVIEW_NTIID, None)
+
 		# don't leak internal OIDs
 		for name in (NTIID, NTIID.lower(), OID, LESSON_OVERVIEW_NTIID, CONTENT_NTIID):
 			value = result.get(name)
@@ -125,6 +131,7 @@ class _CourseOutlineNodeExporter(object):
 				and	is_valid_ntiid_string(value) \
 				and is_ntiid_of_type(value, TYPE_OID):
 				result.pop(name, None)
+
 		return result
 
 @component.adapter(ICourseCatalogEntry)
