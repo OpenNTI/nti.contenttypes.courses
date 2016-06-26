@@ -64,8 +64,10 @@ from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
 from nti.contenttypes.courses import MessageFactory as _
 
+from nti.coremetadata.interfaces import INoPublishLink
+from nti.coremetadata.interfaces import ICalendarPublishable
 from nti.coremetadata.interfaces import IRecordableContainer
-
+	
 from nti.dataserver.interfaces import ICommunity
 from nti.dataserver.interfaces import ILastModified
 from nti.dataserver.interfaces import ITitledDescribedContent
@@ -223,6 +225,7 @@ class ICourseOutlineNode(IRecordableContainer,
 						 ITitledDescribedContent,
 						 IOrderedContainer,
 						 IContainerNamesContainer,
+						 ICalendarPublishable,
 						 _ICourseOutlineNodeContainer):
 	"""
 	A part of the course outline. Children are the sub-nodes of this
@@ -301,7 +304,8 @@ _tag_iface_fields(ICourseOutlineContentNode, 'title', 'description', 'AvailableE
 				  'AvailableBeginning' )
 
 class ICourseOutline(ICourseOutlineNode,
-					 ILastModified):
+					 ILastModified,
+					 INoPublishLink):
 	"""
 	The schedule or syllabus of the course, defined
 	in a recursive tree-like structure.

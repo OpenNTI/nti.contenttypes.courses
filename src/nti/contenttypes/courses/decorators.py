@@ -12,6 +12,7 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 
 from nti.externalization.interfaces import IExternalObjectDecorator
@@ -29,3 +30,13 @@ class _CourseOutlineNodeDecorator(object):
 			external.pop('LessonOverviewNTIID', None)
 		if 'ntiid' not in external and getattr(original, 'ntiid', None):
 			external['ntiid'] = original.ntiid
+
+@component.adapter(ICourseOutline)
+@interface.implementer(IExternalObjectDecorator)
+class _CourseOutlineDecorator(object):
+
+	__metaclass__ = SingletonDecorator
+
+	def decorateExternalObject(self, original, external):
+		external.pop('publishBeginning', None)
+		external.pop('publishEnding', None)
