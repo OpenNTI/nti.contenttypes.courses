@@ -176,11 +176,14 @@ class CourseOutlineImporter(BaseSectionImporter):
 			if not ICourseOutline.providedBy(node):
 				if not getattr(node, "ntiid", None):
 					node.ntiid = self.make_ntiid()
+
 				registerUtility(registry,
 								node,
 							  	name=node.ntiid,
 							  	provided=iface_of_node(node))
-				node.publish(event=False)
+				
+				if not node.publishBeginning: # only if no date
+					node.publish(event=False)
 
 			for child in node.values():
 				_recur(child)
