@@ -18,6 +18,7 @@ from zope.security.interfaces import IPrincipal
 
 from nti.common.file import safe_filename
 
+from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -113,6 +114,10 @@ class _CourseOutlineNodeExporter(object):
 		if items:
 			result[ITEMS] = items
 			
+		if ICourseOutline.providedBy(self.node):
+			result.pop('publishBeginning', None)
+			result.pop('publishEnding', None)
+		
 		# don't leak internal OIDs
 		for name in (NTIID, NTIID.lower(), OID, LESSON_OVERVIEW_NTIID, CONTENT_NTIID):
 			value = result.get(name)
