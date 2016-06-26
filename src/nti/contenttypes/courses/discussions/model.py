@@ -52,8 +52,6 @@ class CourseDiscussion(SchemaConfigured,
 
 	creator = SYSTEM_USER_ID
 
-	_SET_CREATED_MODTIME_ON_INIT = False
-
 	def __init__(self, *args, **kwargs):
 		SchemaConfigured.__init__(self, *args, **kwargs)
 		PersistentCreatedModDateTrackingObject.__init__(self, *args, **kwargs)
