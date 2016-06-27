@@ -455,6 +455,10 @@ def fill_outline_from_key(outline, key, xml_parent_name=None, force=False,
 	if not force and key.lastModified <= outline.lastModified:
 		return False
 
+	entry = _get_catalog_entry(outline)
+	entry_ntiid = getattr( entry, 'ntiid', '' )
+	logger.info( 'Updating course outline for %s', entry_ntiid )
+
 	__traceback_info__ = key, outline
 	node = key.readContentsAsETree()
 	if xml_parent_name:
