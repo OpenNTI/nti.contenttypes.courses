@@ -33,7 +33,8 @@ from nti.contentlibrary.bundle import sync_bundle_from_json_key
 
 from nti.contentlibrary.dublincore import DCMETA_FILENAME
 
-from nti.contentlibrary.filesystem import FilesystemKey, FilesystemBucket
+from nti.contentlibrary.filesystem import FilesystemKey
+from nti.contentlibrary.filesystem import FilesystemBucket 
 
 from nti.contentlibrary.interfaces import IFilesystemBucket
 
@@ -330,13 +331,16 @@ class CourseInfoImporter(BaseSectionImporter):
 	def process(self, context, filer, writeout=True):
 		course = ICourseInstance(context)
 		course.SharingScopes.initScopes()
-
+		entry = ICourseCatalogEntry(course)
 		# make sure Discussions are initialized
 		getattr(course, 'Discussions')
 
 		root = course.root  # must exists
 		if not IFilesystemBucket.providedBy(root):
 			return
+		if not getattr(entry, 'root', None):
+			entry.root = root
+		
 		path = self.course_bucket_path(course) + CATALOG_INFO_NAME
 		source = self.safe_get(filer, path)
 		if source is None:
@@ -352,24 +356,29 @@ class CourseInfoImporter(BaseSectionImporter):
 			new_path = os.path.join(root.absolute_path, DCMETA_FILENAME)
 			transfer_to_native_file(dc_source, new_path)
 
-		tmp_file = None
+		tmp_dir = None
 		try:
 			key = root.getChildNamed(CATALOG_INFO_NAME)
 			if key is None:
-				# CS: We need to save and import the filer source in case
-				#  we are creating a course, in which case the catalog
-				# entry object has to be correctly updated
+				tmp_dir = tempfile.mkdtemp()
+				# save CATALOG_INFO_NAME
+				tmp_cat_info = os.path.join(tmp_dir, CATALOG_INFO_NAME)
+				transfer_to_native_file(source, tmp_cat_info)
 				key = FilesystemKey()
-				tmp_file = tempfile.mkstemp()[1]
-				key.absolute_path = tmp_file
-				transfer_to_native_file(source, tmp_file)
-
-			# process source
+				key.absolute_path = tmp_cat_info
+				# save DCMETA_FILENAME
+				if dc_source != None:
+					tmp_dc_meta = os.path.join(tmp_dir, DCMETA_FILENAME)
+					transfer_to_native_file(dc_source, tmp_dc_meta)
+					root = FilesystemBucket()
+					root.absolute_path = tmp_dir
+					root.key = os.path.split(tmp_dir)[1]
+			# process source(s)
 			entry = ICourseCatalogEntry(course)
 			update_entry_from_legacy_key(entry, key, root, force=True)
 		finally:
-			if tmp_file is not None:  # clean up
-				os.remove(tmp_file)
+			if tmp_dir is not None:  # clean up
+				shutil.rmtree(tmp_dir)
 
 		# process subinstances
 		for sub_instance in get_course_subinstances(course):
