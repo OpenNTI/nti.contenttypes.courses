@@ -57,6 +57,7 @@ def update_sharing_scopes_friendly_names(course):
 			modified_scope = True
 
 		def _imageURL(scope, image_iface, image_attr):
+			image_attr = str( image_attr )
 			result = False
 			scope_imageURL = getattr(scope, image_attr, None)
 			inputed_imageURL = sharing_scope_data.get(image_attr, None)
@@ -89,4 +90,3 @@ def update_sharing_scopes_friendly_names(course):
 			result.append(scope)
 			lifecycleevent.modified(scope)
 	return tuple(result)
-	

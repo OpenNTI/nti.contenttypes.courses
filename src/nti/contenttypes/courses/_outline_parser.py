@@ -215,13 +215,13 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 	for attr in 'title', 'label':
 		val = _attr_val(lesson, attr) or getattr(content_unit, attr, None)
 		if val:
-			setattr(lesson_node, 'title', val)
+			setattr(lesson_node, str('title'), val)
 			break
 
 	desc_val = _attr_val(lesson, 'description') \
 			or getattr(content_unit, 'description', None)
 	if desc_val:
-		setattr(lesson_node, 'description', desc_val)
+		setattr(lesson_node, str('description'), desc_val)
 
 	# Now, if our node is supposed to have the NTIID, expose it.
 	# Even if it doesn't (and won't be in the schema and won't be
