@@ -413,9 +413,11 @@ class BundleMetaInfoImporter(BaseSectionImporter):
 		# sync
 		tmp_dir = None
 		try:
+			update_bundle = True
 			bundle_json_key = root.getChildNamed(BUNDLE_META_NAME)
 			dc_meta_json_key = root.getChildNamed(BUNDLE_DC_METADATA)
 			if bundle_json_key is None:
+				update_bundle = False
 				# create a tmp directory root for bundle files
 				tmp_dir = tempfile.mkdtemp()
 				# XXX copy bundle files to new temp root
@@ -427,12 +429,14 @@ class BundleMetaInfoImporter(BaseSectionImporter):
 				# XXX new import root
 				root = FilesystemBucket()
 				root.absolute_path = tmp_dir
+				root.key = os.path.split(tmp_dir)[1]
 
 			sync_bundle_from_json_key(bundle_json_key,
 									  course.ContentPackageBundle,
 									  dc_meta_name=BUNDLE_DC_METADATA,
 									  excluded_keys=('ntiid',),
-									  dc_bucket=root)
+									  dc_bucket=root,
+									  update_bundle=update_bundle)
 		finally:
 			if tmp_dir is not None:  # clean up
 				shutil.rmtree(tmp_dir)
