@@ -213,7 +213,7 @@ class CourseOutlineImporter(BaseSectionImporter):
 				transfer_to_native_file(source, new_path)
 
 		for sub_instance in get_course_subinstances(course):
-			self.process(sub_instance, filer)
+			self.process(sub_instance, filer, writeout=writeout)
 
 @interface.implementer(ICourseSectionImporter)
 class VendorInfoImporter(BaseSectionImporter):
@@ -248,7 +248,7 @@ class VendorInfoImporter(BaseSectionImporter):
 
 		# process subinstances
 		for sub_instance in get_course_subinstances(course):
-			self.process(sub_instance, filer)
+			self.process(sub_instance, filer, writeout=writeout)
 
 @interface.implementer(ICourseSectionImporter)
 class RoleInfoImporter(BaseSectionImporter):
@@ -271,7 +271,7 @@ class RoleInfoImporter(BaseSectionImporter):
 				transfer_to_native_file(source, new_path)
 
 		for sub_instance in get_course_subinstances(course):
-			self.process(sub_instance, filer)
+			self.process(sub_instance, filer, writeout=writeout)
 
 @interface.implementer(ICourseSectionImporter)
 class AssignmentPoliciesImporter(BaseSectionImporter):
@@ -294,7 +294,7 @@ class AssignmentPoliciesImporter(BaseSectionImporter):
 				transfer_to_native_file(source, new_path)
 
 		for sub_instance in get_course_subinstances(course):
-			self.process(sub_instance, filer)
+			self.process(sub_instance, filer, writeout=writeout)
 
 @interface.implementer(ICourseSectionImporter)
 class BundlePresentationAssetsImporter(BaseSectionImporter):
@@ -323,7 +323,7 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
 			shutil.rmtree(root_path, True)  # not merging
 			self._transfer(filer, path, root_path)
 		for sub_instance in get_course_subinstances(course):
-			self.process(sub_instance, filer)
+			self.process(sub_instance, filer, writeout=writeout)
 
 @interface.implementer(ICourseSectionImporter)
 class CourseInfoImporter(BaseSectionImporter):
@@ -382,7 +382,7 @@ class CourseInfoImporter(BaseSectionImporter):
 
 		# process subinstances
 		for sub_instance in get_course_subinstances(course):
-			self.process(sub_instance, filer)
+			self.process(sub_instance, filer, writeout=writeout)
 
 @interface.implementer(ICourseSectionImporter)
 class BundleMetaInfoImporter(BaseSectionImporter):
