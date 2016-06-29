@@ -225,9 +225,9 @@ class _CourseInstanceSharingScopeExporter(object):
 
 	def toExternalObject(self, **kwargs):
 		result = LocatedExternalDict()
-		cls = getattr(self.entity, '__external_class_name__', None)
-		if cls:
-			result[StandardExternalFields.CLASS] = cls
+		clazz = getattr(self.entity, '__external_class_name__', None)
+		if clazz:
+			result[StandardExternalFields.CLASS] = clazz
 		else:
 			result[StandardExternalFields.CLASS] = self.entity.__class__.__name__
 		decorateMimeType(self.entity, result)
