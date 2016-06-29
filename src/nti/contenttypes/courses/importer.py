@@ -464,4 +464,6 @@ class CourseImporter(object):
 		notify(CourseInstanceImportedEvent(course))
 		for subinstance in get_course_subinstances(course):
 			notify(CourseInstanceImportedEvent(subinstance))
-		logger.info("Course %s imported in %s(s)", entry.ntiid, time.time() - now)
+		result = time.time() - now
+		logger.info("Course %s imported in %s(s)", entry.ntiid, result)
+		return result
