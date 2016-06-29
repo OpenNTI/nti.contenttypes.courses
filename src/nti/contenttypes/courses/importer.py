@@ -417,7 +417,6 @@ class BundleMetaInfoImporter(BaseSectionImporter):
 			bundle_json_key = root.getChildNamed(BUNDLE_META_NAME)
 			dc_meta_json_key = root.getChildNamed(BUNDLE_DC_METADATA)
 			if bundle_json_key is None:
-				update_bundle = False
 				# create a tmp directory root for bundle files
 				tmp_dir = tempfile.mkdtemp()
 				# XXX copy bundle files to new temp root
@@ -426,7 +425,8 @@ class BundleMetaInfoImporter(BaseSectionImporter):
 					self._to_fs_key(dc_source, tmp_dir, BUNDLE_DC_METADATA)
 				else:
 					self._to_fs_key(dc_meta_json_key, tmp_dir, BUNDLE_DC_METADATA)
-				# XXX new import root
+				# XXX new import root temp
+				update_bundle = False
 				root = FilesystemBucket()
 				root.absolute_path = tmp_dir
 				root.key = os.path.split(tmp_dir)[1]
