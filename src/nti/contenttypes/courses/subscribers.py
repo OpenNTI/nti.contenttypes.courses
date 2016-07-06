@@ -207,7 +207,10 @@ def roles_sync_on_course_instance(course, event):
 	intids = component.queryUtility(IIntIds)
 	if catalog is not None and intids is not None:
 		unindex_course_roles(course, catalog)
-		index_course_roles(course, catalog=catalog, intids=intids)
+		indexed_count = index_course_roles(course, catalog=catalog, intids=intids)
+		entry = ICourseCatalogEntry( course, None )
+		entry_ntiid = entry.ntiid if entry is not None else ''
+		logger.info( 'Indexed %s roles for %s', indexed_count, entry_ntiid )
 
 @component.adapter(ICourseInstance, ICourseVendorInfoSynchronized)
 def on_course_vendor_info_synced(course, event):
