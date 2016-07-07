@@ -52,6 +52,14 @@ deprecated('SiteIndex', 'Replaced with SingleSiteIndex')
 class SiteIndex(RawSetIndex):
 	pass
 
+deprecated('ScopeIndex', 'Replaced with ScopeSetIndex')
+class ScopeIndex(ValueIndex):
+	pass
+
+deprecated('ValidatingScope', 'Use new implementation')
+class ValidatingScope(object):
+	pass
+
 # Utilities
 
 class KeepSetIndex(RawSetIndex):
@@ -120,22 +128,16 @@ class UsernameIndex(KeepSetIndex):
 			result = ()
 		return result
 
-class ValidatingScope(object):
+class ScopeSetIndex(KeepSetIndex):
 
-	__slots__ = (b'scope',)
-
-	def __init__(self, obj, default=None):
-		if isinstance(obj, IndexRecord):
-			self.scope = to_unicode(obj.Scope)
-		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
-			self.scope = obj.Scope
-
-	def __reduce__(self):
-		raise TypeError()
-
-class ScopeIndex(ValueIndex):
-	default_field_name = 'scope'
-	default_interface = ValidatingScope
+	def to_iterable(self, value):
+		if isinstance(value, IndexRecord):
+			result = (to_unicode(value.Scope),)
+		elif ICourseInstanceEnrollmentRecord.providedBy(value):
+			result = (to_unicode(value.Scope),)
+		else:
+			result = ()
+		return result
 
 class ValidatingCatalogEntryID(object):
 
@@ -172,7 +174,7 @@ def install_enrollment_catalog(site_manager_container, intids=None):
 	intids.register(catalog)
 	lsm.registerUtility(catalog, provided=ICatalog, name=ENROLLMENT_CATALOG_NAME)
 
-	for name, clazz in ((IX_SCOPE, ScopeIndex),
+	for name, clazz in ((IX_SCOPE, ScopeSetIndex),
 						(IX_SITE, SingleSiteIndex),
 						(IX_USERNAME, UsernameIndex),
 						(IX_ENTRY, CatalogEntryIDIndex)):
