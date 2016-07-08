@@ -104,9 +104,13 @@ class ValidatingSiteName(object):
 	__slots__ = (b'site',)
 
 	def __init__(self, obj, default=None):
+		# For value indexes, we do not want our course to be unindexed
+		# (on modification events, e.g. assessment policies modified) because
+		# this validator returns None.
 		if isinstance(obj, IndexRecord):
 			self.site = unicode(getSite().__name__)
-		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
+		elif 	ICourseInstanceEnrollmentRecord.providedBy(obj) \
+			or  ICourseInstance.providedBy( obj ):
 			course = ICourseInstance(obj, None)
 			self.site = get_course_site(course) or getSite().__name__
 
@@ -144,10 +148,13 @@ class ValidatingCatalogEntryID(object):
 	__slots__ = (b'ntiid',)
 
 	def __init__(self, obj, default=None):
+		# See site index notes.
 		if isinstance(obj, IndexRecord):
 			self.ntiid = to_unicode(obj.ntiid)
-		elif ICourseInstanceEnrollmentRecord.providedBy(obj):
-			entry = ICourseCatalogEntry(obj.CourseInstance, None)
+		elif 	ICourseInstanceEnrollmentRecord.providedBy(obj) \
+			or  ICourseInstance.providedBy( obj ):
+			course = getattr( obj, 'CourseInstance', obj )
+			entry = ICourseCatalogEntry(course, None)
 			if entry is not None:
 				self.ntiid = unicode(entry.ntiid)
 

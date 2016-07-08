@@ -204,7 +204,7 @@
 
 	<!-- Administered Courses -->
 	<configure zcml:condition="not-have testmode">
-		<utility factory=".administered.IterableAdminCourses" />
+		<utility factory=".administered.IndexAdminCourses" />
 	</configure>
 	<configure zcml:condition="have testmode">
 		<utility factory=".administered.IterableAdminCourses" />
