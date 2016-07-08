@@ -17,18 +17,17 @@ from zope import component
 
 from zope.component.hooks import site as current_site
 
-from zope.intid import IIntIds
+from zope.intid.interfaces import IIntIds
 
-from ..interfaces import ICourseCatalog
-from ..interfaces import ICourseInstance
-from ..interfaces import ICourseEnrollments
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseEnrollments
+
+from nti.site.hostpolicy import get_all_host_sites
+
+from nti.metadata import metadata_queue
 
 def do_evolve(context, generation=generation):
-	try:
-		from nti.metadata import metadata_queue
-	except ImportError:
-		return
-
 	conn = context.connection
 	dataserver_folder = conn.root()['nti.dataserver']
 
@@ -36,8 +35,7 @@ def do_evolve(context, generation=generation):
 	intids = lsm.getUtility(IIntIds)
 
 	total = 0
-	sites = dataserver_folder['++etc++hostsites']
-	for site in sites.values():
+	for site in get_all_host_sites():
 		with current_site(site):
 			queue = metadata_queue()
 			if queue is None:
@@ -60,7 +58,7 @@ def do_evolve(context, generation=generation):
 						except TypeError:
 							pass
 
-	logger.info('contenttypes.courses evolution %s done; %s object(s) put in queue',
+	logger.info('Evolution %s done; %s object(s) put in queue',
 				generation, total)
 
 def evolve(context):
