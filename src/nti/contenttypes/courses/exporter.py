@@ -129,8 +129,8 @@ class CourseOutlineExporter(BaseSectionExporter):
 			elif not ICourseOutline.providedBy(node):
 				xml_node = xmldoc.createElement("unit")
 				xml_node.setAttribute("label", node.title)
-				if node.ContentNTIID:
-					xml_node.setAttribute("ntiid", node.ContentNTIID)
+				ntiid = make_ntiid(nttype="NTICourseUnit", base=node.ntiid)
+				xml_node.setAttribute("ntiid", ntiid)
 			else:
 				xml_node = None
 			if xml_node is not None:
