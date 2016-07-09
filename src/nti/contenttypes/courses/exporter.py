@@ -52,11 +52,13 @@ from nti.contenttypes.courses.interfaces import SECTIONS
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
 
+from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseExporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
+from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
 
 from nti.contenttypes.courses.interfaces import CourseInstanceExportedEvent
 
@@ -64,6 +66,8 @@ from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.externalization.externalization import to_external_object
+
+from nti.ntiids.ntiids import make_ntiid
 
 @interface.implementer(ICourseSectionExporter)
 class BaseSectionExporter(object):
@@ -84,13 +88,79 @@ class BaseSectionExporter(object):
 @interface.implementer(ICourseSectionExporter)
 class CourseOutlineExporter(BaseSectionExporter):
 
+	def asXML(self, outline, course=None):
+		DOMimpl = minidom.getDOMImplementation()
+		xmldoc = DOMimpl.createDocument(None, "course", None)
+		doc_root = xmldoc.documentElement
+
+		# process main course elemet
+		entry = ICourseCatalogEntry(course, None)
+		if entry is not None:
+			ntiid = make_ntiid(nttype="NTICourse", base=entry.ntiid)
+			doc_root.setAttribute("ntiid", ntiid)
+			doc_root.setAttribute("label", entry.title or u'')
+			doc_root.setAttribute("courseName", entry.ProviderUniqueID or u'')
+
+		packages = get_course_packages(course)
+		if packages:
+			doc_root.setAttribute("courseInfo", packages[0].ntiid)
+
+		node = xmldoc.createElement("info")
+		node.setAttribute("src", "course_info.json")
+		doc_root.appendChild(node)
+
+		# process units and lessons
+		def _recur(node, xml_parent, level=-1):
+			if ICourseOutlineCalendarNode.providedBy(node):
+				xml_node = xmldoc.createElement("lesson")
+				if node.src:
+					xml_node.setAttribute("src", node.src)
+					xml_node.setAttribute("isOutlineStubOnly", "false")
+				else:
+					xml_node.setAttribute("isOutlineStubOnly", "true")
+				if node.ContentNTIID != node.LessonOverviewNTIID:
+					xml_node.setAttribute("topic-ntiid", node.ContentNTIID)
+
+				if node.AvailableBeginning:
+					s = to_external_object(node.AvailableBeginning)
+					if node.AvailableEnding:
+						s = "%s,%s" % (s, to_external_object(node.AvailableEnding))
+					xml_node.setAttribute("data", s)
+			elif not ICourseOutline.providedBy(node):
+				xml_node = xmldoc.createElement("unit")
+				xml_node.setAttribute("ntiid", node.ntiid)
+				xml_node.setAttribute("label", node.title)
+			else:
+				xml_node = None
+			if xml_node is not None:
+				xml_node.setAttribute("levelnum", str(level))
+				xml_parent.appendChild(xml_node)
+			else:
+				xml_node = xml_parent
+
+			# process children
+			for child in node.values():
+				_recur(child, xml_node, level + 1)
+		_recur(outline, doc_root)
+
+		result = xmldoc.toprettyxml(encoding="UTF-8")
+		return result
+
 	def export(self, context, filer):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
+
+		# as json
 		ext_obj = to_external_object(course.Outline, name='exporter', decorate=False)
 		source = self.dump(ext_obj)
 		filer.save(COURSE_OUTLINE_NAME, source, contentType="application/json",
 				   bucket=bucket, overwrite=True)
+
+		# as xml
+		source = self.asXML(course.Outline, course)
+		filer.save("course_outline.xml", source, contentType="application/xml",
+					bucket=bucket, overwrite=True)
+
 		for sub_instance in get_course_subinstances(course):
 			if sub_instance.Outline is not course.Outline:
 				self.export(sub_instance, filer)
