@@ -42,13 +42,13 @@ class DefaultAssessmentPolicyValidator(object):
 			try:
 				assert int(total_points) >= 0
 			except (AssertionError, TypeError, ValueError):
-				msg = "Invalid total points in policy for %s" % ntiid
+				msg = "Invalid total points in policy for %s (%s)" % (ntiid, total_points)
 				raise ValueError(msg)
 
 		disable = auto_grade.get('disable')
 		if disable is not None:
 			if not (is_true(disable) or is_false(disable)):
-				msg = "Invalid disable flag in policy for %s" % ntiid
+				msg = "Invalid disable flag in policy for %s (%s)" % (ntiid, disable)
 				raise ValueError(msg)
 			elif is_true(disable):
 				auto_grade['disable'] = True
