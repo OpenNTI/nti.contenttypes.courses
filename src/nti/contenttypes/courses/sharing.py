@@ -84,8 +84,9 @@ class CourseInstanceSharingScope(Community):
 
 	# does the UI need this? (Yes, at least the ipad does)
 	__external_class_name__ = 'Community'
-	mime_type = mimeType = 'application/vnd.nextthought.community'
 	__external_can_create__ = False
+		
+	mime_type = mimeType = 'application/vnd.nextthought.community'
 
 	# Override things related to ntiids.
 	# These don't have global names, so they must be referenced
