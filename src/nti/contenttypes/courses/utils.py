@@ -373,7 +373,7 @@ def get_course_editors(context, setting=Allow):
 				else:
 					if principal is not None:
 						result.append(principal)
-	return tuple(result)
+	return result
 
 def get_course_instructors(context, setting=Allow):
 	"""

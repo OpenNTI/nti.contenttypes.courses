@@ -49,10 +49,9 @@ class CourseDiscussionACLProvider(object):
 				 ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self))]
 
 		course = ICourseInstance(self.context, None)
-		if course is not None:
-			for i in get_course_editors(course):
-				aces.append(ace_allowing(i, ALL_PERMISSIONS, type(self)))
-				aces.append(ace_allowing(i, ACT_CONTENT_EDIT, type(self)))
+		for i in get_course_editors(course):
+			aces.append(ace_allowing(i, ALL_PERMISSIONS, type(self)))
+			aces.append(ace_allowing(i, ACT_CONTENT_EDIT, type(self)))
 
 		result = acl_from_aces(aces)
 		return result
