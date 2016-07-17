@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 18
+generation = 20
 
 from zope import component
 from zope import interface
@@ -20,9 +20,9 @@ from zope.intid.interfaces import IIntIds
 
 from zope.location import locate
 
+from nti.contenttypes.courses.index import IX_NAME
 from nti.contenttypes.courses.index import IX_ENTRY
-from nti.contenttypes.courses.index import IX_KEYWORDS
-from nti.contenttypes.courses.index import CourseKeywordsIndex
+from nti.contenttypes.courses.index import CourseNameIndex
 from nti.contenttypes.courses.index import install_courses_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -58,22 +58,22 @@ def do_evolve(context, generation=generation):
 		lsm = ds_folder.getSiteManager()
 		intids = lsm.getUtility(IIntIds)
 		catalog = install_courses_catalog(ds_folder, intids)
-		if IX_KEYWORDS not in catalog:
-			kw_index = CourseKeywordsIndex(family=intids.family)
-			intids.register(kw_index)
-			locate(kw_index, catalog, IX_KEYWORDS)
-			catalog[IX_KEYWORDS] = kw_index
+		if IX_NAME not in catalog:
+			name_index = CourseNameIndex(family=intids.family)
+			intids.register(name_index)
+			locate(name_index, catalog, IX_NAME)
+			catalog[IX_NAME] = name_index
 			# index keywords
 			for doc_id in catalog[IX_ENTRY].ids():
 				value = intids.queryObject(doc_id)
 				if ICourseInstance.providedBy(value):
-					kw_index.index_doc(doc_id, value)
+					name_index.index_doc(doc_id, value)
 
 	component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
 	logger.info('Evolution %s done.', generation)
 
 def evolve(context):
 	"""
-	Evolve to generation 18 by installing the course keyword index
+	Evolve to generation 20 by installing the course name index
 	"""
 	do_evolve(context, generation)

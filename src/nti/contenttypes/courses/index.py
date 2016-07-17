@@ -193,6 +193,7 @@ def install_enrollment_catalog(site_manager_container, intids=None):
 
 # Courses catalog
 
+IX_NAME = 'name'
 IX_PACKAGES = 'packages'
 IX_KEYWORDS = 'keywords'
 COURSES_CATALOG_NAME = 'nti.dataserver.++etc++courses-catalog'
@@ -211,6 +212,21 @@ class ValidatingCourseSiteName(object):
 class CourseSiteIndex(ValueIndex):
 	default_field_name = 'site'
 	default_interface = ValidatingCourseSiteName
+
+class ValidatingCourseName(object):
+
+	__slots__ = (b'name',)
+
+	def __init__(self, obj, default=None):
+		if ICourseInstance.providedBy(obj):
+			self.name = obj.__name__
+
+	def __reduce__(self):
+		raise TypeError()
+
+class CourseNameIndex(ValueIndex):
+	default_field_name = 'name'
+	default_interface = ValidatingCourseName
 
 class ValidatingCourseCatalogEntry(object):
 
@@ -265,7 +281,8 @@ def install_courses_catalog(site_manager_container, intids=None):
 	intids.register(catalog)
 	lsm.registerUtility(catalog, provided=ICatalog, name=COURSES_CATALOG_NAME)
 
-	for name, clazz in ((IX_SITE, CourseSiteIndex),
+	for name, clazz in ((IX_NAME, CourseNameIndex),
+						(IX_SITE, CourseSiteIndex),
 						(IX_PACKAGES, CoursePackagesIndex),
 						(IX_KEYWORDS, CourseKeywordsIndex),
 						(IX_ENTRY, CourseCatalogEntryIndex)):
