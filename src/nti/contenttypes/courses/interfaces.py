@@ -1260,6 +1260,9 @@ class ICourseSelfAssessmentItemCatalog(ICourseAssessmentItemCatalog):
 	from the :class:`.ICourseInstance`.
 	"""
 
+	def iter_assessment_items(exclude_editable=True):
+		pass
+	
 class ICourseAssignmentCatalog(interface.Interface):
 	"""
 	Provides access to the assignments related to a course.
