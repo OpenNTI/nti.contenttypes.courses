@@ -65,24 +65,28 @@ from zope.copypastemove import IObjectMover
 
 from zope.security.interfaces import IPrincipal
 
+from persistent import Persistent
+
 from nti.contenttypes.courses import courses
 from nti.contenttypes.courses.interfaces import ES_PUBLIC, ES_PURCHASED
 from nti.contenttypes.courses.interfaces import ES_CREDIT, ES_CREDIT_NONDEGREE, ES_CREDIT_DEGREE
 
-from nti.dataserver.users import User
-from nti.dataserver.interfaces import IUser
-from nti.dataserver.sharing import SharingSourceMixin
 from nti.dataserver import interfaces as nti_interfaces
+
 from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
 from nti.dataserver.authorization import role_for_providers_content
+
+from nti.dataserver.interfaces import IUser
+
+from nti.dataserver.sharing import SharingSourceMixin
+
+from nti.dataserver.users import User
 
 from nti.ntiids import ntiids
 
 from nti.schema.eqhash import EqHash
 
 from nti.wref.interfaces import IWeakRef
-
-from persistent import Persistent
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 
