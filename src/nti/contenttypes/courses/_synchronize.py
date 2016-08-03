@@ -24,8 +24,6 @@ from zope.event import notify
 
 from zope.site.interfaces import ILocalSiteManager
 
-from nti.common.representation import WithRepr
-
 from nti.common.string import to_unicode
 
 from nti.contentlibrary import ContentRemovalException
@@ -92,6 +90,8 @@ from nti.contenttypes.courses.interfaces import CourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
 
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
+
+from nti.externalization.representation import WithRepr
 
 from nti.schema.eqhash import EqHash
 
