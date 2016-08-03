@@ -33,10 +33,11 @@ from nti.coremetadata.interfaces import SYSTEM_USER_ID
 
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
 
-from nti.schema.field import SchemaConfigured
-from nti.schema.fieldproperty import createDirectFieldProperties
+from nti.schema.eqhash import EqHash
 
-from nti.schema.schema import EqHash
+from nti.schema.field import SchemaConfigured
+
+from nti.schema.fieldproperty import createDirectFieldProperties
 
 @EqHash('id')
 @total_ordering

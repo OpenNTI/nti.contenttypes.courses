@@ -51,9 +51,10 @@ from nti.externalization.representation import WithRepr
 
 from nti.links.links import Link
 
+from nti.schema.eqhash import EqHash
+
 from nti.schema.fieldproperty import createDirectFieldProperties
 
-from nti.schema.schema import EqHash
 from nti.schema.schema import PermissiveSchemaConfigured as SchemaConfigured
 
 from nti.site.localutility import queryNextUtility

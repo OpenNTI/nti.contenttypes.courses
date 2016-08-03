@@ -78,7 +78,7 @@ from nti.dataserver.authorization import role_for_providers_content
 
 from nti.ntiids import ntiids
 
-from nti.schema.schema import EqHash
+from nti.schema.eqhash import EqHash
 
 from nti.wref.interfaces import IWeakRef
 

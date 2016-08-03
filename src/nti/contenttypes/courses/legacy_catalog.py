@@ -35,6 +35,7 @@ from nti.schema.field import Bool
 from nti.schema.field import Object
 from nti.schema.field import ValidURI
 from nti.schema.field import ValidTextLine
+
 from nti.schema.fieldproperty import createDirectFieldProperties
 
 from nti.schema.schema import SchemaConfigured
@@ -221,7 +222,7 @@ from zope.annotation.factory import factory as an_factory
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
-from nti.schema.schema import EqHash
+from nti.schema.eqhash import EqHash
 
 from nti.traversal.traversal import find_interface
 
