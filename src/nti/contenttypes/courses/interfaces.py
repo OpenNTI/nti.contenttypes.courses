@@ -67,7 +67,7 @@ from nti.contenttypes.courses import MessageFactory as _
 from nti.coremetadata.interfaces import INoPublishLink
 from nti.coremetadata.interfaces import ICalendarPublishable
 from nti.coremetadata.interfaces import IRecordableContainer
-	
+
 from nti.dataserver.interfaces import ICommunity
 from nti.dataserver.interfaces import ILastModified
 from nti.dataserver.interfaces import ITitledDescribedContent
@@ -793,10 +793,10 @@ IN_CLASS = 'In-Class'
 #: Vendor key prefix Credit Enrollment
 IN_CLASS_PREFIX = 'InClass'
 
-#: Scope 
+#: Scope
 SCOPE = 'Scope'
 
-#: Scope Description 
+#: Scope Description
 DESCRIPTION = 'Description'
 
 #: Now we list the scopes and create a vocabulary
@@ -1262,7 +1262,7 @@ class ICourseSelfAssessmentItemCatalog(ICourseAssessmentItemCatalog):
 
 	def iter_assessment_items(exclude_editable=True):
 		pass
-	
+
 class ICourseAssignmentCatalog(interface.Interface):
 	"""
 	Provides access to the assignments related to a course.
@@ -1271,12 +1271,15 @@ class ICourseAssignmentCatalog(interface.Interface):
 	from the :class:`.ICourseInstance`.
 	"""
 
-	def iter_assignments():
+	def iter_assignments( course_lineage=False ):
 		"""
 		Return the assignments.
 
 		Recall that assignments typically will have their 'home'
 		content unit in their lineage.
+
+		if `course_lineage`, we also include the assignments defined
+		in the parent course (if available).
 		"""
 
 class ICourseAssessmentUserFilter(interface.Interface):
@@ -1384,7 +1387,7 @@ class CourseInvitationException(ValidationError):
 class CourseCatalogUnavailableException(CourseInvitationException):
 	__doc__ = _("Course catalog not available.")
 	i18n_message = __doc__
-	
+
 class CourseNotFoundException(CourseInvitationException):
 	__doc__ = _("Course not found.")
 	i18n_message = __doc__
@@ -1444,7 +1447,7 @@ class ICourseImporter(interface.Interface):
 	def process(course, filer, writeout=True):
 		"""
 		Import the specified course
-		
+
 		:param course Course to import
 		:param filer: External source filer
 		:param writeout: Boolean to save source files to disk
@@ -1455,7 +1458,7 @@ class ICourseSectionImporter(interface.Interface):
 	def process(course, filer, writeout=True):
 		"""
 		Import the specified course
-		
+
 		:param course Course to import
 		:param filer: External source filer
 		:param writeout: Boolean to save source files to disk
