@@ -181,31 +181,34 @@ class _GenericFolderSynchronizer(object):
 					logger.info("Removing child %s (%r)", folder_child_name, child_folder)
 					del folder[folder_child_name]
 
-		# Create anything the folder is missing if we
-		# have a factory for it
+		# Create anything the folder is missing if we have a factory for it
 		for bucket_child_name in child_buckets:
 			__traceback_info__ = folder, bucket, bucket_child_name
 			child_bucket = child_buckets[bucket_child_name]
 			factory = self._get_factory_for(child_bucket)
-			if bucket_child_name not in folder:
-				# NOTE: We don't handle the case of a bucket
-				# changing the type it should be
-				if not factory:
-					continue
+			folder_obj = folder.get( bucket_child_name, None )
+
+			if 		folder_obj is not None \
+				and factory is not None \
+				and not isinstance( folder_obj, factory ) \
+				and isinstance( folder_obj, self._ADMIN_LEVEL_FACTORY ):
+				# Probably converting from administrative level to course, because
+				# (in error), this object was probably accidentally set up as admin level
+				# and it was intended to be a course. We will only allow conversion from
+				# admin levels to courses.
+				logger.warn( 'Type of course folder structure changed (name=%s) (old=%s) (new=%s), will convert',
+							 bucket_child_name,
+							 type( folder_obj ),
+							 factory )
+				folder_obj = None
+				del folder[bucket_child_name]
+
+			if folder_obj is None and factory is not None:
 				new_child_object = factory()
 				new_child_object.root = child_bucket
 				# Fire the added event
 				__traceback_info__ = folder, child_bucket, new_child_object
 				folder[bucket_child_name] = new_child_object
-			else:
-				folder_obj = folder.get( bucket_child_name )
-				if factory and not isinstance( folder_obj, factory ):
-					# Should we automatically delete here and rebuild?
-					# Maybe if going from admin to something else and allow_removal?
-					logger.warn( 'Type of course folder structure changed (old=%s) (new=%s) (name=%s)',
-								 bucket_child_name,
-								 type( folder_obj ),
-								 factory )
 
 		# Synchronize everything
 		for child_name, child in folder.items():
