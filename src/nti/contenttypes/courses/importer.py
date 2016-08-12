@@ -207,10 +207,13 @@ class CourseOutlineImporter(BaseSectionImporter):
 
 			# save source
 			if writeout and IFilesystemBucket.providedBy(course.root):
-				source = self.safe_get(filer, path)  # reload
-				self.makedirs(course.root.absolute_path)
-				new_path = os.path.join(course.root.absolute_path, COURSE_OUTLINE_NAME)
-				transfer_to_native_file(source, new_path)
+				for name in (COURSE_OUTLINE_NAME, 'course_outline.xml'):
+					path = self.course_bucket_path(course) + name
+					source = self.safe_get(filer, path)  # reload
+					if source is not None:
+						self.makedirs(course.root.absolute_path)
+						new_path = os.path.join(course.root.absolute_path, name)
+						transfer_to_native_file(source, new_path)
 
 		for sub_instance in get_course_subinstances(course):
 			self.process(sub_instance, filer, writeout=writeout)
