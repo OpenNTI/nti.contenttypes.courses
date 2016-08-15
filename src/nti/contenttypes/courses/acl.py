@@ -35,6 +35,7 @@ from nti.dataserver.authorization import ACT_CREATE
 from nti.dataserver.authorization import ROLE_ADMIN
 from nti.dataserver.authorization import ACT_UPDATE
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
+from nti.dataserver.authorization import ACT_SYNC_LIBRARY
 from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
 
 from nti.dataserver.authorization_acl import ace_denying
@@ -77,7 +78,10 @@ class CourseInstanceACLProvider(object):
 		sharing_scopes = course.SharingScopes
 		sharing_scopes.initScopes()
 
-		aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self))]
+		aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
+				ace_allowing(ROLE_CONTENT_ADMIN, ACT_READ, type(self)),
+				ace_allowing(ROLE_CONTENT_ADMIN, ACT_CONTENT_EDIT, type(self)),
+				ace_allowing(ROLE_CONTENT_ADMIN, ACT_SYNC_LIBRARY, type(self))]
 
 		# Anyone still enrolled in course has access, whether the course
 		# is public or not.
