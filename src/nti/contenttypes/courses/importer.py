@@ -392,6 +392,7 @@ class BundleMetaInfoImporter(BaseSectionImporter):
 
 	def _to_fs_key(self, source, path, name):
 		result = FilesystemKey()
+		self.makedirs(path) # create
 		out_path = os.path.join(path, name)
 		result.absolute_path = out_path
 		transfer_to_native_file(source, out_path)
