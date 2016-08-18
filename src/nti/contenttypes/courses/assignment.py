@@ -130,6 +130,13 @@ class MappingAssessmentMixin(Contained, PersistentCreatedAndModifiedTimeObject):
 			data = self._mapping[ntiid] = PersistentMapping()
 		data[name] = value
 
+	def remove(self, assessment, name):
+		ntiid = self.get_ntiid(assessment)
+		data = self._mapping.get(ntiid)
+		if data is not None:
+			return data.pop(name, None)
+		return None
+		
 	def __contains__(self, key):
 		return key in self._mapping
 

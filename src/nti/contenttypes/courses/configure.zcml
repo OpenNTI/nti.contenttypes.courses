@@ -112,6 +112,7 @@
 	<subscriber handler=".subscribers.on_course_outline_node_moved" />
 
 	<subscriber handler=".subscribers.on_assessment_policy_modified" />
+	<subscriber handler=".subscribers.on_unlock_assessment_policies" />
 	<subscriber handler=".subscribers.on_assessment_date_context_modified" />
 
 	<!-- Roles and permissions -->

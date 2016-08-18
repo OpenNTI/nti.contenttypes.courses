@@ -25,6 +25,7 @@ from zope.interface.interfaces import IUnregistered
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
 
 from nti.assessment.interfaces import IQAssessmentPolicies
+from nti.assessment.interfaces import IUnlockQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentPoliciesModified
 from nti.assessment.interfaces import IQAssessmentDateContextModified
 
@@ -208,9 +209,9 @@ def roles_sync_on_course_instance(course, event):
 	if catalog is not None and intids is not None:
 		unindex_course_roles(course, catalog)
 		indexed_count = index_course_roles(course, catalog=catalog, intids=intids)
-		entry = ICourseCatalogEntry( course, None )
+		entry = ICourseCatalogEntry(course, None)
 		entry_ntiid = entry.ntiid if entry is not None else ''
-		logger.info( 'Indexed %s roles for %s', indexed_count, entry_ntiid )
+		logger.info('Indexed %s roles for %s', indexed_count, entry_ntiid)
 
 @component.adapter(ICourseInstance, ICourseVendorInfoSynchronized)
 def on_course_vendor_info_synced(course, event):
@@ -222,7 +223,7 @@ def on_course_vendor_info_synced(course, event):
 
 @component.adapter(IUser, IWillDeleteEntityEvent)
 def on_user_removed(user, event):
-	logger.info( 'Removing enrollment records for %s', user.username )
+	logger.info('Removing enrollment records for %s', user.username)
 	catalog = get_enrollment_catalog()
 	if catalog is not None:
 		# remove enrollment records
@@ -239,13 +240,13 @@ def on_user_removed(user, event):
 		}
 		for uid in catalog.apply(query) or ():
 			record = IndexRecord(user.username, None, None)
-			index.remove(uid, record) # KeepSet index
+			index.remove(uid, record)  # KeepSet index
 
 def unindex_enrollment_records(course):
 	catalog = get_enrollment_catalog()
 	entry = ICourseCatalogEntry(course, None)
 	ntiid = getattr(entry, 'ntiid', None)
-	logger.info( 'Removing enrollment records for %s', ntiid )
+	logger.info('Removing enrollment records for %s', ntiid)
 	if catalog is not None and ntiid:
 		site = getSite().__name__
 		query = {
@@ -263,7 +264,7 @@ def on_course_instance_removed(course, event):
 		clear_course_outline(course)
 
 def course_default_roles(course):
-	course_role_manager = ICourseRolePermissionManager( course )
+	course_role_manager = ICourseRolePermissionManager(course)
 	if course_role_manager is not None:
 		course_role_manager.initialize()
 
@@ -294,7 +295,7 @@ def on_course_outline_node_added(node, event):
 							provided=iface_of_node(node),
 						 	name=ntiid)
 
-def _lock_assessment_policy( event ):
+def _lock_assessment_policy(event):
 	context = event.object
 	course = ICourseInstance(context, None)
 	if course is not None and event.assesment:
@@ -303,8 +304,21 @@ def _lock_assessment_policy( event ):
 
 @component.adapter(IQAssessmentPoliciesModified)
 def on_assessment_policy_modified(event):
-	_lock_assessment_policy( event )
+	_lock_assessment_policy(event)
 
 @component.adapter(IQAssessmentDateContextModified)
 def on_assessment_date_context_modified(event):
-	_lock_assessment_policy( event )
+	_lock_assessment_policy(event)
+
+def _unlock_assessment_policy(assesment, courses=()):
+	courses = [courses] if ICourseInstance.providedBy(courses) else courses
+	for course in courses or ():
+		course = ICourseInstance(course, None)
+		if course is not None:
+			policies = IQAssessmentPolicies(course)
+			policies.remove(assesment, 'locked')
+
+@component.adapter(IUnlockQAssessmentPolicies)
+def on_unlock_assessment_policies(event):
+	if event.courses and event.assesment:
+		_unlock_assessment_policy(event.assesment, event.courses)
