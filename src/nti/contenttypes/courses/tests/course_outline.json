@@ -10,7 +10,7 @@
 			"Items": [
 				{
 					"AvailableBeginning": "2016-08-22T17:00:00Z",
-					"AvailableEnding": null,
+					"AvailableEnding": "2016-12-22T17:00:00Z",
 					"Class": "CourseOutlineContentNode",
 					"ContentNTIID": "tag:nextthought.com,2011-10:OU-HTML-OU_CS_5005_SU_2015_Computing_Structures.lec:course_introduction_b2a28",
 					"CreatedTime": 1470967167.020922,
@@ -21,8 +21,8 @@
 					"NTIID": "tag:nextthought.com,2011-10:NTI-NTICourseOutlineNode-Fall2016_CSDSA_5005.0.0",
 					"description": "",
 					"ntiid": "tag:nextthought.com,2011-10:NTI-NTICourseOutlineNode-Fall2016_CSDSA_5005.0.0",
-					"publishBeginning": null,
-					"publishEnding": null,
+					"publishBeginning": "2016-08-22T17:00:00Z",
+					"publishEnding": "2016-12-22T17:00:00Z",
 					"publishLastModified": 1471570111.97999,
 					"src": "tag_nextthought_com_2011-10_OU-HTML-OU_CS_5005_SU_2015_Computing_Structures_lec_course_introduction_b2a28.json",
 					"title": "Course Introduction"
