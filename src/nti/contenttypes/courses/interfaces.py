@@ -242,9 +242,10 @@ class ICourseOutlineNode(IRecordableContainer,
 	src = ValidTextLine(title="json file to populate the node overview",
 						required=False)
 
-	title = PlainTextLine( max_length=300, required=False,
-					title="The human-readable title of this object",
-					__name__='title')
+	title = PlainTextLine(max_length=300,
+						  required=False,
+						  title="The human-readable title of this object",
+						  __name__='title')
 
 	LessonOverviewNTIID = ValidNTIID(title="The NTIID of the lesson overview",
 									 required=False,
