@@ -245,8 +245,8 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 	if len(dates) == 1:
 		lesson_node.AvailableEnding = dates[0]
 	elif len(dates) == 2:
-		lesson_node.AvailableBeginning = dates[0]
-		lesson_node.AvailableEnding = dates[1]
+		lesson_node.AvailableBeginning = dates[0] if dates[0] else None
+		lesson_node.AvailableEnding = dates[1] if dates[1] else None
 	_publish(lesson_node)
 	return lesson_node
 
