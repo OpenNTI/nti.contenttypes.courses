@@ -320,5 +320,5 @@ def _unlock_assessment_policy(assesment, courses=()):
 
 @component.adapter(IUnlockQAssessmentPolicies)
 def on_unlock_assessment_policies(event):
-	if event.courses and event.assesment:
-		_unlock_assessment_policy(event.assesment, event.courses)
+	if event.courses and event.object:
+		_unlock_assessment_policy(event.object, event.courses)
