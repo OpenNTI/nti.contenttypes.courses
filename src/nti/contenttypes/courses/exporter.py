@@ -121,10 +121,13 @@ class CourseOutlineExporter(BaseSectionExporter):
 				if node.ContentNTIID != node.LessonOverviewNTIID:
 					xml_node.setAttribute("topic-ntiid", node.ContentNTIID)
 
-				if node.AvailableBeginning:
-					s = to_external_object(node.AvailableBeginning)
-					if node.AvailableEnding:
-						s = "%s,%s" % (s, to_external_object(node.AvailableEnding))
+				if node.AvailableBeginning or node.AvailableEnding:
+					dates = []
+					dates.append(to_external_object(node.AvailableBeginning) if node.AvailableBeginning else "")
+					dates.append(to_external_object(node.AvailableEnding) if node.AvailableEnding else "")
+					
+					s = ",".join(dates)
+
 					xml_node.setAttribute("date", s)
 			elif not ICourseOutline.providedBy(node):
 				xml_node = xmldoc.createElement("unit")
