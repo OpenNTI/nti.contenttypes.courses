@@ -206,7 +206,8 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 	content_units = library.pathToNTIID(topic_ntiid, skip_cache=True) if library else None
 	if not content_units:
 		# XXX: Might be common if lessons are stored under bundle.
-		logger.warn("Unable to find referenced course node %s", topic_ntiid)
+		if topic_ntiid:
+			logger.warn("Unable to find referenced course node %s", topic_ntiid)
 		content_unit = None
 	else:
 		content_unit = content_units[-1]
