@@ -240,6 +240,7 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 	# list of datetimes. If there is only one, that looks like
 	# the end date, not the beginning date.
 	dates = lesson.get('date', ())
+	__traceback_info__ = dates
 	if dates:
 		dates = dates.split(',')
 	if len(dates) == 1:
