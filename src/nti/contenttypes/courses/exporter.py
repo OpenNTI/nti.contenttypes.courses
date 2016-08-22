@@ -123,12 +123,10 @@ class CourseOutlineExporter(BaseSectionExporter):
 
 				if node.AvailableBeginning or node.AvailableEnding:
 					dates = []
-					dates.append(to_external_object(node.AvailableBeginning) if node.AvailableBeginning else "")
-					dates.append(to_external_object(node.AvailableEnding) if node.AvailableEnding else "")
-					
-					s = ",".join(dates)
-
-					xml_node.setAttribute("date", s)
+					for data in (node.AvailableBeginning, node.AvailableEnding):
+						dates.append(to_external_object(data) if data else u"")
+					value = ",".join(dates)
+					xml_node.setAttribute("date", value)
 			elif not ICourseOutline.providedBy(node):
 				xml_node = xmldoc.createElement("unit")
 				ntiid = make_ntiid(nttype="NTICourseUnit", base=node.ntiid)

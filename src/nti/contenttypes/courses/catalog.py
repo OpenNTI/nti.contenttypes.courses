@@ -20,11 +20,6 @@ from zope import interface
 
 from zope.cachedescriptors.method import cachedIn
 
-from nti.common.property import alias
-from nti.common.property import LazyOnClass
-from nti.common.property import readproperty
-from nti.common.property import CachedProperty
-
 from nti.containers.containers import CheckingLastModifiedBTreeFolder
 from nti.containers.containers import CheckingLastModifiedBTreeContainer
 
@@ -50,6 +45,11 @@ from nti.externalization.persistence import NoPickle
 from nti.externalization.representation import WithRepr
 
 from nti.links.links import Link
+
+from nti.property.property import alias
+from nti.property.property import LazyOnClass
+from nti.property.property import readproperty
+from nti.property.property import CachedProperty
 
 from nti.schema.eqhash import EqHash
 

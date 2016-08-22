@@ -50,8 +50,6 @@ from zope.site.interfaces import IFolder
 
 from nti.cabinet.interfaces import ISourceFiler
 
-from nti.common.property import alias
-
 from nti.contentfragments.schema import PlainTextLine
 
 from nti.contentlibrary.interfaces import IDisplayableContent
@@ -82,6 +80,8 @@ from nti.invitations.interfaces import IInvitation
 from nti.invitations.interfaces import IInvitationActor
 
 from nti.ntiids.schema import ValidNTIID
+
+from nti.property.property import alias
 
 from nti.schema.field import Bool
 from nti.schema.field import Dict

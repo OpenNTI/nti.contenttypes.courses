@@ -117,7 +117,9 @@ class _CourseOutlineNodeExporter(object):
 		if ICourseOutline.providedBy(self.node):
 			result.pop('publishBeginning', None)
 			result.pop('publishEnding', None)
-		
+		else:
+			result['isPublished'] = node.isPublished()
+
 		# if content points to lesson pop both
 		if 		result.get(CONTENT_NTIID) \
 			and result.get(LESSON_OVERVIEW_NTIID) == result.get(CONTENT_NTIID):

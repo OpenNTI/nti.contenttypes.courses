@@ -22,6 +22,6 @@ def CourseCatalogEntryTraverser(instance, request):
 	"""
 	Courses can be traversed to their catalog entry.
 	"""
-	result = ICourseCatalogEntry(instance)
-	return result
+	return ICourseCatalogEntry(instance)
+
 

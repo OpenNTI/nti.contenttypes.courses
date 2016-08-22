@@ -32,8 +32,6 @@ from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
-from nti.common.property import Lazy
-
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
 
@@ -71,6 +69,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 from nti.contenttypes.courses.vendorinfo import VENDOR_INFO_KEY
 
 from nti.dataserver.users import User
+
+from nti.property.property import Lazy
 
 from nti.site.hostpolicy import get_host_site
 

@@ -17,13 +17,13 @@ from zope import interface
 
 from nti.cabinet.filer import DirectoryFiler
 
-from nti.common.file import safe_filename
-
-from nti.common.property import Lazy
-
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseExportFiler
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+
+from nti.namedfile.file import safe_filename
+
+from nti.property.property import Lazy
 
 @interface.implementer(ICourseExportFiler)
 class CourseExportFiler(DirectoryFiler):
