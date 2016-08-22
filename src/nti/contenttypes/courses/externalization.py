@@ -118,6 +118,7 @@ class _CourseOutlineNodeExporter(object):
 			result.pop('publishBeginning', None)
 			result.pop('publishEnding', None)
 		else:
+			result['isLocked'] = node.isLocked()
 			result['isPublished'] = node.isPublished()
 
 		# if content points to lesson pop both
