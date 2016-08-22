@@ -12,8 +12,6 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
-from nti.common.property import Lazy
-
 from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussion
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -30,6 +28,8 @@ from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
 
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
+
+from nti.property.property import Lazy
 
 @component.adapter(ICourseDiscussion)
 @interface.implementer(IACLProvider)

@@ -19,9 +19,6 @@ from zope.mimetype.interfaces import IContentTypeAware
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQAssignmentPolicies
 
-from nti.common.property import alias
-from nti.common.property import CachedProperty
-
 from nti.contenttypes.courses.grading.interfaces import IEqualGroupGrader
 from nti.contenttypes.courses.grading.interfaces import ICategoryGradeScheme
 from nti.contenttypes.courses.grading.interfaces import ICourseGradingPolicy
@@ -31,6 +28,9 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
 
 from nti.externalization.representation import WithRepr
+
+from nti.property.property import alias
+from nti.property.property import CachedProperty
 
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
