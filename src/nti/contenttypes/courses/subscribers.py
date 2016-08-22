@@ -42,6 +42,7 @@ from nti.contenttypes.courses.index import IX_SITE
 from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_COURSE
 from nti.contenttypes.courses.index import IX_USERNAME
+from nti.contenttypes.courses.index import IX_PACKAGES
 
 from nti.contenttypes.courses.index import IndexRecord
 
@@ -58,6 +59,7 @@ from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CourseCatalogDidSyncEvent
+from nti.contenttypes.courses.interfaces import ICourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceImportedEvent
 from nti.contenttypes.courses.interfaces import ICourseOutlineNodeMovedEvent
 from nti.contenttypes.courses.interfaces import ICourseRolePermissionManager
@@ -322,3 +324,15 @@ def _unlock_assessment_policy(assesment, courses=()):
 def on_unlock_assessment_policies(event):
 	if event.courses and event.object:
 		_unlock_assessment_policy(event.object, event.courses)
+
+@component.adapter(ICourseInstance, ICourseBundleUpdatedEvent)
+def update_course_packages(course, event):
+	"""
+	Update the course packages
+	"""
+	catalog = get_courses_catalog()
+	index = catalog[IX_PACKAGES]
+	intids = component.getUtility(IIntIds)
+	doc_id = intids.queryId(course)
+	if doc_id is not None:
+		index.index_doc(doc_id, course)

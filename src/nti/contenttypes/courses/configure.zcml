@@ -248,6 +248,9 @@
 	<subscriber handler=".sharing.on_modified_update_scope_membership" />
 	<subscriber handler=".sharing.on_moved_between_courses_update_scope_membership" />
 
+	<!-- update packages -->
+	<subscriber handler=".subscribers.update_course_packages" />
+
 	<!-- weak references -->
 	<adapter factory="nti.intid.wref.ArbitraryOrderableWeakRef"
 			 provides="nti.wref.interfaces.IWeakRef"
