@@ -331,8 +331,9 @@ def update_course_packages(course, event):
 	Update the course packages
 	"""
 	catalog = get_courses_catalog()
-	index = catalog[IX_PACKAGES]
-	intids = component.getUtility(IIntIds)
-	doc_id = intids.queryId(course)
-	if doc_id is not None:
-		index.index_doc(doc_id, course)
+	if catalog is not None: # tests
+		index = catalog[IX_PACKAGES]
+		intids = component.getUtility(IIntIds)
+		doc_id = intids.queryId(course)
+		if doc_id is not None:
+			index.index_doc(doc_id, course)
