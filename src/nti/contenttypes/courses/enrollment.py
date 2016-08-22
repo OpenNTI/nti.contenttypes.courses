@@ -48,10 +48,6 @@ import BTrees
 
 from persistent import Persistent
 
-from nti.common.property import Lazy
-from nti.common.property import alias
-from nti.common.property import CachedProperty
-
 from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
 from nti.contentlibrary.bundle import _readCurrent
@@ -79,6 +75,10 @@ from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
 from nti.externalization.persistence import NoPickle
 from nti.externalization.representation import WithRepr
+
+from nti.property.property import Lazy
+from nti.property.property import alias
+from nti.property.property import CachedProperty
 
 from nti.schema.eqhash import EqHash
 
