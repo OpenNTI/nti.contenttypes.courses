@@ -113,13 +113,13 @@ class _CourseOutlineNodeExporter(object):
 			items.append(ext_obj)
 		if items:
 			result[ITEMS] = items
-			
+
 		if ICourseOutline.providedBy(self.node):
 			result.pop('publishBeginning', None)
 			result.pop('publishEnding', None)
 		else:
-			result['isLocked'] = node.isLocked()
-			result['isPublished'] = node.isPublished()
+			result['isLocked'] = self.node.isLocked()
+			result['isPublished'] = self.node.isPublished()
 
 		# if content points to lesson pop both
 		if 		result.get(CONTENT_NTIID) \
@@ -140,9 +140,9 @@ class _CourseOutlineNodeExporter(object):
 @component.adapter(ICourseCatalogEntry)
 @interface.implementer(IInternalObjectExternalizer)
 class _CourseCatalogEntryExporter(object):
-	
-	REPLACE = ( 
-		('Video', 'video'), ('Title', 'title'), ('Preview', 'isPreview'), 
+
+	REPLACE = (
+		('Video', 'video'), ('Title', 'title'), ('Preview', 'isPreview'),
 		('StartDate', 'startDate'), ('EndDate', 'endDate'),
 		('ProviderUniqueID', 'id'), ('ProviderDepartmentTitle', 'school'),
 		('AdditionalProperties', 'additionalProperties'),
@@ -164,7 +164,7 @@ class _CourseCatalogEntryExporter(object):
 	def _replacer(self, result, frm , to):
 		if isinstance(result, Mapping) and frm in result:
 			result[to] = result.pop(frm, None)
-	
+
 	def _fix_instructors(self, instructors):
 		for instructor in instructors or ():
 			self._remover(instructor, ('Name', 'JobTitle'))
@@ -183,7 +183,7 @@ class _CourseCatalogEntryExporter(object):
 		mod_args['decorate'] = False  # no decoration
 		result = to_external_object(self.entry, **mod_args)
 		# remove unwanted keys
-		self._remover(result) 
+		self._remover(result)
 		# replace keys
 		for frm, to in self.REPLACE:
 			self._replacer(result, frm, to)
