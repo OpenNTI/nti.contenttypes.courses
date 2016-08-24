@@ -16,8 +16,6 @@ from zope import interface
 
 from zope.security.interfaces import IPrincipal
 
-from nti.common.file import safe_filename
-
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -36,6 +34,8 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IInternalObjectExternalizer
 
 from nti.mimetype import decorateMimeType
+
+from nti.namedfile.file import safe_filename
 
 from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import is_ntiid_of_type
