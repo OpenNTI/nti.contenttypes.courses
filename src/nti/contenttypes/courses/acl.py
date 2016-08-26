@@ -18,8 +18,6 @@ from zope.authentication.interfaces import IUnauthenticatedPrincipal
 
 from zope.security.interfaces import IPrincipal
 
-from nti.common.property import Lazy
-
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -48,6 +46,8 @@ from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
 from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 
 from nti.dataserver.interfaces import IACLProvider
+
+from nti.property.property import Lazy
 
 from nti.traversal.traversal import find_interface
 

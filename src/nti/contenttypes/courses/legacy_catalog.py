@@ -201,7 +201,7 @@ def _ntiid_from_entry(entry, nttype=NTIID_ENTRY_TYPE):
 					   specific=make_specific_safe(relative_path))
 	return ntiid
 
-from nti.common.property import CachedProperty
+from nti.property.property import CachedProperty
 
 class PersistentCourseCatalogLegacyEntry(CourseCatalogLegacyEntry,
 										 PersistentCreatedAndModifiedTimeObject):
