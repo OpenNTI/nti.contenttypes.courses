@@ -322,6 +322,7 @@ def is_enrolled_in_hierarchy(context, user):
 def get_course_enrollments(context, sites=None, intids=None):
 	if ICourseInstance.providedBy(context) or ICourseCatalogEntry.providedBy(context):
 		courses = (ICourseCatalogEntry(context).ntiid,)
+		sites = get_course_site(ICourseInstance(context))
 	elif isinstance(context, six.string_types):
 		courses = context.split()
 	else:
