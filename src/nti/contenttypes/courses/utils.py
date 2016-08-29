@@ -123,6 +123,11 @@ def get_course_vendor_info(context, create=True):
 			pass
 	return result
 
+def _get_sites_4_index(sites=None):
+	sites = get_component_hierarchy_names() if not sites else sites
+	sites = sites.split() if isinstance(sites, six.string_types) else sites
+	return sites
+
 # index
 
 def get_courses_catalog():
@@ -131,8 +136,7 @@ def get_courses_catalog():
 def get_courses_for_packages(sites=(), packages=(), intids=None):
 	result = set()
 	catalog = get_courses_catalog()
-	sites = get_component_hierarchy_names() if not sites else sites
-	sites = sites.split() if isinstance(sites, six.string_types) else sites
+	sites = _get_sites_4_index(sites)
 	packages = packages.split() if isinstance(packages, six.string_types) else packages
 	query = {
 		IX_SITE: {'any_of': sites},
@@ -315,11 +319,27 @@ def is_enrolled_in_hierarchy(context, user):
 			return True
 	return False
 
+def get_course_enrollments(context, sites=None, intids=None):
+	if ICourseInstance.providedBy(context) or ICourseCatalogEntry.providedBy(context):
+		courses = (ICourseCatalogEntry(context).ntiid,)
+	elif isinstance(context, six.string_types):
+		courses = context.split()
+	else:
+		courses = context
+	sites = _get_sites_4_index(sites)
+	catalog = get_enrollment_catalog()
+	intids = component.getUtility(IIntIds) if intids is None else intids
+	query = {
+		IX_SITE: {'any_of':sites},
+		IX_COURSE: {'any_of':courses},
+		IX_SCOPE: {'any_of':ENROLLMENT_SCOPE_NAMES}
+	}
+	uids = catalog.apply(query) or ()
+	result = ResultSet(uids, intids, True)
+	return result
+
 def get_enrollments(user, sites=None, intids=None):
-	if not sites:
-		sites = get_component_hierarchy_names()
-	elif isinstance(sites, six.string_types):
-		sites = sites.split()
+	sites = _get_sites_4_index(sites)
 	catalog = get_enrollment_catalog()
 	username = getattr(user, 'username', user)
 	intids = component.getUtility(IIntIds) if intids is None else intids
