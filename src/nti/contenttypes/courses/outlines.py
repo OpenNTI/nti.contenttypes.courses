@@ -67,6 +67,17 @@ class _AbstractCourseOutlineNode(Contained,
 			name = unicode(len(self))
 		self[name] = node
 
+	def rename(self, old, new):
+		# remove no event
+		item = self._data[old]
+		del self._data[old]
+		# replace in map
+		item.__name__ = new
+		self._data[new] = item
+		# replace in array
+		idx = self._order.index(old)
+		self._order[idx] = new 
+		
 	def _do_reorder(self, index, ntiid):
 		old_keys = list(self.keys())
 		old_keys.remove(ntiid)
