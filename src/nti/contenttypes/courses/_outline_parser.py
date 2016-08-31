@@ -33,6 +33,7 @@ from nti.contenttypes.courses.outlines import CourseOutlineNode
 from nti.contenttypes.courses.outlines import CourseOutlineContentNode
 
 from nti.coremetadata.interfaces import IRecordable
+from nti.coremetadata.interfaces import IRecordableContainer 
 
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
@@ -71,8 +72,11 @@ def _outline_nodes(outline):
 	return result
 outline_nodes = _outline_nodes
 
-def _is_locked( obj ):
+def _is_locked(obj):
 	return IRecordable.providedBy(obj) and obj.isLocked()
+
+def _is_child_order_locked(obj):
+	return IRecordableContainer.providedBy(obj) and obj.isChildOrderLocked()
 
 def _is_node_locked(node):
 	result = _is_locked( node )
@@ -88,8 +92,8 @@ def _is_node_locked(node):
 def _is_node_move_locked(container, children):
 	# Ideally, the child_order_locked field alone will indicate locked,
 	# but fall back to child status if necessary.
-	return getattr(container, 'child_order_locked', False) \
-		or any((_is_node_locked(x) for x in children))
+	return 	 _is_child_order_locked(container) \
+		  or any((_is_node_locked(x) for x in children))
 
 def _can_be_removed(registered, force=False):
 	result = registered is not None and (force or not _is_node_locked(registered))
