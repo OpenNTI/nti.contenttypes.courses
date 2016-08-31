@@ -11,10 +11,8 @@ logger = __import__('logging').getLogger(__name__)
 
 import os
 import time
-import uuid
 import shutil
 import tempfile
-from hashlib import md5
 
 import simplejson
 
@@ -81,9 +79,9 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.externalization.internalization import update_from_external_object
 
-from nti.ntiids.ntiids import TYPE_UUID
 from nti.ntiids.ntiids import make_ntiid
-from nti.ntiids.ntiids import make_specific_safe
+from nti.ntiids.ntiids import get_provider
+from nti.ntiids.ntiids import get_specific
 
 from nti.site.hostpolicy import get_host_site
 
@@ -147,13 +145,22 @@ class BaseSectionImporter(object):
 @interface.implementer(ICourseSectionImporter)
 class CourseOutlineImporter(BaseSectionImporter):
 
-	def make_ntiid(self):
-		digest = md5(str(uuid.uuid4())).hexdigest().upper()
-		specific = make_specific_safe(TYPE_UUID + ".%s" % digest)
-		result = make_ntiid(provider='NTI',
-							nttype=NTI_COURSE_OUTLINE_NODE,
-							specific=specific)
-		return result
+	def make_ntiid(self, parent, idx):
+		if ICourseOutline.providedBy(parent):
+			course = find_interface(parent, ICourseInstance, strict=False)
+			entry = ICourseCatalogEntry(course)
+			base = entry.ntiid
+		else:
+			base = parent.ntiid
+			
+		provider = get_provider(base) or 'NTI'
+		specific_base = get_specific(base)
+		specific = specific_base + ".%s" % idx
+		ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
+						   base=base,
+						   provider=provider,
+						   specific=specific)
+		return ntiid
 
 	def _update_and_register(self, course, ext_obj):
 		# require connection
@@ -173,10 +180,12 @@ class CourseOutlineImporter(BaseSectionImporter):
 		registry = site.getSiteManager()
 
 		# register nodes
-		def _recur(node):
+		def _recur(node, idx=0):
 			if not ICourseOutline.providedBy(node):
 				if not getattr(node, "ntiid", None):
-					node.ntiid = self.make_ntiid()
+					parent = node.__parent__
+					node.ntiid = self.make_ntiid(parent, idx)
+					parent.rename(node.__name__, node.ntiid)
 
 				registerUtility(registry,
 								node,
@@ -186,8 +195,8 @@ class CourseOutlineImporter(BaseSectionImporter):
 				if not node.publishBeginning: # only if no date
 					node.publish(event=False)
 
-			for child in node.values():
-				_recur(child)
+			for idx, child in enumerate(node.values()):
+				_recur(child, idx)
 		_recur(course.Outline)
 
 	def _delete_outline(self, course):
