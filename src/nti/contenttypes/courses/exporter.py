@@ -10,7 +10,10 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 import time
-from io import StringIO
+try:
+	from cStringIO import StringIO
+except ImportError:
+	from StringIO import StringIO
 
 from xml.dom import minidom
 
