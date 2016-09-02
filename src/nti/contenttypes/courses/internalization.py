@@ -45,7 +45,7 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
 	def set_locked(self, parsed):
 		locked = parsed.get('isLocked')
 		if locked and not ICourseOutline.providedBy(self.node):
-			self.node.lock()
+			self.node.lock(event=False)
 			
 	def updateFromExternalObject(self, parsed, *args, **kwargs):
 		self.set_ntiid(parsed)
@@ -65,5 +65,5 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
 		if 	isPublished \
 			and not ICourseOutline.providedBy(self.node) \
 			and self.node.publishBeginning is not None:
-			self.node.publish()
+			self.node.publish(event=False)
 		return result
