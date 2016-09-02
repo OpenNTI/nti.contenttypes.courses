@@ -14,6 +14,7 @@ from collections import Mapping
 from zope import component
 from zope import interface
 
+from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 
 from nti.externalization.datastructures import InterfaceObjectIO
@@ -37,9 +38,19 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
 	def node(self):
 		return self._ext_self
 
-	def updateFromExternalObject(self, parsed, *args, **kwargs):
-		if 'ntiid' in parsed or NTIID in parsed:
+	def set_ntiid(self, parsed):
+		if NTIID.lower() in parsed or NTIID in parsed:
 			self.node.ntiid = parsed.get('ntiid') or parsed.get(NTIID)
+
+	def set_locked(self, parsed):
+		locked = parsed.get('isLocked')
+		if locked and not ICourseOutline.providedBy(self.node):
+			self.node.lock()
+			
+	def updateFromExternalObject(self, parsed, *args, **kwargs):
+		self.set_ntiid(parsed)
+		self.set_locked(parsed)
+		isPublished = parsed.get('isPublished') # capture param
 		result = super(_CourseOutlineNodeUpdater, self).updateFromExternalObject(parsed, *args, **kwargs)
 		if ITEMS in parsed:
 			for item in parsed.get(ITEMS) or ():
@@ -51,4 +62,8 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
 				else:
 					new_node = item
 				self.node.append(new_node)
+		if 	isPublished \
+			and not ICourseOutline.providedBy(self.node) \
+			and self.node.publishBeginning is not None:
+			self.node.publish()
 		return result
