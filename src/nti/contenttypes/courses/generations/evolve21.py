@@ -18,14 +18,15 @@ from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
-from nti.contenttypes.courses.index import IX_ENTRY
-from nti.contenttypes.courses.index import IX_PACKAGES
 from nti.contenttypes.courses.index import install_courses_catalog
 
+from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
+
+from nti.site.hostpolicy import get_all_host_sites
 
 @interface.implementer(IDataserver)
 class MockDataserver(object):
@@ -54,11 +55,17 @@ def do_evolve(context, generation=generation):
 
 		lsm = ds_folder.getSiteManager()
 		intids = lsm.getUtility(IIntIds)
-		catalog = install_courses_catalog(ds_folder, intids)
-		for doc_id in catalog[IX_ENTRY].ids():
-			value = intids.queryObject(doc_id)
-			if ICourseInstance.providedBy(value):
-				catalog[IX_PACKAGES].index_doc(doc_id, value)
+		index = install_courses_catalog(ds_folder, intids)
+		for site in get_all_host_sites():
+			with current_site(site):
+				catalog = component.queryUtility(ICourseCatalog)
+				if catalog is None:
+					continue
+				for entry in catalog.iterCatalogEntries():
+					course = ICourseInstance(entry, None)
+					doc_id = intids.queryId(course)
+					if doc_id is not None:
+						index.index_doc(doc_id, course)
 
 	component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
 	logger.info('Evolution %s done.', generation)
