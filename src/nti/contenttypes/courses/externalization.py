@@ -120,7 +120,8 @@ class _CourseOutlineNodeExporter(object):
 		else:
 			result['isLocked'] = self.node.isLocked()
 			result['isPublished'] = self.node.isPublished()
-
+			result['isChildOrderLocked'] = self.node.isChildOrderLocked()
+			
 		# if content points to lesson pop both
 		if 		result.get(CONTENT_NTIID) \
 			and result.get(LESSON_OVERVIEW_NTIID) == result.get(CONTENT_NTIID):

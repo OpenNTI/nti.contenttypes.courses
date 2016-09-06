@@ -43,9 +43,13 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
 			self.node.ntiid = parsed.get('ntiid') or parsed.get(NTIID)
 
 	def set_locked(self, parsed):
-		locked = parsed.get('isLocked')
-		if locked and not ICourseOutline.providedBy(self.node):
-			self.node.lock(event=False)
+		if not ICourseOutline.providedBy(self.node):
+			locked = parsed.get('isLocked')
+			if locked:
+				self.node.lock(event=False)
+			locked = parsed.get('isChildOrderLocked')
+			if locked:
+				self.node.childOrderLock(event=False)
 			
 	def updateFromExternalObject(self, parsed, *args, **kwargs):
 		self.set_ntiid(parsed)
