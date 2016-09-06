@@ -295,9 +295,9 @@ def get_catalog_entry(ntiid, safe=True):
 def get_enrollment_record(context, user):
 	course = ICourseInstance(context, None)
 	enrollments = ICourseEnrollments(course, None)
-	record = enrollments.get_enrollment_for_principal(user) \
-			 if user is not None and enrollments is not None else None
-	return record
+	if user is not None and enrollments is not None:
+		return enrollments.get_enrollment_for_principal(user)
+	return None
 
 def get_enrollment_record_in_hierarchy(context, user):
 	for instance in get_course_hierarchy(context):
