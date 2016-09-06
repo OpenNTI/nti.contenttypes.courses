@@ -68,6 +68,6 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
 				self.node.append(new_node)
 		if 	isPublished \
 			and not ICourseOutline.providedBy(self.node) \
-			and self.node.publishBeginning is not None:
+			and self.node.publishBeginning is None:
 			self.node.publish(event=False)
 		return result
