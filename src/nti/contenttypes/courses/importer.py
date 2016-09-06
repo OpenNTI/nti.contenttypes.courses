@@ -191,9 +191,6 @@ class CourseOutlineImporter(BaseSectionImporter):
 								node,
 							  	name=node.ntiid,
 							  	provided=iface_of_node(node))
-				
-				if not node.publishBeginning: # only if no date
-					node.publish(event=False)
 
 			for idx, child in enumerate(node.values()):
 				_recur(child, idx)
