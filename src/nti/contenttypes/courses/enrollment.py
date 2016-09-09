@@ -820,10 +820,8 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
 		if ICourseInstance.isOrExtends(iface):
 			return self.CourseInstance
 
-		if IPrincipal.isOrExtends(iface):
-			return self.Principal
-
-		if IUser.isOrExtends(iface):
+		if 		IPrincipal.isOrExtends(iface) \
+			or	IUser.isOrExtends(iface):
 			return self.Principal
 
 # Subscribers to keep things in sync when
