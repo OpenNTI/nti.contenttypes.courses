@@ -44,6 +44,16 @@ from nti.schema.fieldproperty import AdaptingFieldProperty
 from nti.schema.fieldproperty import createFieldProperties
 from nti.schema.fieldproperty import createDirectFieldProperties
 
+# We eqhash based on identity here, since we do not
+# use these things as keys in maps and we are not
+# concerned with determining if two objects are equal
+# as much as we are if they are the same object. Since
+# we register these objects, some low level zope.interface.registry
+# structures *do* use these objects as keys; thus, we
+# want the fastest hash implementation possible that
+# does not load the state of our object.
+# XXX: <link to docs>
+
 @total_ordering
 @interface.implementer(IAttributeAnnotatable)
 class _AbstractCourseOutlineNode(Contained,
@@ -76,8 +86,8 @@ class _AbstractCourseOutlineNode(Contained,
 		self._data[new] = item
 		# replace in array
 		idx = self._order.index(old)
-		self._order[idx] = new 
-		
+		self._order[idx] = new
+
 	def _do_reorder(self, index, ntiid):
 		old_keys = list(self.keys())
 		old_keys.remove(ntiid)
@@ -96,12 +106,6 @@ class _AbstractCourseOutlineNode(Contained,
 		if obj.ntiid not in list(self.keys()):
 			self.append(obj)
 		self._do_reorder(index, obj.ntiid)
-
-	def __hash__(self):
-		# We inherit an __eq__ from dict, but dict does not
-		# like to be hashed (because mutable cache keys can be bad)
-		# But we have an ACL and need to be hashable
-		return hash(tuple(self.items()))
 
 	def __lt__(self, other):
 		try:
