@@ -26,6 +26,7 @@ from zope.event import notify
 
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
+from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentDateContext
@@ -269,23 +270,29 @@ class BundlePresentationAssetsExporter(BaseSectionExporter):
 @interface.implementer(ICourseSectionExporter)
 class RoleInfoExporter(BaseSectionExporter):
 
-	def _role_export_map(self, course):
-		result = {}
-		roles = IPrincipalRoleMap(course)
-		for name in (RID_TA, RID_INSTRUCTOR, RID_CONTENT_EDITOR):
+	def _role_interface_export(self, result, course, interface, *keys):
+		roles = interface(course, None)
+		if not roles:
+			return
+		for name in keys:
 			deny = []
 			allow = []
 			for principal, setting in roles.getPrincipalsForRole(name) or ():
 				pid = getattr(principal, 'id', str(principal))
-				if setting == Allow:
-					allow.append(pid)
-				else:
-					deny.append(pid)
+				container = allow if setting == Allow else deny
+				container.append(pid)
 			if allow or deny:
 				role_data = result[name] = {}
 				for name, users in (('allow', allow), ('deny', deny)):
 					if users:
 						role_data[name] = users
+
+	def _role_export_map(self, course):
+		result = {}
+		self._role_interface_export(result, course, IPrincipalRoleMap,
+									RID_TA, RID_INSTRUCTOR)
+		self._role_interface_export(result, course, IPrincipalRoleManager,
+									RID_CONTENT_EDITOR)
 		return result
 
 	def export(self, context, filer):
