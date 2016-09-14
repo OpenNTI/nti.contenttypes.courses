@@ -9,7 +9,11 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import six
 import time
+from numbers import Number
+from datetime import datetime
+from collections import Iterable
 try:
 	from cStringIO import StringIO
 except ImportError:
@@ -23,6 +27,10 @@ from zope import component
 from zope import interface
 
 from zope.event import notify
+
+from zope.dublincore.interfaces import IWriteZopeDublinCore
+
+from zope.interface.interfaces import IMethod
 
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
@@ -204,6 +212,19 @@ class BundleMetaInfoExporter(BaseSectionExporter):
 @interface.implementer(ICourseSectionExporter)
 class BundleDCMetadataExporter(BaseSectionExporter):
 
+	attr_to_xml = { 
+		'creators': 'creator',
+		'contributors': 'contributors',
+		'subjects': 'subject'
+	}
+
+	def _to_text(self, value):
+		if isinstance(value, Number):
+			value = str(value)
+		elif isinstance(value, datetime):
+			value = value.strftime('%Y-%m-%d %H:%M:%S %Z')
+		return value
+
 	def export(self, context, filer):
 		course = ICourseInstance(context)
 		if ICourseSubInstance.providedBy(course):
@@ -215,14 +236,27 @@ class BundleDCMetadataExporter(BaseSectionExporter):
 		doc_root = xmldoc.documentElement
 		doc_root.setAttributeNS(None, "xmlns:dc", "http://purl.org/dc/elements/1.1/")
 
-		for creator in entry.creators or ():
-			node = xmldoc.createElement("dc:creator")
-			node.appendChild(xmldoc.createTextNode(creator))
-			doc_root.appendChild(node)
-
-		node = xmldoc.createElement("dc:title")
-		node.appendChild(xmldoc.createTextNode(entry.Title))
-		doc_root.appendChild(node)
+		for k, v in IWriteZopeDublinCore.namesAndDescriptions(all=True):
+			if IMethod.providedBy(v):
+				continue
+			value = getattr(entry, k, None) or getattr(entry, k.lower(), None)
+			if value is None:
+				continue
+			k = k.lower()
+			# create nodes
+			if 		isinstance(value, six.string_types) \
+				or 	isinstance(value, datetime) \
+				or 	isinstance(value, Number):
+				name = self.attr_to_xml.get(k, k)
+				node = xmldoc.createElement("dc:%s" % name)
+				node.appendChild(xmldoc.createTextNode(self._to_text(value)))
+				doc_root.appendChild(node)
+			elif isinstance(value, Iterable):
+				for x in value:
+					name = self.attr_to_xml.get(k, k)
+					node = xmldoc.createElement("dc:%s" % name)
+					node.appendChild(xmldoc.createTextNode(self._to_text(x)))
+					doc_root.appendChild(node)
 
 		source = xmldoc.toprettyxml(encoding="UTF-8")
 		for name in (DCMETA_FILENAME, "bundle_dc_metadata.xml"):
