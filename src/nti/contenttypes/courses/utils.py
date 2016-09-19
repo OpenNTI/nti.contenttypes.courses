@@ -538,7 +538,11 @@ def set_course_site_manager(course, site=component):
 		bases = (site.getSiteManager(),)
 		if ICourseSubInstance.providedBy(course):
 			parent = get_parent_course(course)
-			bases = (parent.getSiteManager(), site.getSiteManager())
+			try:
+				bases = (parent.getSiteManager(), site.getSiteManager())
+			except LookupError:
+				set_course_site_manager(parent, site)
+				bases = (parent.getSiteManager(), site.getSiteManager())
 		sm = HostPolicySiteManager(course)
 		sm.__bases__ = bases
 		course.setSiteManager(sm)
