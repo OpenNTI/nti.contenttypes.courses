@@ -89,6 +89,8 @@ from nti.contenttypes.courses.interfaces import CourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import CourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
 
+from nti.contenttypes.courses.utils import set_course_site_manager
+
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
 from nti.externalization.representation import WithRepr
@@ -271,6 +273,8 @@ class _ContentCourseSynchronizer(object):
 								force=force)
 
 		self.update_deny_open_enrollment(course)
+
+		self.update_site_manager(course, bucket, sync_results=sync_results)
 
 		notify(CourseInstanceAvailableEvent(course,
 											bucket,
@@ -492,6 +496,10 @@ class _ContentCourseSynchronizer(object):
 		if key is not None and IDelimitedHierarchyBucket.providedBy(key):
 			result = parse_discussions(course, key)
 			sync_results.CourseDiscussionsUpdated = result
+			
+	@classmethod
+	def update_site_manager(cls, course, bucket=None, sync_results=None):
+		return set_course_site_manager(course)
 
 @component.adapter(ICourseSubInstances, IDelimitedHierarchyBucket)
 class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
@@ -534,11 +542,14 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		__traceback_info__ = subcourse, bucket
 
 		course_sync_results = _get_course_sync_results(subcourse, **kwargs)
+
 		_ContentCourseSynchronizer.update_common_info(subcourse, bucket,
 													  sync_results=course_sync_results,
 													  force=force)
 
 		_ContentCourseSynchronizer.update_deny_open_enrollment(subcourse)
+
+		_ContentCourseSynchronizer.update_site_manager(subcourse, bucket)
 
 		# mark last sync time
 		entry = ICourseCatalogEntry(subcourse)
