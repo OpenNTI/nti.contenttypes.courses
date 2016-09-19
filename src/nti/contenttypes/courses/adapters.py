@@ -17,9 +17,9 @@ from zope import interface
 
 from zope.traversing.api import traverse
 
-from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseKeywords
+from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
 
 from nti.contenttypes.courses.utils import get_course_vendor_info
 
@@ -63,13 +63,17 @@ def _invitation_gatherer(data):
 	return result
 
 def _paths(course):
-	o = course
 	raw = []
 	safe = []
-	while o is not None and not ICourseCatalog.providedBy(o):
+	o = course
+	while o is not None:
 		try:
-			raw.append(o.__name__)
-			safe.append(make_specific_safe(o.__name__))
+			name = o.__name__
+			if name:
+				raw.append(name)
+				safe.append(make_specific_safe(name))
+			if not name or ICourseAdministrativeLevel.providedBy(o):
+				break
 			o = o.__parent__
 		except AttributeError:
 			break
