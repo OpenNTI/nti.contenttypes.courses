@@ -17,6 +17,7 @@ from zope import interface
 
 from zope.traversing.api import traverse
 
+from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseKeywords
 
@@ -59,6 +60,18 @@ def _invitation_gatherer(data):
 	result = tuple(x.strip() for x in result if x)
 	return result
 
+def _paths(course):
+	o = course
+	result = []
+	while o is not None and not ICourseCatalog.providedBy(o):
+		try:
+			result.append(o.__name__)
+			o = o.__parent__
+		except AttributeError:
+			break
+	result.reverse()
+	return result
+
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseKeywords)
 def _course_keywords(context):
@@ -71,6 +84,9 @@ def _course_keywords(context):
 	# invitation codes
 	data = traverse(info, 'NTI/Invitations', default=None)
 	result.update(_invitation_gatherer(data))
+	# paths
+	result.update(_paths(ICourseInstance(context, None)))
 	# clean and return
 	result.discard(u'')
+	result.discard(None)
 	return _Keywords(sorted(result))
