@@ -41,6 +41,20 @@ class MockDataserver(object):
 			return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
 		return None
 
+def index_courses(index, intids=None, catalog=None):
+	result = 0
+	intids = component.getUtility(IIntIds) if intids is None else intids
+	catalog = component.queryUtility(ICourseCatalog) if catalog is None else catalog
+	if catalog is None:
+		return result
+	for entry in catalog.iterCatalogEntries():
+		course = ICourseInstance(entry, None)
+		doc_id = intids.queryId(course)
+		if doc_id is not None:
+			index.index_doc(doc_id, course)
+			result += 0
+	return result
+
 def do_evolve(context, generation=generation):
 	conn = context.connection
 	ds_folder = conn.root()['nti.dataserver']
@@ -58,14 +72,7 @@ def do_evolve(context, generation=generation):
 		index = install_courses_catalog(ds_folder, intids)
 		for site in get_all_host_sites():
 			with current_site(site):
-				catalog = component.queryUtility(ICourseCatalog)
-				if catalog is None:
-					continue
-				for entry in catalog.iterCatalogEntries():
-					course = ICourseInstance(entry, None)
-					doc_id = intids.queryId(course)
-					if doc_id is not None:
-						index.index_doc(doc_id, course)
+				index_courses(index, intids)
 
 	component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
 	logger.info('Evolution %s done.', generation)
