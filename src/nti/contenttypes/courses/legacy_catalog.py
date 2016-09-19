@@ -22,9 +22,10 @@ from nti.contenttypes.courses.catalog import CourseCatalogInstructorInfo
 from nti.contenttypes.courses.interfaces import NTIID_ENTRY_TYPE
 from nti.contenttypes.courses.interfaces import NTIID_ENTRY_PROVIDER
 
-from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseCatalogInstructorInfo
+
+from nti.contenttypes.courses.utils import path_for_entry
 
 from nti.property.property import readproperty
 
@@ -179,23 +180,9 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import make_specific_safe
 
 def _ntiid_from_entry(entry, nttype=NTIID_ENTRY_TYPE):
-	parents = []
-	o = entry.__parent__
-	while o is not None and not ICourseCatalog.providedBy(o):
-		parents.append(o.__name__)
-		o = getattr(o, '__parent__', None)
-
-	parents.reverse()
-	if None in parents:
-		# Have seen this in alpha...possibly due to mutating content?
-		logger.warn("Unable to get ntiid for %r, missing parents: %r",
-					entry, parents)
-		return None
-
-	relative_path = '/'.join(parents)
+	relative_path = path_for_entry(entry)
 	if not relative_path:
 		return None
-
 	ntiid = make_ntiid(provider=NTIID_ENTRY_PROVIDER,
 					   nttype=nttype,
 					   specific=make_specific_safe(relative_path))

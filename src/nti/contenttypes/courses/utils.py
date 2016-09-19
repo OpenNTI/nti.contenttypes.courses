@@ -548,6 +548,24 @@ def set_course_site_manager(course, site=component):
 		course.setSiteManager(sm)
 	return sm
 
+# catalog entry
+
+def path_for_entry(context):
+	parents = []
+	o = context.__parent__
+	while o is not None and not ICourseCatalog.providedBy(o):
+		parents.append(o.__name__)
+		o = getattr(o, '__parent__', None)
+
+	parents.reverse()
+	if None in parents:
+		logger.warn("Unable to get path for %r, missing parents: %r",
+					context, parents)
+		return None
+
+	result = '/'.join(parents) if parents else None
+	return result
+
 import zope.deferredimport
 zope.deferredimport.initialize()
 zope.deferredimport.deprecatedFrom(

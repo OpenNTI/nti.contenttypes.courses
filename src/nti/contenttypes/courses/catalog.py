@@ -11,7 +11,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import os
 from datetime import datetime
 from functools import total_ordering
 
@@ -32,6 +31,8 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IGlobalCourseCatalog
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseCatalogInstructorInfo
+
+from nti.contenttypes.courses.utils import path_for_entry
 
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization_acl import ace_allowing
@@ -362,14 +363,7 @@ class CourseCatalogEntry(CatalogFamily,
 
 	@CachedProperty('__parent__')
 	def relative_path(self):
-		parents = []
-		o = self.__parent__
-		while o is not None and not ICourseCatalog.providedBy(o):
-			parents.append(o.__name__)
-			o = getattr(o, '__parent__', None)
-		parents.reverse()
-		result = os.path.sep.join(parents) if parents and None not in parents else None
-		return result
+		return path_for_entry(self)
 
 @interface.implementer(IPersistentCourseCatalog)
 class CourseCatalogFolder(_AbstractCourseCatalogMixin,
