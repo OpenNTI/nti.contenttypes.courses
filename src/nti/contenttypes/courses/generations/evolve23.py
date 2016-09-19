@@ -9,7 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-generation = 21
+generation = 23
 
 from zope import component
 from zope import interface
@@ -18,10 +18,14 @@ from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
+from nti.contenttypes.courses.generations import evolve21
+
 from nti.contenttypes.courses.index import install_courses_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
+
+from nti.contenttypes.courses.utils import set_course_site_manager
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
@@ -41,15 +45,11 @@ class MockDataserver(object):
 			return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
 		return None
 
-def index_courses(index, catalog, intids):
-	result = 0
+def set_site_managers(catalog):
 	for entry in catalog.iterCatalogEntries():
 		course = ICourseInstance(entry, None)
-		doc_id = intids.queryId(course)
-		if doc_id is not None:
-			index.index_doc(doc_id, course)
-			result += 0
-	return result
+		if course is not None:
+			set_course_site_manager(course)
 
 def do_evolve(context, generation=generation):
 	conn = context.connection
@@ -70,13 +70,14 @@ def do_evolve(context, generation=generation):
 			with current_site(site):
 				catalog = component.queryUtility(ICourseCatalog)
 				if catalog is not None:
-					index_courses(index, catalog, intids)
+					set_site_managers(catalog)
+					evolve21.index_courses(index, catalog, intids)
 
 	component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
 	logger.info('Evolution %s done.', generation)
 
 def evolve(context):
 	"""
-	Evolve to generation 21 by reindexing the course packages
+	Evolve to generation 23 by reindexing the courses and setting their site managers
 	"""
 	do_evolve(context, generation)
