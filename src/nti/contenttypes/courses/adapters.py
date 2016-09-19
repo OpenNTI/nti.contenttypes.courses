@@ -23,6 +23,8 @@ from nti.contenttypes.courses.interfaces import ICourseKeywords
 
 from nti.contenttypes.courses.utils import get_course_vendor_info
 
+from nti.ntiids.ntiids import make_specific_safe
+
 class _Keywords(object):
 
 	__slots__ = (b'keywords',)
@@ -62,15 +64,20 @@ def _invitation_gatherer(data):
 
 def _paths(course):
 	o = course
-	result = []
+	raw = []
+	safe = []
 	while o is not None and not ICourseCatalog.providedBy(o):
 		try:
-			result.append(o.__name__)
+			raw.append(o.__name__)
+			safe.append(make_specific_safe(o.__name__))
 			o = o.__parent__
 		except AttributeError:
 			break
-	result.reverse()
-	return result
+	result = {raw[-1], raw[0]} # admin level & section/name
+	for p in (raw, safe):
+		p.reverse()
+		result.add('/'.join(p))
+	return tuple(result)
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseKeywords)
