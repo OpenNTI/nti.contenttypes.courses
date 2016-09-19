@@ -72,6 +72,8 @@ from nti.dataserver.users import User
 
 from nti.property.property import Lazy
 
+from nti.site.folder import HostPolicySiteManager
+
 from nti.site.hostpolicy import get_host_site
 
 from nti.site.site import get_component_hierarchy_names
@@ -524,6 +526,23 @@ def clear_course_outline(course):
 	if course.Outline:
 		unregister_outline_nodes(course)
 		course.Outline.clear()  # clear outline
+
+# site manager
+
+def set_course_site_manager(course, site=component):
+	try:
+		sm = course.getSiteManager()
+	except ComponentLookupError:
+		sm = None
+	if sm is None:
+		bases = (site.getSiteManager(),)
+		if ICourseSubInstance.providedBy(course):
+			parent = get_parent_course(course)
+			bases = (parent.getSiteManager(), site.getSiteManager())
+		sm = HostPolicySiteManager(course)
+		sm.__bases__ = bases
+		course.setSiteManager(sm)
+	return sm
 
 import zope.deferredimport
 zope.deferredimport.initialize()
