@@ -42,6 +42,7 @@ def reset_site_managers(catalog):
 		course = ICourseInstance(entry, None)
 		if course is not None and getattr(course, '_sm', None) is not None:
 			course._sm = None
+			logger.info("Sitemanager for %s was reset", entry.ntiid)
 
 def do_evolve(context, generation=generation):
 	conn = context.connection
