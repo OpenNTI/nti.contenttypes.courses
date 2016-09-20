@@ -52,7 +52,7 @@ from nti.schema.fieldproperty import createDirectFieldProperties
 # structures *do* use these objects as keys; thus, we
 # want the fastest hash implementation possible that
 # does not load the state of our object.
-# XXX: <link to docs>
+# See: http://www.zodb.org/en/latest/guide/writing-persistent-objects.html#things-you-can-do-but-need-to-carefully-consider-advanced
 
 @total_ordering
 @interface.implementer(IAttributeAnnotatable)
