@@ -42,7 +42,7 @@ class MockDataserver(object):
 def reset_site_managers(catalog):
 	for entry in catalog.iterCatalogEntries():
 		course = ICourseInstance(entry, None)
-		if course is not None and getattr(course, '_sm', None) is not None:
+		if getattr(course, '_sm', None) is not None:
 			course._sm = None
 		if ISite.providedBy(course):
 			interface.noLongerProvides(course, ISite)
