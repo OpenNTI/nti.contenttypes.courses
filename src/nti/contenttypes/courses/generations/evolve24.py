@@ -16,6 +16,8 @@ from zope import interface
 
 from zope.component.hooks import site as current_site
 
+from zope.component.interfaces import ISite
+
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
@@ -42,6 +44,7 @@ def reset_site_managers(catalog):
 		course = ICourseInstance(entry, None)
 		if course is not None and getattr(course, '_sm', None) is not None:
 			course._sm = None
+			interface.noLongerProvides(course, ISite)
 			logger.info("Sitemanager for %s was reset", entry.ntiid)
 
 def do_evolve(context, generation=generation):
