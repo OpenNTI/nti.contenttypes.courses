@@ -89,8 +89,6 @@ from nti.contenttypes.courses.interfaces import CourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import CourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
 
-from nti.contenttypes.courses.utils import set_course_site_manager
-
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
 from nti.externalization.representation import WithRepr
@@ -499,7 +497,7 @@ class _ContentCourseSynchronizer(object):
 			
 	@classmethod
 	def update_site_manager(cls, course, bucket=None, sync_results=None):
-		return set_course_site_manager(course)
+		pass
 
 @component.adapter(ICourseSubInstances, IDelimitedHierarchyBucket)
 class _CourseSubInstancesSynchronizer(_GenericFolderSynchronizer):
