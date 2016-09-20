@@ -44,6 +44,7 @@ def reset_site_managers(catalog):
 		course = ICourseInstance(entry, None)
 		if course is not None and getattr(course, '_sm', None) is not None:
 			course._sm = None
+		if ISite.providedBy(course, course):
 			interface.noLongerProvides(course, ISite)
 			logger.info("Sitemanager for %s was reset", entry.ntiid)
 
