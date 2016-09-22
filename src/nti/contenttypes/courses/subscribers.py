@@ -55,6 +55,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseRolesSynchronized
@@ -65,6 +66,7 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineNodeMovedEvent
 from nti.contenttypes.courses.interfaces import ICourseRolePermissionManager
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import ICourseVendorInfoSynchronized
+from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.interfaces import iface_of_node
 
@@ -223,17 +225,29 @@ def on_course_vendor_info_synced(course, event):
 	if doc_id is not None:
 		catalog.index_doc(doc_id, course)
 
+def unenroll(record, user):
+	try:
+		course = record.CourseInstance
+		enrollment_manager = ICourseEnrollmentManager(course)
+		enrollment_manager.drop(user)
+	except (TypeError, KeyError):
+		pass
+
 @component.adapter(IUser, IWillDeleteEntityEvent)
 def on_user_removed(user, event):
 	logger.info('Removing enrollment records for %s', user.username)
 	catalog = get_enrollment_catalog()
 	if catalog is not None:
+		intids = component.queryUtility(IIntIds)
 		# remove enrollment records
 		query = {
 			IX_USERNAME: {'any_of':(user.username,)},
 			IX_SCOPE: {'any_of':ENROLLMENT_SCOPE_NAMES }
 		}
 		for uid in catalog.apply(query) or ():
+			record = intids.queryObject(uid)
+			if ICourseInstanceEnrollmentRecord.providedBy(record):
+				unenroll(record, user)
 			catalog.unindex_doc(uid)
 		# remove instructor/ editor roles
 		index = catalog[IX_USERNAME]
