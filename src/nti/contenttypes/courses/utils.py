@@ -540,10 +540,10 @@ def set_course_site_manager(course, site=component):
 			parent = get_parent_course(course)
 			site_bases = site.getSiteManager().__bases__
 			try:
-				bases = (parent.getSiteManager(), site.getSiteManager()) + site_bases
+				bases = site_bases + (site.getSiteManager(), parent.getSiteManager())
 			except LookupError:
 				set_course_site_manager(parent, site)
-				bases = (parent.getSiteManager(), site.getSiteManager()) + site_bases
+				bases = site_bases + (site.getSiteManager(), parent.getSiteManager())
 		sm = HostPolicySiteManager(course)
 		sm.__bases__ = bases
 		course.setSiteManager(sm)
