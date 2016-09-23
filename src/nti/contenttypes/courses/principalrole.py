@@ -63,14 +63,14 @@ class CourseInstancePrincipalRoleMap(object):
 	def getPrincipalsForRole(self, role_id):
 		role_meth = dict(self.__role_meth)
 		if role_id not in role_meth:
-			return []
+			return ()
 		return [(x.id, Allow) for x in role_meth[role_id]()]
 
 	def getRolesForPrincipal(self, principal_id):
 		for rid, meth in self.__role_meth:
 			if principal_id in [x.id for x in meth()]:
 				return [(rid, Allow)]
-		return []
+		return ()
 
 	def getSetting(self, role_id, principal_id, default=Unset):
 		if role_id not in self._SUPPORTED_ROLES:
