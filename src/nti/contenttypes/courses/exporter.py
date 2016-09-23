@@ -14,14 +14,11 @@ import time
 from numbers import Number
 from datetime import datetime
 from collections import Iterable
-try:
-	from cStringIO import StringIO
-except ImportError:
-	from StringIO import StringIO
 
 from xml.dom import minidom
 
 import simplejson
+from simplejson.compat import StringIO
 
 from zope import component
 from zope import interface
