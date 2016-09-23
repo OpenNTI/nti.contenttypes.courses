@@ -15,7 +15,7 @@ from zope import interface
 
 from zope.cachedescriptors.property import cachedIn
 
-from nti.contenttypes.courses import MessageFactory as _
+from nti.contenttypes.courses import MessageFactory as _m
 
 from nti.contenttypes.courses.interfaces import ICourseInstanceBoard
 
@@ -50,5 +50,5 @@ class CourseInstanceBoard(CommunityBoard):
 		forum = CommunityForum()
 		forum.creator = self.creator
 		self[forum.__default_name__] = forum
-		forum.title = _('Forum')
+		forum.title = _m('Forum')
 		return forum
