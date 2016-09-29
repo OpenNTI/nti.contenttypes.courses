@@ -494,7 +494,7 @@ class _ContentCourseSynchronizer(object):
 		if key is not None and IDelimitedHierarchyBucket.providedBy(key):
 			result = parse_discussions(course, key)
 			sync_results.CourseDiscussionsUpdated = result
-			
+
 	@classmethod
 	def update_site_manager(cls, course, bucket=None, sync_results=None):
 		pass

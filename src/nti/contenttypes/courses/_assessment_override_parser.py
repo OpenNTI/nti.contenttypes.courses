@@ -23,21 +23,22 @@ from nti.externalization.datetime import datetime_from_string
 
 from nti.ntiids.ntiids import validate_ntiid_string
 
-def reset_asg_missing_key(course, full=True):
+def reset_asg_missing_key(course):
 	dates = IQAssessmentDateContext(course)
 	policies = IQAssessmentPolicies(course)
-	if full:
-		dates.clear()
-		policies.clear()
-	else:
-		for key in policies.assessments():
-			if not policies.get(key, 'locked', False):
-				del policies[key]
+	# Always test locked status before clearing state in dates and policies.
+	for key in policies.assessments():
+		if not policies.get(key, 'locked', False):
+			del policies[key]
+			try:
+				del dates[key]
+			except KeyError:
+				pass
 	return policies
 
 def fill_asg_from_json(course, index, lastModified=0):
 	# remove previous data
-	reset_asg_missing_key(course, full=False)
+	reset_asg_missing_key(course)
 
 	dates = IQAssessmentDateContext(course)
 	policies = IQAssessmentPolicies(course)
