@@ -318,9 +318,11 @@ def _lock_assessment_policy(event, course=None):
 	if course is not None and assesment:
 		policies = IQAssessmentPolicies(course)
 		policies.set(assesment, 'locked', True)
+		# log message
+		entry = ICourseCatalogEntry(course)
 		assesment = getattr(assesment, 'ntiid', assesment)
-		entry_ntiid = ICourseCatalogEntry(course).ntiid
-		logger.info("%s in course %s has been locked", assesment, entry_ntiid)
+		logger.info("%s in course %s has been locked",
+					 assesment, entry.ntiid)
 
 @component.adapter(IQAssessmentPoliciesModified)
 def on_assessment_policy_modified(event):
