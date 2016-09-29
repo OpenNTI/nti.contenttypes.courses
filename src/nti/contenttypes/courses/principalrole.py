@@ -44,7 +44,7 @@ class CourseInstancePrincipalRoleMap(object):
 
 	def _principals_for_ta(self):
 		# XXX: FIXME: Right now, we don't have anything that distinguishes
-		# the TAs from the instructors definitevely. All we have is the catalog
+		# the TAs from the instructors definitively. All we have is the catalog
 		# entry and the convention that the JobTitle will be 'Teaching Assistant'
 		# So right now we never put anyone in that role.
 		return ()

@@ -312,7 +312,7 @@ def on_course_outline_node_added(node, event):
 						 	name=ntiid)
 
 def _lock_assessment_policy(event, course=None):
-	assesment = event.assesment	
+	assesment = event.assesment
 	context = event.object if course is None else course
 	course = ICourseInstance(context, None) # adapt to a course
 	if course is not None and assesment:
@@ -339,6 +339,10 @@ def _unlock_assessment_policy(assesment, courses=()):
 		if course is not None:
 			policies = IQAssessmentPolicies(course)
 			policies.remove(assesment, 'locked')
+			entry = ICourseCatalogEntry(course)
+			assesment = getattr(assesment, 'ntiid', assesment)
+			logger.info("%s in course %s has been unlocked",
+						 assesment, entry.ntiid)
 
 @component.adapter(IUnlockQAssessmentPolicies)
 def on_unlock_assessment_policies(event):
