@@ -89,7 +89,7 @@ class _Dates(object):
 			return getattr(self._asg, name)
 
 @interface.implementer(IItemMapping, IWriteMapping, IInternalObjectExternalizer)
-class MappingAssessmentMixin(Contained, PersistentCreatedAndModifiedTimeObject):
+class MappingAssessmentMixin(PersistentCreatedAndModifiedTimeObject, Contained):
 
 	_SET_CREATED_MODTIME_ON_INIT = False
 
