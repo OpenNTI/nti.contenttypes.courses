@@ -33,7 +33,7 @@ from nti.contenttypes.courses.outlines import CourseOutlineNode
 from nti.contenttypes.courses.outlines import CourseOutlineContentNode
 
 from nti.coremetadata.interfaces import IRecordable
-from nti.coremetadata.interfaces import IRecordableContainer 
+from nti.coremetadata.interfaces import IRecordableContainer
 
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
@@ -207,7 +207,7 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
 	# Now give it the title and description of the content node,
 	# if they have them (they may not, but we require them, even if blank).
 	# If the XML itself has a value, that overrides
-	content_units = library.pathToNTIID(topic_ntiid, skip_cache=True) if library else None
+	content_units = library.pathToNTIID(topic_ntiid) if library else None
 	if not content_units:
 		# XXX: Might be common if lessons are stored under bundle.
 		if topic_ntiid:
