@@ -29,6 +29,7 @@ def get_course_packages(context):
 	return ()
 get_course_content_packages = get_course_packages
 
-def get_course_site(course):
+def get_course_site(context):
+	course = ICourseInstance(context, None)
 	folder = find_interface(course, IHostPolicyFolder, strict=False)
 	return folder.__name__ if folder is not None else None
