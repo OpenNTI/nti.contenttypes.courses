@@ -143,6 +143,8 @@
 					on course objects." />
 
 	<!-- ACLs -->
+	<adapter factory=".acl.CourseBoardACLProvider" />
+	<adapter factory=".acl.CourseForumACLProvider" />
 	<adapter factory=".acl.CourseInstanceACLProvider" />
 	<adapter factory=".acl.CourseOutlineNodeACLProvider" />
 	<adapter factory=".acl.CourseCatalogEntryACLProvider" />

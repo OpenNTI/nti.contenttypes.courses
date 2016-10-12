@@ -22,6 +22,8 @@ from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseInstanceBoard
+from nti.contenttypes.courses.interfaces import ICourseInstanceForum
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
@@ -39,6 +41,9 @@ from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
 from nti.dataserver.authorization_acl import ace_denying
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
+
+from nti.dataserver.contenttypes.forums.acl import CommunityBoardACLProvider
+from nti.dataserver.contenttypes.forums.acl import CommunityForumACLProvider
 
 from nti.dataserver.interfaces import ACE_DENY_ALL
 from nti.dataserver.interfaces import ALL_PERMISSIONS
@@ -212,3 +217,35 @@ class CourseOutlineNodeACLProvider(object):
 						for i in get_course_editors(course) or ())
 		result = acl_from_aces(aces)
 		return result
+
+@component.adapter(ICourseInstanceBoard)
+@interface.implementer(IACLProvider)
+class CourseBoardACLProvider( CommunityBoardACLProvider ):
+	"""
+	Plug in our editors to have READ access to the boards.
+	We deny all up the chain.
+	"""
+
+	def _extend_acl_after_creator_and_sharing(self, acl):
+		super( CourseBoardACLProvider, self )._extend_acl_after_creator_and_sharing( acl )
+		course = find_interface(self.context, ICourseInstance)
+		for editor in get_course_editors(course):
+			acl.append(ace_allowing(editor, ACT_READ, type(self)))
+
+@component.adapter(ICourseInstanceForum)
+@interface.implementer(IACLProvider)
+class CourseForumACLProvider( CommunityForumACLProvider ):
+	"""
+	Plug in our editors to have READ access to the forums.
+	"""
+
+	def _extend_acl_after_creator_and_sharing(self, acl):
+		super( CourseForumACLProvider, self )._extend_acl_after_creator_and_sharing( acl )
+		course = find_interface(self.context, ICourseInstance)
+		for editor in get_course_editors(course):
+			acl.append(ace_allowing(editor, ACT_READ, type(self)))
+			# Since we do not deny-all in chain, we need to
+			# explicitly restrict access for editors
+			acl.append(ace_denying(editor,
+								   (ACT_CONTENT_EDIT, ACT_UPDATE),
+								   type(self)))
