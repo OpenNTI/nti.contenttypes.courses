@@ -42,8 +42,8 @@ from nti.dataserver.authorization_acl import ace_denying
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
-from nti.dataserver.contenttypes.forums.acl import _CommunityBoardACLProvider as CommunityBoardACLProvider
-from nti.dataserver.contenttypes.forums.acl import _CommunityForumACLProvider as CommunityForumACLProvider
+from nti.dataserver.contenttypes.forums.acl import CommunityBoardACLProvider
+from nti.dataserver.contenttypes.forums.acl import CommunityForumACLProvider
 
 from nti.dataserver.interfaces import ACE_DENY_ALL
 from nti.dataserver.interfaces import ALL_PERMISSIONS
