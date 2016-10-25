@@ -61,6 +61,8 @@ class DefaultAssessmentPolicyValidator(object):
 			# If auto-gradable, make sure we can
 			if not can_be_auto_graded(assignment):
 				raise AssertionError('Assignment is not auto-gradable (%s)' % ntiid)
+			if not total_points:
+				raise AssertionError('Auto-gradable assignment must have total_points (%s)' % ntiid)
 		return auto_grade
 
 	def validate_pointbased_policy(self, auto_grade, assignment, ntiid):
