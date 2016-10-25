@@ -34,3 +34,18 @@ def get_course_site_name(context):
 	folder = find_interface(course, IHostPolicyFolder, strict=False)
 	return folder.__name__ if folder is not None else None
 get_course_site = get_course_site_name
+
+def is_part_auto_gradable(part):
+	# Validate every part has grader.
+	result = 	getattr(part, 'grader_interface', None) \
+			or  getattr(part, 'grader_name', None)
+	return bool(result)
+
+def can_be_auto_graded(assignment):
+	for part in assignment.parts or ():
+		question_set = part.question_set
+		for question in question_set.questions or ():
+			for part in question.parts or ():
+				if not is_part_auto_gradable(part):
+					return False
+	return True

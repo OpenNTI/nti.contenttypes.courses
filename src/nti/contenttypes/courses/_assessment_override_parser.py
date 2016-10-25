@@ -76,7 +76,7 @@ def fill_asg_from_json(course, index, lastModified=0):
 				int_val = int(int_val)
 				assert int_val > 0
 			except (AssertionError, TypeError, ValueError):
-				raise ValueError("Bad postive integer value: %r" % int_val)
+				raise ValueError("Bad positive integer value: %r" % int_val)
 			val[k] = int_val
 
 		# Policies stores it directly, with the exception

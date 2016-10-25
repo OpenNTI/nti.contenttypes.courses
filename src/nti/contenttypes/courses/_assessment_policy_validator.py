@@ -21,6 +21,8 @@ from nti.assessment.interfaces import IQAssessmentPolicyValidator
 from nti.common.string import is_true
 from nti.common.string import is_false
 
+from nti.contenttypes.courses.common import can_be_auto_graded
+
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.ntiids.ntiids import is_valid_ntiid_string
@@ -54,6 +56,11 @@ class DefaultAssessmentPolicyValidator(object):
 				auto_grade['disable'] = True
 			elif is_false(disable):
 				auto_grade['disable'] = False
+
+		if 'disable' not in auto_grade or not auto_grade['disable']:
+			# If auto-gradable, make sure we can
+			if not can_be_auto_graded(assignment):
+				raise AssertionError('Assignment is not auto-gradable (%s)' % ntiid)
 		return auto_grade
 
 	def validate_pointbased_policy(self, auto_grade, assignment, ntiid):
