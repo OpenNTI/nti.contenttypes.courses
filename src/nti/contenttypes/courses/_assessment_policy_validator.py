@@ -36,6 +36,8 @@ class DefaultAssessmentPolicyValidator(object):
 		return points
 
 	def valid_auto_grade(self, policy, assignment, ntiid):
+		if assignment is None:
+			return
 		auto_grade = policy.get('auto_grade')
 		if not auto_grade:
 			return
@@ -66,6 +68,8 @@ class DefaultAssessmentPolicyValidator(object):
 		return auto_grade
 
 	def validate_pointbased_policy(self, auto_grade, assignment, ntiid):
+		if assignment is None:
+			return
 		name = auto_grade.get('name') if auto_grade else None
 		if not name or (assignment and not IQAssignment.providedBy(assignment)):
 			return
