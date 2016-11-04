@@ -63,7 +63,9 @@ class DefaultAssessmentPolicyValidator(object):
 			# If auto-gradable, make sure we can
 			if not can_be_auto_graded(assignment):
 				raise AssertionError('Assignment is not auto-gradable (%s)' % ntiid)
-			if not total_points:
+			# We do allow total_points of zero, even though that
+			# doesn't make sense (legacy content).
+			if total_points is None:
 				raise AssertionError('Auto-gradable assignment must have total_points (%s)' % ntiid)
 		return auto_grade
 
