@@ -1431,9 +1431,13 @@ class ICourseExportFiler(ISourceFiler):
 
 class ICourseExporter(interface.Interface):
 
-	def export(course, filer):
+	def export(course, filer, backup=True):
 		"""
 		Export the specified course
+		
+		@param course: Course to export
+		@param filer: External filter to export objects
+		@param backup: Backup flag
 		"""
 
 class ICourseSectionExporter(interface.Interface):
@@ -1449,7 +1453,7 @@ class ICourseImporter(interface.Interface):
 		"""
 		Import the specified course
 
-		:param course Course to import
+		:param course: Course to import
 		:param filer: External source filer
 		:param writeout: Boolean to save source files to disk
 		"""

@@ -380,7 +380,7 @@ class CourseInfoExporter(BaseSectionExporter):
 @interface.implementer(ICourseExporter)
 class CourseExporter(object):
 
-	def export(self, context, filer):
+	def export(self, context, filer, backup=True):
 		now = time.time()
 		course = ICourseInstance(context)
 		entry = ICourseCatalogEntry(course)
