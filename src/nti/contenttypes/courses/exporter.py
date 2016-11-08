@@ -156,7 +156,7 @@ class CourseOutlineExporter(BaseSectionExporter):
 		result = xmldoc.toprettyxml(encoding="UTF-8")
 		return result
 
-	def export(self, context, filer):
+	def export(self, context, filer, backup=True):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
 
@@ -178,7 +178,7 @@ class CourseOutlineExporter(BaseSectionExporter):
 @interface.implementer(ICourseSectionExporter)
 class VendorInfoExporter(BaseSectionExporter):
 
-	def export(self, context, filer):
+	def export(self, context, filer, backup=True):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
 		verdor_info = get_course_vendor_info(course, False)
@@ -193,7 +193,7 @@ class VendorInfoExporter(BaseSectionExporter):
 @interface.implementer(ICourseSectionExporter)
 class BundleMetaInfoExporter(BaseSectionExporter):
 
-	def export(self, context, filer):
+	def export(self, context, filer, backup=True):
 		course = ICourseInstance(context)
 		if ICourseSubInstance.providedBy(course):
 			return
@@ -222,7 +222,7 @@ class BundleDCMetadataExporter(BaseSectionExporter):
 			value = value.strftime('%Y-%m-%d %H:%M:%S %Z')
 		return value
 
-	def export(self, context, filer):
+	def export(self, context, filer, backup=True):
 		course = ICourseInstance(context)
 		if ICourseSubInstance.providedBy(course):
 			return
@@ -291,7 +291,7 @@ class BundlePresentationAssetsExporter(BaseSectionExporter):
 				elif IEnumerableDelimitedHierarchyBucket.providedBy(child):
 					self._process_root(child, bucket, filer)
 
-	def export(self, context, filer):
+	def export(self, context, filer, backup=True):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
 		bucket = u'' if not bucket else bucket + '/'
@@ -326,7 +326,7 @@ class RoleInfoExporter(BaseSectionExporter):
 									RID_CONTENT_EDITOR)
 		return result
 
-	def export(self, context, filer):
+	def export(self, context, filer, backup=True):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
 		result = self._role_export_map(course)
@@ -352,7 +352,7 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
 				result[key] = entry
 		return result
 
-	def export(self, context, filer):
+	def export(self, context, filer, backup=True):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
 		result = self._process(course)
@@ -366,7 +366,7 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
 @interface.implementer(ICourseSectionExporter)
 class CourseInfoExporter(BaseSectionExporter):
 
-	def export(self, context, filer):
+	def export(self, context, filer, backup=True):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
 		entry = ICourseCatalogEntry(course)
@@ -386,7 +386,7 @@ class CourseExporter(object):
 		entry = ICourseCatalogEntry(course)
 		for name, exporter in sorted(component.getUtilitiesFor(ICourseSectionExporter)):
 			logger.info("Processing %s", name)
-			exporter.export(course, filer)
+			exporter.export(course, filer, backup)
 		notify(CourseInstanceExportedEvent(course))
 		for subinstance in get_course_subinstances(course):
 			notify(CourseInstanceExportedEvent(subinstance))

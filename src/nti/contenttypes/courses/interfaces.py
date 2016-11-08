@@ -1441,10 +1441,17 @@ class ICourseExporter(interface.Interface):
 		"""
 
 class ICourseSectionExporter(interface.Interface):
+	"""
+	Export a course section
+	"""
 
-	def export(course, filer):
+	def export(course, filer, backup=True):
 		"""
 		Export the specified course
+		
+		:param course: Course to export
+		:param filer: External source filer
+		:param backup: backup flag
 		"""
 
 class ICourseImporter(interface.Interface):
