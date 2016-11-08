@@ -173,7 +173,7 @@ class CourseOutlineExporter(BaseSectionExporter):
 
 		for sub_instance in get_course_subinstances(course):
 			if sub_instance.Outline is not course.Outline:
-				self.export(sub_instance, filer)
+				self.export(sub_instance, filer, backup)
 
 @interface.implementer(ICourseSectionExporter)
 class VendorInfoExporter(BaseSectionExporter):
@@ -188,7 +188,7 @@ class VendorInfoExporter(BaseSectionExporter):
 			filer.save(VENDOR_INFO_NAME, source, contentType="application/json",
 					   bucket=bucket, overwrite=True)
 		for sub_instance in get_course_subinstances(course):
-			self.export(sub_instance, filer)
+			self.export(sub_instance, filer, backup)
 
 @interface.implementer(ICourseSectionExporter)
 class BundleMetaInfoExporter(BaseSectionExporter):
@@ -334,7 +334,7 @@ class RoleInfoExporter(BaseSectionExporter):
 		filer.save(ROLE_INFO_NAME, source, bucket=bucket,
 				   contentType="application/json", overwrite=True)
 		for sub_instance in get_course_subinstances(course):
-			self.export(sub_instance, filer)
+			self.export(sub_instance, filer, backup)
 
 @interface.implementer(ICourseSectionExporter)
 class AssignmentPoliciesExporter(BaseSectionExporter):
@@ -361,7 +361,7 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
 			filer.save(ASSIGNMENT_POLICIES_NAME, source, bucket=bucket,
 					   contentType="application/json", overwrite=True)
 		for sub_instance in get_course_subinstances(course):
-			self.export(sub_instance, filer)
+			self.export(sub_instance, filer, backup)
 
 @interface.implementer(ICourseSectionExporter)
 class CourseInfoExporter(BaseSectionExporter):
@@ -375,7 +375,7 @@ class CourseInfoExporter(BaseSectionExporter):
 		filer.save(CATALOG_INFO_NAME, source, bucket=bucket,
 				   contentType="application/json", overwrite=True)
 		for sub_instance in get_course_subinstances(course):
-			self.export(sub_instance, filer)
+			self.export(sub_instance, filer, backup)
 
 @interface.implementer(ICourseExporter)
 class CourseExporter(object):
