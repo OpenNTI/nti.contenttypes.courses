@@ -147,7 +147,8 @@ class _CourseCatalogEntryExporter(object):
 		('StartDate', 'startDate'), ('EndDate', 'endDate'),
 		('ProviderUniqueID', 'id'), ('ProviderDepartmentTitle', 'school'),
 		('AdditionalProperties', 'additionalProperties'),
-		('Credit', 'credit'), ('Instructors', 'instructors')
+		('Credit', 'credit'), ('Instructors', 'instructors'),
+		('Description', 'description'), ('RichDescription', 'richDescription')
 	)
 
 	REQUIRED = {x[0] for x  in REPLACE}

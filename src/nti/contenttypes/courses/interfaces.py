@@ -60,6 +60,8 @@ from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 from nti.contentlibrary.interfaces import IGenericSynchronizationResults
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
+from nti.contentfragments.schema import HTMLContentFragment
+
 from nti.contenttypes.courses import MessageFactory as _
 
 from nti.coremetadata.interfaces import INoPublishLink
@@ -762,6 +764,12 @@ class ICourseCatalogEntry(ICatalogFamily,
 						 required=False)
 
 	AdditionalProperties = Dict(title="dictionary of additional unmodeled data", required=False)
+
+	RichDescription = HTMLContentFragment(title="An embelished version of the description of this course",
+										  description="""An HTMLContentFragment providing an embelished description 
+										  for the course.  This provides storage for a description with basic html formatting""",
+										  required=False,
+										  default='')
 
 	def isCourseCurrentlyActive():
 		"""

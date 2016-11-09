@@ -7,6 +7,8 @@ __docformat__ = "restructuredtext en"
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
+from hamcrest import all_of
+from hamcrest import contains_string
 from hamcrest import is_
 from hamcrest import none
 from hamcrest import is_not
@@ -63,9 +65,13 @@ class TestCatalogParser(CourseLayerTest):
 									 'DisableOverviewCalendar', True) )
 		assert_that(entry, verifiably_provides(ICourseCatalogLegacyEntry))
 
+		richDescription = entry.RichDescription
+		assert_that(richDescription, all_of(contains_string('<strong>'), contains_string('<li>')))
+
 		assert_that( entry,
 					 externalizes( has_entries(
-							 'DisableOverviewCalendar', True) ) )
+							 'DisableOverviewCalendar', True,
+							 'RichDescription', contains_string('<strong>')) ) )
 
 		fill_entry_from_legacy_key(entry, key)
 		assert_that( entry,

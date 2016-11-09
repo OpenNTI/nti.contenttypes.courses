@@ -78,6 +78,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 					   ('Title', 'title'),
 					   ('ProviderUniqueID', 'id'),
 					   ('Description', 'description'),
+					   ('RichDescription', 'richDescription'),
 					   ('ProviderDepartmentTitle', 'school'),
 					   ('InstructorsSignature', 'InstructorsSignature')):
 		val = info_json_dict.get(key)

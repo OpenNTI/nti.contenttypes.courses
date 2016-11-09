@@ -54,6 +54,7 @@ from nti.property.property import CachedProperty
 
 from nti.schema.eqhash import EqHash
 
+from nti.schema.fieldproperty import AdaptingFieldProperty
 from nti.schema.fieldproperty import createDirectFieldProperties
 
 from nti.schema.schema import PermissiveSchemaConfigured as SchemaConfigured
@@ -264,6 +265,8 @@ class CourseCatalogEntry(CatalogFamily,
 	_SET_CREATED_MODTIME_ON_INIT = False
 
 	createDirectFieldProperties(ICourseCatalogEntry)
+
+	RichDescription = AdaptingFieldProperty(ICourseCatalogEntry['RichDescription'])
 
 	__name__ = alias('ntiid')
 	__parent__ = None
