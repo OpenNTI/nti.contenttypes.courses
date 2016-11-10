@@ -36,6 +36,8 @@ from zope.container.interfaces import IContainerNamesContainer
 
 from zope.interface.common.mapping import IEnumerableMapping
 
+from zope.interface.common.sequence import ISequence
+
 from zope.interface.interfaces import IMethod
 from zope.interface.interfaces import ObjectEvent
 from zope.interface.interfaces import IObjectEvent
@@ -305,6 +307,11 @@ class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
 
 _tag_iface_fields(ICourseOutlineContentNode, 'title', 'description', 'AvailableEnding',
 				  'AvailableBeginning' )
+
+class ICourseOutlineNodes(ISequence):
+	"""
+	A marker interface for a sequence of outline nodes
+	"""
 
 class ICourseOutline(ICourseOutlineNode,
 					 ILastModified,
