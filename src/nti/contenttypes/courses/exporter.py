@@ -11,6 +11,7 @@ logger = __import__('logging').getLogger(__name__)
 
 import six
 import time
+import hashlib
 from numbers import Number
 from datetime import datetime
 from collections import Iterable
@@ -73,10 +74,27 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.externalization.externalization import to_external_object
 
+from nti.ntiids.ntiids import get_parts
 from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import make_specific_safe
 
 @interface.implementer(ICourseSectionExporter)
 class BaseSectionExporter(object):
+
+	def hexdigest(self, data):
+		hasher = hashlib.sha256()
+		hasher.update(data)
+		return hasher.hexdigest()
+
+	def hash_ntiid(self, ntiid):
+		parts = get_parts(ntiid)
+		digest = self.hexdigest(ntiid).upper()
+		specific = make_specific_safe("%s_%04d" % (digest, len(ntiid)))
+		ntiid = make_ntiid(parts.date, 
+						   parts.provider,
+						   parts.nttype, 
+						   specific=specific)
+		return ntiid
 
 	def dump(self, ext_obj):
 		source = StringIO()
