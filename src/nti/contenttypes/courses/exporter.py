@@ -14,6 +14,7 @@ import time
 import hashlib
 from numbers import Number
 from datetime import datetime
+from collections import Mapping
 from collections import Iterable
 
 from xml.dom import minidom
@@ -74,9 +75,15 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.externalization.externalization import to_external_object
 
+from nti.externalization.interfaces import StandardExternalFields
+
 from nti.ntiids.ntiids import get_parts
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import make_specific_safe
+
+ID = StandardExternalFields.ID
+OID = StandardExternalFields.OID
+NTIID = StandardExternalFields.NTIID
 
 @interface.implementer(ICourseSectionExporter)
 class BaseSectionExporter(object):
@@ -174,12 +181,29 @@ class CourseOutlineExporter(BaseSectionExporter):
 		result = xmldoc.toprettyxml(encoding="UTF-8")
 		return result
 
+	def _export_remover(self, ext_obj):
+		if isinstance(ext_obj, Mapping):
+			for key in (ID, OID, NTIID, NTIID.lower()):
+				ext_obj.pop(key, None)
+			ContentNTIID = ext_obj.get('ContentNTIID', None)
+			LessonOverviewNTIID = ext_obj.get('LessonOverviewNTIID', None)
+			if ContentNTIID and ContentNTIID == LessonOverviewNTIID:
+				ext_obj.pop('ContentNTIID', None)
+			ext_obj.pop('LessonOverviewNTIID', None)
+			for value in ext_obj.values():
+				self._export_remover(value)
+		elif isinstance(ext_obj, (list, tuple, set)):
+			for value in ext_obj:
+				self._export_remover(value)
+
 	def export(self, context, filer, backup=True):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
 
 		# as json
 		ext_obj = to_external_object(course.Outline, name='exporter', decorate=False)
+		if not backup:
+			self._export_remover(ext_obj)
 		source = self.dump(ext_obj)
 		filer.save(COURSE_OUTLINE_NAME, source, contentType="application/json",
 				   bucket=bucket, overwrite=True)
