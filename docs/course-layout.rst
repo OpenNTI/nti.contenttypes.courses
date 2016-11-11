@@ -510,11 +510,11 @@ show_assignments_by_outline
 	Note: it is invalid to set this to false and have assignments in the course
 
 Invitations
-	An array with dictionary entries containing information pertaining to how 
+	An array with dictionary entries containing information pertaining to how
 	invitation/access tokens are set for a course. This entry is optional
-	
+
 	Each access/invitation dictionary entry has the following fields
-	
+
 	* ``Code`: Access/Invitation token, unique per site. This field is required
 	* ``Scope``: Enrollment scope when an access token is granted. This field is optional
 	* ``Description``: Access token/invitation description. This field is optional
@@ -620,7 +620,7 @@ This optional directory is used to store course lesson overview json files.
 Such files will be processed during course synchronization.
 
 Course Sections
-===============
+===============================
 
 If a course instance directory contains a directory called
 ``Sections``, then the contents of each of those directories creates a
@@ -677,7 +677,7 @@ presentation-assets/
 
 
 Course Discussions
-===============
+===============================
 
 If a course instance directory contains a directory called
 ``Discussions``, then the json files of that directory defines the
