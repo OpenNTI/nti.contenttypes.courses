@@ -35,6 +35,11 @@ def get_course_site_name(context):
 	return folder.__name__ if folder is not None else None
 get_course_site = get_course_site_name
 
+def get_course_site_registry(context):
+	course = ICourseInstance(context, None)
+	folder = find_interface(course, IHostPolicyFolder, strict=False)
+	return folder.getSiteManager() if folder is not None else None
+
 def is_part_auto_gradable(part):
 	# Validate every part has grader.
 	result = 	getattr(part, 'grader_interface', None) \
