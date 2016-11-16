@@ -60,13 +60,15 @@ class DefaultAssessmentPolicyValidator(object):
 				auto_grade['disable'] = False
 
 		if 'disable' not in auto_grade or not auto_grade['disable']:
+			# Lot of legacy stuff has invalid auto_grade/total_points
+			# combinations; so we'll warn for now.
 			# If auto-gradable, make sure we can
 			if not can_be_auto_graded(assignment):
-				raise AssertionError('Assignment is not auto-gradable (%s)' % ntiid)
+				logger.warn('Assignment is not auto-gradable (%s)', ntiid)
 			# We do allow total_points of zero, even though that
 			# doesn't make sense (legacy content).
 			if total_points is None:
-				raise AssertionError('Auto-gradable assignment must have total_points (%s)' % ntiid)
+				logger.warn('Auto-gradable assignment must have total_points (%s)', ntiid)
 		return auto_grade
 
 	def validate_pointbased_policy(self, auto_grade, assignment, ntiid):
