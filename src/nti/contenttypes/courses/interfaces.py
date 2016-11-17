@@ -1450,9 +1450,9 @@ class ICourseExporter(interface.Interface):
 		"""
 		Export the specified course
 
-		@param course: Course to export
-		@param filer: External filter to export objects
-		@param backup: Backup flag
+		:param course: Course to export
+		:param filer: External filter to export objects
+		:param backup: Backup flag
 		:param salt: ntiid salt
 		"""
 
