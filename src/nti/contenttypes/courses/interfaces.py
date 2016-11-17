@@ -773,7 +773,7 @@ class ICourseCatalogEntry(ICatalogFamily,
 	AdditionalProperties = Dict(title="dictionary of additional unmodeled data", required=False)
 
 	RichDescription = HTMLContentFragment(title="An embelished version of the description of this course",
-										  description="""An HTMLContentFragment providing an embelished description 
+										  description="""An HTMLContentFragment providing an embelished description
 										  for the course.  This provides storage for a description with basic html formatting""",
 										  required=False,
 										  default='')
@@ -1446,13 +1446,14 @@ class ICourseExportFiler(ISourceFiler):
 
 class ICourseExporter(interface.Interface):
 
-	def export(course, filer, backup=True):
+	def export(course, filer, backup=True, salt=None):
 		"""
 		Export the specified course
-		
+
 		@param course: Course to export
 		@param filer: External filter to export objects
 		@param backup: Backup flag
+		:param salt: ntiid salt
 		"""
 
 class ICourseSectionExporter(interface.Interface):
@@ -1460,13 +1461,14 @@ class ICourseSectionExporter(interface.Interface):
 	Export a course section
 	"""
 
-	def export(course, filer, backup=True):
+	def export(course, filer, backup=True, salt=None):
 		"""
 		Export the specified course
-		
+
 		:param course: Course to export
 		:param filer: External source filer
 		:param backup: backup flag
+		:param salt: ntiid salt
 		"""
 
 class ICourseImporter(interface.Interface):

@@ -88,18 +88,19 @@ NTIID = StandardExternalFields.NTIID
 @interface.implementer(ICourseSectionExporter)
 class BaseSectionExporter(object):
 
-	def hexdigest(self, data):
+	def hexdigest(self, data, salt=None):
+		salt = salt or ''
 		hasher = hashlib.sha256()
-		hasher.update(data)
+		hasher.update(data + salt)
 		return hasher.hexdigest()
 
-	def hash_ntiid(self, ntiid):
+	def hash_ntiid(self, ntiid, salt=None):
 		parts = get_parts(ntiid)
-		digest = self.hexdigest(ntiid).upper()
+		digest = self.hexdigest(ntiid, salt).upper()
 		specific = make_specific_safe("%s_%04d" % (digest, len(ntiid)))
-		ntiid = make_ntiid(parts.date, 
+		ntiid = make_ntiid(parts.date,
 						   parts.provider,
-						   parts.nttype, 
+						   parts.nttype,
 						   specific=specific)
 		return ntiid
 
@@ -196,7 +197,7 @@ class CourseOutlineExporter(BaseSectionExporter):
 			for value in ext_obj:
 				self._export_remover(value)
 
-	def export(self, context, filer, backup=True):
+	def export(self, context, filer, backup=True, salt=None):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
 
@@ -215,12 +216,12 @@ class CourseOutlineExporter(BaseSectionExporter):
 
 		for sub_instance in get_course_subinstances(course):
 			if sub_instance.Outline is not course.Outline:
-				self.export(sub_instance, filer, backup)
+				self.export(sub_instance, filer, backup, salt)
 
 @interface.implementer(ICourseSectionExporter)
 class VendorInfoExporter(BaseSectionExporter):
 
-	def export(self, context, filer, backup=True):
+	def export(self, context, filer, backup=True, salt=None):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
 		verdor_info = get_course_vendor_info(course, False)
@@ -230,12 +231,12 @@ class VendorInfoExporter(BaseSectionExporter):
 			filer.save(VENDOR_INFO_NAME, source, contentType="application/json",
 					   bucket=bucket, overwrite=True)
 		for sub_instance in get_course_subinstances(course):
-			self.export(sub_instance, filer, backup)
+			self.export(sub_instance, filer, backup, salt)
 
 @interface.implementer(ICourseSectionExporter)
 class BundleMetaInfoExporter(BaseSectionExporter):
 
-	def export(self, context, filer, backup=True):
+	def export(self, context, filer, backup=True, salt=None):
 		course = ICourseInstance(context)
 		if ICourseSubInstance.providedBy(course):
 			return
@@ -251,7 +252,7 @@ class BundleMetaInfoExporter(BaseSectionExporter):
 @interface.implementer(ICourseSectionExporter)
 class BundleDCMetadataExporter(BaseSectionExporter):
 
-	attr_to_xml = { 
+	attr_to_xml = {
 		'creators': 'creator',
 		'contributors': 'contributors',
 		'subjects': 'subject'
@@ -264,7 +265,7 @@ class BundleDCMetadataExporter(BaseSectionExporter):
 			value = value.strftime('%Y-%m-%d %H:%M:%S %Z')
 		return value
 
-	def export(self, context, filer, backup=True):
+	def export(self, context, filer, backup=True, salt=None):
 		course = ICourseInstance(context)
 		if ICourseSubInstance.providedBy(course):
 			return
@@ -333,7 +334,7 @@ class BundlePresentationAssetsExporter(BaseSectionExporter):
 				elif IEnumerableDelimitedHierarchyBucket.providedBy(child):
 					self._process_root(child, bucket, filer)
 
-	def export(self, context, filer, backup=True):
+	def export(self, context, filer, backup=True, salt=None):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
 		bucket = u'' if not bucket else bucket + '/'
@@ -368,7 +369,7 @@ class RoleInfoExporter(BaseSectionExporter):
 									RID_CONTENT_EDITOR)
 		return result
 
-	def export(self, context, filer, backup=True):
+	def export(self, context, filer, backup=True, salt=None):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
 		result = self._role_export_map(course)
@@ -376,7 +377,7 @@ class RoleInfoExporter(BaseSectionExporter):
 		filer.save(ROLE_INFO_NAME, source, bucket=bucket,
 				   contentType="application/json", overwrite=True)
 		for sub_instance in get_course_subinstances(course):
-			self.export(sub_instance, filer, backup)
+			self.export(sub_instance, filer, backup, salt)
 
 @interface.implementer(ICourseSectionExporter)
 class AssignmentPoliciesExporter(BaseSectionExporter):
@@ -394,7 +395,7 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
 				result[key] = entry
 		return result
 
-	def export(self, context, filer, backup=True):
+	def export(self, context, filer, backup=True, salt=None):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
 		result = self._process(course)
@@ -403,12 +404,12 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
 			filer.save(ASSIGNMENT_POLICIES_NAME, source, bucket=bucket,
 					   contentType="application/json", overwrite=True)
 		for sub_instance in get_course_subinstances(course):
-			self.export(sub_instance, filer, backup)
+			self.export(sub_instance, filer, backup, salt)
 
 @interface.implementer(ICourseSectionExporter)
 class CourseInfoExporter(BaseSectionExporter):
 
-	def export(self, context, filer, backup=True):
+	def export(self, context, filer, backup=True, salt=None):
 		course = ICourseInstance(context)
 		bucket = self.course_bucket(course)
 		entry = ICourseCatalogEntry(course)
@@ -417,18 +418,18 @@ class CourseInfoExporter(BaseSectionExporter):
 		filer.save(CATALOG_INFO_NAME, source, bucket=bucket,
 				   contentType="application/json", overwrite=True)
 		for sub_instance in get_course_subinstances(course):
-			self.export(sub_instance, filer, backup)
+			self.export(sub_instance, filer, backup, salt)
 
 @interface.implementer(ICourseExporter)
 class CourseExporter(object):
 
-	def export(self, context, filer, backup=True):
+	def export(self, context, filer, backup=True, salt=None):
 		now = time.time()
 		course = ICourseInstance(context)
 		entry = ICourseCatalogEntry(course)
 		for name, exporter in sorted(component.getUtilitiesFor(ICourseSectionExporter)):
 			logger.info("Processing %s", name)
-			exporter.export(course, filer, backup)
+			exporter.export(course, filer, backup, salt)
 		notify(CourseInstanceExportedEvent(course))
 		for subinstance in get_course_subinstances(course):
 			notify(CourseInstanceExportedEvent(subinstance))
