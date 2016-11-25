@@ -31,6 +31,8 @@ setup(
 	namespace_packages=['nti', 'nti.contenttypes'],
 	install_requires=[
 		'setuptools',
+		'nti.contentlibrary',
+		'nti.mimetype'
 	],
 	entry_points=entry_points
 )
