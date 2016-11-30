@@ -42,6 +42,7 @@ from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_COURSE
 from nti.contenttypes.courses.index import IX_PACKAGES
 from nti.contenttypes.courses.index import IX_USERNAME
+from nti.contenttypes.courses.index import IX_CONTENT_UNIT
 
 from nti.contenttypes.courses.index import IndexRecord
 from nti.contenttypes.courses.index import COURSES_CATALOG_NAME
@@ -61,6 +62,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseEnrollments
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
@@ -362,11 +364,6 @@ def has_enrollments(user, intids=None):
 			return True
 	return False
 
-# outlines
-
-def get_course_outline_catalog():
-	return component.queryUtility(ICatalog, name=COURSE_OUTLINE_CATALOG_NAME)
-
 # instructors & editors
 
 def get_instructors_in_roles(roles, setting=Allow):
@@ -511,6 +508,22 @@ def is_course_instructor_or_editor(context, user):
 	return result
 
 # outlines
+
+def get_course_outline_catalog():
+	return component.queryUtility(ICatalog, name=COURSE_OUTLINE_CATALOG_NAME)
+
+def get_content_outline_nodes(ntiid, intids=None):
+	catalog = get_course_outline_catalog()
+	query = {
+		IX_CONTENT_UNIT: {'any_of': (ntiid,)},
+	}
+	result = set()
+	intids = component.getUtility(IIntIds) if intids is None else intids
+	for uid in catalog.apply(query) or ():
+		node = ICourseOutlineNode(intids.queryObject(uid), None)
+		result.add(node)
+	result.discard(None)
+	return tuple(result)
 
 def unregister_outline_nodes(course):
 	site = get_course_site(course)
