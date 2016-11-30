@@ -46,6 +46,7 @@ from nti.contenttypes.courses.index import IX_USERNAME
 from nti.contenttypes.courses.index import IndexRecord
 from nti.contenttypes.courses.index import COURSES_CATALOG_NAME
 from nti.contenttypes.courses.index import ENROLLMENT_CATALOG_NAME
+from nti.contenttypes.courses.index import COURSE_OUTLINE_CATALOG_NAME
 
 from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import EDITOR
@@ -360,6 +361,11 @@ def has_enrollments(user, intids=None):
 		if ICourseInstanceEnrollmentRecord.providedBy(obj):
 			return True
 	return False
+
+# outlines
+
+def get_course_outline_catalog():
+	return component.queryUtility(ICatalog, name=COURSE_OUTLINE_CATALOG_NAME)
 
 # instructors & editors
 
