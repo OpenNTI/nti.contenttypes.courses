@@ -19,11 +19,21 @@ from zope.traversing.api import traverse
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseKeywords
+from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
 
 from nti.contenttypes.courses.utils import get_course_vendor_info
 
 from nti.ntiids.ntiids import make_specific_safe
+
+from nti.traversal.traversal import find_interface
+
+@component.adapter(ICourseOutlineNode)
+@interface.implementer(ICourseInstance)
+def _outlinenode_to_course(outline):
+	return find_interface(outline, ICourseInstance, strict=False)
+
+# keywords
 
 class _Keywords(object):
 

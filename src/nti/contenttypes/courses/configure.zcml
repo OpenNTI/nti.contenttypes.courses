@@ -337,6 +337,9 @@
 				 zcml:condition="installed nti.dataserver.contenttypes.forums" />
 	</configure>
 
+	<!-- Outline nodes -->
+	<adapter factory=".adapters._outlinenode_to_course" />
+
 	<!-- Export Filer -->
 	<adapter factory=".filer.CourseExportFiler"
 			 for=".interfaces.ICourseInstance"
