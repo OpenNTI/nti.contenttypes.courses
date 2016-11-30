@@ -359,7 +359,7 @@ class NodeAvailableEndingRawIndex(RawIntegerValueIndex):
 
 def NodeAvailableEndingIndex(family=None):
 	return NormalizationWrapper(field_name='AvailableEnding',
-								interface=ValidatingAvailableBeginning,
+								interface=ValidatingAvailableEnding,
 								index=NodeAvailableEndingRawIndex(family=family),
 								normalizer=TimestampToNormalized64BitIntNormalizer())
 

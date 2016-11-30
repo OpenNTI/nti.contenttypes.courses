@@ -78,7 +78,7 @@ def do_evolve(context, generation=generation):
 		for site in get_all_host_sites():
 			with current_site(site):
 				course_catalog = component.queryUtility(ICourseCatalog)
-				if course_catalog is not None:
+				if course_catalog is not None and not course_catalog.isEmpty():
 					_index_nodes(outline_index, intids, seen, course_catalog)
 
 	component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
