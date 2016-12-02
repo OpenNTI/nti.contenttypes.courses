@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope.container.constraints import contains
 from zope.container.interfaces import IContainer
 
+from zope.interface.common.sequence import ISequence
+
 from zope.location.interfaces import IContained
 
 from zope.schema.vocabulary import SimpleTerm
@@ -73,3 +75,8 @@ class ICourseDiscussions(IContainer, IContained, ILastModified):
 		"""
 		clear all entries in this Container
 		"""
+
+class ICourseDiscussionList(ISequence):
+	"""
+	A marker interface for a sequence of course discussion objects
+	"""
