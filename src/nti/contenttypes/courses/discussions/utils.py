@@ -74,8 +74,8 @@ def get_course_for_discussion(discussion, context):
 	return None
 
 def get_discussion_for_path(path, context):
-	path = os.path.sep + path if not path.startswith(os.path.sep) else os.path.sep
 	parent = get_parent_course(context)
+	path = os.path.sep + path if not path.startswith(os.path.sep) else os.path.sep
 	if parent is not None:
 		splits = path.split(os.path.sep)
 		if SECTIONS in splits and len(splits) >= 2 and splits[1] == SECTIONS:  # e.g. /Sections/02/Discussions/p.json
