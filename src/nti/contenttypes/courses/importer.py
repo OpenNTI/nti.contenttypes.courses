@@ -83,8 +83,6 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 
-from nti.site.hostpolicy import get_host_site
-
 from nti.site.interfaces import IHostPolicyFolder
 
 from nti.site.utils import registerUtility
@@ -176,8 +174,7 @@ class CourseOutlineImporter(BaseSectionImporter):
 
 		# get site registry
 		folder = find_interface(course, IHostPolicyFolder, strict=False)
-		site = get_host_site(folder.__name__)
-		registry = site.getSiteManager()
+		registry = folder.getSiteManager()
 
 		# register nodes
 		def _recur(node, idx=0):
