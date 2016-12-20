@@ -19,14 +19,14 @@ from zope.location.interfaces import IContained
 from zope.schema.vocabulary import SimpleTerm
 from zope.schema.vocabulary import SimpleVocabulary
 
+from nti.base.interfaces import ITitled
+from nti.base.interfaces import ICreated
+from nti.base.interfaces import ILastModified
+
 from nti.contenttypes.courses.discussions.schema import DiscussionModeledContentBody
 
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
-
-from nti.coremetadata.interfaces import ITitled
-from nti.coremetadata.interfaces import ICreated
-from nti.coremetadata.interfaces import ILastModified
 
 from nti.dataserver_fragments.interfaces import ITaggedContent
 
