@@ -227,15 +227,15 @@
 	<!-- anything that can get IPrincipalEnrollments -->
 	<subscriber handler=".enrollment.on_principal_deletion_unenroll"
 				for="zope.security.interfaces.IPrincipal
-					 nti.intid.interfaces.IIntIdRemovedEvent" />
+					 zc.intid.interfaces.IBeforeIdRemovedEvent" />
 
 	<subscriber handler=".enrollment.on_principal_deletion_unenroll"
 				for="nti.dataserver.interfaces.IUser
-					 nti.intid.interfaces.IIntIdRemovedEvent" />
+					 zc.intid.interfaces.IBeforeIdRemovedEvent" />
 
 	<subscriber handler=".enrollment.on_course_deletion_unenroll"
 				for=".interfaces.ICourseInstance
-					 nti.intid.interfaces.IIntIdRemovedEvent"/>
+					 zc.intid.interfaces.IBeforeIdRemovedEvent"/>
 
 	<!-- deny open enrollment -->
 	<subscriber handler=".enrollment.check_open_enrollment_record_added" />
