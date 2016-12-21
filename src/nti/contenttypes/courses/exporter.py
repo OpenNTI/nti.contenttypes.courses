@@ -9,6 +9,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import os
 import six
 import time
 import hashlib
@@ -104,6 +105,11 @@ class BaseSectionExporter(object):
 						   specific=specific)
 		return ntiid
 
+	def hash_filename(self, name, salt=None):
+		root, ext = os.path.splitext(name)
+		root = self.hexdigest(root, salt)
+		return root + ext
+
 	def dump(self, ext_obj):
 		source = StringIO()
 		simplejson.dump(ext_obj, source, indent='\t', sort_keys=True)
@@ -120,7 +126,7 @@ class BaseSectionExporter(object):
 @interface.implementer(ICourseSectionExporter)
 class CourseOutlineExporter(BaseSectionExporter):
 
-	def asXML(self, outline, course=None):
+	def asXML(self, outline, course=None, backup=False, salt=None):
 		DOMimpl = minidom.getDOMImplementation()
 		xmldoc = DOMimpl.createDocument(None, "course", None)
 		doc_root = xmldoc.documentElement
@@ -146,7 +152,8 @@ class CourseOutlineExporter(BaseSectionExporter):
 			if ICourseOutlineCalendarNode.providedBy(node):
 				xml_node = xmldoc.createElement("lesson")
 				if node.src:
-					xml_node.setAttribute("src", node.src)
+					src = self.hash_filename(node.src, salt) if not backup else node.src
+					xml_node.setAttribute("src", src)
 					xml_node.setAttribute("isOutlineStubOnly", "false")
 				else:
 					xml_node.setAttribute("isOutlineStubOnly", "true")
@@ -182,7 +189,7 @@ class CourseOutlineExporter(BaseSectionExporter):
 		result = xmldoc.toprettyxml(encoding="UTF-8")
 		return result
 
-	def _export_remover(self, ext_obj):
+	def _export_remover(self, ext_obj, salt):
 		if isinstance(ext_obj, Mapping):
 			for key in (ID, OID, NTIID, NTIID.lower()):
 				ext_obj.pop(key, None)
@@ -191,11 +198,15 @@ class CourseOutlineExporter(BaseSectionExporter):
 			if ContentNTIID and ContentNTIID == LessonOverviewNTIID:
 				ext_obj.pop('ContentNTIID', None)
 			ext_obj.pop('LessonOverviewNTIID', None)
+			src = ext_obj.get('src')
+			if src: # hash source
+				src = self.hash_filename(src, salt)
+				ext_obj['src'] = src
 			for value in ext_obj.values():
-				self._export_remover(value)
+				self._export_remover(value, salt)
 		elif isinstance(ext_obj, (list, tuple, set)):
 			for value in ext_obj:
-				self._export_remover(value)
+				self._export_remover(value, salt)
 
 	def export(self, context, filer, backup=True, salt=None):
 		course = ICourseInstance(context)
@@ -204,13 +215,13 @@ class CourseOutlineExporter(BaseSectionExporter):
 		# as json
 		ext_obj = to_external_object(course.Outline, name='exporter', decorate=False)
 		if not backup:
-			self._export_remover(ext_obj)
+			self._export_remover(ext_obj, salt)
 		source = self.dump(ext_obj)
 		filer.save(COURSE_OUTLINE_NAME, source, contentType="application/json",
 				   bucket=bucket, overwrite=True)
 
 		# as xml
-		source = self.asXML(course.Outline, course)
+		source = self.asXML(course.Outline, course, backup=backup, salt=salt)
 		filer.save("course_outline.xml", source, contentType="application/xml",
 					bucket=bucket, overwrite=True)
 
