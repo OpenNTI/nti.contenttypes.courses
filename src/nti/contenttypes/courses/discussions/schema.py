@@ -9,8 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from nti.dataserver_fragments.schema import CompoundModeledContentBody
-from nti.dataserver_fragments.schema import legacyModeledContentBodyTypes
+from nti.coremetadata.schema import CompoundModeledContentBody
+from nti.coremetadata.schema import legacyModeledContentBodyTypes
 
 from nti.schema.field import ValidText
 

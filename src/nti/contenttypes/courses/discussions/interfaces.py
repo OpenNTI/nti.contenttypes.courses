@@ -28,7 +28,7 @@ from nti.contenttypes.courses.discussions.schema import DiscussionModeledContent
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
-from nti.dataserver_fragments.interfaces import ITaggedContent
+from nti.coremetadata.interfaces import ITaggedContent
 
 from nti.namedfile.interfaces import INamedFile
 from nti.namedfile.interfaces import IFileConstrained
