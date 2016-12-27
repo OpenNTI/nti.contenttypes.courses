@@ -228,8 +228,10 @@ class CourseBoardACLProvider( CommunityBoardACLProvider ):
 
 	def _extend_acl_after_creator_and_sharing(self, acl):
 		super( CourseBoardACLProvider, self )._extend_acl_after_creator_and_sharing( acl )
-		__traceback_info__ = self.context,
-		course = find_interface(self.context, ICourseInstance)
+		course = find_interface(self.context, ICourseInstance, strict=False)
+		if course is None:
+			__traceback_info__ = self.context
+			raise TypeError("Not enough context information to get all parents")
 		for editor in get_course_editors(course):
 			acl.append(ace_allowing(editor, ACT_READ, type(self)))
 
