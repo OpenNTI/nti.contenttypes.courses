@@ -81,6 +81,7 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 		lifecycleevent.created(board)
 		self['Discussions'] = board
 		board.createDefaultForum()
+		board.__parent__ = self # make sure root is set
 		return board
 
 	def _delete_Outline(self):
