@@ -546,6 +546,14 @@ def clear_course_outline(course):
 		unregister_outline_nodes(course)
 		course.Outline.clear()  # clear outline
 
+def unenroll(record, user):
+	try:
+		course = record.CourseInstance
+		enrollment_manager = ICourseEnrollmentManager(course)
+		enrollment_manager.drop(user)
+	except (TypeError, KeyError):
+		pass
+
 # site manager
 
 def set_course_site_manager(course, site=component):

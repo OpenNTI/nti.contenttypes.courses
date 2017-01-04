@@ -55,7 +55,6 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseRolesSynchronized
@@ -70,6 +69,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.interfaces import iface_of_node
 
+from nti.contenttypes.courses.utils import unenroll
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import index_course_roles
 from nti.contenttypes.courses.utils import get_courses_catalog
@@ -224,14 +224,6 @@ def on_course_vendor_info_synced(course, event):
 	doc_id = intids.queryId(course) if intids is not None else None
 	if doc_id is not None:
 		catalog.index_doc(doc_id, course)
-
-def unenroll(record, user):
-	try:
-		course = record.CourseInstance
-		enrollment_manager = ICourseEnrollmentManager(course)
-		enrollment_manager.drop(user)
-	except (TypeError, KeyError):
-		pass
 
 @component.adapter(IUser, IWillDeleteEntityEvent)
 def on_user_removed(user, event):
