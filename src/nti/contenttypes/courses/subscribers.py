@@ -264,12 +264,16 @@ def unindex_enrollment_records(course):
 	ntiid = getattr(entry, 'ntiid', None)
 	logger.info('Removing enrollment records for %s', ntiid)
 	if catalog is not None and ntiid:
+		intids = component.queryUtility(IIntIds)
 		site = getSite().__name__
 		query = {
 			IX_SITE: {'any_of':(site,)},
 			IX_COURSE: {'any_of':(ntiid,)}
 		}
 		for uid in catalog.apply(query) or ():
+			record = intids.queryObject(uid)
+			if ICourseInstanceEnrollmentRecord.providedBy(record):
+				unenroll(record, record.Principal)
 			catalog.unindex_doc(uid)
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
