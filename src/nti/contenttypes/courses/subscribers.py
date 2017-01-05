@@ -279,8 +279,6 @@ def unindex_enrollment_records(course):
             IX_COURSE: {'any_of': (ntiid,)},
             IX_SITE: {'any_of': (site_name,)},
         }
-        from IPython.core.debugger import Tracer; Tracer()()
-        print(query)
         for uid in catalog.apply(query) or ():
             catalog.unindex_doc(uid)
 
