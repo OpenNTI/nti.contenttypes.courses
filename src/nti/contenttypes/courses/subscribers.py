@@ -12,7 +12,6 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 
 from zope.component.hooks import site
-from zope.component.hooks import getSite
 
 from zope.event import notify
 
@@ -35,6 +34,8 @@ from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
 
 from nti.contenttypes.courses import get_enrollment_catalog
+
+from nti.contenttypes.courses.common import get_course_site_name
 
 from nti.contenttypes.courses.catalog import CourseCatalogFolder
 
@@ -270,8 +271,8 @@ def remove_enrollment_records(course):
 
 
 def unindex_enrollment_records(course):
-    site_name = getSite().__name__
     catalog = get_enrollment_catalog()
+    site_name = get_course_site_name(course)
     entry = ICourseCatalogEntry(course, None)
     ntiid = getattr(entry, 'ntiid', None)
     if catalog is not None and ntiid and site_name:
