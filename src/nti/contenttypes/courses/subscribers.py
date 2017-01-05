@@ -270,13 +270,17 @@ def remove_enrollment_records(course):
 
 
 def unindex_enrollment_records(course):
+    site_name = getSite().__name__
     catalog = get_enrollment_catalog()
     entry = ICourseCatalogEntry(course, None)
-    if catalog is not None and entry is not None:
+    ntiid = getattr(entry, 'ntiid', None)
+    if catalog is not None and ntiid and site_name:
         query = {
-            IX_COURSE: {'any_of': (entry.ntiid,)},
-            IX_SITE: {'any_of': (getSite().__name__,)},
+            IX_COURSE: {'any_of': (ntiid,)},
+            IX_SITE: {'any_of': (site_name,)},
         }
+        from IPython.core.debugger import Tracer; Tracer()()
+        print(query)
         for uid in catalog.apply(query) or ():
             catalog.unindex_doc(uid)
 
