@@ -55,6 +55,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseRolesSynchronized
@@ -263,25 +264,26 @@ def on_user_removed(user, event):
             index.remove(uid, record)  # KeepSet index
 
 
+def remove_enrollment_records(course):
+    manager = ICourseEnrollmentManager(course)
+    manager.drop_all()
+
+
 def unindex_enrollment_records(course):
     catalog = get_enrollment_catalog()
     entry = ICourseCatalogEntry(course, None)
     if catalog is not None and entry is not None:
-        logger.info('Removing enrollment records for %s', entry.ntiid)
-        intids = component.getUtility(IIntIds)
         query = {
             IX_COURSE: {'any_of': (entry.ntiid,)},
             IX_SITE: {'any_of': (getSite().__name__,)},
         }
         for uid in catalog.apply(query) or ():
-            record = intids.queryObject(uid)
             catalog.unindex_doc(uid)
-            if ICourseInstanceEnrollmentRecord.providedBy(record):
-                unenroll(record, record.Principal)
 
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def on_course_instance_removed(course, event):
+    remove_enrollment_records(course)
     unindex_enrollment_records(course)
     if 		not ICourseSubInstance.providedBy(course) \
             or course.Outline is not get_parent_course(course).Outline:
