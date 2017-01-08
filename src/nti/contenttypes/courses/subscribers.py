@@ -244,7 +244,7 @@ def on_user_removed(user, event):
     logger.info('Removing enrollment records for %s', user.username)
     catalog = get_enrollment_catalog()
     if catalog is not None:
-        intids = component.queryUtility(IIntIds)
+        intids = component.getUtility(IIntIds)
         # remove enrollment records
         query = {
             IX_USERNAME: {'any_of': (user.username,)},
