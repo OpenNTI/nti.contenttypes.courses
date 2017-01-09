@@ -26,29 +26,30 @@ from nti.externalization.oids import to_external_ntiid_oid
 
 from nti.ntiids.ntiids import TYPE_OID
 
+
 @interface.implementer(ICourseInstanceBoard)
 class CourseInstanceBoard(CommunityBoard):
-	"""
-	The board for a course.
-	"""
+    """
+    The board for a course.
+    """
 
-	# The iPad isn't ready to have this appear externally as something different
-	# mime_type = mimeType = 'application/vnd.nextthought.courses.courseinstanceboard'
+    # The iPad isn't ready to have this appear externally as something different
+    # mime_type = mimeType = 'application/vnd.nextthought.courses.courseinstanceboard'
 
-	__external_class_name__ = 'CommunityBoard'
+    __external_class_name__ = 'CommunityBoard'
 
-	# Override things related to ntiids.
-	# These don't have global names, so they must be referenced
-	# by OID
-	NTIID_TYPE = _ntiid_type = TYPE_OID
-	NTIID = cachedIn('_v_ntiid')(to_external_ntiid_oid)
+    # Override things related to ntiids.
+    # These don't have global names, so they must be referenced
+    # by OID
+    NTIID_TYPE = _ntiid_type = TYPE_OID
+    NTIID = cachedIn('_v_ntiid')(to_external_ntiid_oid)
 
-	def createDefaultForum(self):
-		if CommunityForum.__default_name__ in self:
-			return self[CommunityForum.__default_name__]
+    def createDefaultForum(self):
+        if CommunityForum.__default_name__ in self:
+            return self[CommunityForum.__default_name__]
 
-		forum = CommunityForum()
-		forum.creator = self.creator
-		self[forum.__default_name__] = forum
-		forum.title = _('Forum')
-		return forum
+        forum = CommunityForum()
+        forum.creator = self.creator
+        self[forum.__default_name__] = forum
+        forum.title = _('Forum')
+        return forum

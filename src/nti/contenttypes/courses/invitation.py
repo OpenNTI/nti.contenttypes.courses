@@ -36,51 +36,54 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.schema.fieldproperty import createDirectFieldProperties
 
+
 @interface.implementer(IJoinCourseInvitation)
 class JoinCourseInvitation(Invitation):
-	createDirectFieldProperties(IJoinCourseInvitation)
+    createDirectFieldProperties(IJoinCourseInvitation)
 
-	mimeType = mime_type = u"application/vnd.nextthought.joincourseinvitation"
+    mimeType = mime_type = u"application/vnd.nextthought.joincourseinvitation"
 
-	@readproperty
-	def scope(self):
-		return ES_PUBLIC
+    @readproperty
+    def scope(self):
+        return ES_PUBLIC
 
-	@readproperty
-	def name(self):
-		return self.receiver
+    @readproperty
+    def name(self):
+        return self.receiver
 
-	@readproperty
-	def email(self):
-		return self.receiver
+    @readproperty
+    def email(self):
+        return self.receiver
+
 
 @interface.implementer(IJoinCourseInvitationActor)
 class JoinCourseInvitationActor(object):
 
-	def __init__(self, invitation=None):
-		self.invitation = invitation
+    def __init__(self, invitation=None):
+        self.invitation = invitation
 
-	def accept(self, user, invitation=None):
-		invitation = self.invitation if invitation is None else invitation
-		entry = invitation.course
-		scope = invitation.scope or ES_PUBLIC
-		catalog = component.queryUtility(ICourseCatalog)
-		if catalog is None:
-			raise CourseCatalogUnavailableException()
+    def accept(self, user, invitation=None):
+        invitation = self.invitation if invitation is None else invitation
+        entry = invitation.course
+        scope = invitation.scope or ES_PUBLIC
+        catalog = component.queryUtility(ICourseCatalog)
+        if catalog is None:
+            raise CourseCatalogUnavailableException()
 
-		# find course
-		course = find_object_with_ntiid(entry)
-		if course is None:
-			course = catalog.getCatalogEntry(entry)
+        # find course
+        course = find_object_with_ntiid(entry)
+        if course is None:
+            course = catalog.getCatalogEntry(entry)
 
-		course = ICourseInstance(course, None)
-		if course is None:
-			raise CourseNotFoundException()
+        course = ICourseInstance(course, None)
+        if course is None:
+            raise CourseNotFoundException()
 
-		record = get_enrollment_in_hierarchy(course, user)
-		if record is not None:
-			raise AlreadyEnrolledException(_("You are already enrolled in this course."))
+        record = get_enrollment_in_hierarchy(course, user)
+        if record is not None:
+            raise AlreadyEnrolledException(
+                _("You are already enrolled in this course."))
 
-		enrollment_manager = ICourseEnrollmentManager(course)
-		enrollment_manager.enroll(user, scope=scope)
-		return True
+        enrollment_manager = ICourseEnrollmentManager(course)
+        enrollment_manager.enroll(user, scope=scope)
+        return True

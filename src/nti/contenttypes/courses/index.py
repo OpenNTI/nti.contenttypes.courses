@@ -51,50 +51,59 @@ from nti.zope_catalog.index import IntegerValueIndex as RawIntegerValueIndex
 # Deprecations
 
 deprecated('ValidatingUsernameID', 'Use latest index implementation')
+
+
 class ValidatingUsernameID(object):
 
-	def __init__(self, *args, **kwargs):
-		pass
+    def __init__(self, *args, **kwargs):
+        pass
 
 deprecated('SiteIndex', 'Replaced with SingleSiteIndex')
+
+
 class SiteIndex(RawSetIndex):
-	pass
+    pass
 
 deprecated('ScopeIndex', 'Replaced with ScopeSetIndex')
+
+
 class ScopeIndex(ValueIndex):
-	pass
+    pass
 
 deprecated('ValidatingScope', 'Use new implementation')
+
+
 class ValidatingScope(object):
-	pass
+    pass
 
 # Utilities
 
+
 class KeepSetIndex(RawSetIndex):
 
-	empty_set = set()
+    empty_set = set()
 
-	def to_iterable(self, value):
-		return value
+    def to_iterable(self, value):
+        return value
 
-	def index_doc(self, doc_id, value):
-		value = {v for v in self.to_iterable(value) if v is not None}
-		old = self.documents_to_values.get(doc_id) or self.empty_set
-		if value.difference(old):
-			value.update(old)
-			result = super(KeepSetIndex, self).index_doc(doc_id, value)
-			return result
+    def index_doc(self, doc_id, value):
+        value = {v for v in self.to_iterable(value) if v is not None}
+        old = self.documents_to_values.get(doc_id) or self.empty_set
+        if value.difference(old):
+            value.update(old)
+            result = super(KeepSetIndex, self).index_doc(doc_id, value)
+            return result
 
-	def remove(self, doc_id, value):
-		old = set(self.documents_to_values.get(doc_id) or ())
-		if not old:
-			return
-		for v in self.to_iterable(value):
-			old.discard(v)
-		if old:
-			super(KeepSetIndex, self).index_doc(doc_id, old)
-		else:
-			super(KeepSetIndex, self).unindex_doc(doc_id)
+    def remove(self, doc_id, value):
+        old = set(self.documents_to_values.get(doc_id) or ())
+        if not old:
+            return
+        for v in self.to_iterable(value):
+            old.discard(v)
+        if old:
+            super(KeepSetIndex, self).index_doc(doc_id, old)
+        else:
+            super(KeepSetIndex, self).unindex_doc(doc_id)
 
 # Enrollment catalog
 
@@ -107,97 +116,107 @@ IX_SCOPE = 'scope'
 IX_ENTRY = IX_COURSE = 'course'
 IX_USERNAME = IX_STUDENT = IX_INSTRUCTOR = 'username'
 
+
 class ValidatingSiteName(object):
 
-	__slots__ = (b'site',)
+    __slots__ = (b'site',)
 
-	def __init__(self, obj, default=None):
-		# For value indexes, we do not want our course to be unindexed
-		# (on modification events, e.g. assessment policies modified) because
-		# this validator returns None.
-		if isinstance(obj, IndexRecord):
-			self.site = unicode(getSite().__name__)
-		elif 	ICourseInstanceEnrollmentRecord.providedBy(obj) \
-			or  ICourseInstance.providedBy( obj ):
-			course = ICourseInstance(obj, None)
-			self.site = get_course_site(course) or getSite().__name__
+    def __init__(self, obj, default=None):
+        # For value indexes, we do not want our course to be unindexed
+        # (on modification events, e.g. assessment policies modified) because
+        # this validator returns None.
+        if isinstance(obj, IndexRecord):
+            self.site = unicode(getSite().__name__)
+        elif 	ICourseInstanceEnrollmentRecord.providedBy(obj) \
+                or ICourseInstance.providedBy(obj):
+            course = ICourseInstance(obj, None)
+            self.site = get_course_site(course) or getSite().__name__
 
-	def __reduce__(self):
-		raise TypeError()
+    def __reduce__(self):
+        raise TypeError()
+
 
 class SingleSiteIndex(ValueIndex):
-	default_field_name = 'site'
-	default_interface = ValidatingSiteName
+    default_field_name = 'site'
+    default_interface = ValidatingSiteName
+
 
 class UsernameIndex(KeepSetIndex):
 
-	def to_iterable(self, value):
-		if isinstance(value, IndexRecord):
-			result = (to_unicode(value.username),)
-		elif ICourseInstanceEnrollmentRecord.providedBy(value):
-			result = (value.Principal.id,) if value.Principal is not None else ()
-		else:
-			result = ()
-		return result
+    def to_iterable(self, value):
+        if isinstance(value, IndexRecord):
+            result = (to_unicode(value.username),)
+        elif ICourseInstanceEnrollmentRecord.providedBy(value):
+            result = (
+                value.Principal.id,) if value.Principal is not None else ()
+        else:
+            result = ()
+        return result
+
 
 class ScopeSetIndex(KeepSetIndex):
 
-	def to_iterable(self, value):
-		if isinstance(value, IndexRecord):
-			result = (to_unicode(value.Scope),)
-		elif ICourseInstanceEnrollmentRecord.providedBy(value):
-			result = (to_unicode(value.Scope),)
-		else:
-			result = ()
-		return result
+    def to_iterable(self, value):
+        if isinstance(value, IndexRecord):
+            result = (to_unicode(value.Scope),)
+        elif ICourseInstanceEnrollmentRecord.providedBy(value):
+            result = (to_unicode(value.Scope),)
+        else:
+            result = ()
+        return result
+
 
 class ValidatingCatalogEntryID(object):
 
-	__slots__ = (b'ntiid',)
+    __slots__ = (b'ntiid',)
 
-	def __init__(self, obj, default=None):
-		# See site index notes.
-		if isinstance(obj, IndexRecord):
-			self.ntiid = to_unicode(obj.ntiid)
-		elif 	ICourseInstanceEnrollmentRecord.providedBy(obj) \
-			or  ICourseInstance.providedBy( obj ):
-			course = getattr( obj, 'CourseInstance', obj )
-			entry = ICourseCatalogEntry(course, None)
-			if entry is not None:
-				self.ntiid = unicode(entry.ntiid)
+    def __init__(self, obj, default=None):
+        # See site index notes.
+        if isinstance(obj, IndexRecord):
+            self.ntiid = to_unicode(obj.ntiid)
+        elif 	ICourseInstanceEnrollmentRecord.providedBy(obj) \
+                or ICourseInstance.providedBy(obj):
+            course = getattr(obj, 'CourseInstance', obj)
+            entry = ICourseCatalogEntry(course, None)
+            if entry is not None:
+                self.ntiid = unicode(entry.ntiid)
 
-	def __reduce__(self):
-		raise TypeError()
+    def __reduce__(self):
+        raise TypeError()
+
 
 class CatalogEntryIDIndex(ValueIndex):
-	default_field_name = 'ntiid'
-	default_interface = ValidatingCatalogEntryID
+    default_field_name = 'ntiid'
+    default_interface = ValidatingCatalogEntryID
+
 
 @interface.implementer(ICatalog)
 class EnrollmentCatalog(Catalog):
-	pass
+    pass
+
 
 def install_enrollment_catalog(site_manager_container, intids=None):
-	lsm = site_manager_container.getSiteManager()
-	intids = lsm.getUtility(IIntIds) if intids is None else intids
-	catalog = lsm.queryUtility(ICatalog, name=ENROLLMENT_CATALOG_NAME)
-	if catalog is not None:
-		return catalog
+    lsm = site_manager_container.getSiteManager()
+    intids = lsm.getUtility(IIntIds) if intids is None else intids
+    catalog = lsm.queryUtility(ICatalog, name=ENROLLMENT_CATALOG_NAME)
+    if catalog is not None:
+        return catalog
 
-	catalog = EnrollmentCatalog(family=intids.family)
-	locate(catalog, site_manager_container, ENROLLMENT_CATALOG_NAME)
-	intids.register(catalog)
-	lsm.registerUtility(catalog, provided=ICatalog, name=ENROLLMENT_CATALOG_NAME)
+    catalog = EnrollmentCatalog(family=intids.family)
+    locate(catalog, site_manager_container, ENROLLMENT_CATALOG_NAME)
+    intids.register(catalog)
+    lsm.registerUtility(
+        catalog, provided=ICatalog, name=ENROLLMENT_CATALOG_NAME)
 
-	for name, clazz in ((IX_SCOPE, ScopeSetIndex),
-						(IX_SITE, SingleSiteIndex),
-						(IX_USERNAME, UsernameIndex),
-						(IX_ENTRY, CatalogEntryIDIndex)):
-		index = clazz(family=intids.family)
-		intids.register(index)
-		locate(index, catalog, name)
-		catalog[name] = index
-	return catalog
+    for name, clazz in ((IX_SCOPE, ScopeSetIndex),
+                        (IX_SITE, SingleSiteIndex),
+                        (IX_USERNAME, UsernameIndex),
+                        (IX_ENTRY, CatalogEntryIDIndex)):
+        index = clazz(family=intids.family)
+        intids.register(index)
+        locate(index, catalog, name)
+        catalog[name] = index
+    return catalog
 
 # Courses catalog
 
@@ -206,99 +225,110 @@ IX_PACKAGES = 'packages'
 IX_KEYWORDS = 'keywords'
 COURSES_CATALOG_NAME = 'nti.dataserver.++etc++courses-catalog'
 
+
 class ValidatingCourseSiteName(object):
 
-	__slots__ = (b'site',)
+    __slots__ = (b'site',)
 
-	def __init__(self, obj, default=None):
-		if ICourseInstance.providedBy(obj):
-			self.site = get_course_site(obj) or u''
+    def __init__(self, obj, default=None):
+        if ICourseInstance.providedBy(obj):
+            self.site = get_course_site(obj) or u''
 
-	def __reduce__(self):
-		raise TypeError()
+    def __reduce__(self):
+        raise TypeError()
+
 
 class CourseSiteIndex(ValueIndex):
-	default_field_name = 'site'
-	default_interface = ValidatingCourseSiteName
+    default_field_name = 'site'
+    default_interface = ValidatingCourseSiteName
+
 
 class ValidatingCourseName(object):
 
-	__slots__ = (b'name',)
+    __slots__ = (b'name',)
 
-	def __init__(self, obj, default=None):
-		if ICourseInstance.providedBy(obj):
-			self.name = obj.__name__
+    def __init__(self, obj, default=None):
+        if ICourseInstance.providedBy(obj):
+            self.name = obj.__name__
 
-	def __reduce__(self):
-		raise TypeError()
+    def __reduce__(self):
+        raise TypeError()
+
 
 class CourseNameIndex(ValueIndex):
-	default_field_name = 'name'
-	default_interface = ValidatingCourseName
+    default_field_name = 'name'
+    default_interface = ValidatingCourseName
+
 
 class ValidatingCourseCatalogEntry(object):
 
-	__slots__ = (b'ntiid',)
+    __slots__ = (b'ntiid',)
 
-	def __init__(self, obj, default=None):
-		if ICourseInstance.providedBy(obj):
-			entry = ICourseCatalogEntry(obj, None)
-			self.ntiid = getattr(entry, 'ntiid', None)
+    def __init__(self, obj, default=None):
+        if ICourseInstance.providedBy(obj):
+            entry = ICourseCatalogEntry(obj, None)
+            self.ntiid = getattr(entry, 'ntiid', None)
 
-	def __reduce__(self):
-		raise TypeError()
+    def __reduce__(self):
+        raise TypeError()
+
 
 class CourseCatalogEntryIndex(ValueIndex):
-	default_field_name = 'ntiid'
-	default_interface = ValidatingCourseCatalogEntry
+    default_field_name = 'ntiid'
+    default_interface = ValidatingCourseCatalogEntry
+
 
 class ValidatingCoursePackages(object):
 
-	__slots__ = (b'packages',)
+    __slots__ = (b'packages',)
 
-	def __init__(self, obj, default=None):
-		if ICourseInstance.providedBy(obj):
-			packs = get_course_packages(obj)
-			self.packages = {getattr(x, 'ntiid', None) for x in packs}
-			self.packages.discard(None)
+    def __init__(self, obj, default=None):
+        if ICourseInstance.providedBy(obj):
+            packs = get_course_packages(obj)
+            self.packages = {getattr(x, 'ntiid', None) for x in packs}
+            self.packages.discard(None)
 
-	def __reduce__(self):
-		raise TypeError()
+    def __reduce__(self):
+        raise TypeError()
+
 
 class CoursePackagesIndex(AttributeSetIndex):
-	default_field_name = 'packages'
-	default_interface = ValidatingCoursePackages
+    default_field_name = 'packages'
+    default_interface = ValidatingCoursePackages
+
 
 class CourseKeywordsIndex(AttributeKeywordIndex):
-	default_field_name = 'keywords'
-	default_interface = ICourseKeywords
+    default_field_name = 'keywords'
+    default_interface = ICourseKeywords
+
 
 @interface.implementer(ICatalog)
 class CoursesCatalog(Catalog):
-	pass
+    pass
+
 
 def install_courses_catalog(site_manager_container, intids=None):
-	lsm = site_manager_container.getSiteManager()
-	intids = lsm.getUtility(IIntIds) if intids is None else intids
-	catalog = lsm.queryUtility(ICatalog, name=COURSES_CATALOG_NAME)
-	if catalog is not None:
-		return catalog
+    lsm = site_manager_container.getSiteManager()
+    intids = lsm.getUtility(IIntIds) if intids is None else intids
+    catalog = lsm.queryUtility(ICatalog, name=COURSES_CATALOG_NAME)
+    if catalog is not None:
+        return catalog
 
-	catalog = CoursesCatalog(family=intids.family)
-	locate(catalog, site_manager_container, COURSES_CATALOG_NAME)
-	intids.register(catalog)
-	lsm.registerUtility(catalog, provided=ICatalog, name=COURSES_CATALOG_NAME)
+    catalog = CoursesCatalog(family=intids.family)
+    locate(catalog, site_manager_container, COURSES_CATALOG_NAME)
+    intids.register(catalog)
+    lsm.registerUtility(catalog, provided=ICatalog, name=COURSES_CATALOG_NAME)
 
-	for name, clazz in ((IX_NAME, CourseNameIndex),
-						(IX_SITE, CourseSiteIndex),
-						(IX_PACKAGES, CoursePackagesIndex),
-						(IX_KEYWORDS, CourseKeywordsIndex),
-						(IX_ENTRY, CourseCatalogEntryIndex)):
-		index = clazz(family=intids.family)
-		intids.register(index)
-		locate(index, catalog, name)
-		catalog[name] = index
-	return catalog
+    for name, clazz in ((IX_NAME, CourseNameIndex),
+                        (IX_SITE, CourseSiteIndex),
+                        (IX_PACKAGES, CoursePackagesIndex),
+                        (IX_KEYWORDS, CourseKeywordsIndex),
+                        (IX_ENTRY, CourseCatalogEntryIndex)):
+        index = clazz(family=intids.family)
+        intids.register(index)
+        locate(index, catalog, name)
+        catalog[name] = index
+    return catalog
 
 # outline catalog
 
@@ -309,83 +339,96 @@ IX_AVAILABLE_ENDING = 'AvailableEnding'
 IX_AVAILABLE_BEGINNING = 'AvailableBeginning'
 COURSE_OUTLINE_CATALOG_NAME = 'nti.dataserver.++etc++course-outline-catalog'
 
+
 class NodeSrcIndex(ValueIndex):
-	default_field_name = 'src'
-	default_interface = ICourseOutlineNode
+    default_field_name = 'src'
+    default_interface = ICourseOutlineNode
+
 
 class NodeContentUnitIndex(ValueIndex):
-	default_field_name = 'ContentNTIID'
-	default_interface = ICourseOutlineNode
+    default_field_name = 'ContentNTIID'
+    default_interface = ICourseOutlineNode
+
 
 class NodeLessonOverviewIndex(ValueIndex):
-	default_field_name = 'LessonOverviewNTIID'
-	default_interface = ICourseOutlineNode
+    default_field_name = 'LessonOverviewNTIID'
+    default_interface = ICourseOutlineNode
+
 
 class ValidatingAvailableBeginning(object):
 
-	__slots__ = (b'AvailableBeginning',)
+    __slots__ = (b'AvailableBeginning',)
 
-	def __init__(self, obj, default=None):
-		if 		ICourseOutlineCalendarNode.providedBy(obj) \
-			and obj.AvailableBeginning is not None:
-			self.AvailableBeginning = time.mktime(obj.AvailableBeginning.timetuple())
+    def __init__(self, obj, default=None):
+        if 		ICourseOutlineCalendarNode.providedBy(obj) \
+                and obj.AvailableBeginning is not None:
+            self.AvailableBeginning = time.mktime(
+                obj.AvailableBeginning.timetuple())
 
-	def __reduce__(self):
-		raise TypeError()
+    def __reduce__(self):
+        raise TypeError()
+
 
 class NodeAvailableBeginningRawIndex(RawIntegerValueIndex):
-	pass
+    pass
+
 
 def NodeAvailableBeginningIndex(family=None):
-	return NormalizationWrapper(field_name='AvailableBeginning',
-								interface=ValidatingAvailableBeginning,
-								index=NodeAvailableBeginningRawIndex(family=family),
-								normalizer=TimestampToNormalized64BitIntNormalizer())
-	
+    return NormalizationWrapper(field_name='AvailableBeginning',
+                                interface=ValidatingAvailableBeginning,
+                                index=NodeAvailableBeginningRawIndex(family=family),
+                                normalizer=TimestampToNormalized64BitIntNormalizer())
+
+
 class ValidatingAvailableEnding(object):
 
-	__slots__ = (b'AvailableEnding',)
+    __slots__ = (b'AvailableEnding',)
 
-	def __init__(self, obj, default=None):
-		if 		ICourseOutlineCalendarNode.providedBy(obj) \
-			and obj.AvailableEnding is not None:
-			self.AvailableEnding = time.mktime(obj.AvailableEnding.timetuple())
+    def __init__(self, obj, default=None):
+        if 		ICourseOutlineCalendarNode.providedBy(obj) \
+                and obj.AvailableEnding is not None:
+            self.AvailableEnding = time.mktime(obj.AvailableEnding.timetuple())
 
-	def __reduce__(self):
-		raise TypeError()
+    def __reduce__(self):
+        raise TypeError()
+
 
 class NodeAvailableEndingRawIndex(RawIntegerValueIndex):
-	pass
+    pass
+
 
 def NodeAvailableEndingIndex(family=None):
-	return NormalizationWrapper(field_name='AvailableEnding',
-								interface=ValidatingAvailableEnding,
-								index=NodeAvailableEndingRawIndex(family=family),
-								normalizer=TimestampToNormalized64BitIntNormalizer())
+    return NormalizationWrapper(field_name='AvailableEnding',
+                                interface=ValidatingAvailableEnding,
+                                index=NodeAvailableEndingRawIndex(family=family),
+                                normalizer=TimestampToNormalized64BitIntNormalizer())
+
 
 @interface.implementer(ICatalog)
 class CourseOutlineCatalog(Catalog):
-	pass
+    pass
+
 
 def install_course_outline_catalog(site_manager_container, intids=None):
-	lsm = site_manager_container.getSiteManager()
-	intids = lsm.getUtility(IIntIds) if intids is None else intids
-	catalog = lsm.queryUtility(ICatalog, name=COURSE_OUTLINE_CATALOG_NAME)
-	if catalog is not None:
-		return catalog
+    lsm = site_manager_container.getSiteManager()
+    intids = lsm.getUtility(IIntIds) if intids is None else intids
+    catalog = lsm.queryUtility(ICatalog, name=COURSE_OUTLINE_CATALOG_NAME)
+    if catalog is not None:
+        return catalog
 
-	catalog = CourseOutlineCatalog(family=intids.family)
-	locate(catalog, site_manager_container, COURSE_OUTLINE_CATALOG_NAME)
-	intids.register(catalog)
-	lsm.registerUtility(catalog, provided=ICatalog, name=COURSE_OUTLINE_CATALOG_NAME)
+    catalog = CourseOutlineCatalog(family=intids.family)
+    locate(catalog, site_manager_container, COURSE_OUTLINE_CATALOG_NAME)
+    intids.register(catalog)
+    lsm.registerUtility(
+        catalog, provided=ICatalog, name=COURSE_OUTLINE_CATALOG_NAME)
 
-	for name, clazz in ((IX_SOURCE, NodeSrcIndex),
-						(IX_CONTENT_UNIT, NodeContentUnitIndex),
-						(IX_LESSON_OVERVIEW, NodeLessonOverviewIndex),
-						(IX_AVAILABLE_ENDING, NodeAvailableEndingIndex),
-						(IX_AVAILABLE_BEGINNING, NodeAvailableBeginningIndex)):
-		index = clazz(family=intids.family)
-		intids.register(index)
-		locate(index, catalog, name)
-		catalog[name] = index
-	return catalog
+    for name, clazz in ((IX_SOURCE, NodeSrcIndex),
+                        (IX_CONTENT_UNIT, NodeContentUnitIndex),
+                        (IX_LESSON_OVERVIEW, NodeLessonOverviewIndex),
+                        (IX_AVAILABLE_ENDING, NodeAvailableEndingIndex),
+                        (IX_AVAILABLE_BEGINNING, NodeAvailableBeginningIndex)):
+        index = clazz(family=intids.family)
+        intids.register(index)
+        locate(index, catalog, name)
+        catalog[name] = index
+    return catalog

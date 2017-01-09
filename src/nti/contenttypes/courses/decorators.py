@@ -19,24 +19,26 @@ from nti.externalization.interfaces import IExternalObjectDecorator
 
 from nti.externalization.singleton import SingletonDecorator
 
+
 @component.adapter(ICourseOutlineNode)
 @interface.implementer(IExternalObjectDecorator)
 class _CourseOutlineNodeDecorator(object):
 
-	__metaclass__ = SingletonDecorator
+    __metaclass__ = SingletonDecorator
 
-	def decorateExternalObject(self, original, external):
-		if not original.LessonOverviewNTIID:
-			external.pop('LessonOverviewNTIID', None)
-		if 'ntiid' not in external and getattr(original, 'ntiid', None):
-			external['ntiid'] = original.ntiid
+    def decorateExternalObject(self, original, external):
+        if not original.LessonOverviewNTIID:
+            external.pop('LessonOverviewNTIID', None)
+        if 'ntiid' not in external and getattr(original, 'ntiid', None):
+            external['ntiid'] = original.ntiid
+
 
 @component.adapter(ICourseOutline)
 @interface.implementer(IExternalObjectDecorator)
 class _CourseOutlineDecorator(object):
 
-	__metaclass__ = SingletonDecorator
+    __metaclass__ = SingletonDecorator
 
-	def decorateExternalObject(self, original, external):
-		external.pop('publishBeginning', None)
-		external.pop('publishEnding', None)
+    def decorateExternalObject(self, original, external):
+        external.pop('publishBeginning', None)
+        external.pop('publishEnding', None)

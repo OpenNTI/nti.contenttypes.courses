@@ -19,26 +19,28 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 
 from nti.ntiids.interfaces import INTIIDResolver
 
+
 @interface.implementer(INTIIDResolver)
 class _CourseInfoNTIIDResolver(object):
-	"""
-	Resolves course info ntiids through the catalog.
-	"""
+    """
+    Resolves course info ntiids through the catalog.
+    """
 
-	def resolve(self, ntiid):
-		catalog = component.queryUtility(ICourseCatalog)
-		try:
-			return catalog.getCatalogEntry(ntiid)
-		except (AttributeError, KeyError):
-			pass
-		return None
+    def resolve(self, ntiid):
+        catalog = component.queryUtility(ICourseCatalog)
+        try:
+            return catalog.getCatalogEntry(ntiid)
+        except (AttributeError, KeyError):
+            pass
+        return None
+
 
 @interface.implementer(INTIIDResolver)
 class _CourseOutlineNodeNTIIDResolver(object):
-	"""
-	Resolves outline nodes
-	"""
+    """
+    Resolves outline nodes
+    """
 
-	def resolve(self, ntiid):
-		result = component.queryUtility(ICourseOutlineNode, name=ntiid)
-		return result
+    def resolve(self, ntiid):
+        result = component.queryUtility(ICourseOutlineNode, name=ntiid)
+        return result

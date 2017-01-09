@@ -17,11 +17,10 @@ from zope.traversing.interfaces import IPathAdapter
 
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
+
 @interface.implementer(IPathAdapter)
 def CourseCatalogEntryTraverser(instance, request):
-	"""
-	Courses can be traversed to their catalog entry.
-	"""
-	return ICourseCatalogEntry(instance)
-
-
+    """
+    Courses can be traversed to their catalog entry.
+    """
+    return ICourseCatalogEntry(instance)

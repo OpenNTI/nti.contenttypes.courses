@@ -28,46 +28,48 @@ from nti.externalization.internalization import update_from_external_object
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
 
+
 @component.adapter(ICourseOutlineNode)
 @interface.implementer(IInternalObjectUpdater)
 class _CourseOutlineNodeUpdater(InterfaceObjectIO):
 
-	_ext_iface_upper_bound = ICourseOutlineNode
+    _ext_iface_upper_bound = ICourseOutlineNode
 
-	@property	
-	def node(self):
-		return self._ext_self
+    @property
+    def node(self):
+        return self._ext_self
 
-	def set_ntiid(self, parsed):
-		if NTIID.lower() in parsed or NTIID in parsed:
-			self.node.ntiid = parsed.get('ntiid') or parsed.get(NTIID)
+    def set_ntiid(self, parsed):
+        if NTIID.lower() in parsed or NTIID in parsed:
+            self.node.ntiid = parsed.get('ntiid') or parsed.get(NTIID)
 
-	def set_locked(self, parsed):
-		if not ICourseOutline.providedBy(self.node):
-			locked = parsed.get('isLocked')
-			if locked:
-				self.node.lock(event=False)
-			locked = parsed.get('isChildOrderLocked')
-			if locked:
-				self.node.childOrderLock(event=False)
-			
-	def updateFromExternalObject(self, parsed, *args, **kwargs):
-		self.set_ntiid(parsed)
-		self.set_locked(parsed)
-		isPublished = parsed.get('isPublished') # capture param
-		result = super(_CourseOutlineNodeUpdater, self).updateFromExternalObject(parsed, *args, **kwargs)
-		if ITEMS in parsed:
-			for item in parsed.get(ITEMS) or ():
-				# parse and update just in case
-				if isinstance(item, Mapping):
-					factory = find_factory_for(item)
-					new_node = factory()
-					update_from_external_object(new_node, item, **kwargs)
-				else:
-					new_node = item
-				self.node.append(new_node)
-		if 	isPublished \
-			and not ICourseOutline.providedBy(self.node) \
-			and self.node.publishBeginning is None:
-			self.node.publish(event=False)
-		return result
+    def set_locked(self, parsed):
+        if not ICourseOutline.providedBy(self.node):
+            locked = parsed.get('isLocked')
+            if locked:
+                self.node.lock(event=False)
+            locked = parsed.get('isChildOrderLocked')
+            if locked:
+                self.node.childOrderLock(event=False)
+
+    def updateFromExternalObject(self, parsed, *args, **kwargs):
+        self.set_ntiid(parsed)
+        self.set_locked(parsed)
+        isPublished = parsed.get('isPublished')  # capture param
+        result = super(_CourseOutlineNodeUpdater, self).updateFromExternalObject(
+            parsed, *args, **kwargs)
+        if ITEMS in parsed:
+            for item in parsed.get(ITEMS) or ():
+                # parse and update just in case
+                if isinstance(item, Mapping):
+                    factory = find_factory_for(item)
+                    new_node = factory()
+                    update_from_external_object(new_node, item, **kwargs)
+                else:
+                    new_node = item
+                self.node.append(new_node)
+        if 		isPublished \
+                and not ICourseOutline.providedBy(self.node) \
+                and self.node.publishBeginning is None:
+            self.node.publish(event=False)
+        return result
