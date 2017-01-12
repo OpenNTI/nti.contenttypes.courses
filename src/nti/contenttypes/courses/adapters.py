@@ -20,11 +20,12 @@ from zope.traversing.api import traverse
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseKeywords
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+from nti.contenttypes.courses.interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
 
+from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_vendor_info
-
-from nti.ntiids.ntiids import make_specific_safe
 
 from nti.traversal.traversal import find_interface
 
@@ -77,26 +78,25 @@ def _invitation_gatherer(data):
     return result
 
 
-def _paths(course):
-    raw = []
-    safe = []
-    o = course
-    while o is not None:
-        try:
-            name = o.__name__
-            if name:
-                raw.append(name)
-                safe.append(make_specific_safe(name))
-            if not name or ICourseAdministrativeLevel.providedBy(o):
-                break
-            o = o.__parent__
-        except AttributeError:
-            break
-    result = {raw[-1], raw[0]}  # admin level & section/name
-    for p in (raw, safe):
-        p.reverse()
-        result.add('/'.join(p))
-    return tuple(result)
+def _names(course):
+    result = None
+    if course is not None:
+        result = set()
+        level = find_interface(
+            course, ICourseAdministrativeLevel, strict=False)
+        if level is not None:
+            result.add(level.__name__)  # admin level
+        parent = get_parent_course(course)
+        result.add(parent.__name__)  # course name
+        if ICourseSubInstance.providedBy(course):
+            result.add(course.__name__)
+            result.add('SubInstance')
+        entry = ICourseCatalogEntry(course, None)
+        if entry is not None:
+            result.add(entry.ProviderUniqueID)
+        result.discard(u'')
+        result.discard(None)
+    return tuple(result) if result else ()
 
 
 @component.adapter(ICourseInstance)
@@ -112,7 +112,7 @@ def _course_keywords(context):
     data = traverse(info, 'NTI/Invitations', default=None)
     result.update(_invitation_gatherer(data))
     # paths
-    result.update(_paths(ICourseInstance(context, None)))
+    result.update(_names(ICourseInstance(context, None)))
     # clean and return
     result.discard(u'')
     result.discard(None)
