@@ -96,7 +96,7 @@ def _names(course):
             result.add(entry.ProviderUniqueID)
         result.discard(u'')
         result.discard(None)
-    return tuple(result) if result else ()
+    return tuple(x.strip() for x in result or () if x)
 
 
 @component.adapter(ICourseInstance)
