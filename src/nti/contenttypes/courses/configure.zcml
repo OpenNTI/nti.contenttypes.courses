@@ -309,9 +309,6 @@
 			 for=".interfaces.ICourseInstance *"
 			 name="CourseCatalogEntry" />
 
-	<adapter factory="nti.traversal.traversal.ContainerAdapterTraversable"
-			 for=".interfaces.ICourseInstance" />
-
 	<!-- Invitations -->
 	<adapter factory=".invitation.JoinCourseInvitationActor"
 			 provides=".interfaces.IJoinCourseInvitationActor"
