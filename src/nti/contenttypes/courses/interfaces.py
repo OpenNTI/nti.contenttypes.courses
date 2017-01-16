@@ -1099,6 +1099,7 @@ class ICourseBundleUpdatedEvent(IObjectEvent):
 
 @interface.implementer(ICourseBundleUpdatedEvent)
 class CourseBundleUpdatedEvent(ObjectEvent):
+
 	course = alias( 'object' )
 
 	def __init__(self, obj, added_packages, removed_packages):
@@ -1491,6 +1492,17 @@ class ICourseSectionImporter(interface.Interface):
 		:param course Course to import
 		:param filer: External source filer
 		:param writeout: Boolean to save source files to disk
+		"""
+
+class ICourseEvaluationImporter(interface.Interface):
+
+	def process_source(course, source, filer=None):
+		"""
+		Import the specified course evaluations
+
+		:param course Course to import
+		:param source Source to process
+		:param filer: External source filer
 		"""
 
 class ICourseInstanceExportedEvent(IObjectEvent):
