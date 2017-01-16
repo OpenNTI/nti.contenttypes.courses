@@ -46,3 +46,6 @@ ASSIGNMENT_POLICIES_NAME = ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
 
 #: Course evaluations
 EVALUATION_INDEX = 'evaluation_index.json'
+
+#: Course evaluation last modified annotation key
+EVALUATION_INDEX_LAST_MODIFIED = EVALUATION_INDEX + '.lastModified'

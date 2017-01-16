@@ -13,25 +13,23 @@ from zope import component
 
 from zope.annotation.interfaces import IAnnotations
 
-from nti.contenttypes.courses import EVALUATION_INDEX
+from nti.contenttypes.courses import EVALUATION_INDEX_LAST_MODIFIED
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseEvaluationImporter
 
-EVALUATION_INDEX_LAST_MOD = EVALUATION_INDEX + '.lastModified'
-
 
 def get_index_lastModified(context):
     course = ICourseInstance(context)
     annotations = IAnnotations(course)
-    return annotations.get(EVALUATION_INDEX_LAST_MOD) or 0
+    return annotations.get(EVALUATION_INDEX_LAST_MODIFIED) or 0
 
 
 def set_index_lastModified(context, last_modified):
     course = ICourseInstance(context)
     annotations = IAnnotations(course)
-    annotations[EVALUATION_INDEX_LAST_MOD] = last_modified
+    annotations[EVALUATION_INDEX_LAST_MODIFIED] = last_modified
 
 
 def fill_evaluations_from_key(course, key, force=False):
