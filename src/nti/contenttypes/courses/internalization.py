@@ -56,8 +56,9 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
         self.set_ntiid(parsed)
         self.set_locked(parsed)
         isPublished = parsed.get('isPublished')  # capture param
-        result = super(_CourseOutlineNodeUpdater, self).updateFromExternalObject(
-            parsed, *args, **kwargs)
+        result = super(_CourseOutlineNodeUpdater, self).updateFromExternalObject(parsed,
+                                                                                 *args,
+                                                                                 **kwargs)
         if ITEMS in parsed:
             for item in parsed.get(ITEMS) or ():
                 # parse and update just in case
@@ -68,8 +69,8 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
                 else:
                     new_node = item
                 self.node.append(new_node)
-        if 		isPublished \
-                and not ICourseOutline.providedBy(self.node) \
-                and self.node.publishBeginning is None:
+        if      isPublished \
+            and not ICourseOutline.providedBy(self.node) \
+            and self.node.publishBeginning is None:
             self.node.publish(event=False)
         return result
