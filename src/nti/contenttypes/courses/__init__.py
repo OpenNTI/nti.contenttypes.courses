@@ -43,3 +43,6 @@ INSTRUCTOR_INFO_NAME = 'instructor_info.json'
 
 #: Course assignment policies file name
 ASSIGNMENT_POLICIES_NAME = ASSIGNMENT_DATES_NAME = 'assignment_policies.json'
+
+#: Course evaluations
+EVALUATION_INDEX = 'evaluation_index.json'

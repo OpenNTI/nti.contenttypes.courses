@@ -42,10 +42,12 @@ from nti.contenttypes.courses._assessment_policy_validator import validate_assig
 
 from nti.contenttypes.courses._bundle import created_content_package_bundle
 
+from nti.contenttypes.courses._catalog_entry_parser import update_entry_from_legacy_key
+
 from nti.contenttypes.courses._enrollment import update_deny_open_enrollment
 from nti.contenttypes.courses._enrollment import check_enrollment_mapped_course
 
-from nti.contenttypes.courses._catalog_entry_parser import update_entry_from_legacy_key
+from nti.contenttypes.courses._evaluation_parser import fill_evaluations_from_key
 
 from nti.contenttypes.courses._outline_parser import fill_outline_from_key
 
@@ -55,6 +57,7 @@ from nti.contenttypes.courses._role_parser import reset_roles_missing_key
 from nti.contenttypes.courses._sharing_scopes import update_sharing_scopes_friendly_names
 
 from nti.contenttypes.courses import ROLE_INFO_NAME
+from nti.contenttypes.courses import EVALUATION_INDEX
 from nti.contenttypes.courses import VENDOR_INFO_NAME
 from nti.contenttypes.courses import CATALOG_INFO_NAME
 from nti.contenttypes.courses import GRADING_POLICY_NAME
@@ -334,6 +337,9 @@ class _ContentCourseSynchronizer(object):
 
 		# validate assigment policies
 		cls.validate_assigment_policies(course, bucket)
+		
+		# update course evaluations
+		cls.update_course_evaluations(course, bucket)
 
 		# check grading policy. it must be done after validating assigments
 		cls.update_grading_policy(course, bucket, sync_results=sync_results)
@@ -457,6 +463,14 @@ class _ContentCourseSynchronizer(object):
 				sync_results.AssignmentPoliciesUpdated = True
 		elif reset_asg_missing_key(course):
 			sync_results.AssignmentPoliciesReseted = True
+			
+	@classmethod
+	def update_course_evaluations(cls, course, bucket, sync_results=None):
+		sync_results = _get_course_sync_results(course, sync_results)
+		key = bucket.getChildNamed(EVALUATION_INDEX)
+		if key is not None:
+			if fill_evaluations_from_key(course, key):
+				sync_results.EvaluationsUpdated = True
 
 	@classmethod
 	def update_grading_policy(cls, course, bucket, sync_results=None):
