@@ -43,9 +43,10 @@ def fill_evaluations_from_key(course, key, force=False):
     if importer is None:
         return False
 
-    __traceback_info__ = key,
     entry = ICourseCatalogEntry(course)
     logger.info('Updating course evaluations for %s', entry.ntiid)
+
+    __traceback_info__ = key, entry
     importer.process_source(course, key)
     set_index_lastModified(course, key.lastModified)
     return True
