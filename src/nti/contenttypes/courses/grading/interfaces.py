@@ -15,7 +15,8 @@ from zope import interface
 
 from zope.container.interfaces import IContained
 
-from nti.coremetadata.interfaces import ILastModified
+from nti.base.interfaces import ICreated
+from nti.base.interfaces import ILastModified
 
 from nti.schema.field import Dict
 from nti.schema.field import Number
@@ -43,7 +44,7 @@ class IEqualGroupGrader(IGrader):
 									required=True),
 				  min_length=1)
 
-class ICourseGradingPolicy(IContained, ILastModified):
+class ICourseGradingPolicy(IContained, ILastModified, ICreated):
 	"""
 	A marker interface to store a course grading policy
 	"""
