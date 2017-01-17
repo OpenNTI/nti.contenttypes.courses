@@ -187,6 +187,7 @@ class DefaultCourseGradingPolicy(CreatedAndModifiedTimeMixin, BaseMixin):
 
 	mime_type = mimeType = 'application/vnd.nextthought.courses.grading.defaultpolicy'
 
+	creator = None
 	grader = alias('Grader')
 
 	def __setattr__(self, name, value):
