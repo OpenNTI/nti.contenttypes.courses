@@ -18,16 +18,15 @@ from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.grading.interfaces import ICourseGradingPolicy
 
+from nti.contenttypes.courses.grading.parser import GRADING_POLICY_KEY
+
 from nti.contenttypes.courses.grading.parser import parse_grading_policy
 from nti.contenttypes.courses.grading.parser import reset_grading_policy
 from nti.contenttypes.courses.grading.parser import fill_grading_policy_from_key
+from nti.contenttypes.courses.grading.parser import set_grading_policy_for_course
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-
-#: Grading policy course annotation key
-GRADING_POLICY_KEY = 'CourseGradingPolicy'
-
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseGradingPolicy)
@@ -41,26 +40,10 @@ def grading_policy_for_course(course):
 _grading_policy_for_course = grading_policy_for_course
 
 
-def set_grading_policy_for_course(course, policy=None):
-	annotations = IAnnotations(course)
-	if policy is None:
-		if GRADING_POLICY_KEY in annotations:
-			del annotations[GRADING_POLICY_KEY]
-		else:
-			return False
-	else:
-		assert ICourseGradingPolicy.providedBy(policy)
-		annotations[GRADING_POLICY_KEY] = policy
-		policy.__parent__ = course  # take ownership
-		policy.__name__ = policy.__name__ or GRADING_POLICY_KEY
-	return True
-
-
 def find_grading_policy_for_course(context):
 	course = ICourseInstance(context, None)
 	if course is None:
 		return None
-
 	registry = component
 	try:
 		# Courses may be ISites
