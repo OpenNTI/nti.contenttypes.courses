@@ -10,7 +10,7 @@
 	<include package="zope.security" />
 
 	<!-- Adapters -->
-	<adapter factory="._grading_policy_for_course" />
+	<adapter factory=".grading_policy_for_course" />
 	
 	<!-- Externalization -->
 	<include package="nti.externalization" file="meta.zcml" />
