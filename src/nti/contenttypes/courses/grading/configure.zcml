@@ -11,6 +11,7 @@
 
 	<!-- Adapters -->
 	<adapter factory=".grading_policy_for_course" />
+	<adapter factory=".grading_policy_to_course" />
 	
 	<!-- Externalization -->
 	<include package="nti.externalization" file="meta.zcml" />

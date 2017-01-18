@@ -14,8 +14,6 @@ from zope import interface
 
 from zope.annotation.interfaces import IAnnotations
 
-from nti.contenttypes.courses.common import get_course_packages
-
 from nti.contenttypes.courses.grading.interfaces import ICourseGradingPolicy
 
 from nti.contenttypes.courses.grading.parser import GRADING_POLICY_KEY
@@ -26,43 +24,28 @@ from nti.contenttypes.courses.grading.parser import fill_grading_policy_from_key
 from nti.contenttypes.courses.grading.parser import set_grading_policy_for_course
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+
+from nti.traversal.traversal import find_interface
+
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseGradingPolicy)
 def grading_policy_for_course(course):
-	annotations = IAnnotations(course)
-	try:
-		result = annotations[GRADING_POLICY_KEY]
-	except KeyError:
-		result = None
-	return result
+    annotations = IAnnotations(course)
+    try:
+        result = annotations[GRADING_POLICY_KEY]
+    except KeyError:
+        result = None
+    return result
 _grading_policy_for_course = grading_policy_for_course
 
 
+@component.adapter(ICourseGradingPolicy)
+@interface.implementer(ICourseInstance)
+def grading_policy_to_course(policy):
+    return find_interface(policy, ICourseInstance, strict=False)
+
+
 def find_grading_policy_for_course(context):
-	course = ICourseInstance(context, None)
-	if course is None:
-		return None
-	registry = component
-	try:
-		# Courses may be ISites
-		registry = course.getSiteManager()
-		names = ('',)
-	except LookupError:
-		# try content pacakges
-		names = [x.ntiid for x in get_course_packages(course)]
-		# try catalog entry
-		entry = ICourseCatalogEntry(course, None)
-		if entry:
-			names.append(entry.ntiid)
-			names.append(entry.ProviderUniqueID)
-
-	for name in names or ():
-		try:
-			return registry.getUtility(ICourseGradingPolicy, name=name)
-		except LookupError:
-			pass
-
-	# We need to actually be registering these as annotations
-	return ICourseGradingPolicy(course, None)
+    course = ICourseInstance(context, None)
+    return ICourseGradingPolicy(course, None)
