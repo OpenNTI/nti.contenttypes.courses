@@ -66,11 +66,11 @@ class TestPolicies(CourseLayerTest):
 		grader = EqualGroupGrader()
 		grader.groups = {'exams':CategoryGradeScheme(Weight=0.2),
 						 "homeworks": CategoryGradeScheme(Weight=0.9)}
-		with self.assertRaises(AssertionError):
+		with self.assertRaises(ValueError):
 			grader.validate() # add more than one
 		grader.groups = { 'exams':CategoryGradeScheme(Weight=0.2),
 						  'homeworks': CategoryGradeScheme(Weight=0.7)}
-		with self.assertRaises(AssertionError):
+		with self.assertRaises(ValueError):
 			grader.validate() #
 	
 	@WithMockDSTrans

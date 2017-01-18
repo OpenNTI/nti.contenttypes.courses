@@ -14,6 +14,8 @@ from zope import interface
 
 from zope.container.contained import Contained
 
+from zope.i18n import translate
+
 from zope.mimetype.interfaces import IContentTypeAware
 
 from nti.assessment.interfaces import IQAssignment
@@ -22,6 +24,8 @@ from nti.assessment.interfaces import IQAssignmentPolicies
 from nti.contenttypes.courses.grading.interfaces import IEqualGroupGrader
 from nti.contenttypes.courses.grading.interfaces import ICategoryGradeScheme
 from nti.contenttypes.courses.grading.interfaces import ICourseGradingPolicy
+
+from nti.contenttypes.courses import MessageFactory as _
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 
@@ -46,7 +50,6 @@ def get_assignment_policies(course):
 
 def get_assignment(ntiid):
     return component.queryUtility(IQAssignment, name=ntiid)
-
 
 
 @interface.implementer(IContentTypeAware)
@@ -85,42 +88,56 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
     groups = alias('Groups')
 
     def validate(self):
-        assert self.groups, "must specify at least a group"
+        if not self.groups:
+            raise ValueError(_("Must specify at least a group"))
 
         count = 0
         for name, category in self.groups.items():
             weight = category.Weight
-            assert weight > 0 and weight <= 1, \
-                   "invalid weight for category %s" % name
+            if weight <= 0 or weight > 1:
+                msg = translate(_("Invalid weight for category ${category}",
+                                  mapping={'category': weight}))
+                raise ValueError(msg)
             count += weight
 
-        assert  round(count, 2) <= 1.0, \
-            "total category weight must be less than or equal to one"
+        if round(count, 2) > 1.0:
+            msg = _("Total category weight must be less than or equal to one")
+            raise ValueError(msg)
 
         categories = self._raw_categories()
         for name in categories.keys():
-            assert name in self.groups, \
-                   "%s is an invalid group name" % name
+            if name not in self.groups:
+                msg = translate(_("${group} is an invalid group name",
+                                  mapping={'group': name}))
+                raise ValueError(msg)
 
         seen = set()
         for name in self.groups.keys():
             data = categories.get(name)
-            assert data, \
-                   "No assignment are defined for category %s" % name
-            for ntiid in [x['assignment'] for x in data]:
-                assert ntiid not in seen, \
-                       "Assignment %s is in multiple groups" % ntiid
-                seen.add(ntiid)
+            if not data:
+                msg = translate(_("No assignments are defined for category ${category}",
+                                  mapping={'category': name}))
+                raise ValueError(msg)
 
+            for ntiid in [x['assignment'] for x in data]:
+                if ntiid in seen:
+                    msg = translate(_("Assignment ${asg} is in multiple groups",
+                                      mapping={'asg': ntiid}))
+                    raise ValueError(msg)
+                seen.add(ntiid)
                 assignment = get_assignment(ntiid)
                 if assignment is None:
-                    raise AssertionError("assignment does not exists", ntiid)
+                    msg = translate(_("Assignment ${asg} does not exists",
+                                      mapping={'asg': ntiid}))
+                    raise ValueError(msg)
 
     @property
     def lastSynchronized(self):
         self_lastModified = self.lastModified or 0
-        parent_lastSynchronized = getattr(
-            self.course, 'lastSynchronized', None) or 0
+        try:
+            parent_lastSynchronized = self.course.lastSynchronized or 0
+        except AttributeError:
+            parent_lastSynchronized = 0
         return max(self_lastModified, parent_lastSynchronized)
 
     def _raw_categories(self):
@@ -198,7 +215,7 @@ class DefaultCourseGradingPolicy(CreatedAndModifiedTimeMixin, BaseMixin):
 
     def __setattr__(self, name, value):
         if name in ("Grader", "grader") and value is not None:
-            value.__parent__ = self # take ownership
+            value.__parent__ = self  # take ownership
         return BaseMixin.__setattr__(self, name, value)
 
     def validate(self):
