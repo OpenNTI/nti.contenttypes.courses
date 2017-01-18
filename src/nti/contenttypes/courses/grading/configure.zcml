@@ -12,6 +12,9 @@
 	<!-- Adapters -->
 	<adapter factory=".grading_policy_for_course" />
 	<adapter factory=".grading_policy_to_course" />
+
+	<!-- ACL -->
+	<adapter factory=".acl.GradingPolicyACLProvider" />
 	
 	<!-- Externalization -->
 	<include package="nti.externalization" file="meta.zcml" />

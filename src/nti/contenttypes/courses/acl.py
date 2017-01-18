@@ -113,7 +113,7 @@ class CourseInstanceACLProvider(object):
         # as their students.
         for subinstance in get_course_subinstances(course):
             aces.extend(ace_allowing(i, ACT_READ, type(self))
-                        for i in subinstance.instructors)
+                        for i in subinstance.instructors or ())
 
         # Now our content editors/admins.
         for editor in get_course_editors(course):
@@ -165,8 +165,9 @@ class CourseCatalogEntryACLProvider(object):
             # course in our lineage, we actually need to be a bit stricter
             # than that...the course cannot forbid creation or do a deny-all
             # (?)
-            course_in_lineage = find_interface(
-                cce, ICourseInstance, strict=False)
+            course_in_lineage = find_interface(cce, 
+                                               ICourseInstance, 
+                                               strict=False)
 
             # Do we have a course instance? If it's not in our lineage its the legacy
             # case
