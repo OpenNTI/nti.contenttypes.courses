@@ -22,46 +22,60 @@ from nti.schema.field import Dict
 from nti.schema.field import Number
 from nti.schema.field import Object
 from nti.schema.field import ValidTextLine
-	
+
+
 class IGrader(IContained, ILastModified):
-	"""
-	Marker interface for a grader
-	"""
-	
-	def validate():
-		"""
-		validate this grader
-		"""
+    """
+    Marker interface for a grader
+    """
+
+    def validate():
+        """
+        validate this grader
+        """
+
 
 class ICategoryGradeScheme(interface.Interface):
-	Weight = Number(title="Category weight", default=0.0, min=0.0, max=1.0, required=True)
-	LatePenalty = Number(title="Late penalty", default=1, min=0.0, max=1.0, required=False)
+    Weight = Number(title="Category weight",
+                    default=0.0,
+                    min=0.0,
+                    max=1.0,
+                    required=True)
+
+    LatePenalty = Number(title="Late penalty",
+                         default=1,
+                         min=0.0,
+                         max=1.0,
+                         required=False)
+
 
 class IEqualGroupGrader(IGrader):
 
-	Groups = Dict(key_type=ValidTextLine(title="Category Name"),
-	  			  value_type=Object(ICategoryGradeScheme, title="Category grade scheme",
-									required=True),
-				  min_length=1)
+    Groups = Dict(key_type=ValidTextLine(title="Category Name"),
+                  value_type=Object(ICategoryGradeScheme, 
+                                    title="Category grade scheme",
+                                    required=True),
+                  min_length=1)
+
 
 class ICourseGradingPolicy(IContained, ILastModified, ICreated):
-	"""
-	A marker interface to store a course grading policy
-	"""
-	
-	Grader = Object(IGrader, required=True, title="Grader")
-	
-	def validate():
-		"""
-		validate this policy
-		"""
-		
-	def synchronize():
-		"""
-		Perform any adjustment of this policy during course synchronization
-		"""
-		
-	def grade(principal):
-		"""
-		return the [current] grade for the specified user/principal
-		"""
+    """
+    A marker interface to store a course grading policy
+    """
+
+    Grader = Object(IGrader, required=True, title="Grader")
+
+    def validate():
+        """
+        validate this policy
+        """
+
+    def synchronize():
+        """
+        Perform any adjustment of this policy during course synchronization
+        """
+
+    def grade(principal):
+        """
+        return the [current] grade for the specified user/principal
+        """

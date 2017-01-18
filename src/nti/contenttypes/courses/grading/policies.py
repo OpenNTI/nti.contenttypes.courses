@@ -35,190 +35,197 @@ from nti.property.property import CachedProperty
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
 
+from nti.traversal.traversal import find_interface
+
 from nti.zodb.persistentproperty import PersistentPropertyHolder
 
+
 def get_assignment_policies(course):
-	result = IQAssignmentPolicies(course, None)
-	return result
+    return IQAssignmentPolicies(course, None)
+
 
 def get_assignment(ntiid):
-	assignment = component.queryUtility(IQAssignment, name=ntiid)
-	return assignment
+    return component.queryUtility(IQAssignment, name=ntiid)
+
+
 
 @interface.implementer(IContentTypeAware)
 class BaseMixin(PersistentPropertyHolder, SchemaConfigured, Contained):
 
-	parameters = {} # IContentTypeAware
+    parameters = {}  # IContentTypeAware
 
-	def __init__(self, *args, **kwargs):
-		# SchemaConfigured is not cooperative
-		PersistentPropertyHolder.__init__(self)
-		SchemaConfigured.__init__(self, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        # SchemaConfigured is not cooperative
+        PersistentPropertyHolder.__init__(self)
+        SchemaConfigured.__init__(self, *args, **kwargs)
+
 
 @WithRepr
 @interface.implementer(ICategoryGradeScheme)
 class CategoryGradeScheme(BaseMixin):
 
-	mime_type = mimeType = 'application/vnd.nextthought.courses.grading.categorygradescheme'
+    mime_type = mimeType = 'application/vnd.nextthought.courses.grading.categorygradescheme'
 
-	createDirectFieldProperties(ICategoryGradeScheme)
+    createDirectFieldProperties(ICategoryGradeScheme)
 
-	LatePenalty = 1
+    LatePenalty = 1
 
-	weight = alias('Weight')
-	penalty = alias('LatePenalty')
-	dropLowest = alias('DropLowest')
+    weight = alias('Weight')
+    penalty = alias('LatePenalty')
+    dropLowest = alias('DropLowest')
+
 
 @WithRepr
 @interface.implementer(IEqualGroupGrader)
 class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
-	createDirectFieldProperties(IEqualGroupGrader)
+    createDirectFieldProperties(IEqualGroupGrader)
 
-	mime_type = mimeType = 'application/vnd.nextthought.courses.grading.equalgroupgrader'
+    mime_type = mimeType = 'application/vnd.nextthought.courses.grading.equalgroupgrader'
 
-	groups = alias('Groups')
+    groups = alias('Groups')
 
-	def validate(self):
-		assert self.groups, "must specify at least a group"
+    def validate(self):
+        assert self.groups, "must specify at least a group"
 
-		count = 0
-		for name, category in self.groups.items():
-			weight = category.Weight
-			assert weight > 0 and weight <= 1, "invalid weight for category %s" % name
-			count += weight
+        count = 0
+        for name, category in self.groups.items():
+            weight = category.Weight
+            assert weight > 0 and weight <= 1, \
+                   "invalid weight for category %s" % name
+            count += weight
 
-		assert  round(count, 2) <= 1.0, \
-				"total category weight must be less than or equal to one"
+        assert  round(count, 2) <= 1.0, \
+            "total category weight must be less than or equal to one"
 
-		categories = self._raw_categories()
-		for name in categories.keys():
-			assert name in self.groups, \
-				   "%s is an invalid group name" % name
+        categories = self._raw_categories()
+        for name in categories.keys():
+            assert name in self.groups, \
+                   "%s is an invalid group name" % name
 
-		seen = set()
-		for name in self.groups.keys():
-			data = categories.get(name)
-			assert data, \
-				   "No assignment are defined for category %s" % name
-			for ntiid in [x['assignment'] for x in data]:
-				assert ntiid not in seen, \
-					   "Assignment %s is in multiple groups" % ntiid
-				seen.add(ntiid)
+        seen = set()
+        for name in self.groups.keys():
+            data = categories.get(name)
+            assert data, \
+                   "No assignment are defined for category %s" % name
+            for ntiid in [x['assignment'] for x in data]:
+                assert ntiid not in seen, \
+                       "Assignment %s is in multiple groups" % ntiid
+                seen.add(ntiid)
 
-				assignment = get_assignment(ntiid)
-				if assignment is None:
-					raise AssertionError("assignment does not exists", ntiid)
+                assignment = get_assignment(ntiid)
+                if assignment is None:
+                    raise AssertionError("assignment does not exists", ntiid)
 
-	@property
-	def lastSynchronized(self):
-		self_lastModified = self.lastModified or 0
-		parent_lastSynchronized = getattr(self.course, 'lastSynchronized', None) or 0
-		return max(self_lastModified, parent_lastSynchronized)
+    @property
+    def lastSynchronized(self):
+        self_lastModified = self.lastModified or 0
+        parent_lastSynchronized = getattr(
+            self.course, 'lastSynchronized', None) or 0
+        return max(self_lastModified, parent_lastSynchronized)
 
-	def _raw_categories(self):
-		result = {}
-		policies = get_assignment_policies(self.course)
-		if policies is not None:
-			for assignment in policies.assignments():
-				policy = policies.getPolicyForAssignment(assignment)
-				if not policy or policy.get('excluded', False):
-					continue
+    def _raw_categories(self):
+        result = {}
+        policies = get_assignment_policies(self.course)
+        if policies is not None:
+            for assignment in policies.assignments():
+                policy = policies.getPolicyForAssignment(assignment)
+                if not policy or policy.get('excluded', False):
+                    continue
 
-				auto_grade = policy.get('auto_grade') or {}
-				grader = policy.get('grader') or auto_grade.get('grader')
-				if not grader:
-					continue
+                auto_grade = policy.get('auto_grade') or {}
+                grader = policy.get('grader') or auto_grade.get('grader')
+                if not grader:
+                    continue
 
-				group = grader.get('group')
-				if group:
-					data = dict()
-					total_points = auto_grade.get('total_points')
-					if total_points:
-						data['total_points'] = data['points'] = total_points
-					data.update(grader)  # override
-					data['assignment'] = assignment  # save
+                group = grader.get('group')
+                if group:
+                    data = dict()
+                    total_points = auto_grade.get('total_points')
+                    if total_points:
+                        data['total_points'] = data['points'] = total_points
+                    data.update(grader)  # override
+                    data['assignment'] = assignment  # save
 
-					result.setdefault(group, [])
-					result[group].append(data)
-		return result
+                    result.setdefault(group, [])
+                    result[group].append(data)
+        return result
 
-	@CachedProperty('lastSynchronized')
-	def _categories(self):
-		result = self._raw_categories()
-		return result
+    @CachedProperty('lastSynchronized')
+    def _categories(self):
+        return self._raw_categories()
 
-	def _raw_rev_categories(self):
-		result = {}
-		for name, data in self._categories.items():
-			for assignment in [x['assignment'] for x in data]:
-				result[assignment] = name
-		return result
+    def _raw_rev_categories(self):
+        result = {}
+        for name, data in self._categories.items():
+            for assignment in [x['assignment'] for x in data]:
+                result[assignment] = name
+        return result
 
-	@CachedProperty('lastSynchronized')
-	def _rev_categories(self):
-		result = self._raw_rev_categories()
-		return result
+    @CachedProperty('lastSynchronized')
+    def _rev_categories(self):
+        return self._raw_rev_categories()
 
-	def _raw_assignments(self):
-		return tuple(self._raw_rev_categories().keys())
+    def _raw_assignments(self):
+        return tuple(self._raw_rev_categories().keys())
 
-	@CachedProperty('lastSynchronized')
-	def _assignments(self):
-		result = self._raw_assignments()
-		return result
+    @CachedProperty('lastSynchronized')
+    def _assignments(self):
+        return self._raw_assignments()
 
-	@property
-	def course(self):
-		return getattr(self.__parent__, 'course', None)
+    @property
+    def course(self):
+        return getattr(self.__parent__, 'course', None)
 
-	def __len__(self):
-		return len(self.groups)
+    def __len__(self):
+        return len(self.groups)
 
-	def __getitem__(self, key):
-		return self.groups[key]
+    def __getitem__(self, key):
+        return self.groups[key]
 
-	def __iter__(self):
-		return iter(self.groups)
+    def __iter__(self):
+        return iter(self.groups)
+
 
 @WithRepr
 @interface.implementer(ICourseGradingPolicy)
 class DefaultCourseGradingPolicy(CreatedAndModifiedTimeMixin, BaseMixin):
-	createDirectFieldProperties(ICourseGradingPolicy)
+    createDirectFieldProperties(ICourseGradingPolicy)
 
-	mime_type = mimeType = 'application/vnd.nextthought.courses.grading.defaultpolicy'
+    mime_type = mimeType = 'application/vnd.nextthought.courses.grading.defaultpolicy'
 
-	creator = None
-	grader = alias('Grader')
+    creator = None
+    grader = alias('Grader')
 
-	def __setattr__(self, name, value):
-		if name in ("Grader", "grader") and value is not None:
-			value.__parent__ = self
-		return BaseMixin.__setattr__(self, name, value)
+    def __setattr__(self, name, value):
+        if name in ("Grader", "grader") and value is not None:
+            value.__parent__ = self # take ownership
+        return BaseMixin.__setattr__(self, name, value)
 
-	def validate(self):
-		assert self.grader, "must specify a grader"
-		self.grader.validate()
+    def validate(self):
+        assert self.grader, "must specify a grader"
+        self.grader.validate()
 
-	def synchronize(self):
-		course = self.course
-		assert course, "must policy must be attached to a course"
-		self.validate()
+    def synchronize(self):
+        course = self.course
+        assert course, "must policy must be attached to a course"
+        self.validate()
 
-	@property
-	def course(self):
-		return ICourseInstance(self.__parent__, None)
+    @property
+    def course(self):
+        return find_interface(self, ICourseInstance, strict=False)
 
-	def grade(self, *args, **kwargs):
-		raise NotImplementedError()
+    def grade(self, *args, **kwargs):
+        raise NotImplementedError()
 
-	def updateLastMod(self, t=None):
-		result = super(DefaultCourseGradingPolicy, self).updateLastMod(t)
-		if self.grader is not None:
-			self.grader.updateLastMod(t)
-		return result
+    def updateLastMod(self, t=None):
+        result = super(DefaultCourseGradingPolicy, self).updateLastMod(t)
+        if self.grader is not None:
+            self.grader.updateLastMod(t)
+        return result
 
-	def updateLastModIfGreater(self, t):
-		result = super(DefaultCourseGradingPolicy, self).updateLastModIfGreater(t)
-		if self.grader is not None:
-			self.grader.updateLastModIfGreater(t)
-		return result
+    def updateLastModIfGreater(self, t):
+        result = super(
+            DefaultCourseGradingPolicy, self).updateLastModIfGreater(t)
+        if self.grader is not None:
+            self.grader.updateLastModIfGreater(t)
+        return result
