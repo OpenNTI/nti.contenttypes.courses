@@ -30,6 +30,8 @@ from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussion
+
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_record
 
@@ -175,12 +177,13 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
     and user enrollment or None
 
     :param item: A discussion ref object
-    :param context: An object that can be adpated to a course
+    :param context: An object that can be adapted to a course
     :param record: Enrollment record if available
     """
 
     context = item if context is None else item
-    record = get_user_or_instructor_enrollment_record(context, user) if record is None else record
+    record = get_user_or_instructor_enrollment_record(
+        context, user) if record is None else record
     if record is None:
         logger.warn("No enrollment record for user %s under %s", user, context)
         return None
@@ -197,20 +200,22 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 
     # if course is a subinstance, make sure we are enrolled in it and
     # we are not an instructor
-    if         ICourseSubInstance.providedBy(course) \
-            and    scope != ES_ALL \
-            and course != record.CourseInstance:
+    if 		ICourseSubInstance.providedBy(course) \
+        and scope != ES_ALL \
+        and course != record.CourseInstance:
         return None
 
-    # get course discussion
-    key = get_discussion_key(item)
-    discussion = ICourseDiscussions(course).get(key) if key else None
+    # get course discussion, if needed
+    discussion = item
+    if not ICourseDiscussion.providedBy(item):
+        key = get_discussion_key(item)
+        discussion = ICourseDiscussions(course).get(key) if key else None
     scopes = get_implied_by_scopes(
         discussion.scopes) if discussion is not None else ()
     logger.debug("Implied scopes for %s are %s", key, scopes)
 
-    if        (not scope) \
-            or    (not scopes) \
+    if     	   (not scope) \
+            or (not scopes) \
             or (scope != ES_ALL and ES_ALL not in scopes and scope not in scopes):
         logger.warn(
             "User scope %s did not match implied scopes %s", scope, scopes)
@@ -219,16 +224,16 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
         topic = None
         topic_key = get_topic_key(discussion)
         topic_title = make_specific_safe(discussion.title)
-        m_scope = ES_ALL if scope == ES_ALL else ENROLLMENT_LINEAGE_MAP.get(
-            scope)[0]
+        m_scope = ES_ALL if scope == ES_ALL \
+            else ENROLLMENT_LINEAGE_MAP.get(scope)[0]
         m_scope_term = get_scope_term(m_scope) if m_scope != ES_ALL else None
         m_scope_implies = set(getattr(m_scope_term, 'implies', None) or ())
         for v in course.Discussions.values():
             # check the forum scopes against the mapped enrollment scope
             forum_scopes = get_forum_scopes(v) if m_scope != ES_ALL else ()
-            if        m_scope == ES_ALL \
-                    or    m_scope in forum_scopes \
-                    or m_scope_implies.intersection(forum_scopes):
+            if     m_scope == ES_ALL \
+                or m_scope in forum_scopes \
+                or m_scope_implies.intersection(forum_scopes):
                 if topic_key in v:
                     topic = v[topic_key]
                     break
