@@ -83,22 +83,20 @@ class KeepSetIndex(RawSetIndex):
 
     def index_doc(self, doc_id, value):
         value = {v for v in self.to_iterable(value) if v is not None}
-        old = self.documents_to_values.get(doc_id) or self.empty_set
-        if value.difference(old):
-            value.update(old)
-            result = super(KeepSetIndex, self).index_doc(doc_id, value)
-            return result
+        current = self.documents_to_values.get(doc_id) or self.empty_set
+        if value.difference(current):
+            value.update(current)
+            return super(KeepSetIndex, self).index_doc(doc_id, value)
 
     def remove(self, doc_id, value):
-        old = set(self.documents_to_values.get(doc_id) or ())
-        if not old:
+        current = set(self.documents_to_values.get(doc_id) or ())
+        if not current:
             return
         for v in self.to_iterable(value):
-            old.discard(v)
-        if old:
-            super(KeepSetIndex, self).index_doc(doc_id, old)
-        else:
-            super(KeepSetIndex, self).unindex_doc(doc_id)
+            current.discard(v)
+        if current:
+            return super(KeepSetIndex, self).index_doc(doc_id, current)
+        return super(KeepSetIndex, self).unindex_doc(doc_id)
 
 # Enrollment catalog
 
