@@ -34,6 +34,10 @@ class IGrader(IContained, ILastModified):
         validate this grader
         """
 
+def INullGrader(IGrader):
+    """
+    A grader that does nothing
+    """
 
 class ICategoryGradeScheme(interface.Interface):
     Weight = Number(title="Category weight",

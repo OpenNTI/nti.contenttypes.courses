@@ -21,6 +21,7 @@ from zope.mimetype.interfaces import IContentTypeAware
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQAssignmentPolicies
 
+from nti.contenttypes.courses.grading.interfaces import INullGrader
 from nti.contenttypes.courses.grading.interfaces import IEqualGroupGrader
 from nti.contenttypes.courses.grading.interfaces import ICategoryGradeScheme
 from nti.contenttypes.courses.grading.interfaces import ICourseGradingPolicy
@@ -76,6 +77,16 @@ class CategoryGradeScheme(BaseMixin):
     weight = alias('Weight')
     penalty = alias('LatePenalty')
     dropLowest = alias('DropLowest')
+
+
+@WithRepr
+@interface.implementer(INullGrader)
+class NullGrader(CreatedAndModifiedTimeMixin, BaseMixin):
+
+    mime_type = mimeType = 'application/vnd.nextthought.courses.grading.nullgrader'
+
+    def validate(self):
+        pass
 
 
 @WithRepr
@@ -241,8 +252,7 @@ class DefaultCourseGradingPolicy(CreatedAndModifiedTimeMixin, BaseMixin):
         return result
 
     def updateLastModIfGreater(self, t):
-        result = super(
-            DefaultCourseGradingPolicy, self).updateLastModIfGreater(t)
+        result = super(DefaultCourseGradingPolicy, self).updateLastModIfGreater(t)
         if self.grader is not None:
             self.grader.updateLastModIfGreater(t)
         return result
