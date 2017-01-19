@@ -68,7 +68,7 @@ class BaseMixin(PersistentPropertyHolder, SchemaConfigured, Contained):
 @interface.implementer(ICategoryGradeScheme)
 class CategoryGradeScheme(BaseMixin):
 
-    mime_type = mimeType = 'application/vnd.nextthought.courses.grading.categorygradescheme'
+    mime_type = mimeType = u'application/vnd.nextthought.courses.grading.categorygradescheme'
 
     createDirectFieldProperties(ICategoryGradeScheme)
 
@@ -82,8 +82,9 @@ class CategoryGradeScheme(BaseMixin):
 @WithRepr
 @interface.implementer(INullGrader)
 class NullGrader(CreatedAndModifiedTimeMixin, BaseMixin):
+    createDirectFieldProperties(INullGrader)
 
-    mime_type = mimeType = 'application/vnd.nextthought.courses.grading.nullgrader'
+    mime_type = mimeType = u'application/vnd.nextthought.courses.grading.nullgrader'
 
     def validate(self):
         pass
@@ -94,7 +95,7 @@ class NullGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
     createDirectFieldProperties(IEqualGroupGrader)
 
-    mime_type = mimeType = 'application/vnd.nextthought.courses.grading.equalgroupgrader'
+    mime_type = mimeType = u'application/vnd.nextthought.courses.grading.equalgroupgrader'
 
     groups = alias('Groups')
 

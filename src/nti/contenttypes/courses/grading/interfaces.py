@@ -34,10 +34,12 @@ class IGrader(IContained, ILastModified):
         validate this grader
         """
 
-def INullGrader(IGrader):
+
+class INullGrader(IGrader):
     """
     A grader that does nothing
     """
+
 
 class ICategoryGradeScheme(interface.Interface):
     Weight = Number(title="Category weight",
@@ -56,7 +58,7 @@ class ICategoryGradeScheme(interface.Interface):
 class IEqualGroupGrader(IGrader):
 
     Groups = Dict(key_type=ValidTextLine(title="Category Name"),
-                  value_type=Object(ICategoryGradeScheme, 
+                  value_type=Object(ICategoryGradeScheme,
                                     title="Category grade scheme",
                                     required=True),
                   min_length=1)

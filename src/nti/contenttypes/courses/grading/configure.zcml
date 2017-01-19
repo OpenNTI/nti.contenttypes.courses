@@ -22,7 +22,6 @@
 		
 	<ext:registerAutoPackageIO
 		root_interfaces=".interfaces.IGrader
-						 .interfaces.INullGrader
 						 .interfaces.IEqualGroupGrader
 						 .interfaces.ICategoryGradeScheme
 						 .interfaces.ICourseGradingPolicy"
