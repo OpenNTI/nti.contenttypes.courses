@@ -167,7 +167,8 @@ class CourseOutlineImporter(BaseSectionImporter):
         connection = IConnection(course)
 
         def _object_hook(k, v, x):
-            if ICourseOutlineNode.providedBy(v) and not ICourseOutline.providedBy(v):
+            if      ICourseOutlineNode.providedBy(v) \
+                and not ICourseOutline.providedBy(v):
                 connection.add(v)
             return v
         update_from_external_object(course.Outline,
@@ -281,7 +282,7 @@ class RoleInfoImporter(BaseSectionImporter):
                 new_path = os.path.join(
                     course.root.absolute_path, ROLE_INFO_NAME)
                 transfer_to_native_file(source, new_path)
-
+        # process subinstances
         for sub_instance in get_course_subinstances(course):
             self.process(sub_instance, filer, writeout=writeout)
 
@@ -414,8 +415,8 @@ class BundleMetaInfoImporter(BaseSectionImporter):
         course = ICourseInstance(context)
         course = get_parent_course(course)
         root = course.root
-        if 		ICourseSubInstance.providedBy(course) \
-                or not IFilesystemBucket.providedBy(root):
+        if     ICourseSubInstance.providedBy(course) \
+            or not IFilesystemBucket.providedBy(root):
             return
         name_source = self.safe_get(filer, BUNDLE_META_NAME)
         if name_source is None:

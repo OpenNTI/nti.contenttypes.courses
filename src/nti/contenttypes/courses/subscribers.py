@@ -187,8 +187,8 @@ def sync_catalog_when_library_synched(library, event):
 
     catalog = site_manager.get(COURSE_CATALOG_NAME)
     if catalog is None:
-        logger.info(
-            "Installing and synchronizing course catalog for %s", site_manager)
+        logger.info("Installing and synchronizing course catalog for %s", 
+                    site_manager)
         # which in turn will call back to us
         install_site_course_catalog(library)
         return
@@ -197,11 +197,11 @@ def sync_catalog_when_library_synched(library, event):
     enumeration_root = enumeration.root
     courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
     if courses_bucket is None:
-        logger.info("Not synchronizing: no directory named %s in %s for catalog %s",
-                    catalog.__name__,
-                    getattr(
-                        enumeration_root, 'absolute_path', enumeration_root),
-                    catalog)
+        logger.info(
+            "Not synchronizing: no directory named %s in %s for catalog %s",
+            catalog.__name__,
+            getattr(enumeration_root, 'absolute_path', enumeration_root),
+            catalog)
         return
 
     logger.info("Synchronizing course catalog %s in site %s from directory %s",
@@ -223,11 +223,13 @@ def roles_sync_on_course_instance(course, event):
     intids = component.queryUtility(IIntIds)
     if catalog is not None and intids is not None:
         unindex_course_roles(course, catalog)
-        indexed_count = index_course_roles(
-            course, catalog=catalog, intids=intids)
+        indexed_count = index_course_roles(course, 
+                                           catalog=catalog, 
+                                           intids=intids)
         entry = ICourseCatalogEntry(course, None)
         entry_ntiid = entry.ntiid if entry is not None else ''
-        logger.info('Indexed %s roles for %s', indexed_count, entry_ntiid)
+        logger.info('Indexed %s roles for %s', 
+                    indexed_count, entry_ntiid)
 
 
 @component.adapter(ICourseInstance, ICourseVendorInfoSynchronized)
@@ -288,8 +290,8 @@ def unindex_enrollment_records(course):
 def on_course_instance_removed(course, event):
     remove_enrollment_records(course)
     unindex_enrollment_records(course)
-    if 		not ICourseSubInstance.providedBy(course) \
-            or course.Outline is not get_parent_course(course).Outline:
+    if     not ICourseSubInstance.providedBy(course) \
+        or course.Outline is not get_parent_course(course).Outline:
         clear_course_outline(course)
 
 

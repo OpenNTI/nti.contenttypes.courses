@@ -39,62 +39,65 @@ from nti.schema.field import SchemaConfigured
 
 from nti.schema.fieldproperty import createDirectFieldProperties
 
+
 @EqHash('id')
 @total_ordering
 @interface.implementer(ICourseDiscussion, IContentTypeAware)
 class CourseDiscussion(SchemaConfigured,
-					   PersistentCreatedModDateTrackingObject,
-					   Contained):
-	createDirectFieldProperties(ICourseDiscussion)
+                       PersistentCreatedModDateTrackingObject,
+                       Contained):
+    createDirectFieldProperties(ICourseDiscussion)
 
-	__external_class_name__ = u"Discussion"
-	mime_type = mimeType = u'application/vnd.nextthought.courses.discussion'
+    __external_class_name__ = u"Discussion"
+    mime_type = mimeType = u'application/vnd.nextthought.courses.discussion'
 
-	parameters = {} # IContentTypeAware
+    parameters = {}  # IContentTypeAware
 
-	creator = SYSTEM_USER_ID
+    creator = SYSTEM_USER_ID
 
-	def __init__(self, *args, **kwargs):
-		SchemaConfigured.__init__(self, *args, **kwargs)
-		PersistentCreatedModDateTrackingObject.__init__(self, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)
+        PersistentCreatedModDateTrackingObject.__init__(self, *args, **kwargs)
 
-	def __str__(self, *args, **kwargs):
-		try:
-			if self.id:
-				result = "%s(id=%s)" % (self.__class__.__name__, self.id)
-			else:
-				result = '%s(title="%s")' % (self.__class__.__name__, self.title)
-			return result
-		except ConnectionStateError:
-			return"<%s object at %s>" % (type(self).__name__, hex(id(self)))
-	__repr__ = __str__
+    def __str__(self, *args, **kwargs):
+        try:
+            clazz = self.__class__.__name__
+            if self.id:
+                result = "%s(id=%s)" % (clazz, self.id)
+            else:
+                result = '%s(title="%s")' % (clazz, self.title)
+            return result
+        except ConnectionStateError:
+            return"<%s object at %s>" % (type(self).__name__, hex(id(self)))
+    __repr__ = __str__
 
-	def __lt__(self, other):
-		try:
-			return (self.mimeType, self.title) < (other.mimeType, other.title)
-		except AttributeError:
-			return NotImplemented
+    def __lt__(self, other):
+        try:
+            return (self.mimeType, self.title) < (other.mimeType, other.title)
+        except AttributeError:
+            return NotImplemented
 
-	def __gt__(self, other):
-		try:
-			return (self.mimeType, self.title) > (other.mimeType, other.title)
-		except AttributeError:
-			return NotImplemented
+    def __gt__(self, other):
+        try:
+            return (self.mimeType, self.title) > (other.mimeType, other.title)
+        except AttributeError:
+            return NotImplemented
+
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseDiscussions)
 class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer):
-	"""
-	The default representation of course discussions.
-	"""
+    """
+    The default representation of course discussions.
+    """
 
-	__external_class_name__ = u"CourseDiscussions"
-	mime_type = mimeType = u'application/vnd.nextthought.courses.discussions'
+    __external_class_name__ = u"CourseDiscussions"
+    mime_type = mimeType = u'application/vnd.nextthought.courses.discussions'
 
-	__name__ = None
-	__parent__ = None
+    __name__ = None
+    __parent__ = None
 
-	def __init__(self):
-		super(DefaultCourseDiscussions, self).__init__()
+    def __init__(self):
+        super(DefaultCourseDiscussions, self).__init__()
 
 CourseDiscussions = an_factory(DefaultCourseDiscussions, 'CourseDiscussions')

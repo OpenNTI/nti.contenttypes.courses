@@ -92,17 +92,17 @@ class CourseInstanceACLProvider(object):
         # Anyone still enrolled in course has access, whether the course
         # is public or not.
         public_scope = sharing_scopes[ES_PUBLIC]
-        aces.append(
-            ace_allowing(IPrincipal(public_scope), ACT_READ, type(self)))
+        aces.append(ace_allowing(IPrincipal(public_scope),
+                                 ACT_READ, 
+                                 type(self)))
 
         # Courses marked as being anonymously accessible should have READ access
         # for the unauthenticated user.  Note that for BWC we intentionally
         # do NOT use the Everyone principal.  We don't want authenticated
         # but unenrolled users to have access right now.
         if IAnonymouslyAccessibleCourseInstance.providedBy(course):
-            unauthenticated_principal = component.getUtility(
-                IUnauthenticatedPrincipal)
-            aces.append(ace_allowing(unauthenticated_principal,
+            u_principal = component.getUtility(IUnauthenticatedPrincipal)
+            aces.append(ace_allowing(u_principal,
                                      ACT_READ,
                                      type(self)))
 
@@ -145,14 +145,15 @@ class CourseCatalogEntryACLProvider(object):
         cce = self.context
         # catalog entries can be non-public children of public courses,
         # or public children of non-public courses.
-        non_public = find_interface(
-            cce, INonPublicCourseInstance, strict=False)
+        non_public = find_interface(cce,
+                                    INonPublicCourseInstance,
+                                    strict=False)
 
         if non_public:
             # Ok, was that us, or are we not non-public and our direct parent
             # is also not non-public?
-            if 	INonPublicCourseInstance.providedBy(self.context) or \
-                    INonPublicCourseInstance.providedBy(self.__parent__):
+            if     INonPublicCourseInstance.providedBy(self.context) \
+                or INonPublicCourseInstance.providedBy(self.__parent__):
                 non_public = True
             else:
                 # We don't directly provide it, neither does our parent, so

@@ -31,26 +31,27 @@ from nti.dataserver.authorization_acl import acl_from_aces
 
 from nti.property.property import Lazy
 
+
 @component.adapter(ICourseDiscussion)
 @interface.implementer(IACLProvider)
 class CourseDiscussionACLProvider(object):
 
-	def __init__(self, context):
-		self.context = context
+    def __init__(self, context):
+        self.context = context
 
-	@property
-	def __parent__(self):
-		# See comments in nti.dataserver.authorization_acl:has_permission
-		return self.context.__parent__
+    @property
+    def __parent__(self):
+        # See comments in nti.dataserver.authorization_acl:has_permission
+        return self.context.__parent__
 
-	@Lazy
-	def __acl__(self):
-		aces = [ ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
-				 ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self))]
+    @Lazy
+    def __acl__(self):
+        aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
+                ace_allowing(ROLE_CONTENT_ADMIN, ALL_PERMISSIONS, type(self))]
 
-		course = ICourseInstance(self.context, None)
-		for i in get_course_editors(course):
-			aces.append(ace_allowing(i, ACT_READ, type(self)))
+        course = ICourseInstance(self.context, None)
+        for i in get_course_editors(course):
+            aces.append(ace_allowing(i, ACT_READ, type(self)))
 
-		result = acl_from_aces(aces)
-		return result
+        result = acl_from_aces(aces)
+        return result

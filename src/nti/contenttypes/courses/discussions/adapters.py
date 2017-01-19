@@ -19,12 +19,14 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.traversal.traversal import find_interface
 
+
 @component.adapter(ICourseDiscussion)
 @interface.implementer(ICourseInstance)
 def _course_discussion_to_course(context):
-	return find_interface(context, ICourseInstance, strict=False)
+    return find_interface(context, ICourseInstance, strict=False)
+
 
 @component.adapter(ICourseDiscussions)
 @interface.implementer(ICourseInstance)
 def _course_discussions_to_course(context):
-	return find_interface(context, ICourseInstance, strict=False)
+    return find_interface(context, ICourseInstance, strict=False)

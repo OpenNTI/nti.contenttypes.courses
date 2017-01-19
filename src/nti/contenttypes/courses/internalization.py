@@ -56,9 +56,10 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
         self.set_ntiid(parsed)
         self.set_locked(parsed)
         isPublished = parsed.get('isPublished')  # capture param
-        result = super(_CourseOutlineNodeUpdater, self).updateFromExternalObject(parsed,
-                                                                                 *args,
-                                                                                 **kwargs)
+        result = super(_CourseOutlineNodeUpdater, 
+                       self).updateFromExternalObject(parsed,
+                                                      *args,
+                                                      **kwargs)
         if ITEMS in parsed:
             for item in parsed.get(ITEMS) or ():
                 # parse and update just in case

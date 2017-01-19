@@ -46,8 +46,8 @@ class CourseExportFiler(DirectoryFiler):
 
     def asZip(self, path=None):
         base_name = path or tempfile.mkdtemp()
-        base_name = os.path.join(
-            base_name, safe_filename(self.course.__name__))
+        base_name = os.path.join(base_name,
+                                 safe_filename(self.course.__name__))
         if os.path.exists(base_name + ".zip"):
             os.remove(base_name + ".zip")
         result = shutil.make_archive(base_name, 'zip', self.path)

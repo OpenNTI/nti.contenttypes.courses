@@ -51,28 +51,23 @@ from nti.zope_catalog.index import IntegerValueIndex as RawIntegerValueIndex
 # Deprecations
 
 deprecated('ValidatingUsernameID', 'Use latest index implementation')
-
-
 class ValidatingUsernameID(object):
 
     def __init__(self, *args, **kwargs):
         pass
 
+
 deprecated('SiteIndex', 'Replaced with SingleSiteIndex')
-
-
 class SiteIndex(RawSetIndex):
     pass
 
+
 deprecated('ScopeIndex', 'Replaced with ScopeSetIndex')
-
-
 class ScopeIndex(ValueIndex):
     pass
 
+
 deprecated('ValidatingScope', 'Use new implementation')
-
-
 class ValidatingScope(object):
     pass
 
@@ -127,8 +122,8 @@ class ValidatingSiteName(object):
         # this validator returns None.
         if isinstance(obj, IndexRecord):
             self.site = unicode(getSite().__name__)
-        elif 	ICourseInstanceEnrollmentRecord.providedBy(obj) \
-                or ICourseInstance.providedBy(obj):
+        elif   ICourseInstanceEnrollmentRecord.providedBy(obj) \
+            or ICourseInstance.providedBy(obj):
             course = ICourseInstance(obj, None)
             self.site = get_course_site(course) or getSite().__name__
 
@@ -147,8 +142,8 @@ class UsernameIndex(KeepSetIndex):
         if isinstance(value, IndexRecord):
             result = (to_unicode(value.username),)
         elif ICourseInstanceEnrollmentRecord.providedBy(value):
-            result = (
-                value.Principal.id,) if value.Principal is not None else ()
+            principal = value.Principal
+            result = (principal.id,) if principal is not None else ()
         else:
             result = ()
         return result
@@ -174,8 +169,8 @@ class ValidatingCatalogEntryID(object):
         # See site index notes.
         if isinstance(obj, IndexRecord):
             self.ntiid = to_unicode(obj.ntiid)
-        elif 	ICourseInstanceEnrollmentRecord.providedBy(obj) \
-                or ICourseInstance.providedBy(obj):
+        elif   ICourseInstanceEnrollmentRecord.providedBy(obj) \
+            or ICourseInstance.providedBy(obj):
             course = getattr(obj, 'CourseInstance', obj)
             entry = ICourseCatalogEntry(course, None)
             if entry is not None:
@@ -205,8 +200,9 @@ def install_enrollment_catalog(site_manager_container, intids=None):
     catalog = EnrollmentCatalog(family=intids.family)
     locate(catalog, site_manager_container, ENROLLMENT_CATALOG_NAME)
     intids.register(catalog)
-    lsm.registerUtility(
-        catalog, provided=ICatalog, name=ENROLLMENT_CATALOG_NAME)
+    lsm.registerUtility(catalog, 
+                        provided=ICatalog, 
+                        name=ENROLLMENT_CATALOG_NAME)
 
     for name, clazz in ((IX_SCOPE, ScopeSetIndex),
                         (IX_SITE, SingleSiteIndex),
@@ -317,7 +313,9 @@ def install_courses_catalog(site_manager_container, intids=None):
     catalog = CoursesCatalog(family=intids.family)
     locate(catalog, site_manager_container, COURSES_CATALOG_NAME)
     intids.register(catalog)
-    lsm.registerUtility(catalog, provided=ICatalog, name=COURSES_CATALOG_NAME)
+    lsm.registerUtility(catalog,
+                        provided=ICatalog,
+                        name=COURSES_CATALOG_NAME)
 
     for name, clazz in ((IX_NAME, CourseNameIndex),
                         (IX_SITE, CourseSiteIndex),
@@ -360,8 +358,8 @@ class ValidatingAvailableBeginning(object):
     __slots__ = (b'AvailableBeginning',)
 
     def __init__(self, obj, default=None):
-        if 		ICourseOutlineCalendarNode.providedBy(obj) \
-                and obj.AvailableBeginning is not None:
+        if      ICourseOutlineCalendarNode.providedBy(obj) \
+            and obj.AvailableBeginning is not None:
             self.AvailableBeginning = time.mktime(
                 obj.AvailableBeginning.timetuple())
 
@@ -385,8 +383,8 @@ class ValidatingAvailableEnding(object):
     __slots__ = (b'AvailableEnding',)
 
     def __init__(self, obj, default=None):
-        if 		ICourseOutlineCalendarNode.providedBy(obj) \
-                and obj.AvailableEnding is not None:
+        if         ICourseOutlineCalendarNode.providedBy(obj) \
+            and obj.AvailableEnding is not None:
             self.AvailableEnding = time.mktime(obj.AvailableEnding.timetuple())
 
     def __reduce__(self):
@@ -419,8 +417,9 @@ def install_course_outline_catalog(site_manager_container, intids=None):
     catalog = CourseOutlineCatalog(family=intids.family)
     locate(catalog, site_manager_container, COURSE_OUTLINE_CATALOG_NAME)
     intids.register(catalog)
-    lsm.registerUtility(
-        catalog, provided=ICatalog, name=COURSE_OUTLINE_CATALOG_NAME)
+    lsm.registerUtility(catalog, 
+                        provided=ICatalog, 
+                        name=COURSE_OUTLINE_CATALOG_NAME)
 
     for name, clazz in ((IX_SOURCE, NodeSrcIndex),
                         (IX_CONTENT_UNIT, NodeContentUnitIndex),

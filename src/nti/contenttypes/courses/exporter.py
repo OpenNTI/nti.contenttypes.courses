@@ -307,8 +307,8 @@ class BundleDCMetadataExporter(BaseSectionExporter):
         DOMimpl = minidom.getDOMImplementation()
         xmldoc = DOMimpl.createDocument(None, "metadata", None)
         doc_root = xmldoc.documentElement
-        doc_root.setAttributeNS(
-            None, "xmlns:dc", "http://purl.org/dc/elements/1.1/")
+        doc_root.setAttributeNS(None, "xmlns:dc",
+                                "http://purl.org/dc/elements/1.1/")
 
         for k, v in IWriteZopeDublinCore.namesAndDescriptions(all=True):
             if IMethod.providedBy(v):
@@ -334,8 +334,9 @@ class BundleDCMetadataExporter(BaseSectionExporter):
 
         source = xmldoc.toprettyxml(encoding="UTF-8")
         for name in (DCMETA_FILENAME, "bundle_dc_metadata.xml"):
-            filer.save(
-                name, source, contentType="application/xml", overwrite=True)
+            filer.save(name, source, 
+                       contentType="application/xml", 
+                       overwrite=True)
 
 
 @interface.implementer(ICourseSectionExporter)

@@ -11,13 +11,13 @@
 	<include package="zope.security" />
 
 	<!-- Adapters -->
-	<adapter factory=".model.CourseDiscussions" />
-	
-	<adapter factory=".acl.CourseDiscussionACLProvider" />
-	
+	<adapter factory=".model.CourseDiscussions" />	
 	<adapter factory=".adapters._course_discussion_to_course" />
 	<adapter factory=".adapters._course_discussions_to_course" />
 			 
+	<!-- ACL -->
+	<adapter factory=".acl.CourseDiscussionACLProvider" />
+	
 	<!-- Externalization -->
 	<include package="nti.externalization" file="meta.zcml" />
 	<include package="nti.externalization" />

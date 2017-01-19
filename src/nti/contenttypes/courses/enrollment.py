@@ -426,7 +426,6 @@ class DefaultCourseEnrollmentManager(object):
 			records.append(record)
 			self._drop_record_for_principal_id(record, pid)
 			del storage[pid]
-
 		return records
 	reset = drop_all
 

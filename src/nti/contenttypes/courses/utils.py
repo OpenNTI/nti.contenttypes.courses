@@ -251,7 +251,7 @@ def get_course_hierarchy(context):
     if parent is not None:
         result.append(parent)
         result.extend(parent.SubInstances.values())
-    return tuple(result)
+    return result
 
 
 def get_content_unit_courses(context, include_sub_instances=True):
@@ -261,8 +261,8 @@ def get_content_unit_courses(context, include_sub_instances=True):
     if package is not None:
         courses = get_courses_for_packages(packages=package.ntiid)
         if not include_sub_instances:
-            result = tuple(
-                x for x in courses if not ICourseSubInstance.providedBy(x))
+            result = tuple(x for x in courses 
+                           if not ICourseSubInstance.providedBy(x))
         else:
             result = courses
     return result
@@ -308,10 +308,10 @@ def drop_any_other_enrollments(context, user, ignore_existing=True):
             enrollment_manager = ICourseEnrollmentManager(instance)
             enrollment_manager.drop(user)
             entry = ICourseCatalogEntry(instance, None)
-            logger.warn("User %s dropped from course '%s' open enrollment", user,
-                        getattr(entry, 'ProviderUniqueID', None))
+            logger.warn("User %s dropped from course '%s' open enrollment",
+                        user, getattr(entry, 'ProviderUniqueID', None))
             result.append(instance)
-    return tuple(result)
+    return result
 
 
 def get_catalog_entry(ntiid, safe=True):
@@ -373,8 +373,7 @@ def get_course_enrollments(context, sites=None, intids=None):
         IX_SCOPE: {'any_of': ENROLLMENT_SCOPE_NAMES}
     }
     uids = catalog.apply(query) or ()
-    result = ResultSet(uids, intids, True)
-    return result
+    return ResultSet(uids, intids, True)
 
 
 def get_enrollments(user, sites=None, intids=None):
@@ -388,8 +387,7 @@ def get_enrollments(user, sites=None, intids=None):
         IX_SCOPE: {'any_of': ENROLLMENT_SCOPE_NAMES}
     }
     uids = catalog.apply(query) or ()
-    result = ResultSet(uids, intids, True)
-    return result
+    return ResultSet(uids, intids, True)
 
 
 def has_enrollments(user, intids=None):
@@ -550,8 +548,8 @@ def get_instructed_course_in_hierarchy(context, user):
 
 
 def is_course_instructor_or_editor(context, user):
-    result = is_course_instructor(
-        context, user) or is_course_editor(context, user)
+    result =   is_course_instructor(context, user) \
+            or is_course_editor(context, user)
     return result
 
 # outlines
@@ -656,8 +654,7 @@ def get_user_or_instructor_enrollment_record(context, user):
                 # instructor
                 return ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
         # find any enrollment
-        result = get_any_enrollment(course, user)
-        return result
+        return get_any_enrollment(course, user)
 
 import zope.deferredimport
 zope.deferredimport.initialize()

@@ -97,28 +97,24 @@ def get_course_for_discussion(discussion, context):
 
 def get_discussion_for_path(path, context):
     parent = get_parent_course(context)
-    path = os.path.sep + \
-        path if not path.startswith(os.path.sep) else os.path.sep
+    path = os.path.sep + path if not path.startswith(os.path.sep) else os.path.sep
     if parent is not None:
         splits = path.split(os.path.sep)
         # e.g. /Sections/02/Discussions/p.json
         if SECTIONS in splits and len(splits) >= 2 and splits[1] == SECTIONS:
-            course = parent.SubInstances.get(
-                splits[2]) if len(splits) >= 3 else None
-            course = None if len(
-                splits) < 3 or DISCUSSIONS != splits[3] else course
+            course = parent.SubInstances.get(splits[2]) if len(splits) >= 3 else None
+            course = None if len(splits) < 3 or DISCUSSIONS != splits[3] else course
             name = splits[4] if len(splits) >= 5 else None
         else:
             course = parent  # e.g. /Discussions/p.json
-            course = None if len(
-                splits) < 2 or DISCUSSIONS != splits[1] else course
+            course = None if len(splits) < 2 or DISCUSSIONS != splits[1] else course
             name = splits[2] if len(splits) >= 3 else None
 
         if course is not None and name:
             discussions = ICourseDiscussions(course, None) or {}
             for prefix in (name, name.replace(' ', '_')):
-                result = discussions.get(
-                    prefix) or discussions.get(prefix + '.json')
+                result =   discussions.get(prefix) \
+                        or discussions.get(prefix + '.json')
                 if result is not None:
                     break
             return result
@@ -166,7 +162,8 @@ def get_forum_scopes(forum):
     elif hasattr(forum, '__acl__'):
         result = set()
         for ace in forum.__acl__:
-            if IPrincipal(ace.actor).id in m and ace.action == ACE_ACT_ALLOW:
+            if      IPrincipal(ace.actor).id in m \
+                and ace.action == ACE_ACT_ALLOW:
                 result.add(m[k])
     return result or ()
 
@@ -182,8 +179,8 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
     """
 
     context = item if context is None else item
-    record = get_user_or_instructor_enrollment_record(
-        context, user) if record is None else record
+    if record is None:
+        record = get_user_or_instructor_enrollment_record(context, user)
     if record is None:
         logger.warn("No enrollment record for user %s under %s", user, context)
         return None
@@ -200,7 +197,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
 
     # if course is a subinstance, make sure we are enrolled in it and
     # we are not an instructor
-    if 		ICourseSubInstance.providedBy(course) \
+    if      ICourseSubInstance.providedBy(course) \
         and scope != ES_ALL \
         and course != record.CourseInstance:
         return None
@@ -210,22 +207,25 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
     if not ICourseDiscussion.providedBy(item):
         key = get_discussion_key(item)
         discussion = ICourseDiscussions(course).get(key) if key else None
-    scopes = get_implied_by_scopes(
-        discussion.scopes) if discussion is not None else ()
+    if discussion is not None:
+        scopes = get_implied_by_scopes(discussion.scopes) 
+    else:
+        scopes = ()
     logger.debug("Implied scopes for %s are %s", discussion.id, scopes)
 
-    if     	   (not scope) \
-            or (not scopes) \
-            or (scope != ES_ALL and ES_ALL not in scopes and scope not in scopes):
-        logger.warn(
-            "User scope %s did not match implied scopes %s", scope, scopes)
+    if     (not scope) \
+        or (not scopes) \
+        or (scope != ES_ALL and ES_ALL not in scopes and scope not in scopes):
+        logger.warn("User scope %s did not match implied scopes %s",
+                    scope, scopes)
         return None
     else:
         topic = None
+        m_scope = ES_ALL
         topic_key = get_topic_key(discussion)
         topic_title = make_specific_safe(discussion.title)
-        m_scope = ES_ALL if scope == ES_ALL \
-            else ENROLLMENT_LINEAGE_MAP.get(scope)[0]
+        if scope != ES_ALL:
+            m_scope = ENROLLMENT_LINEAGE_MAP.get(scope)[0]
         m_scope_term = get_scope_term(m_scope) if m_scope != ES_ALL else None
         m_scope_implies = set(getattr(m_scope_term, 'implies', None) or ())
         for v in course.Discussions.values():

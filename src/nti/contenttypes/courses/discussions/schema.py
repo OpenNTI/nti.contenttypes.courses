@@ -14,11 +14,14 @@ from nti.coremetadata.schema import legacyModeledContentBodyTypes
 
 from nti.schema.field import ValidText
 
+
 def discussionModeledContentBodyTypes():
-	result = legacyModeledContentBodyTypes()
-	result.append(ValidText(min_length=1, description="A text that is non-empty"))
-	return result
+    result = legacyModeledContentBodyTypes()
+    result.append(ValidText(min_length=1, 
+                            description="A text that is non-empty"))
+    return result
+
 
 def DiscussionModeledContentBody(required=False):
-	return CompoundModeledContentBody(required=required,
-									  fields=discussionModeledContentBodyTypes())
+    return CompoundModeledContentBody(required=required,
+                                      fields=discussionModeledContentBodyTypes())

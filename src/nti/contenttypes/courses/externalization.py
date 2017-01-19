@@ -43,6 +43,7 @@ from nti.ntiids.ntiids import is_valid_ntiid_string
 
 from nti.traversal.traversal import find_interface
 
+ID = StandardExternalFields.ID
 OID = StandardExternalFields.OID
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
@@ -125,17 +126,17 @@ class _CourseOutlineNodeExporter(object):
             result['isChildOrderLocked'] = self.node.isChildOrderLocked()
 
         # if content points to lesson pop both
-        if 		result.get(CONTENT_NTIID) \
-                and result.get(LESSON_OVERVIEW_NTIID) == result.get(CONTENT_NTIID):
+        if      result.get(CONTENT_NTIID) \
+            and result.get(LESSON_OVERVIEW_NTIID) == result.get(CONTENT_NTIID):
             result.pop(CONTENT_NTIID, None)
             result.pop(LESSON_OVERVIEW_NTIID, None)
 
         # don't leak internal OIDs
         for name in (NTIID, NTIID.lower(), OID, LESSON_OVERVIEW_NTIID, CONTENT_NTIID):
             value = result.get(name)
-            if 		value \
-                    and	is_valid_ntiid_string(value) \
-                    and is_ntiid_of_type(value, TYPE_OID):
+            if      value \
+                and is_valid_ntiid_string(value) \
+                and is_ntiid_of_type(value, TYPE_OID):
                 result.pop(name, None)
 
         return result
@@ -197,8 +198,7 @@ class _CourseCatalogEntryExporter(object):
         # instructors
         self._fix_instructors(result.get('instructors'))
         # extra keys
-        result['is_non_public'] = INonPublicCourseInstance.providedBy(
-            self.entry)
+        result['is_non_public'] = INonPublicCourseInstance.providedBy(self.entry)
         return result
 
 
@@ -238,14 +238,13 @@ class _CourseInstanceSharingScopeExporter(object):
         result = LocatedExternalDict()
         clazz = getattr(self.entity, '__external_class_name__', None)
         if clazz:
-            result[StandardExternalFields.CLASS] = clazz
+            result[CLASS] = clazz
         else:
-            result[
-                StandardExternalFields.CLASS] = self.entity.__class__.__name__
+            result[CLASS] = self.entity.__class__.__name__
         decorateMimeType(self.entity, result)
         result['Username'] = self.entity.username
         if IUseNTIIDAsExternalUsername.providedBy(self.entity):
-            result[StandardExternalFields.ID] = self.entity.NTIID
+            result[ID] = self.entity.NTIID
         result['Scope'] = self.entity.__name__  # by definition
         course = find_interface(self.entity, ICourseInstance, strict=False)
         entry = ICourseCatalogEntry(course, None)

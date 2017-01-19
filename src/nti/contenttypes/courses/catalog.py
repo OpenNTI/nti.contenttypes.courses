@@ -61,407 +61,422 @@ from nti.schema.schema import PermissiveSchemaConfigured as SchemaConfigured
 
 from nti.site.localutility import queryNextUtility
 
+from nti.traversal.traversal import find_interface
+
+
 def _queryNextCatalog(context):
-	return queryNextUtility(context, ICourseCatalog)
+    return queryNextUtility(context, ICourseCatalog)
+
 
 class _AbstractCourseCatalogMixin(object):
-	"""
-	Defines the interface methods for a generic course
-	catalog, including tree searching.
-	"""
+    """
+    Defines the interface methods for a generic course
+    catalog, including tree searching.
+    """
 
-	__name__ = 'CourseCatalog'
+    __name__ = 'CourseCatalog'
 
-	@LazyOnClass
-	def __acl__(self):
-		# Got to be here after the components are registered
-		return acl_from_aces(
-			# Everyone logged in has read and search access to the catalog
-			ace_allowing(AUTHENTICATED_GROUP_NAME, ACT_READ, type(self)))
+    @LazyOnClass
+    def __acl__(self):
+        # Got to be here after the components are registered
+        # Everyone logged in has read and search access to the catalog
+        return acl_from_aces(ace_allowing(AUTHENTICATED_GROUP_NAME,
+                                          ACT_READ,
+                                          type(self)))
 
-	# regardless of length, catalogs are True
-	def __bool__(self):
-		return True
-	__nonzero__ = __bool__
+    # regardless of length, catalogs are True
+    def __bool__(self):
+        return True
+    __nonzero__ = __bool__
 
-	@property
-	def _next_catalog(self):
-		return _queryNextCatalog(self)
+    @property
+    def _next_catalog(self):
+        return _queryNextCatalog(self)
 
-	def _get_all_my_entries(self):
-		"Return all the entries at this level"
-		raise NotImplementedError()
+    def _get_all_my_entries(self):
+        """
+        Return all the entries at this level
+        """
+        raise NotImplementedError()
 
-	def isEmpty(self):
-		# TODO: should this be in the hierarchy?
-		return not self._get_all_my_entries()
+    def isEmpty(self):
+        # TODO: should this be in the hierarchy?
+        return not self._get_all_my_entries()
 
-	# TODO: A protocol for caching _get_all_my_entries
-	# and handling queries in a cached way, plus caching
-	# the iterator
+    # TODO: A protocol for caching _get_all_my_entries
+    # and handling queries in a cached way, plus caching
+    # the iterator
 
-	def iterCatalogEntries(self):
-		seen = set()
-		entry_map = self._get_all_my_entries()
-		for ntiid, entry in entry_map.items():
-			if ntiid is None or ntiid in seen:
-				continue
-			seen.add(ntiid)
-			yield entry
+    def iterCatalogEntries(self):
+        seen = set()
+        entry_map = self._get_all_my_entries()
+        for ntiid, entry in entry_map.items():
+            if ntiid is None or ntiid in seen:
+                continue
+            seen.add(ntiid)
+            yield entry
 
-		parent = self._next_catalog
-		if parent is not None:
-			for e in parent.iterCatalogEntries():
-				ntiid = e.ntiid
-				if ntiid not in seen:
-					seen.add(ntiid)
-					yield e
+        parent = self._next_catalog
+        if parent is not None:
+            for e in parent.iterCatalogEntries():
+                ntiid = e.ntiid
+                if ntiid not in seen:
+                    seen.add(ntiid)
+                    yield e
 
-	def _primary_query_my_entry(self, name):
-		entry_map = self._get_all_my_entries()
-		return entry_map.get(name)
+    def _primary_query_my_entry(self, name):
+        entry_map = self._get_all_my_entries()
+        return entry_map.get(name)
 
-	def _query_my_entry(self, name):
-		entry = self._primary_query_my_entry(name)
-		return entry
+    def _query_my_entry(self, name):
+        entry = self._primary_query_my_entry(name)
+        return entry
 
-	def getCatalogEntry(self, name):
-		entry = self._query_my_entry(name)
-		if entry is not None:
-			return entry
+    def getCatalogEntry(self, name):
+        entry = self._query_my_entry(name)
+        if entry is not None:
+            return entry
 
-		parent = self._next_catalog
-		if parent is None:
-			raise KeyError(name)
-		return parent.getCatalogEntry(name)
+        parent = self._next_catalog
+        if parent is None:
+            raise KeyError(name)
+        return parent.getCatalogEntry(name)
+
 
 @NoPickle
 @WithRepr
 @interface.implementer(IGlobalCourseCatalog)
 class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
-						  CheckingLastModifiedBTreeContainer):
+                          CheckingLastModifiedBTreeContainer):
 
-	# NOTE: We happen to inherit Persistent, which we really
-	# don't want.
+    # NOTE: We happen to inherit Persistent, which we really
+    # don't want.
 
-	lastModified = 0
+    lastModified = 0
 
-	def _get_all_my_entries(self):
-		return {x.ntiid:x for x in self.values()}
+    def _get_all_my_entries(self):
+        return {x.ntiid: x for x in self.values()}
 
-	def _primary_query_my_entry(self, name):
-		try:
-			return CheckingLastModifiedBTreeContainer.__getitem__(self, name)
-		except KeyError:
-			return None
+    def _primary_query_my_entry(self, name):
+        try:
+            return CheckingLastModifiedBTreeContainer.__getitem__(self, name)
+        except KeyError:
+            return None
 
-	def addCatalogEntry(self, entry, event=True):
-		"""
-		Adds an entry to this catalog.
+    def addCatalogEntry(self, entry, event=True):
+        """
+        Adds an entry to this catalog.
 
-		:keyword bool event: If true (the default), we broadcast
-			the object added event.
-		"""
-		key = entry.ntiid or entry.__name__
-		if not key:
-			raise ValueError("The entry has no NTIID or name", entry)
-		if CheckingLastModifiedBTreeContainer.__contains__(self, key):
-			if entry.__parent__ is self:
-				return
-			raise ValueError("Adding duplicate entry", entry)
+        :keyword bool event: If true (the default), we broadcast
+                the object added event.
+        """
+        key = entry.ntiid or entry.__name__
+        if not key:
+            raise ValueError("The entry has no NTIID or name", entry)
+        if CheckingLastModifiedBTreeContainer.__contains__(self, key):
+            if entry.__parent__ is self:
+                return
+            raise ValueError("Adding duplicate entry", entry)
 
-		if event:
-			self[key] = entry
-		else:
-			self._setitemf(key, entry)
-			entry.__parent__ = self
+        if event:
+            self[key] = entry
+        else:
+            self._setitemf(key, entry)
+            entry.__parent__ = self
 
-		self.lastModified = max(self.lastModified, entry.lastModified)
+        self.lastModified = max(self.lastModified, entry.lastModified)
 
-	append = addCatalogEntry
+    append = addCatalogEntry
 
-	def removeCatalogEntry(self, entry, event=True):
-		"""
-		Remove an entry from this catalog.
+    def removeCatalogEntry(self, entry, event=True):
+        """
+        Remove an entry from this catalog.
 
-		:keyword bool event: If true (the default), we broadcast
-			the object removed event.
-		"""
-		key = entry.ntiid or entry.__name__
-		if not key:
-			raise ValueError("The entry has no NTIID or name", entry)
+        :keyword bool event: If true (the default), we broadcast
+                the object removed event.
+        """
+        key = entry.ntiid or entry.__name__
+        if not key:
+            raise ValueError("The entry has no NTIID or name", entry)
 
-		__traceback_info__ = key, entry
-		if not event:
-			l = self._BTreeContainer__len
-			try:
-				entry = self._SampleContainer__data[key]
-				del self._SampleContainer__data[key]
-				l.change(-1)
-				entry.__parent__ = None
-			except KeyError:
-				pass
-		else:
-			if CheckingLastModifiedBTreeContainer.__contains__(self, key):
-				del self[key]
+        __traceback_info__ = key, entry
+        if not event:
+            l = self._BTreeContainer__len
+            try:
+                entry = self._SampleContainer__data[key]
+                del self._SampleContainer__data[key]
+                l.change(-1)
+                entry.__parent__ = None
+            except KeyError:
+                pass
+        else:
+            if CheckingLastModifiedBTreeContainer.__contains__(self, key):
+                del self[key]
 
-	def isEmpty(self):
-		# we can be more efficient than the parent
-		return len(self) == 0
+    def isEmpty(self):
+        # we can be more efficient than the parent
+        return len(self) == 0
 
-	def clear(self):
-		for i in list(self.iterCatalogEntries()):
-			self.removeCatalogEntry(i, event=False)
+    def clear(self):
+        for i in list(self.iterCatalogEntries()):
+            self.removeCatalogEntry(i, event=False)
 
-	def __contains__(self, ix):
-		if CheckingLastModifiedBTreeContainer.__contains__(self, ix):
-			return True
+    def __contains__(self, ix):
+        if CheckingLastModifiedBTreeContainer.__contains__(self, ix):
+            return True
 
-		try:
-			return self[ix] is not None
-		except KeyError:
-			return False
+        try:
+            return self[ix] is not None
+        except KeyError:
+            return False
 
-	__getitem__ = _AbstractCourseCatalogMixin.getCatalogEntry
+    __getitem__ = _AbstractCourseCatalogMixin.getCatalogEntry
+
 
 @WithRepr
 @interface.implementer(ICourseCatalogInstructorInfo)
 class CourseCatalogInstructorInfo(SchemaConfigured):
-	createDirectFieldProperties(ICourseCatalogInstructorInfo)
+    createDirectFieldProperties(ICourseCatalogInstructorInfo)
+
 
 @WithRepr
 @EqHash('ProviderUniqueID')
 @interface.implementer(ICatalogFamily)
 class CatalogFamily(SchemaConfigured,
-					DisplayableContentMixin):
-	# shut up pylint
-	title = None
-	EndDate = None
-	StartDate = None
-	DisplayName = None
-	description = None
-	ProviderUniqueID = None
+                    DisplayableContentMixin):
+    # shut up pylint
+    title = None
+    EndDate = None
+    StartDate = None
+    DisplayName = None
+    description = None
+    ProviderUniqueID = None
 
-	createDirectFieldProperties(ICatalogFamily)
+    createDirectFieldProperties(ICatalogFamily)
 
-	# legacy compatibility
-	Title = alias('title')
-	Description = alias('description')
+    # legacy compatibility
+    Title = alias('title')
+    Description = alias('description')
 
-	def __init__(self, *args, **kwargs):
-		SchemaConfigured.__init__(self, *args, **kwargs)  # not cooperative
+    def __init__(self, *args, **kwargs):
+        SchemaConfigured.__init__(self, *args, **kwargs)  # not cooperative
+
 
 @interface.implementer(ICourseCatalogEntry)
 @total_ordering
 @EqHash('ntiid')
 class CourseCatalogEntry(CatalogFamily,
-						 CreatedAndModifiedTimeMixin):
-	# shut up pylint
-	ntiid = None
-	Duration = None
+                         CreatedAndModifiedTimeMixin):
+    # shut up pylint
+    ntiid = None
+    Duration = None
 
-	lastSynchronized = 0
+    lastSynchronized = 0
 
-	_SET_CREATED_MODTIME_ON_INIT = False
+    _SET_CREATED_MODTIME_ON_INIT = False
 
-	createDirectFieldProperties(ICourseCatalogEntry)
+    createDirectFieldProperties(ICourseCatalogEntry)
 
-	RichDescription = AdaptingFieldProperty(ICourseCatalogEntry['RichDescription'])
+    RichDescription = AdaptingFieldProperty(
+        ICourseCatalogEntry['RichDescription'])
 
-	__name__ = alias('ntiid')
-	__parent__ = None
+    __name__ = alias('ntiid')
+    __parent__ = None
 
-	def __init__(self, *args, **kwargs):
-		CatalogFamily.__init__(self, *args, **kwargs)
-		CreatedAndModifiedTimeMixin.__init__(self)
+    def __init__(self, *args, **kwargs):
+        CatalogFamily.__init__(self, *args, **kwargs)
+        CreatedAndModifiedTimeMixin.__init__(self)
 
-	def __lt__(self, other):
-		return self.ntiid < other.ntiid
+    def __lt__(self, other):
+        return self.ntiid < other.ntiid
 
-	@property
-	def links(self):
-		return self._make_links()
+    @property
+    def links(self):
+        return self._make_links()
 
-	def _make_links(self):
-		"""
-		Subclasses can extend this to customize the available links.
+    def _make_links(self):
+        """
+        Subclasses can extend this to customize the available links.
 
-		If we are adaptable to a :class:`.ICourseInstance`, we
-		produce a link to that.
-		"""
-		result = ()
-		instance = ICourseInstance(self, None)
-		if instance is not None:
-			result = [Link(instance, rel="CourseInstance")]
-		return result
+        If we are adaptable to a :class:`.ICourseInstance`, we
+        produce a link to that.
+        """
+        result = ()
+        instance = ICourseInstance(self, None)
+        if instance is not None:
+            result = [Link(instance, rel="CourseInstance")]
+        return result
 
-	@property
-	def PlatformPresentationResources(self):
-		"""
-		If we do not have a set of presentation assets,
-		we echo the first thing we have that does contain
-		them. This should simplify things for the clients.
-		"""
-		ours = super(CourseCatalogEntry, self).PlatformPresentationResources
-		if ours:
-			return ours
+    @property
+    def PlatformPresentationResources(self):
+        """
+        If we do not have a set of presentation assets,
+        we echo the first thing we have that does contain
+        them. This should simplify things for the clients.
+        """
+        ours = super(CourseCatalogEntry, self).PlatformPresentationResources
+        if ours:
+            return ours
 
-		# Ok, do we have a course, and if so, does it have
-		# a bundle or legacy content package?
-		theirs = None
-		try:
-			course = ICourseInstance(self, None)
-		except LookupError:
-			# typically outside af a transaction
-			course = None
-		if course is None:
-			# we got nothing
-			return
+        # Ok, do we have a course, and if so, does it have
+        # a bundle or legacy content package?
+        theirs = None
+        try:
+            course = ICourseInstance(self, None)
+        except LookupError:
+            # typically outside af a transaction
+            course = None
+        if course is None:
+            # we got nothing
+            return
 
-		# Does it have a bundle with resources?
-		try:
-			theirs = course.ContentPackageBundle.PlatformPresentationResources
-		except AttributeError:
-			pass
+        # Does it have a bundle with resources?
+        try:
+            theirs = course.ContentPackageBundle.PlatformPresentationResources
+        except AttributeError:
+            pass
 
-		if theirs:
-			return theirs
+        if theirs:
+            return theirs
 
-		# Does it have the old legacy property?
-		try:
-			theirs = course.legacy_content_package.PlatformPresentationResources
-		except AttributeError:
-			pass
+        # Does it have the old legacy property?
+        try:
+            theirs = course.legacy_content_package.PlatformPresentationResources
+        except AttributeError:
+            pass
 
-		return theirs
+        return theirs
 
-	@readproperty
-	def AdditionalProperties(self):
-		return None
+    @readproperty
+    def AdditionalProperties(self):
+        return None
 
-	@readproperty
-	def InstructorsSignature(self):
-		sig_lines = []
-		for inst in self.Instructors:
-			sig_lines.append(inst.Name)
-			sig_lines.append(inst.JobTitle)
+    @readproperty
+    def InstructorsSignature(self):
+        sig_lines = []
+        for inst in self.Instructors or ():
+            sig_lines.append(inst.Name)
+            sig_lines.append(inst.JobTitle)
+            sig_lines.append("")
+        if sig_lines:
+            # always at least one instructor. take off the last trailing line
+            del sig_lines[-1]
+        signature = '\n\n'.join(sig_lines)
+        return signature
 
-			sig_lines.append("")
-		del sig_lines[-1]  # always at least one instructor. take off the last trailing line
-		signature = '\n\n'.join(sig_lines)
-		return signature
+    def isCourseCurrentlyActive(self):
+        # XXX: duplicated for legacy sub-catalog entries
+        if getattr(self, 'Preview', False):
+            # either manually set, or before the start date
+            # some objects don't have this flag at all
+            return False
+        if self.EndDate:
+            # if we end in the future we're active
+            return self.EndDate > datetime.utcnow()
+        # otherwise, with no information given, assume
+        # we're active
+        return True
 
-	def isCourseCurrentlyActive(self):
-		# XXX: duplicated for legacy sub-catalog entries
-		if getattr(self, 'Preview', False):
-			# either manually set, or before the start date
-			# some objects don't have this flag at all
-			return False
-		if self.EndDate:
-			# if we end in the future we're active
-			return self.EndDate > datetime.utcnow()
-		# otherwise, with no information given, assume
-		# we're active
-		return True
+    @CachedProperty('__parent__')
+    def relative_path(self):
+        return path_for_entry(self)
 
-	@CachedProperty('__parent__')
-	def relative_path(self):
-		return path_for_entry(self)
 
 @interface.implementer(IPersistentCourseCatalog)
 class CourseCatalogFolder(_AbstractCourseCatalogMixin,
-						  CheckingLastModifiedBTreeFolder):
-	"""
-	A folder whose contents are (recursively) the course instances
-	for which we will generate the appropriate course catalog entries
-	as needed.
+                          CheckingLastModifiedBTreeFolder):
+    """
+    A folder whose contents are (recursively) the course instances
+    for which we will generate the appropriate course catalog entries
+    as needed.
 
-	This folder is intended to be registered as a utility providing
-	:class:`ICourseCatalog`. It cooperates with utilities higher
-	in parent sites.
+    This folder is intended to be registered as a utility providing
+    :class:`ICourseCatalog`. It cooperates with utilities higher
+    in parent sites.
 
-	.. note:: Although currently the catalog is flattened,
-		in the future the folder structure might mean something
-		(e.g., be incorporated into the workspace structure at the
-		application level).
-	"""
+    .. note:: Although currently the catalog is flattened,
+            in the future the folder structure might mean something
+            (e.g., be incorporated into the workspace structure at the
+            application level).
+    """
 
-	@cachedIn('_v_all_my_entries')
-	def _get_all_my_entries(self):
-		entries = dict()
+    @cachedIn('_v_all_my_entries')
+    def _get_all_my_entries(self):
+        entries = dict()
 
-		def _recur(folder):
-			course = ICourseInstance(folder, None)
-			if course:
-				entry = ICourseCatalogEntry(course, None)
-				if entry:
-					entries[entry.ntiid] = entry
-					for subinstance in course.SubInstances.values():
-						entry = ICourseCatalogEntry(subinstance, None)
-						if entry:
-							entries[entry.ntiid] = entry
-				# We don't need to go any deeper than two levels
-				# (If we hit the community members in the scope, we
-				# can get infinite recursion)
-				return
-			try:
-				folder_values = folder.values()
-			except AttributeError:
-				pass
-			else:
-				for value in folder_values:
-					_recur(value)
-		_recur(self)
-		return entries
+        def _recur(folder):
+            course = ICourseInstance(folder, None)
+            if course:
+                entry = ICourseCatalogEntry(course, None)
+                if entry:
+                    entries[entry.ntiid] = entry
+                    for subinstance in course.SubInstances.values():
+                        entry = ICourseCatalogEntry(subinstance, None)
+                        if entry:
+                            entries[entry.ntiid] = entry
+                # We don't need to go any deeper than two levels
+                # (If we hit the community members in the scope, we
+                # can get infinite recursion)
+                return
+            try:
+                folder_values = folder.values()
+            except AttributeError:
+                pass
+            else:
+                for value in folder_values:
+                    _recur(value)
+        _recur(self)
+        return entries
 
-from nti.traversal.traversal import find_interface
 
 def _clear_catalog_cache_when_course_updated(course, event):
-	"""
-	Because course instances can be any level of folders deep under a
-	CourseCatalogFolder, when they change (are added or removed), the
-	CCF may not itself be changed and included in the transaction.
-	This in turn means that it may not be invalidated/ghosted, so if
-	its state was already loaded and non-ghost, and its contents
-	cached (because it had been iterated), that cached object may
-	still be used by some processes.
+    """
+    Because course instances can be any level of folders deep under a
+    CourseCatalogFolder, when they change (are added or removed), the
+    CCF may not itself be changed and included in the transaction.
+    This in turn means that it may not be invalidated/ghosted, so if
+    its state was already loaded and non-ghost, and its contents
+    cached (because it had been iterated), that cached object may
+    still be used by some processes.
 
-	This subscriber watches for any course change event and clears the catalog
-	cache.
-	"""
+    This subscriber watches for any course change event and clears the catalog
+    cache.
+    """
 
-	# We don't use a component.adapter decorator because we need to handle
-	# at least CourseInstanceAvailable events as well as Deleted events.
+    # We don't use a component.adapter decorator because we need to handle
+    # at least CourseInstanceAvailable events as well as Deleted events.
 
-	# Because the catalogs may be nested to an arbitrary depth and
-	# have other caching, contingent upon what got returned by
-	# superclasses, we want to reset anything we find. Further more,
-	# we can't know what *other* worker instances might have the same
-	# catalog object cached, so we need to actually mark the object as
-	# changed so it gets included in the transaction and invalidates
-	# there (still invalidate locally, though, so it takes effect for
-	# the rest of the transaction). Fortunately these objects are tiny and
-	# have almost no state, so this doesn't bloat the transaction much
+    # Because the catalogs may be nested to an arbitrary depth and
+    # have other caching, contingent upon what got returned by
+    # superclasses, we want to reset anything we find. Further more,
+    # we can't know what *other* worker instances might have the same
+    # catalog object cached, so we need to actually mark the object as
+    # changed so it gets included in the transaction and invalidates
+    # there (still invalidate locally, though, so it takes effect for
+    # the rest of the transaction). Fortunately these objects are tiny and
+    # have almost no state, so this doesn't bloat the transaction much
 
-	catalogs = []
+    catalogs = []
 
-	# Include the parent, if we have one
-	catalogs.append(find_interface(course, IPersistentCourseCatalog, strict=False))
+    # Include the parent, if we have one
+    catalogs.append(find_interface(course,
+                                   IPersistentCourseCatalog,
+                                   strict=False))
 
-	# If the event has oldParent and/or newParent, include them
-	for n in 'oldParent', 'newParent':
-		catalogs.append(find_interface(getattr(event, n, None),
-									   IPersistentCourseCatalog,
-									   strict=False))
-	# finally, anything else we can find
-	catalogs.extend(component.getAllUtilitiesRegisteredFor(ICourseCatalog))
+    # If the event has oldParent and/or newParent, include them
+    for n in 'oldParent', 'newParent':
+        catalogs.append(find_interface(getattr(event, n, None),
+                                       IPersistentCourseCatalog,
+                                       strict=False))
+    # finally, anything else we can find
+    catalogs.extend(component.getAllUtilitiesRegisteredFor(ICourseCatalog))
 
-	for catalog in catalogs:
-		if catalog is None:
-			continue
-		try:
-			catalog._get_all_my_entries.invalidate(catalog)
-		except AttributeError:  # pragma: no cover
-			pass
-		if hasattr(catalog, '_p_changed') and catalog._p_jar:
-			catalog._p_changed = True
+    for catalog in catalogs:
+        if catalog is None:
+            continue
+        try:
+            catalog._get_all_my_entries.invalidate(catalog)
+        except AttributeError:  # pragma: no cover
+            pass
+        if hasattr(catalog, '_p_changed') and catalog._p_jar:
+            catalog._p_changed = True
