@@ -13,6 +13,7 @@ import six
 from itertools import chain
 
 from zope import component
+from zope import interface
 
 from zope.catalog.interfaces import ICatalog
 
@@ -32,6 +33,8 @@ from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
+from nti.base.mixins import CreatedAndModifiedTimeMixin
+
 from nti.contentlibrary.interfaces import IContentUnit
 from nti.contentlibrary.interfaces import IContentPackage
 
@@ -49,6 +52,7 @@ from nti.contenttypes.courses.index import COURSES_CATALOG_NAME
 from nti.contenttypes.courses.index import ENROLLMENT_CATALOG_NAME
 from nti.contenttypes.courses.index import COURSE_OUTLINE_CATALOG_NAME
 
+from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import EDITOR
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
@@ -70,6 +74,10 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.vendorinfo import VENDOR_INFO_KEY
+
+from nti.dataserver.authorization import ACT_CONTENT_EDIT
+
+from nti.dataserver.authorization_acl import has_permission
 
 from nti.dataserver.users import User
 
@@ -616,6 +624,40 @@ def path_for_entry(context):
 
     result = '/'.join(parents) if parents else None
     return result
+
+@interface.implementer(ICourseInstanceEnrollmentRecord)
+class ProxyEnrollmentRecord(CreatedAndModifiedTimeMixin, Contained):
+
+    Scope = None
+    Principal = None
+    CourseInstance = None
+
+    def __init__(self, course=None, principal=None, scope=None):
+        self.Scope = scope
+        self.Principal = principal
+        self.CourseInstance = course
+
+
+def get_user_or_instructor_enrollment_record(context, user):
+    """
+    Fetches an enrollment record for the given context/user,
+    returning a pseudo-record with an `ES_ALL` scope if the
+    user is an instructor/editor.
+    """
+    course = ICourseInstance(context, None)  # e.g. course in lineage
+    if course is None:
+        return None
+    else:
+        is_editor = has_permission(ACT_CONTENT_EDIT, course, user.username)
+        # give priority to course in lineage before checking the rest
+        for instance in get_course_hierarchy(course):
+            if is_course_instructor_or_editor(instance, user) or is_editor:
+                # create a fake enrollment record w/ all scopes to signal an
+                # instructor
+                return ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
+        # find any enrollment
+        result = get_any_enrollment(course, user)
+        return result
 
 import zope.deferredimport
 zope.deferredimport.initialize()
