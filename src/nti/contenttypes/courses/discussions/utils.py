@@ -212,7 +212,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
         discussion = ICourseDiscussions(course).get(key) if key else None
     scopes = get_implied_by_scopes(
         discussion.scopes) if discussion is not None else ()
-    logger.debug("Implied scopes for %s are %s", key, scopes)
+    logger.debug("Implied scopes for %s are %s", discussion.id, scopes)
 
     if     	   (not scope) \
             or (not scopes) \
