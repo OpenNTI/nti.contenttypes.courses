@@ -21,26 +21,27 @@ from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 
-import nti.dataserver.tests.mock_dataserver as mock_dataserver
+from nti.dataserver.tests import mock_dataserver
 from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
+
 
 class TestAdapters(CourseLayerTest):
 
-	@WithMockDSTrans
-	def test_course_discussions(self):
-		connection = mock_dataserver.current_transaction
-		inst = CourseInstance()
-		connection.add(inst)
+    @WithMockDSTrans
+    def test_course_discussions(self):
+        connection = mock_dataserver.current_transaction
+        inst = CourseInstance()
+        connection.add(inst)
 
-		discussions = ICourseDiscussions(inst, None)
-		assert_that(discussions, is_not(none()))
-		assert_that(discussions, has_property('__parent__', is_(inst)))
+        discussions = ICourseDiscussions(inst, None)
+        assert_that(discussions, is_not(none()))
+        assert_that(discussions, has_property('__parent__', is_(inst)))
 
-		discussion = CourseDiscussion()
-		discussion.id = 'foo'
-		discussions['foo'] = discussion
-		assert_that(discussions, has_entry('foo', is_(discussion)))
+        discussion = CourseDiscussion()
+        discussion.id = 'foo'
+        discussions['foo'] = discussion
+        assert_that(discussions, has_entry('foo', is_(discussion)))
 
-		course = ICourseInstance(discussion, None)
-		assert_that(course, is_not(none()))
-		assert_that(course, is_(inst))
+        course = ICourseInstance(discussion, None)
+        assert_that(course, is_not(none()))
+        assert_that(course, is_(inst))
