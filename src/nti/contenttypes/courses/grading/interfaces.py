@@ -83,5 +83,6 @@ class ICourseGradingPolicy(IContained, ILastModified, ICreated):
 
     def grade(principal):
         """
-        return the [current] grade for the specified user/principal
+        return the [current] grade for the specified user/principal. May
+        return None if no valid grade could be produced.
         """

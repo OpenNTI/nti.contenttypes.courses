@@ -69,7 +69,6 @@ from nti.contenttypes.courses.courses import CourseAdministrativeLevel
 
 from nti.contenttypes.courses.discussions import parse_discussions
 
-from nti.contenttypes.courses.grading import reset_grading_policy
 from nti.contenttypes.courses.grading import fill_grading_policy_from_key
 
 from nti.contenttypes.courses.interfaces import ES_CREDIT
@@ -337,7 +336,7 @@ class _ContentCourseSynchronizer(object):
 
 		# validate assigment policies
 		cls.validate_assigment_policies(course, bucket)
-		
+
 		# update course evaluations
 		cls.update_course_evaluations(course, bucket)
 
@@ -463,7 +462,7 @@ class _ContentCourseSynchronizer(object):
 				sync_results.AssignmentPoliciesUpdated = True
 		elif reset_asg_missing_key(course):
 			sync_results.AssignmentPoliciesReseted = True
-			
+
 	@classmethod
 	def update_course_evaluations(cls, course, bucket, sync_results=None):
 		sync_results = _get_course_sync_results(course, sync_results)
@@ -474,13 +473,12 @@ class _ContentCourseSynchronizer(object):
 
 	@classmethod
 	def update_grading_policy(cls, course, bucket, sync_results=None):
+		# We no longer wipe existing policies out.
 		sync_results = _get_course_sync_results(course, sync_results)
 		key = bucket.getChildNamed(GRADING_POLICY_NAME)
-		if key is not None:
-			if fill_grading_policy_from_key(course, key):
+		if 		key is not None \
+			and fill_grading_policy_from_key(course, key):
 				sync_results.GradingPolicyUpdated = True
-		elif reset_grading_policy(course):
-			sync_results.GradingPolicyDeleted = True
 
 	@classmethod
 	def validate_assigment_policies(cls, course, bucket):
