@@ -358,7 +358,7 @@ class BundlePresentationAssetsExporter(BaseSectionExporter):
         return '/'.join(result)
 
     def _guess_type(self, name):
-        return mimetypes.guess_type(name) or u'application/octet-stream'
+        return mimetypes.guess_type(name)[0] or u'application/octet-stream'
 
     def _process_root(self, root, bucket, filer):
         if IEnumerableDelimitedHierarchyBucket.providedBy(root):
