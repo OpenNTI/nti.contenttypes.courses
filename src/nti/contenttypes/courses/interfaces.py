@@ -1190,7 +1190,6 @@ class ICourseSynchronizationResults(IGenericSynchronizationResults):
 	AssignmentPoliciesReseted = Bool(title="Assignment Policies reseted", required=False, default=False)
 	AssignmentPoliciesUpdated = Bool(title="Assignment Policies updated", required=False, default=False)
 
-	GradingPolicyDeleted = Bool(title="Grading Policy deleted", required=False, default=False)
 	GradingPolicyUpdated = Bool(title="Grading Policy updated", required=False, default=False)
 
 	EvaluationsUpdated = Bool(title="Course Evaluations", required=False, default=False)
