@@ -13,6 +13,7 @@ import os
 import six
 import time
 import hashlib
+import mimetypes
 from numbers import Number
 from datetime import datetime
 from collections import Mapping
@@ -38,8 +39,6 @@ from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentDateContext
-
-from nti.common import mimetypes
 
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 
