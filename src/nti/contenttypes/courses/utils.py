@@ -9,7 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import six
+from six import string_types
+
 from itertools import chain
 
 from zope import component
@@ -140,7 +141,7 @@ def get_course_vendor_info(context, create=True):
 
 def _get_sites_4_index(sites=None):
     sites = get_component_hierarchy_names() if not sites else sites
-    sites = sites.split() if isinstance(sites, six.string_types) else sites
+    sites = sites.split() if isinstance(sites, string_types) else sites
     return sites
 
 # index
@@ -154,8 +155,7 @@ def get_courses_for_packages(sites=(), packages=(), intids=None):
     result = set()
     catalog = get_courses_catalog()
     sites = _get_sites_4_index(sites)
-    packages = packages.split() if isinstance(
-        packages, six.string_types) else packages
+    packages = packages.split() if isinstance(packages, string_types) else packages
     query = {
         IX_SITE: {'any_of': sites},
         IX_PACKAGES: {'any_of': packages}
@@ -360,7 +360,7 @@ def get_course_enrollments(context, sites=None, intids=None):
     if ICourseInstance.providedBy(context) or ICourseCatalogEntry.providedBy(context):
         courses = (ICourseCatalogEntry(context).ntiid,)
         sites = get_course_site(ICourseInstance(context))
-    elif isinstance(context, six.string_types):
+    elif isinstance(context, string_types):
         courses = context.split()
     else:
         courses = context
