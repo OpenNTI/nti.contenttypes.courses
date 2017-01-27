@@ -29,63 +29,68 @@ from nti.dataserver.interfaces import IOIDResolver
 
 from nti.site.hostpolicy import get_all_host_sites
 
+
 @interface.implementer(IDataserver)
 class MockDataserver(object):
 
-	root = None
+    root = None
 
-	def get_by_oid(self, oid, ignore_creator=False):
-		resolver = component.queryUtility(IOIDResolver)
-		if resolver is None:
-			logger.warn("Using dataserver without a proper ISiteManager configuration.")
-		else:
-			return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
-		return None
+    def get_by_oid(self, oid, ignore_creator=False):
+        resolver = component.queryUtility(IOIDResolver)
+        if resolver is None:
+            logger.warn(
+                "Using dataserver without a proper ISiteManager configuration.")
+        else:
+            return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
+        return None
+
 
 def _index_nodes(outline_index, intids, seen, course_catalog):
-	for entry in course_catalog.iterCatalogEntries():
-		if entry.ntiid in seen:
-			continue
-		seen.add(entry.ntiid)
-		course = ICourseInstance(entry, None)
-		if course is not None:
-			def recur(node):
-				for child in node.values():
-					recur(child)
-				uid = intids.queryId(node)
-				if uid is not None and not ICourseOutline.providedBy(node):
-					outline_index.index_doc(uid, node)
+    for entry in course_catalog.iterCatalogEntries():
+        if entry.ntiid in seen:
+            continue
+        seen.add(entry.ntiid)
+        course = ICourseInstance(entry, None)
+        if course is not None:
+            def recur(node):
+                for child in node.values():
+                    recur(child)
+                uid = intids.queryId(node)
+                if uid is not None and not ICourseOutline.providedBy(node):
+                    outline_index.index_doc(uid, node)
 
-		if course.Outline:
-			recur(course.Outline)
+        if course.Outline:
+            recur(course.Outline)
+
 
 def do_evolve(context, generation=generation):
-	conn = context.connection
-	ds_folder = conn.root()['nti.dataserver']
+    conn = context.connection
+    ds_folder = conn.root()['nti.dataserver']
 
-	mock_ds = MockDataserver()
-	mock_ds.root = ds_folder
-	component.provideUtility(mock_ds, IDataserver)
+    mock_ds = MockDataserver()
+    mock_ds.root = ds_folder
+    component.provideUtility(mock_ds, IDataserver)
 
-	with current_site(ds_folder):
-		assert	component.getSiteManager() == ds_folder.getSiteManager(), \
-				"Hooks not installed?"
-		lsm = ds_folder.getSiteManager()
-		intids = lsm.getUtility(IIntIds)
-		outline_index = install_course_outline_catalog(ds_folder, intids)
+    with current_site(ds_folder):
+        assert   component.getSiteManager() == ds_folder.getSiteManager(), \
+                "Hooks not installed?"
+        lsm = ds_folder.getSiteManager()
+        intids = lsm.getUtility(IIntIds)
+        outline_index = install_course_outline_catalog(ds_folder, intids)
 
-		seen = set()
-		for site in get_all_host_sites():
-			with current_site(site):
-				course_catalog = component.queryUtility(ICourseCatalog)
-				if course_catalog is not None and not course_catalog.isEmpty():
-					_index_nodes(outline_index, intids, seen, course_catalog)
+        seen = set()
+        for site in get_all_host_sites():
+            with current_site(site):
+                course_catalog = component.queryUtility(ICourseCatalog)
+                if course_catalog is not None and not course_catalog.isEmpty():
+                    _index_nodes(outline_index, intids, seen, course_catalog)
 
-	component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
-	logger.info('Evolution %s done.', generation)
+    component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
+    logger.info('Evolution %s done.', generation)
+
 
 def evolve(context):
-	"""
-	Evolve to generation 26 by installing the outline catalog.
-	"""
-	do_evolve(context, generation)
+    """
+    Evolve to generation 26 by installing the outline catalog.
+    """
+    do_evolve(context, generation)
