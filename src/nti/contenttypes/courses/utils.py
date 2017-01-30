@@ -139,10 +139,11 @@ def get_course_vendor_info(context, create=True):
     return result
 
 
-def _get_sites_4_index(sites=None):
+def get_sites_4_index(sites=None):
     sites = get_component_hierarchy_names() if not sites else sites
     sites = sites.split() if isinstance(sites, string_types) else sites
     return sites
+_get_sites_4_index = get_sites_4_index
 
 # index
 
@@ -154,7 +155,7 @@ def get_courses_catalog():
 def get_courses_for_packages(sites=(), packages=(), intids=None):
     result = set()
     catalog = get_courses_catalog()
-    sites = _get_sites_4_index(sites)
+    sites = get_sites_4_index(sites)
     packages = packages.split() if isinstance(packages, string_types) else packages
     query = {
         IX_SITE: {'any_of': sites},
@@ -364,7 +365,7 @@ def get_course_enrollments(context, sites=None, intids=None):
         courses = context.split()
     else:
         courses = context
-    sites = _get_sites_4_index(sites)
+    sites = get_sites_4_index(sites)
     catalog = get_enrollment_catalog()
     intids = component.getUtility(IIntIds) if intids is None else intids
     query = {
@@ -377,7 +378,7 @@ def get_course_enrollments(context, sites=None, intids=None):
 
 
 def get_enrollments(user, sites=None, intids=None):
-    sites = _get_sites_4_index(sites)
+    sites = get_sites_4_index(sites)
     catalog = get_enrollment_catalog()
     username = getattr(user, 'username', user)
     intids = component.getUtility(IIntIds) if intids is None else intids
