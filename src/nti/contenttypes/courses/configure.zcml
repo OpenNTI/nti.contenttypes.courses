@@ -86,6 +86,8 @@
 			 for=".interfaces.ICourseOutlineNode"
 			 provides="nti.externalization.interfaces.IInternalObjectUpdater" />
 
+	<adapter factory="._bundle._CourseContentBundleIO" />
+
 	<!-- Decorators -->
 	<subscriber factory=".decorators._CourseOutlineNodeDecorator"
 				for=".interfaces.ICourseOutlineNode"
