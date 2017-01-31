@@ -9,19 +9,36 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from six import string_types
+
 from zope import interface
 from zope import lifecycleevent
 
 from nti.contentlibrary.bundle import PersistentContentPackageBundle
 
+from nti.contentlibrary.interfaces import IContentPackage
+
 from nti.contenttypes.courses.legacy_catalog import _ntiid_from_entry
 
 from nti.contenttypes.courses.interfaces import ICourseContentPackageBundle
 
+from nti.ntiids.ntiids import find_object_with_ntiid
+
 
 @interface.implementer(ICourseContentPackageBundle)
 class CoursePersistentContentPackageBundle(PersistentContentPackageBundle):
-    pass
+
+    def add(self, context):
+        if not isinstance(context, string_types):
+            context = find_object_with_ntiid(context)
+        assert context is IContentPackage
+        return PersistentContentPackageBundle.add(self, context)
+
+    def remove(self, context):
+        if not isinstance(context, string_types):
+            context = find_object_with_ntiid(context)
+        assert context is IContentPackage
+        return PersistentContentPackageBundle.remove(self, context)
 
 
 def created_content_package_bundle(course, bucket=None):
