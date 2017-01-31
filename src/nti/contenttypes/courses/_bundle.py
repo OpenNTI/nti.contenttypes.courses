@@ -5,7 +5,6 @@
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
-from feedgenerator.django.utils.functional import lazy
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -74,7 +73,7 @@ class _CourseContentBundleIO(ContentBundleIO):
 
     _ext_iface_upper_bound = ICourseContentPackageBundle
 
-    _excluded_in_ivars_ = ContentBundleIO._excluded_in_ivars_.union(
+    _excluded_in_ivars_ = getattr(ContentBundleIO, '_excluded_in_ivars_').union(
         {'ntiid', 'root', 'ContentPackages'})
 
     def resolve(self, ntiid, library):
