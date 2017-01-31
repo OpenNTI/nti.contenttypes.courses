@@ -28,6 +28,8 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 @interface.implementer(ICourseContentPackageBundle)
 class CoursePersistentContentPackageBundle(PersistentContentPackageBundle):
 
+    mime_type = mimeType = 'application/vnd.nextthought.coursecontentpackagebundle'
+
     def add(self, context):
         if not isinstance(context, string_types):
             context = find_object_with_ntiid(context)
