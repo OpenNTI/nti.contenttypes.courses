@@ -59,6 +59,7 @@ from nti.contentlibrary.interfaces import IContentPackageBundle
 from nti.contentlibrary.interfaces import ISynchronizationParams
 from nti.contentlibrary.interfaces import ISynchronizationResults
 from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
+from nti.contentlibrary.interfaces import IEditableContentPackageBundle
 from nti.contentlibrary.interfaces import IGenericSynchronizationResults
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
@@ -1089,6 +1090,10 @@ class CourseInstanceAvailableEvent(ObjectEvent):
 		super(CourseInstanceAvailableEvent, self).__init__(obj)
 		self.bucket = bucket
 		self.results = results
+
+
+class ICourseContentPackageBundle(IEditableContentPackageBundle):
+	pass
 
 class ICourseBundleUpdatedEvent(IObjectEvent):
 	"""

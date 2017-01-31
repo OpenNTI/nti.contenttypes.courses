@@ -9,17 +9,25 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from zope import interface
 from zope import lifecycleevent
 
 from nti.contentlibrary.bundle import PersistentContentPackageBundle
 
 from nti.contenttypes.courses.legacy_catalog import _ntiid_from_entry
 
+from nti.contenttypes.courses.interfaces import ICourseContentPackageBundle
+
+
+@interface.implementer(ICourseContentPackageBundle)
+class CoursePersistentContentPackageBundle(PersistentContentPackageBundle):
+    pass
+
 
 def created_content_package_bundle(course, bucket=None):
     created_bundle = False
     if course.ContentPackageBundle is None:
-        bundle = PersistentContentPackageBundle()
+        bundle = CoursePersistentContentPackageBundle()
         bundle.root = bucket
         bundle.__parent__ = course
         bundle.createdTime = bundle.lastModified = 0
