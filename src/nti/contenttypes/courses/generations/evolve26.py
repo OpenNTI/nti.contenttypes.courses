@@ -73,7 +73,7 @@ def do_evolve(context, generation=generation):
 
     with current_site(ds_folder):
         assert   component.getSiteManager() == ds_folder.getSiteManager(), \
-                "Hooks not installed?"
+            "Hooks not installed?"
         lsm = ds_folder.getSiteManager()
         intids = lsm.getUtility(IIntIds)
         outline_index = install_course_outline_catalog(ds_folder, intids)

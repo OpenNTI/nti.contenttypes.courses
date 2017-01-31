@@ -18,18 +18,30 @@ from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
+from BTrees.OOBTree import OOSet
+
+from nti.contentlibrary.interfaces import IContentPackageLibrary
+
+from nti.contenttypes.courses._bundle import CoursePersistentContentPackageBundle
+
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 
-from nti.contenttypes.courses._bundle import CoursePersistentContentPackageBundle
-
+from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
 
+from nti.intid.common import addIntId
+from nti.intid.common import removeIntId
+
 from nti.site.hostpolicy import get_all_host_sites
 
+def _load_library():
+    library = component.queryUtility(IContentPackageLibrary)
+    if library is not None:
+        library.syncContentPackages()
 
 @interface.implementer(IDataserver)
 class MockDataserver(object):
@@ -51,24 +63,29 @@ def _update_bundle(seen, catalog, intids):
             continue
         seen.add(entry.ntiid)
         course = ICourseInstance(entry, None)
-        if course is not None and not ICourseSubInstance.providedBy(course):
+        if      course is not None \
+            and not ICourseSubInstance.providedBy(course) \
+            and not ILegacyCourseInstance.providedBy(course):
             bundle = course.ContentPackageBundle
             if      bundle is not None and \
                 not isinstance(bundle, CoursePersistentContentPackageBundle):
                 new_bundle = CoursePersistentContentPackageBundle()
                 new_bundle.root = bundle.root
                 new_bundle.__parent__ = course
-                new_bundle.ntiid =  bundle.ntiid 
+                new_bundle.ntiid = bundle.ntiid
                 new_bundle.createdTime = bundle.createdTime
                 new_bundle.lastModified = bundle.lastModified
+                new_refs = OOSet(bundle._ContentPackages_wrefs or ())
+                new_bundle._ContentPackages_wrefs = new_refs
                 # update
                 bundle.__parent__ = None
                 course.ContentPackageBundle = new_bundle
                 # check intid
                 doc_id = intids.queryId(bundle)
                 if doc_id is not None:
-                    intids.unregister(bundle)
-                    intids.register(new_bundle)
+                    removeIntId(bundle)
+                    addIntId(new_bundle)
+
 
 def do_evolve(context, generation=generation):
     conn = context.connection
@@ -80,12 +97,13 @@ def do_evolve(context, generation=generation):
 
     with current_site(ds_folder):
         assert   component.getSiteManager() == ds_folder.getSiteManager(), \
-                "Hooks not installed?"
+                 "Hooks not installed?"
 
         lsm = ds_folder.getSiteManager()
         intids = lsm.getUtility(IIntIds)
-        
+
         seen = set()
+        _load_library()
         # global library
         catalog = component.queryUtility(ICourseCatalog)
         if catalog is not None:
