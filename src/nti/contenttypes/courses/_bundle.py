@@ -76,7 +76,8 @@ class _CourseContentBundleIO(ContentBundleIO):
     _excluded_in_ivars_ = getattr(ContentBundleIO, '_excluded_in_ivars_').union(
         {'ntiid', 'root', 'ContentPackages'})
 
-    def resolve(self, ntiid, library):
+    @classmethod
+    def resolve(cls, ntiid, library):
         paths = library.pathToNTIID(ntiid) if library is not None else None
         return paths[0] if paths else None
 
