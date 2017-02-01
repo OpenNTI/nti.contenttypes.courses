@@ -24,6 +24,7 @@
 		root_interfaces=".interfaces.IGrader
 						 .interfaces.IEqualGroupGrader
 						 .interfaces.ICategoryGradeScheme
+						 .interfaces.IPredictedGrade
 						 .interfaces.ICourseGradingPolicy"
 		modules=".policies" />
 

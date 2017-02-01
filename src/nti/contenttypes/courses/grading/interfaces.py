@@ -86,3 +86,17 @@ class ICourseGradingPolicy(IContained, ILastModified, ICreated):
         return the [current] grade for the specified user/principal. May
         return None if no valid grade could be produced.
         """
+        
+class IPredictedGrade(interface.Interface):
+    """
+    A predicted grade for a student in a course. This is not
+    related to IGrade. 
+    """
+        
+    Grade = ValidTextLine(title="The student's grade according to the current grade scheme")
+    RawValue = Number(title="The raw value of the grade")
+    Correctness = Number(title="The correctness value of the grade")
+    PointsEarned = Number(title="The number of points earned at this point in the course",
+                          required=False)
+    PointsAvailable = Number(title="The number of available points at this point in the course",
+                             required=False)
