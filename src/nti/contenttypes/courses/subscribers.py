@@ -28,7 +28,9 @@ from nti.assessment.interfaces import IUnlockQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentPoliciesModified
 from nti.assessment.interfaces import IQAssessmentDateContextModified
 
+from nti.contentlibrary.interfaces import IContentPackage
 from nti.contentlibrary.interfaces import IContentPackageLibrary
+from nti.contentlibrary.interfaces import IContentPackageAddedEvent
 from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
@@ -51,6 +53,7 @@ from nti.contenttypes.courses.interfaces import COURSE_CATALOG_NAME
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_NAMES
 from nti.contenttypes.courses.interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
 
+from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -60,6 +63,7 @@ from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseRolesSynchronized
+from nti.contenttypes.courses.interfaces import CourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import CourseCatalogDidSyncEvent
 from nti.contenttypes.courses.interfaces import ICourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceImportedEvent
@@ -74,6 +78,7 @@ from nti.contenttypes.courses.interfaces import iface_of_node
 from nti.contenttypes.courses.utils import unenroll
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import index_course_roles
+from nti.contenttypes.courses.utils import get_course_packages
 from nti.contenttypes.courses.utils import get_courses_catalog
 from nti.contenttypes.courses.utils import clear_course_outline
 from nti.contenttypes.courses.utils import unindex_course_roles
@@ -187,7 +192,7 @@ def sync_catalog_when_library_synched(library, event):
 
     catalog = site_manager.get(COURSE_CATALOG_NAME)
     if catalog is None:
-        logger.info("Installing and synchronizing course catalog for %s", 
+        logger.info("Installing and synchronizing course catalog for %s",
                     site_manager)
         # which in turn will call back to us
         install_site_course_catalog(library)
@@ -223,12 +228,12 @@ def roles_sync_on_course_instance(course, event):
     intids = component.queryUtility(IIntIds)
     if catalog is not None and intids is not None:
         unindex_course_roles(course, catalog)
-        indexed_count = index_course_roles(course, 
-                                           catalog=catalog, 
+        indexed_count = index_course_roles(course,
+                                           catalog=catalog,
                                            intids=intids)
         entry = ICourseCatalogEntry(course, None)
         entry_ntiid = entry.ntiid if entry is not None else ''
-        logger.info('Indexed %s roles for %s', 
+        logger.info('Indexed %s roles for %s',
                     indexed_count, entry_ntiid)
 
 
@@ -387,3 +392,23 @@ def update_course_packages(course, event):
         doc_id = intids.queryId(course)
         if doc_id is not None:
             index.index_doc(doc_id, course)
+
+@component.adapter(IContentPackage, IContentPackageAddedEvent)
+def _update_course_bundle(new_package, event):
+    """
+    With content package added, make sure we update our state
+    (index, permissions, etc) in case we have a bundle wref
+    already pointing to the package.
+    """
+    # Have to iterate through since our index may not have this package.
+    # XXX: This may be expensive if triggered interactively.
+    catalog = component.getUtility(ICourseCatalog)
+    for entry in catalog.iterCatalogEntries():
+        course = ICourseInstance(entry, None)
+        packages = get_course_packages( course )
+        if packages and new_package in packages:
+            # A content package has been added, fire since our
+            # bundle has essentially been updated.
+            logger.info( 'Updating course bundle with new package (%s) (%s)',
+                         new_package.ntiid, entry.ntiid)
+            notify( CourseBundleUpdatedEvent(course, (new_package,), ()) )

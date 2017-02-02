@@ -258,6 +258,7 @@ class _ContentCourseSynchronizer(object):
 								  			 excluded_keys=('ntiid',))
 
 		if modified:
+			logger.info( "Updating course bundle (%s)", entry.ntiid )
 			new_packages = set(bundle.ContentPackages)
 			added_packages = new_packages - old_packages
 			removed_packages = old_packages - new_packages

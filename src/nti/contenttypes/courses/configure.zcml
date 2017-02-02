@@ -16,7 +16,7 @@
 	<include package="nti.mimetype" />
 	<include package="nti.recorder" />
 	<include package="nti.contentlibrary" />
-	
+
 	<include package="zope.generations" />
 	<include package="zope.generations" file="subscriber.zcml" />
 
@@ -255,6 +255,7 @@
 
 	<!-- update packages -->
 	<subscriber handler=".subscribers.update_course_packages" />
+	<subscriber handler=".subscribers._update_course_bundle" />
 
 	<!-- weak references -->
 	<adapter factory="nti.intid.wref.ArbitraryOrderableWeakRef"
