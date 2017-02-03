@@ -83,19 +83,24 @@ class ICourseGradingPolicy(IContained, ILastModified, ICreated):
 
     def grade(principal):
         """
-        return the [current] grade for the specified user/principal. May
-        return None if no valid grade could be produced.
+        Returns an :class:`IPredictedGrade` or None if no valid grade
+        could be produced.
         """
-        
+
 class IPredictedGrade(interface.Interface):
     """
     A predicted grade for a student in a course. This is not
-    related to IGrade. 
+    related to IGrade.
     """
-        
-    Grade = ValidTextLine(title="The student's grade according to the current grade scheme")
-    RawValue = Number(title="The raw value of the grade")
-    Correctness = Number(title="The correctness value of the grade")
+
+    Grade = ValidTextLine(title="The student's grade according to the current grade scheme",
+                          description="A grade useful for display purposes.""")
+    RawValue = Number(title="The raw value of the grade",
+                      description="""Represents the fraction of PointsEarned to
+                                  PointsAvailable.""")
+    Correctness = Number(title="The correctness value of the grade, 100 * RawValue",
+                         description="""This is RawValue * 100, e.g. the percentage
+                                    representation of raw value.""")
     PointsEarned = Number(title="The number of points earned at this point in the course",
                           required=False)
     PointsAvailable = Number(title="The number of available points at this point in the course",
