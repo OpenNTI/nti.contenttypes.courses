@@ -37,6 +37,7 @@ from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnume
 
 from nti.contenttypes.courses import get_enrollment_catalog
 
+from nti.contenttypes.courses.common import get_course_packages
 from nti.contenttypes.courses.common import get_course_site_name
 
 from nti.contenttypes.courses.catalog import CourseCatalogFolder
@@ -78,7 +79,6 @@ from nti.contenttypes.courses.interfaces import iface_of_node
 from nti.contenttypes.courses.utils import unenroll
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import index_course_roles
-from nti.contenttypes.courses.utils import get_course_packages
 from nti.contenttypes.courses.utils import get_courses_catalog
 from nti.contenttypes.courses.utils import clear_course_outline
 from nti.contenttypes.courses.utils import unindex_course_roles
@@ -171,7 +171,8 @@ def uninstall_site_course_catalog(library, event):
 # Sync-related subscribers
 
 
-@component.adapter(IPersistentContentPackageLibrary, IContentPackageLibraryDidSyncEvent)
+@component.adapter(IPersistentContentPackageLibrary, 
+                   IContentPackageLibraryDidSyncEvent)
 def sync_catalog_when_library_synched(library, event):
     """
     When a persistent content library is synchronized
@@ -215,8 +216,10 @@ def sync_catalog_when_library_synched(library, event):
 
     synchronizer = component.getMultiAdapter((catalog, courses_bucket),
                                              IObjectEntrySynchronizer)
-    synchronizer.synchronize(
-        catalog, courses_bucket, params=params, results=results)
+    synchronizer.synchronize(catalog, 
+                             courses_bucket, 
+                             params=params, 
+                             results=results)
 
     # Course catalog has been synced
     notify(CourseCatalogDidSyncEvent(catalog, params, results))
@@ -393,6 +396,7 @@ def update_course_packages(course, event):
         if doc_id is not None:
             index.index_doc(doc_id, course)
 
+
 @component.adapter(IContentPackage, IContentPackageAddedEvent)
 def _update_course_bundle(new_package, event):
     """
@@ -405,10 +409,10 @@ def _update_course_bundle(new_package, event):
     catalog = component.getUtility(ICourseCatalog)
     for entry in catalog.iterCatalogEntries():
         course = ICourseInstance(entry, None)
-        packages = get_course_packages( course )
+        packages = get_course_packages(course)
         if packages and new_package in packages:
             # A content package has been added, fire since our
             # bundle has essentially been updated.
-            logger.info( 'Updating course bundle with new package (%s) (%s)',
-                         new_package.ntiid, entry.ntiid)
-            notify( CourseBundleUpdatedEvent(course, (new_package,), ()) )
+            logger.info('Updating course bundle with new package (%s) (%s)',
+                        new_package.ntiid, entry.ntiid)
+            notify(CourseBundleUpdatedEvent(course, (new_package,), ()))
