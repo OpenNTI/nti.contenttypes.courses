@@ -272,8 +272,8 @@ def get_principal(principal):
 
 def _content_roles_for_course_instance(course, packages=None):
 	"""
-	Returns the content roles for all the content packages
-	in the course, if there are any.
+	Returns the content roles for all the applicable content
+	packages in the course, if there are any.
 
 	:return: A set.
 	"""
