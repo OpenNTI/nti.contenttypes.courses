@@ -35,6 +35,8 @@ from ZODB.POSException import POSError
 
 from nti.containers.containers import CheckingLastModifiedBTreeContainer
 
+from nti.contentlibrary.interfaces import IEditableContentPackage
+
 from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
@@ -85,7 +87,7 @@ class CourseInstanceSharingScope(Community):
 	# does the UI need this? (Yes, at least the ipad does)
 	__external_class_name__ = 'Community'
 	__external_can_create__ = False
-		
+
 	mime_type = mimeType = 'application/vnd.nextthought.community'
 
 	# Override things related to ntiids.
@@ -279,6 +281,10 @@ def _content_roles_for_course_instance(course, packages=None):
 		packages = get_course_packages(course)
 	roles = []
 	for pack in packages:
+		# Editable content packages may have fluxuating permissible
+		# state; so we handle those elsewhere.
+		if IEditableContentPackage.providedBy( pack ):
+			continue
 		ntiid = pack.ntiid
 		ntiid = get_parts(ntiid)
 		provider = ntiid.provider
