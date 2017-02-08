@@ -18,6 +18,8 @@ from zope.authentication.interfaces import IUnauthenticatedPrincipal
 
 from zope.security.interfaces import IPrincipal
 
+from nti.contentlibrary.interfaces import IRenderableContentPackage
+
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -29,6 +31,7 @@ from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInst
 
 from nti.contenttypes.courses.utils import get_course_editors
 from nti.contenttypes.courses.utils import get_course_subinstances
+from nti.contenttypes.courses.utils import get_content_unit_courses
 
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ACT_CREATE
@@ -51,6 +54,7 @@ from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
 from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 
 from nti.dataserver.interfaces import IACLProvider
+from nti.dataserver.interfaces import ISupplementalACLProvider
 
 from nti.property.property import Lazy
 
@@ -93,7 +97,7 @@ class CourseInstanceACLProvider(object):
         # is public or not.
         public_scope = sharing_scopes[ES_PUBLIC]
         aces.append(ace_allowing(IPrincipal(public_scope),
-                                 ACT_READ, 
+                                 ACT_READ,
                                  type(self)))
 
         # Courses marked as being anonymously accessible should have READ access
@@ -166,8 +170,8 @@ class CourseCatalogEntryACLProvider(object):
             # course in our lineage, we actually need to be a bit stricter
             # than that...the course cannot forbid creation or do a deny-all
             # (?)
-            course_in_lineage = find_interface(cce, 
-                                               ICourseInstance, 
+            course_in_lineage = find_interface(cce,
+                                               ICourseInstance,
                                                strict=False)
 
             # Do we have a course instance? If it's not in our lineage its the legacy
@@ -267,3 +271,38 @@ class CourseForumACLProvider(CommunityForumACLProvider):
             acl.append(ace_denying(editor,
                                    (ACT_CONTENT_EDIT, ACT_UPDATE),
                                    type(self)))
+
+@component.adapter(IRenderableContentPackage)
+@interface.implementer(ISupplementalACLProvider)
+class IRenderableContentPackageSupplementalACLProvider(object):
+    """
+    Supplement :class:`IRenderableContentPackage` objects with
+    the acl of all courses containing these packages. Students
+    only have READ permission once the content package is published.
+    """
+    def __init__(self, context):
+        self.context = context
+
+    def _get_excluded_principals(self, course):
+        # The public scope drives visibility for enrolled students.
+        sharing_scopes = course.SharingScopes
+        sharing_scopes.initScopes()
+        public_scope = sharing_scopes[ES_PUBLIC]
+        return set((IPrincipal(public_scope),))
+
+    @Lazy
+    def __acl__(self):
+        result = []
+        courses = get_content_unit_courses( self.context )
+        for course in courses or ():
+            course_acl = IACLProvider(course).__acl__
+            if self.context.is_published():
+                # If published, we want the whole ACL
+                result.extend( course_acl )
+            else:
+                # Otherwise, exclude enrolled students
+                excluded_principals = self._get_excluded_principals(course)
+                for course_ace in course_acl:
+                    if IPrincipal(course_ace.actor) not in excluded_principals:
+                        result.append(course_ace)
+        return result

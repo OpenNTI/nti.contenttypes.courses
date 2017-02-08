@@ -157,6 +157,8 @@
 	<adapter factory=".principalrole.CourseRolePermissionManager"
 			 provides=".interfaces.ICourseRolePermissionManager" />
 
+    <adapter factory=".acl.IRenderableContentPackageSupplementalACLProvider" />
+
 	<!-- Catalog -->
 	<!--
 		We provide one global catalog,
