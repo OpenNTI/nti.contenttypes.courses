@@ -171,7 +171,7 @@ def uninstall_site_course_catalog(library, event):
 # Sync-related subscribers
 
 
-@component.adapter(IPersistentContentPackageLibrary, 
+@component.adapter(IPersistentContentPackageLibrary,
                    IContentPackageLibraryDidSyncEvent)
 def sync_catalog_when_library_synched(library, event):
     """
@@ -216,9 +216,9 @@ def sync_catalog_when_library_synched(library, event):
 
     synchronizer = component.getMultiAdapter((catalog, courses_bucket),
                                              IObjectEntrySynchronizer)
-    synchronizer.synchronize(catalog, 
-                             courses_bucket, 
-                             params=params, 
+    synchronizer.synchronize(catalog,
+                             courses_bucket,
+                             params=params,
                              results=results)
 
     # Course catalog has been synced
@@ -415,4 +415,4 @@ def _update_course_bundle(new_package, event):
             # bundle has essentially been updated.
             logger.info('Updating course bundle with new package (%s) (%s)',
                         new_package.ntiid, entry.ntiid)
-            notify(CourseBundleUpdatedEvent(course, (new_package,), ()))
+            notify(CourseBundleUpdatedEvent(course, (new_package,)))

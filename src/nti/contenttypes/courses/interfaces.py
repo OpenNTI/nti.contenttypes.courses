@@ -1107,7 +1107,7 @@ class CourseBundleUpdatedEvent(ObjectEvent):
 
 	course = alias( 'object' )
 
-	def __init__(self, obj, added_packages, removed_packages):
+	def __init__(self, obj, added_packages, removed_packages=()):
 		super(CourseBundleUpdatedEvent, self).__init__(obj)
 		self.added_packages = added_packages
 		self.removed_packages = removed_packages
@@ -1198,7 +1198,7 @@ class ICourseSynchronizationResults(IGenericSynchronizationResults):
 	GradingPolicyUpdated = Bool(title="Grading Policy updated", required=False, default=False)
 
 	EvaluationsUpdated = Bool(title="Course Evaluations", required=False, default=False)
-	
+
 	Lessons = Object(ICourseLessonSyncResults, title="Lesson Results", required=False)
 
 	Site = ValidTextLine(title="Site Name", required=False)
