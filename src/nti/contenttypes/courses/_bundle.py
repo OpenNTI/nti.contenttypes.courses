@@ -41,15 +41,15 @@ class CoursePersistentContentPackageBundle(PersistentContentPackageBundle):
     mime_type = mimeType = 'application/vnd.nextthought.coursecontentpackagebundle'
 
     def add(self, context):
-        if not isinstance(context, string_types):
+        if isinstance(context, string_types):
             context = find_object_with_ntiid(context)
-        assert context is IContentPackage
+        assert IContentPackage.providedBy(context)
         return PersistentContentPackageBundle.add(self, context)
 
     def remove(self, context):
-        if not isinstance(context, string_types):
+        if isinstance(context, string_types):
             context = find_object_with_ntiid(context)
-        assert context is IContentPackage
+        assert IContentPackage.providedBy(context)
         return PersistentContentPackageBundle.remove(self, context)
 
 
