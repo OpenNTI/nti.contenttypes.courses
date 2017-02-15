@@ -87,6 +87,7 @@ class ICourseGradingPolicy(IContained, ILastModified, ICreated):
         could be produced.
         """
 
+
 class IPredictedGrade(interface.Interface):
     """
     A predicted grade for a student in a course. This is not
@@ -101,6 +102,9 @@ class IPredictedGrade(interface.Interface):
     Correctness = Number(title="The correctness value of the grade, 100 * RawValue",
                          description="""This is RawValue * 100, e.g. the percentage
                                     representation of raw value.""")
+    DisplayableGrade = ValidTextLine(
+        title="A formatted description of the grade",
+        description="Should default to the same value as Correctness unless a grading scheme is set")
     PointsEarned = Number(title="The number of points earned at this point in the course",
                           required=False)
     PointsAvailable = Number(title="The number of available points at this point in the course",
