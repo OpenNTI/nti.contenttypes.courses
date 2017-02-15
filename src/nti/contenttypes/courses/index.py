@@ -25,7 +25,7 @@ from zope.intid.interfaces import IIntIds
 
 from zope.location import locate
 
-from nti.common.string import to_unicode
+from nti.base._compat import to_unicode
 
 from nti.contenttypes.courses.common import get_course_site
 from nti.contenttypes.courses.common import get_course_packages

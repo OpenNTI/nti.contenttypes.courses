@@ -24,7 +24,7 @@ from zope.event import notify
 
 from zope.site.interfaces import ILocalSiteManager
 
-from nti.common.string import to_unicode
+from nti.base._compat import to_unicode
 
 from nti.contentlibrary import ContentRemovalException
 
