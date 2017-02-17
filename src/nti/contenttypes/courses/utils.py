@@ -156,7 +156,8 @@ def get_courses_for_packages(sites=(), packages=(), intids=None):
     result = set()
     catalog = get_courses_catalog()
     sites = get_sites_4_index(sites)
-    packages = packages.split() if isinstance(packages, string_types) else packages
+    packages = packages.split() if isinstance(
+        packages, string_types) else packages
     query = {
         IX_SITE: {'any_of': sites},
         IX_PACKAGES: {'any_of': packages}
@@ -262,7 +263,7 @@ def get_content_unit_courses(context, include_sub_instances=True):
     if package is not None:
         courses = get_courses_for_packages(packages=package.ntiid)
         if not include_sub_instances:
-            result = tuple(x for x in courses 
+            result = tuple(x for x in courses
                            if not ICourseSubInstance.providedBy(x))
         else:
             result = courses
@@ -377,18 +378,29 @@ def get_course_enrollments(context, sites=None, intids=None):
     return ResultSet(uids, intids, True)
 
 
-def get_enrollments(user, sites=None, intids=None):
-    sites = get_sites_4_index(sites)
+def _get_courses_for_scope(user, scopes=(), **kwargs):
+    intids = kwargs.get('intids', None) or component.getUtility(IIntIds)
     catalog = get_enrollment_catalog()
+    sites = get_sites_4_index(kwargs.get('sites', None))
     username = getattr(user, 'username', user)
-    intids = component.getUtility(IIntIds) if intids is None else intids
     query = {
         IX_SITE: {'any_of': sites},
+        IX_SCOPE: {'any_of': scopes},
         IX_USERNAME: {'any_of': (username,)},
-        IX_SCOPE: {'any_of': ENROLLMENT_SCOPE_NAMES}
     }
     uids = catalog.apply(query) or ()
     return ResultSet(uids, intids, True)
+
+
+def get_enrollments(user, sites=None, intids=None):
+    """
+    Returns a ResultSet containing all the courses 
+    in which this user is enrolled
+    """
+    return _get_courses_for_scope(user,
+                                  scopes=(ENROLLMENT_SCOPE_NAMES,),
+                                  sites=sites,
+                                  intids=intids)
 
 
 def has_enrollments(user, intids=None):
@@ -398,6 +410,27 @@ def has_enrollments(user, intids=None):
     return False
 
 # instructors & editors
+
+
+def get_instructed_courses(user, **kwargs):
+    """
+    Returns a ResultSet containing all the courses
+    in which this user is an instructor
+    """
+    return _get_courses_for_scope(user,
+                                  scopes=(INSTRUCTOR,),
+                                  **kwargs)
+
+
+def get_instructed_and_edited_courses(user, **kwargs):
+    """
+    Returns a ResultSet containing all the courses
+    in which this user is either an instructor
+    or an editor. 
+    """
+    return _get_courses_for_scope(user,
+                                  scopes=(INSTRUCTOR, EDITOR),
+                                  **kwargs)
 
 
 def get_instructors_in_roles(roles, setting=Allow):
@@ -550,7 +583,7 @@ def get_instructed_course_in_hierarchy(context, user):
 
 def is_course_instructor_or_editor(context, user):
     result =   is_course_instructor(context, user) \
-            or is_course_editor(context, user)
+        or is_course_editor(context, user)
     return result
 
 # outlines
@@ -623,6 +656,7 @@ def path_for_entry(context):
 
     result = '/'.join(parents) if parents else None
     return result
+
 
 @interface.implementer(ICourseInstanceEnrollmentRecord)
 class ProxyEnrollmentRecord(CreatedAndModifiedTimeMixin, Contained):

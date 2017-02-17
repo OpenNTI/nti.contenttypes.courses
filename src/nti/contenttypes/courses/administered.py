@@ -40,6 +40,7 @@ from nti.contenttypes.courses.interfaces import IPrincipalAdministrativeRoleCata
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.courses.utils import get_course_editors
+from nti.contenttypes.courses.utils import get_instructed_and_edited_courses
 from nti.contenttypes.courses.utils import AbstractInstanceWrapper
 
 from nti.dataserver.authorization import ROLE_ADMIN
@@ -61,19 +62,10 @@ from nti.site.site import get_component_hierarchy_names
 class IndexAdminCourses(object):
 
     def iter_admin(self, user):
-        intids = component.getUtility(IIntIds)
-        catalog = get_enrollment_catalog()
-        sites = get_component_hierarchy_names()
-        username = getattr(user, 'username', user)
-        query = {
-            IX_SITE: {'any_of': sites},
-            IX_SCOPE: {'any_of': (INSTRUCTOR, EDITOR)},
-            IX_USERNAME: {'any_of': (username,)},
-        }
-        for uid in catalog.apply(query) or ():
-            context = intids.queryObject(uid)
-            if ICourseInstance.providedBy(context):  # extra check
-                yield context
+        results = get_instructed_and_edited_courses(user)
+        for result in results:
+            if ICourseInstance.providedBy(result):  # extra check
+                yield result
 
 
 @interface.implementer(IUserAdministeredCourses)
@@ -86,7 +78,7 @@ class IterableAdminCourses(object):
             instance = ICourseInstance(entry)
             instructors = instance.instructors or ()
             if     principal in instructors \
-                or principal in get_course_editors(instance):
+                    or principal in get_course_editors(instance):
                 yield instance
 
 
@@ -143,7 +135,7 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
             course = ICourseInstance(entry, None)
             if      course is not None \
                 and not ILegacyCourseInstance.providedBy(course) \
-                and (   is_admin
+                and (is_admin
                      or has_permission(ACT_CONTENT_EDIT, entry, self.user)):
                 yield course
 
@@ -169,7 +161,7 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
                 role = u'teaching assistant'
             else:
                 role = u'editor'
-            yield CourseInstanceAdministrativeRole(RoleName=role, 
+            yield CourseInstanceAdministrativeRole(RoleName=role,
                                                    CourseInstance=course)
     iter_enrollments = iter_administrations  # for convenience
 
