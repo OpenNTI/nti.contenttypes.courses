@@ -122,6 +122,7 @@ class AbstractInstanceWrapper(Contained):
         if ICourseInstance.isOrExtends(iface):
             return self._private_course_instance
 
+
 # vendor info
 
 
@@ -144,6 +145,7 @@ def get_sites_4_index(sites=None):
     sites = sites.split() if isinstance(sites, string_types) else sites
     return sites
 _get_sites_4_index = get_sites_4_index
+
 
 # index
 
@@ -230,6 +232,7 @@ def index_course_roles(context, catalog=None, intids=None):
     result += _index_editors(course, catalog, entry, doc_id)
     return result
 
+
 # course & hierarchy
 
 
@@ -269,6 +272,7 @@ def get_content_unit_courses(context, include_sub_instances=True):
             result = courses
     return result
 content_unit_to_courses = get_content_unit_courses
+
 
 # enrollments
 
@@ -359,7 +363,8 @@ def is_enrolled_in_hierarchy(context, user):
 
 
 def get_course_enrollments(context, sites=None, intids=None):
-    if ICourseInstance.providedBy(context) or ICourseCatalogEntry.providedBy(context):
+    if     ICourseInstance.providedBy(context) \
+        or ICourseCatalogEntry.providedBy(context):
         courses = (ICourseCatalogEntry(context).ntiid,)
         sites = get_course_site(ICourseInstance(context))
     elif isinstance(context, string_types):
@@ -394,7 +399,7 @@ def _get_courses_for_scope(user, scopes=(), **kwargs):
 
 def get_enrollments(user, sites=None, intids=None):
     """
-    Returns a ResultSet containing all the courses 
+    Returns a ResultSet containing all the courses
     in which this user is enrolled
     """
     return _get_courses_for_scope(user,
@@ -408,6 +413,41 @@ def has_enrollments(user, intids=None):
         if ICourseInstanceEnrollmentRecord.providedBy(obj):
             return True
     return False
+
+
+@interface.implementer(ICourseInstanceEnrollmentRecord)
+class ProxyEnrollmentRecord(CreatedAndModifiedTimeMixin, Contained):
+
+    Scope = None
+    Principal = None
+    CourseInstance = None
+
+    def __init__(self, course=None, principal=None, scope=None):
+        self.Scope = scope
+        self.Principal = principal
+        self.CourseInstance = course
+
+
+def get_user_or_instructor_enrollment_record(context, user):
+    """
+    Fetches an enrollment record for the given context/user,
+    returning a pseudo-record with an `ES_ALL` scope if the
+    user is an instructor/editor.
+    """
+    course = ICourseInstance(context, None)  # e.g. course in lineage
+    if course is None:
+        return None
+    else:
+        is_editor = has_permission(ACT_CONTENT_EDIT, course, user.username)
+        # give priority to course in lineage before checking the rest
+        for instance in get_course_hierarchy(course):
+            if is_course_instructor_or_editor(instance, user) or is_editor:
+                # create a fake enrollment record w/ all scopes to signal an
+                # instructor
+                return ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
+        # find any enrollment
+        return get_any_enrollment(course, user)
+
 
 # instructors & editors
 
@@ -426,7 +466,7 @@ def get_instructed_and_edited_courses(user, **kwargs):
     """
     Returns a ResultSet containing all the courses
     in which this user is either an instructor
-    or an editor. 
+    or an editor.
     """
     return _get_courses_for_scope(user,
                                   scopes=(INSTRUCTOR, EDITOR),
@@ -456,7 +496,8 @@ def get_course_editors(context, setting=Allow):
     course = ICourseInstance(context, None)
     role_manager = IPrincipalRoleManager(course, None)
     if role_manager is not None:
-        for prin, setting in role_manager.getPrincipalsForRole(RID_CONTENT_EDITOR):
+        for prin, setting in role_manager.getPrincipalsForRole(
+                RID_CONTENT_EDITOR):
             if setting is setting:
                 try:
                     user = User.get_user(prin)
@@ -586,6 +627,7 @@ def is_course_instructor_or_editor(context, user):
         or is_course_editor(context, user)
     return result
 
+
 # outlines
 
 
@@ -657,39 +699,6 @@ def path_for_entry(context):
     result = '/'.join(parents) if parents else None
     return result
 
-
-@interface.implementer(ICourseInstanceEnrollmentRecord)
-class ProxyEnrollmentRecord(CreatedAndModifiedTimeMixin, Contained):
-
-    Scope = None
-    Principal = None
-    CourseInstance = None
-
-    def __init__(self, course=None, principal=None, scope=None):
-        self.Scope = scope
-        self.Principal = principal
-        self.CourseInstance = course
-
-
-def get_user_or_instructor_enrollment_record(context, user):
-    """
-    Fetches an enrollment record for the given context/user,
-    returning a pseudo-record with an `ES_ALL` scope if the
-    user is an instructor/editor.
-    """
-    course = ICourseInstance(context, None)  # e.g. course in lineage
-    if course is None:
-        return None
-    else:
-        is_editor = has_permission(ACT_CONTENT_EDIT, course, user.username)
-        # give priority to course in lineage before checking the rest
-        for instance in get_course_hierarchy(course):
-            if is_course_instructor_or_editor(instance, user) or is_editor:
-                # create a fake enrollment record w/ all scopes to signal an
-                # instructor
-                return ProxyEnrollmentRecord(course, IPrincipal(user), ES_ALL)
-        # find any enrollment
-        return get_any_enrollment(course, user)
 
 import zope.deferredimport
 zope.deferredimport.initialize()

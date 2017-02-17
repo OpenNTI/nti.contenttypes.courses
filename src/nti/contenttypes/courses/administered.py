@@ -12,23 +12,13 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
-from zope.intid.interfaces import IIntIds
-
 from zope.security.interfaces import IPrincipal
 
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from zope.securitypolicy.principalrole import principalRoleManager
 
-from nti.contenttypes.courses import get_enrollment_catalog
-
-from nti.contenttypes.courses.index import IX_SITE
-from nti.contenttypes.courses.index import IX_SCOPE
-from nti.contenttypes.courses.index import IX_USERNAME
-
-from nti.contenttypes.courses.interfaces import EDITOR
 from nti.contenttypes.courses.interfaces import RID_TA
-from nti.contenttypes.courses.interfaces import INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
@@ -54,8 +44,6 @@ from nti.dataserver.interfaces import IGroupMember
 
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
-
-from nti.site.site import get_component_hierarchy_names
 
 
 @interface.implementer(IUserAdministeredCourses)
