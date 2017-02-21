@@ -383,10 +383,14 @@ def get_course_enrollments(context, sites=None, intids=None):
     return ResultSet(uids, intids, True)
 
 
-def _get_courses_for_scope(user, scopes=(), **kwargs):
-    intids = kwargs.get('intids', None) or component.getUtility(IIntIds)
+def _get_courses_for_scope(user, scopes=(), sites=None, intids=None):
+    """
+    Fetch the enrollment records for the given user (or username)
+    and the given enrollment scopes, including instructor/editor scopes.
+    """
+    intids = component.getUtility(IIntIds) if intids is None else intids
     catalog = get_enrollment_catalog()
-    sites = get_sites_4_index(kwargs.get('sites', None))
+    sites = get_sites_4_index(sites)
     username = getattr(user, 'username', user)
     query = {
         IX_SITE: {'any_of': sites},
@@ -397,19 +401,18 @@ def _get_courses_for_scope(user, scopes=(), **kwargs):
     return ResultSet(uids, intids, True)
 
 
-def get_enrollments(user, sites=None, intids=None):
+def get_enrollments(user, **kwargs):
     """
     Returns a ResultSet containing all the courses
     in which this user is enrolled
     """
     return _get_courses_for_scope(user,
-                                  scopes=(ENROLLMENT_SCOPE_NAMES,),
-                                  sites=sites,
-                                  intids=intids)
+                                  scopes=ENROLLMENT_SCOPE_NAMES,
+                                  **kwargs)
 
 
 def has_enrollments(user, intids=None):
-    for obj in get_enrollments(user, intids):
+    for obj in get_enrollments(user, intids=intids):
         if ICourseInstanceEnrollmentRecord.providedBy(obj):
             return True
     return False
