@@ -29,7 +29,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceForum
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
-from nti.contenttypes.courses.utils import get_course_editors
+from nti.contenttypes.courses.utils import get_course_editors,\
+    get_course_instructors
 from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import get_content_unit_courses
 
@@ -274,7 +275,7 @@ class CourseForumACLProvider(CommunityForumACLProvider):
 
 @component.adapter(IRenderableContentPackage)
 @interface.implementer(ISupplementalACLProvider)
-class IRenderableContentPackageSupplementalACLProvider(object):
+class RenderableContentPackageSupplementalACLProvider(object):
     """
     Supplement :class:`IRenderableContentPackage` objects with
     the acl of all courses containing these packages. Students
@@ -283,12 +284,26 @@ class IRenderableContentPackageSupplementalACLProvider(object):
     def __init__(self, context):
         self.context = context
 
+    def _get_excluded_instructors(self, course):
+        instructors = get_course_instructors(course)
+        instructors = [IPrincipal(x) for x in instructors or ()]
+        editors = get_course_editors(course)
+        editors = [IPrincipal(x) for x in editors or ()]
+        result = set(instructors or ()) - set(editors or ())
+        return result
+
     def _get_excluded_principals(self, course):
+        """
+        Exclude students and instructors that are not editors.
+        """
         # The public scope drives visibility for enrolled students.
         sharing_scopes = course.SharingScopes
         sharing_scopes.initScopes()
         public_scope = sharing_scopes[ES_PUBLIC]
-        return set((IPrincipal(public_scope),))
+        result = set((IPrincipal(public_scope),))
+        instructors = self._get_excluded_instructors(course)
+        result.update(instructors)
+        return result
 
     @Lazy
     def __acl__(self):

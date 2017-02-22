@@ -157,7 +157,9 @@
 	<adapter factory=".principalrole.CourseRolePermissionManager"
 			 provides=".interfaces.ICourseRolePermissionManager" />
 
-    <adapter factory=".acl.IRenderableContentPackageSupplementalACLProvider" />
+    <subscriber factory=".acl.RenderableContentPackageSupplementalACLProvider"
+                provides="nti.dataserver.interfaces.ISupplementalACLProvider"
+                for="nti.contentlibrary.interfaces.IRenderableContentPackage" />
 
 	<!-- Catalog -->
 	<!--
