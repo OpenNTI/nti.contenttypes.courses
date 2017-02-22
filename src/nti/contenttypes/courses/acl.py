@@ -20,6 +20,8 @@ from zope.security.interfaces import IPrincipal
 
 from nti.contentlibrary.interfaces import IRenderableContentPackage
 
+from nti.contenttypes.courses.common import get_course_packages
+
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -29,8 +31,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceForum
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
-from nti.contenttypes.courses.utils import get_course_editors
-from nti.contenttypes.courses.utils import get_course_instructors
+from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import get_content_unit_courses
 
@@ -61,6 +62,23 @@ from nti.property.property import Lazy
 
 from nti.traversal.traversal import find_interface
 
+def editor_aces_for_course(course, provider):
+    """
+    Gather the editor aces for a given course.
+    """
+    aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(provider)),
+            ace_allowing(ROLE_CONTENT_ADMIN, ACT_READ, type(provider)),
+            ace_allowing(ROLE_CONTENT_ADMIN, ACT_CONTENT_EDIT, type(provider)),
+            ace_allowing(ROLE_CONTENT_ADMIN, ACT_SYNC_LIBRARY, type(provider))]
+
+    # Now our content editors/admins.
+    for editor in get_course_editors(course):
+        aces.append(ace_allowing(editor, ACT_READ, type(provider)))
+        aces.append(ace_allowing(editor, ACT_UPDATE, type(provider)))
+        aces.append(ace_allowing(editor, ACT_CONTENT_EDIT, type(provider)))
+
+    return aces
+
 
 @component.adapter(ICourseInstance)
 @interface.implementer(IACLProvider)
@@ -88,11 +106,7 @@ class CourseInstanceACLProvider(object):
         course = self.context
         sharing_scopes = course.SharingScopes
         sharing_scopes.initScopes()
-
-        aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(self)),
-                ace_allowing(ROLE_CONTENT_ADMIN, ACT_READ, type(self)),
-                ace_allowing(ROLE_CONTENT_ADMIN, ACT_CONTENT_EDIT, type(self)),
-                ace_allowing(ROLE_CONTENT_ADMIN, ACT_SYNC_LIBRARY, type(self))]
+        aces = editor_aces_for_course(course, self)
 
         # Anyone still enrolled in course has access, whether the course
         # is public or not.
@@ -119,12 +133,6 @@ class CourseInstanceACLProvider(object):
         for subinstance in get_course_subinstances(course):
             aces.extend(ace_allowing(i, ACT_READ, type(self))
                         for i in subinstance.instructors or ())
-
-        # Now our content editors/admins.
-        for editor in get_course_editors(course):
-            aces.append(ace_allowing(editor, ACT_READ, type(self)))
-            aces.append(ace_allowing(editor, ACT_UPDATE, type(self)))
-            aces.append(ace_allowing(editor, ACT_CONTENT_EDIT, type(self)))
 
         result = acl_from_aces(aces)
         return result
@@ -277,48 +285,41 @@ class CourseForumACLProvider(CommunityForumACLProvider):
 class RenderableContentPackageSupplementalACLProvider(object):
     """
     Supplement :class:`IRenderableContentPackage` objects with
-    the acl of all courses containing these packages. Students
-    only have READ permission once the content package is published.
+    the acl of all courses containing these packages. If unpublished,
+    only course editors have access.
     """
 
     def __init__(self, context):
         self.context = context
 
-    def _get_excluded_instructors(self, course):
-        instructors = get_course_instructors(course)
-        instructors = [IPrincipal(x) for x in instructors or ()]
-        editors = get_course_editors(course)
-        editors = [IPrincipal(x) for x in editors or ()]
-        result = set(instructors or ()) - set(editors or ())
-        return result
-
-    def _get_excluded_principals(self, course):
+    def _get_courses(self):
         """
-        Exclude students and instructors that are not editors.
+        Get all courses and subinstances that contain this package.
         """
-        # The public scope drives visibility for enrolled students.
-        sharing_scopes = course.SharingScopes
-        sharing_scopes.initScopes()
-        public_scope = sharing_scopes[ES_PUBLIC]
-        result = set((IPrincipal(public_scope),))
-        instructors = self._get_excluded_instructors(course)
-        result.update(instructors)
+        package = self.context
+        courses = get_content_unit_courses( package )
+        result = set()
+        for course in courses or ():
+            course_tree = get_course_hierarchy(course)
+            for course in course_tree or ():
+                course_packages = get_course_packages(course)
+                if package in course_packages:
+                    result.add( course )
         return result
 
     @Lazy
     def __acl__(self):
+        is_published = self.context.is_published()
         result = []
-        # TODO: children courses?
-        courses = get_content_unit_courses( self.context )
-        for course in courses or ():
-            course_acl = IACLProvider(course).__acl__
-            if self.context.is_published():
+        courses = self._get_courses()
+        for course in courses:
+            if is_published:
                 # If published, we want the whole ACL
+                # XXX: Eliminate dupes?
+                course_acl = IACLProvider(course).__acl__
                 result.extend( course_acl )
             else:
-                # Otherwise, exclude enrolled students
-                excluded_principals = self._get_excluded_principals(course)
-                for course_ace in course_acl:
-                    if IPrincipal(course_ace.actor) not in excluded_principals:
-                        result.append(course_ace)
-        return result
+                # Otherwise, fetch just the course editors
+                aces = editor_aces_for_course(course, self)
+                result.extend( aces )
+        return acl_from_aces(result)
