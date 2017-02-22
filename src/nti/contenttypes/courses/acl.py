@@ -29,8 +29,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceForum
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
-from nti.contenttypes.courses.utils import get_course_editors,\
-    get_course_instructors
+from nti.contenttypes.courses.utils import get_course_editors
+from nti.contenttypes.courses.utils import get_course_instructors
 from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import get_content_unit_courses
 
@@ -243,8 +243,7 @@ class CourseBoardACLProvider(CommunityBoardACLProvider):
     """
 
     def _extend_acl_after_creator_and_sharing(self, acl):
-        super(CourseBoardACLProvider,
-              self)._extend_acl_after_creator_and_sharing(acl)
+        super(CourseBoardACLProvider, self)._extend_acl_after_creator_and_sharing(acl)
         course = find_interface(self.context, ICourseInstance, strict=False)
         if course is None:
             __traceback_info__ = self.context
@@ -262,8 +261,7 @@ class CourseForumACLProvider(CommunityForumACLProvider):
     """
 
     def _extend_acl_after_creator_and_sharing(self, acl):
-        super(CourseForumACLProvider,
-              self)._extend_acl_after_creator_and_sharing(acl)
+        super(CourseForumACLProvider, self)._extend_acl_after_creator_and_sharing(acl)
         course = find_interface(self.context, ICourseInstance)
         for editor in get_course_editors(course):
             acl.append(ace_allowing(editor, ACT_READ, type(self)))
@@ -273,6 +271,7 @@ class CourseForumACLProvider(CommunityForumACLProvider):
                                    (ACT_CONTENT_EDIT, ACT_UPDATE),
                                    type(self)))
 
+
 @component.adapter(IRenderableContentPackage)
 @interface.implementer(ISupplementalACLProvider)
 class RenderableContentPackageSupplementalACLProvider(object):
@@ -281,6 +280,7 @@ class RenderableContentPackageSupplementalACLProvider(object):
     the acl of all courses containing these packages. Students
     only have READ permission once the content package is published.
     """
+
     def __init__(self, context):
         self.context = context
 
