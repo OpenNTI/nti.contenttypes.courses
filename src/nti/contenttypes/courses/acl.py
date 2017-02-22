@@ -308,6 +308,7 @@ class RenderableContentPackageSupplementalACLProvider(object):
     @Lazy
     def __acl__(self):
         result = []
+        # TODO: children courses?
         courses = get_content_unit_courses( self.context )
         for course in courses or ():
             course_acl = IACLProvider(course).__acl__
