@@ -31,6 +31,7 @@ from nti.assessment.interfaces import IQAssessmentDateContextModified
 from nti.contentlibrary.interfaces import IContentPackage
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageAddedEvent
+from nti.contentlibrary.interfaces import IContentPackageRemovedEvent
 from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
@@ -82,6 +83,7 @@ from nti.contenttypes.courses.utils import index_course_roles
 from nti.contenttypes.courses.utils import get_courses_catalog
 from nti.contenttypes.courses.utils import clear_course_outline
 from nti.contenttypes.courses.utils import unindex_course_roles
+from nti.contenttypes.courses.utils import get_content_unit_courses
 
 from nti.dataserver.interfaces import IUser
 from nti.dataserver.users.interfaces import IWillDeleteEntityEvent
@@ -416,3 +418,18 @@ def _update_course_bundle(new_package, event):
             logger.info('Updating course bundle with new package (%s) (%s)',
                         new_package.ntiid, entry.ntiid)
             notify(CourseBundleUpdatedEvent(course, (new_package,)))
+
+
+@component.adapter(IContentPackage, IContentPackageRemovedEvent)
+def _update_course_bundle_on_package_removal(package, event):
+    """
+    When a content package is deleted, remove it from the
+    appropriate courses.
+    """
+    courses = get_content_unit_courses(package)
+    for course in courses or ():
+        entry = ICourseCatalogEntry(course)
+        logger.info( 'Removing package from course (%s) (%s)',
+                     package.ntiid, entry.ntiid)
+        course.ContentPackageBundle.remove(package)
+        notify(CourseBundleUpdatedEvent(course, removed_packages=(package,)))
