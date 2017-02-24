@@ -15,6 +15,8 @@ from zope.component.hooks import site
 
 from zope.event import notify
 
+from zope.security.management import queryInteraction
+
 from zope.intid.interfaces import IIntIds
 from zope.intid.interfaces import IIntIdAddedEvent
 
@@ -301,7 +303,7 @@ def on_course_instance_removed(course, event):
     remove_enrollment_records(course)
     unindex_enrollment_records(course)
     if     not ICourseSubInstance.providedBy(course) \
-        or course.Outline is not get_parent_course(course).Outline:
+            or course.Outline is not get_parent_course(course).Outline:
         clear_course_outline(course)
 
 
@@ -406,6 +408,8 @@ def _update_course_bundle(new_package, event):
     (index, permissions, etc) in case we have a bundle wref
     already pointing to the package.
     """
+    if queryInteraction() is not None:
+        return
     # Have to iterate through since our index may not have this package.
     # XXX: This may be expensive if triggered interactively.
     catalog = component.getUtility(ICourseCatalog)
@@ -429,7 +433,7 @@ def _update_course_bundle_on_package_removal(package, event):
     courses = get_content_unit_courses(package)
     for course in courses or ():
         entry = ICourseCatalogEntry(course)
-        logger.info( 'Removing package from course (%s) (%s)',
-                     package.ntiid, entry.ntiid)
+        logger.info('Removing package from course (%s) (%s)',
+                    package.ntiid, entry.ntiid)
         course.ContentPackageBundle.remove(package)
         notify(CourseBundleUpdatedEvent(course, removed_packages=(package,)))
