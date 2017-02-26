@@ -23,9 +23,8 @@ from nti.metadata.predicates import BasePrincipalObjects
 from nti.site.hostpolicy import run_job_in_all_host_sites
 
 
-def course_collector(catalog=None):
-    catalog = component.getUtility(
-        ICourseCatalog) if catalog is None else catalog
+def course_collector():
+    catalog = component.getUtility(ICourseCatalog)
     for entry in catalog.iterCatalogEntries():
         course = ICourseInstance(entry, None)
         if course is not None:
@@ -69,7 +68,8 @@ class _EnrollmentPrincipalObjects(BasePrincipalObjects):
         user = self.user
 
         def _collector():
-            for enrollments in component.subscribers((user,), IPrincipalEnrollments):
+            for enrollments in component.subscribers((user,),
+                                                     IPrincipalEnrollments):
                 for enrollment in enrollments.iter_enrollments():
                     result.append(enrollment)
         run_job_in_all_host_sites(_collector)
