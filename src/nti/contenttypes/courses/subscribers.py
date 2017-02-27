@@ -452,7 +452,7 @@ def _package_ntiid_will_update(package, event):
     courses = get_content_unit_courses(package)
     for course in courses or ():
         entry = ICourseCatalogEntry(course)
-        logger.info('Change package ref in course (%s) (new_ntiid=%s) (%s)',
+        logger.info('Changing package ref in course (%s) (new_ntiid=%s) (%s)',
                     package.ntiid, event.new_ntiid, entry.ntiid)
         course.ContentPackageBundle.remove(package)
         # Create a placeholder package for event (weak-ref) usage.
