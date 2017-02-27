@@ -14,6 +14,7 @@ import six
 import time
 import hashlib
 import mimetypes
+from six import StringIO
 from numbers import Number
 from datetime import datetime
 from collections import Mapping
@@ -22,7 +23,6 @@ from collections import Iterable
 from xml.dom import minidom
 
 import simplejson
-from simplejson.compat import StringIO
 
 from zope import component
 from zope import interface
