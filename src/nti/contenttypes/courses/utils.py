@@ -158,8 +158,7 @@ def get_courses_for_packages(sites=(), packages=(), intids=None):
     result = set()
     catalog = get_courses_catalog()
     sites = get_sites_4_index(sites)
-    packages = packages.split() if isinstance(
-        packages, string_types) else packages
+    packages = packages.split() if isinstance(packages, string_types) else packages
     query = {
         IX_SITE: {'any_of': sites},
         IX_PACKAGES: {'any_of': packages}

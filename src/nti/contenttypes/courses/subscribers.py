@@ -9,8 +9,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from copy import copy
-
 from zope import component
 
 from zope.component.hooks import site
@@ -39,6 +37,8 @@ from nti.contentlibrary.interfaces import IContentPackageRemovedEvent
 from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
+
+from nti.contentlibrary.wref import contentunit_wref_to_missing_ntiid
 
 from nti.contenttypes.courses import get_enrollment_catalog
 
@@ -88,11 +88,12 @@ from nti.contenttypes.courses.utils import get_courses_catalog
 from nti.contenttypes.courses.utils import clear_course_outline
 from nti.contenttypes.courses.utils import unindex_course_roles
 from nti.contenttypes.courses.utils import get_content_unit_courses
+from nti.contenttypes.courses.utils import get_courses_for_packages
 
 from nti.dataserver.interfaces import IUser
 from nti.dataserver.users.interfaces import IWillDeleteEntityEvent
 
-from nti.ntiids.interfaces import IWillUpdateNTIIDEvent
+from nti.ntiids.interfaces import IUpdatedNTIIDEvent
 
 from nti.recorder.utils import record_transaction
 
@@ -443,24 +444,22 @@ def _update_course_bundle_on_package_removal(package, event):
         notify(CourseBundleUpdatedEvent(course, removed_packages=(package,)))
 
 
-@component.adapter(IContentPackage, IWillUpdateNTIIDEvent)
-def _package_ntiid_will_update(package, event):
+@component.adapter(IContentPackage, IUpdatedNTIIDEvent)
+def _package_ntiid_updated(package, event):
     """
     When a content package changes ntiids, change our bundle
     ref appropriately.
     """
-    courses = get_content_unit_courses(package)
+    courses = get_courses_for_packages(packages=event.old_ntiid)
     for course in courses or ():
         entry = ICourseCatalogEntry(course)
-        logger.info('Changing package ref in course (%s) (new_ntiid=%s) (%s)',
-                    package.ntiid, event.new_ntiid, entry.ntiid)
-        course.ContentPackageBundle.remove(package)
-        # Create a placeholder package for event (weak-ref) usage.
-        # XXX: a lof of underlying knowledge here
-        # XXX: verify this works
-        placeholder_package = copy(package)
-        placeholder_package.ntiid = event.new_ntiid
-        course.ContentPackageBundle.add(placeholder_package)
+        logger.info('Changing package ref in course (%s) (old_ntiid=%s) (%s)',
+                    package.ntiid, event.old_ntiid, entry.ntiid)
+        course.ContentPackageBundle.add(package)
+        # XXX: a lot of underlying knowledge here
+        old_ref = contentunit_wref_to_missing_ntiid( event.old_ntiid )
+        course.ContentPackageBundle.remove(old_ref)
+        # XXX: Removed packages?
         notify(CourseBundleUpdatedEvent(course,
-                                        added_packages=(placeholder_package,),
-                                        removed_packages=(package,)))
+                                        added_packages=(package,)))
+
