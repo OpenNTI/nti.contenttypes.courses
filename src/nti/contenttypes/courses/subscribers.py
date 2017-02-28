@@ -308,7 +308,7 @@ def on_course_instance_removed(course, event):
     remove_enrollment_records(course)
     unindex_enrollment_records(course)
     if     not ICourseSubInstance.providedBy(course) \
-            or course.Outline is not get_parent_course(course).Outline:
+        or course.Outline is not get_parent_course(course).Outline:
         clear_course_outline(course)
 
 
@@ -393,7 +393,7 @@ def on_unlock_assessment_policies(event):
 
 
 @component.adapter(ICourseInstance, ICourseBundleUpdatedEvent)
-def update_course_packages(course, event):
+def update_course_packages(course, event=None):
     """
     Update the course packages
     """
@@ -404,6 +404,12 @@ def update_course_packages(course, event):
         doc_id = intids.queryId(course)
         if doc_id is not None:
             index.index_doc(doc_id, course)
+
+
+@component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
+def on_course_imported(course, event):
+    update_course_packages(course)
+
 
 
 @component.adapter(IContentPackage, IContentPackageAddedEvent)
@@ -462,4 +468,3 @@ def _package_ntiid_updated(package, event):
         # XXX: Removed packages?
         notify(CourseBundleUpdatedEvent(course,
                                         added_packages=(package,)))
-
