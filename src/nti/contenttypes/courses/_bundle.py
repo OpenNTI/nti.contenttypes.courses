@@ -32,6 +32,8 @@ from nti.externalization.interfaces import StandardExternalFields
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+from nti.wref.interfaces import IWeakRef
+
 ITEMS = StandardExternalFields.ITEMS
 
 
@@ -40,16 +42,20 @@ class CoursePersistentContentPackageBundle(PersistentContentPackageBundle):
 
     mime_type = mimeType = 'application/vnd.nextthought.coursecontentpackagebundle'
 
+    def _is_valid_type(self, obj):
+        return IContentPackage.providedBy(obj) \
+            or IWeakRef.providedBy(obj)
+
     def add(self, context):
         if isinstance(context, string_types):
             context = find_object_with_ntiid(context)
-        assert IContentPackage.providedBy(context)
+        assert self._is_valid_type(context)
         return PersistentContentPackageBundle.add(self, context)
 
     def remove(self, context):
         if isinstance(context, string_types):
             context = find_object_with_ntiid(context)
-        assert IContentPackage.providedBy(context)
+        assert self._is_valid_type(context)
         return PersistentContentPackageBundle.remove(self, context)
 
 
