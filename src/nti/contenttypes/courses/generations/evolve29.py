@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-.. $Id: evolve28.py 105559 2017-01-31 20:45:08Z carlos.sanchez $
+.. $Id$
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
@@ -68,8 +68,8 @@ def _update_policy(seen, catalog, intids):
             mapping = OOBTree(mixin._mapping)
             for key, value in list(mapping.items()):
                 if isinstance(value, Mapping):
-                    value = OOBTree(value)
-                    mapping[key] = value
+                    mapping[key] = OOBTree(value)
+            mixin._mapping = mapping
             mixin._p_changed = True
 
 
@@ -89,6 +89,10 @@ def do_evolve(context, generation=generation):
         intids = lsm.getUtility(IIntIds)
 
         seen = set()
+        # global site
+        catalog = component.queryUtility(ICourseCatalog)
+        _update_policy(seen, catalog, intids)
+        # all sites
         for site in get_all_host_sites():
             with current_site(site):
                 catalog = component.queryUtility(ICourseCatalog)
