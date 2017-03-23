@@ -23,6 +23,8 @@ from zope.annotation.factory import factory as an_factory
 
 from zope.container.contained import Contained
 
+from BTrees.OOBTree import OOBTree
+
 from persistent.mapping import PersistentMapping
 
 from nti.assessment.interfaces import IQAssessmentPolicies
@@ -39,6 +41,8 @@ from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IInternalObjectExternalizer
 
 from nti.externalization.persistence import NoPickle
+
+MappingClass = PersistentMapping if True else OOBTree
 
 
 @interface.implementer(IQAssessmentDateContext)
@@ -74,6 +78,7 @@ class EmptyAssessmentDateContext(object):
     def __len__(self):
         return 0
 
+
 EmptyAssignmentDateContext = EmptyAssessmentDateContext  # BWC
 
 
@@ -98,7 +103,7 @@ class MappingAssessmentMixin(PersistentCreatedAndModifiedTimeObject, Contained):
 
     def __init__(self):
         PersistentCreatedAndModifiedTimeObject.__init__(self)
-        self._mapping = PersistentMapping()
+        self._mapping = MappingClass()
 
     def assessments(self):
         return list(self._mapping.keys())
@@ -130,7 +135,7 @@ class MappingAssessmentMixin(PersistentCreatedAndModifiedTimeObject, Contained):
         ntiid = self.get_ntiid(assessment)
         data = self._mapping.get(ntiid)
         if data is None:
-            data = self._mapping[ntiid] = PersistentMapping()
+            data = self._mapping[ntiid] = MappingClass()
         data[name] = value
 
     def remove(self, assessment, name):
@@ -188,12 +193,12 @@ class MappingAssessmentDateContext(MappingAssessmentMixin):
         if asg.ntiid in self._mapping:
             return _Dates(self._mapping, asg)
         return asg
-
 MappingAssignmentDateContext = MappingAssessmentDateContext  # BWC
 
-COURSE_SUBINSTANCE_DATE_CONTEXT_KEY = 'nti.contenttypes.courses.assignment.MappingAssignmentDateContext'
+COURSE_INSTANCE_DATE_CONTEXT_KEY = 'nti.contenttypes.courses.assignment.MappingAssignmentDateContext'
+COURSE_SUBINSTANCE_DATE_CONTEXT_KEY = COURSE_INSTANCE_DATE_CONTEXT_KEY # BWC
 CourseSubInstanceAssignmentDateContextFactory = an_factory(MappingAssignmentDateContext,
-                                                           key=COURSE_SUBINSTANCE_DATE_CONTEXT_KEY)
+                                                           key=COURSE_INSTANCE_DATE_CONTEXT_KEY)
 
 
 @component.adapter(ICourseInstance)
@@ -211,7 +216,6 @@ class MappingAssessmentPolicies(MappingAssessmentMixin):
     def __bool__(self):
         return bool(self._mapping)
     __nonzero__ = __bool__
-
 MappingAssignmentPolicies = MappingAssessmentPolicies  # BWC
 
 COURSE_DATE_CONTEXT_KEY = 'nti.contenttypes.courses.assignment.MappingAssignmentPolicies'
