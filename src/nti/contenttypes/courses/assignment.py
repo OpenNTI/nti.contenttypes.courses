@@ -25,8 +25,6 @@ from zope.container.contained import Contained
 
 from BTrees.OOBTree import OOBTree
 
-from persistent.mapping import PersistentMapping
-
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentDateContext
 
@@ -42,7 +40,7 @@ from nti.externalization.interfaces import IInternalObjectExternalizer
 
 from nti.externalization.persistence import NoPickle
 
-MappingClass = PersistentMapping if True else OOBTree
+MappingClass = OOBTree
 
 
 @interface.implementer(IQAssessmentDateContext)
