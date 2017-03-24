@@ -77,7 +77,7 @@ class EmptyAssessmentDateContext(object):
         return 0
 
     def __delitem__(self, key):
-        pass
+        raise KeyError(key)
 EmptyAssignmentDateContext = EmptyAssessmentDateContext  # BWC
 
 
