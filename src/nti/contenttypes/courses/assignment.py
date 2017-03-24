@@ -76,7 +76,8 @@ class EmptyAssessmentDateContext(object):
     def __len__(self):
         return 0
 
-
+    def __delitem__(self, key):
+        pass
 EmptyAssignmentDateContext = EmptyAssessmentDateContext  # BWC
 
 
