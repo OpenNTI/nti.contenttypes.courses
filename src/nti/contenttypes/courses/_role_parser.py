@@ -190,4 +190,5 @@ def fill_roles_from_key(course, key):
 	logger.info('Syncing course roles for key (%s)', key)
 	json = key.readContentsAsYaml()
 	result = fill_roles_from_json(course, json)
+	course.__principalRoleslastModified__ = key.lastModified
 	return result

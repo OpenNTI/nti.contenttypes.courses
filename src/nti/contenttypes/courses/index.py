@@ -198,8 +198,8 @@ def install_enrollment_catalog(site_manager_container, intids=None):
     catalog = EnrollmentCatalog(family=intids.family)
     locate(catalog, site_manager_container, ENROLLMENT_CATALOG_NAME)
     intids.register(catalog)
-    lsm.registerUtility(catalog, 
-                        provided=ICatalog, 
+    lsm.registerUtility(catalog,
+                        provided=ICatalog,
                         name=ENROLLMENT_CATALOG_NAME)
 
     for name, clazz in ((IX_SCOPE, ScopeSetIndex),
@@ -415,8 +415,8 @@ def install_course_outline_catalog(site_manager_container, intids=None):
     catalog = CourseOutlineCatalog(family=intids.family)
     locate(catalog, site_manager_container, COURSE_OUTLINE_CATALOG_NAME)
     intids.register(catalog)
-    lsm.registerUtility(catalog, 
-                        provided=ICatalog, 
+    lsm.registerUtility(catalog,
+                        provided=ICatalog,
                         name=COURSE_OUTLINE_CATALOG_NAME)
 
     for name, clazz in ((IX_SOURCE, NodeSrcIndex),
