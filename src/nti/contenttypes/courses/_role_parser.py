@@ -32,9 +32,14 @@ from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
 
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 
 from nti.contenttypes.courses.sharing import add_principal_to_course_content_roles
 from nti.contenttypes.courses.sharing import remove_principal_from_course_content_roles
+
+from nti.contenttypes.courses.utils import is_enrolled
+from nti.contenttypes.courses.utils import get_course_hierarchy
 
 from nti.dataserver.interfaces import IUser
 
@@ -96,6 +101,19 @@ def _check_scopes(course):
 					delattr(scope, intids.attribute)
 				intids.register(scope)
 
+def _unenroll_instructor(instructor, course):
+	"""
+	Unenroll the instructor from any courses they may have
+	pre-emptively enrolled in.
+	"""
+	for course in get_course_hierarchy(course) or ():
+		if is_enrolled(course, instructor):
+			entry_ntiid = ICourseCatalogEntry(course).ntiid
+			manager = ICourseEnrollmentManager(course)
+			manager.drop(instructor)
+			logger.info('Dropping instructor from course (%s) (%s)',
+					     instructor, entry_ntiid)
+
 def fill_roles_from_json(course, json):
 	_check_scopes(course)
 
@@ -126,6 +144,7 @@ def fill_roles_from_json(course, json):
 			user = User.get_user(pid)
 			if is_instructor:
 				course.instructors += (IPrincipal(user),)
+				_unenroll_instructor(user, course)
 		except (LookupError, TypeError):
 			# lookuperror if we're not in a ds context,
 			# TypeError if no named user was found and none was returned
