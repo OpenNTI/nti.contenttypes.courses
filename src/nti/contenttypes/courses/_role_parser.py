@@ -39,6 +39,7 @@ from nti.contenttypes.courses.sharing import add_principal_to_course_content_rol
 from nti.contenttypes.courses.sharing import remove_principal_from_course_content_roles
 
 from nti.contenttypes.courses.utils import is_enrolled
+from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_hierarchy
 
 from nti.dataserver.interfaces import IUser
@@ -171,7 +172,7 @@ def fill_roles_from_json(course, json):
             # If they're an instructor of a section, give them
             # access to the public community of the main course.
             if ICourseSubInstance.providedBy(course):
-                parent_course = course.__parent__.__parent__
+                parent_course = get_parent_course(course)
                 public_scope = parent_course.SharingScopes[ES_PUBLIC]
                 user.record_dynamic_membership(public_scope)
                 user.follow(public_scope)
@@ -188,7 +189,7 @@ def fill_roles_from_json(course, json):
 
             # And remove access to the parent public scope.
             if ICourseSubInstance.providedBy(course):
-                parent_course = course.__parent__.__parent__
+                parent_course = get_parent_course(course)
                 public_scope = parent_course.SharingScopes[ES_PUBLIC]
                 user.record_no_longer_dynamic_member(public_scope)
                 user.stop_following(public_scope)
