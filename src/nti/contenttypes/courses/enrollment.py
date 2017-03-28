@@ -66,10 +66,15 @@ from nti.contenttypes.courses.interfaces import IDenyOpenEnrollment
 from nti.contenttypes.courses.interfaces import IGlobalCourseCatalog
 from nti.contenttypes.courses.interfaces import IPrincipalEnrollments
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
+from nti.contenttypes.courses.interfaces import InstructorEnrolledException
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 from nti.contenttypes.courses.interfaces import IDefaultCourseCatalogEnrollmentStorage
 from nti.contenttypes.courses.interfaces import IDefaultCourseInstanceEnrollmentStorage
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecordContainer
+
+from nti.contenttypes.courses.utils import is_instructor_in_hierarchy
+
+from nti.dataserver.users import User
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
@@ -354,6 +359,13 @@ class DefaultCourseEnrollmentManager(object):
 			# dropping---but dropping must always readCurrent
 			_readCurrent(self._inst_enrollment_storage)
 			return False
+
+		user = User.get_user( principal_id )
+		if is_instructor_in_hierarchy(self.context, user):
+			entry_ntiid = ICourseCatalogEntry(self.context).ntiid
+			logger.warn( 'Cannot enroll instructor in course (%s) (%s)',
+						 principal_id, entry_ntiid )
+			raise InstructorEnrolledException()
 
 		record = DefaultCourseInstanceEnrollmentRecord(Principal=principal, Scope=scope)
 		enrollments = self._cat_enrollment_storage.enrollments_for_id(principal_id,
@@ -644,7 +656,7 @@ class DefaultCourseEnrollments(object):
 	def is_principal_enrolled(self, principal):
 		principal_id = IPrincipal(principal).id
 		return principal_id in self._inst_enrollment_storage
-	
+
 	def get_enrollment_for_principal(self, principal):
 		principal_id = IPrincipal(principal).id
 		return self._inst_enrollment_storage.get(principal_id)

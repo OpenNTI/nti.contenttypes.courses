@@ -1071,6 +1071,11 @@ class AlreadyEnrolledException(ValidationError):
 	__doc__ = _('User already enrolled in course.')
 	i18n_message = __doc__
 
+@interface.implementer(IEnrollmentException)
+class InstructorEnrolledException(ValidationError):
+	__doc__ = _('Instructor cannot enroll in course.')
+	i18n_message = __doc__
+
 class ICourseInstanceAvailableEvent(IObjectEvent):
 	"""
 	An event that is sent, usually during startup or synchronization,
