@@ -69,7 +69,6 @@ from nti.contenttypes.courses import MessageFactory as _
 
 from nti.coremetadata.interfaces import INoPublishLink
 from nti.coremetadata.interfaces import ICalendarPublishable
-from nti.coremetadata.interfaces import IRecordableContainer
 
 from nti.dataserver.interfaces import ICommunity
 from nti.dataserver.interfaces import ILastModified
@@ -87,6 +86,8 @@ from nti.invitations.interfaces import IInvitationActor
 from nti.ntiids.schema import ValidNTIID
 
 from nti.property.property import alias
+
+from nti.recorder.interfaces import IRecordableContainer
 
 from nti.schema.field import Bool
 from nti.schema.field import Dict
