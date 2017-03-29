@@ -32,12 +32,13 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
 from nti.coremetadata.interfaces import ILastModified
 
 from nti.coremetadata.mixins import CalendarPublishableMixin
-from nti.coremetadata.mixins import RecordableContainerMixin
 
 from nti.dataserver.interfaces import SYSTEM_USER_ID
 from nti.dataserver.interfaces import ITitledDescribedContent
 
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
+
+from nti.recorder.mixins import RecordableContainerMixin
 
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import AdaptingFieldProperty
