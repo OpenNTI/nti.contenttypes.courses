@@ -218,8 +218,8 @@ class CourseOutlineImporter(BaseSectionImporter):
                     source = self.safe_get(filer, path)  # reload
                     if source is not None:
                         self.makedirs(course.root.absolute_path)
-                        new_path = os.path.join(
-                            course.root.absolute_path, name)
+                        new_path = os.path.join(course.root.absolute_path,
+                                                name)
                         transfer_to_native_file(source, new_path)
 
         for sub_instance in get_course_subinstances(course):
@@ -446,13 +446,15 @@ class BundleMetaInfoImporter(BaseSectionImporter):
                 # create a tmp directory root for bundle files
                 tmp_dir = tempfile.mkdtemp()
                 # XXX copy bundle files to new temp root
-                bundle_json_key = self._to_fs_key(
-                    name_source, tmp_dir, BUNDLE_META_NAME)
+                bundle_json_key = self._to_fs_key(name_source, 
+                                                  tmp_dir,
+                                                  BUNDLE_META_NAME)
                 if dc_meta_json_key is None:
                     self._to_fs_key(dc_source, tmp_dir, BUNDLE_DC_METADATA)
                 else:
-                    self._to_fs_key(
-                        dc_meta_json_key, tmp_dir, BUNDLE_DC_METADATA)
+                    self._to_fs_key(dc_meta_json_key,
+                                    tmp_dir,
+                                    BUNDLE_DC_METADATA)
                 # XXX new import root temp
                 update_bundle = False
                 root = FilesystemBucket()
