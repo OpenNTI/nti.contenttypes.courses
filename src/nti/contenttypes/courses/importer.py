@@ -483,6 +483,7 @@ class CourseImporter(object):
         entry.lastSynchronized = course.lastSynchronized = time.time()
         notify(CourseInstanceImportedEvent(course))
         for subinstance in get_course_subinstances(course):
+            subinstance.lastSynchronized = course.lastSynchronized
             notify(CourseInstanceImportedEvent(subinstance))
         result = time.time() - now
         logger.info("Course %s imported in %s(s)", entry.ntiid, result)
