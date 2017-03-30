@@ -473,18 +473,27 @@ class BundleMetaInfoImporter(BaseSectionImporter):
 @interface.implementer(ICourseImporter)
 class CourseImporter(object):
 
+    def _mark_sync(self, context):
+        now = time.time()
+        for provided in (ICourseInstance, ICourseCatalogEntry):
+            try:
+                provided(context).lastSynchronized = now
+            except AttributeError:
+                pass
+
     def process(self, context, filer, writeout=True):
         now = time.time()
         course = ICourseInstance(context)
         for name, importer in sorted(component.getUtilitiesFor(ICourseSectionImporter)):
             logger.info("Processing %s", name)
             importer.process(course, filer, writeout)
-        entry = ICourseCatalogEntry(course)
-        entry.lastSynchronized = course.lastSynchronized = time.time()
+        # notify
+        self._mark_sync(course)
         notify(CourseInstanceImportedEvent(course))
         for subinstance in get_course_subinstances(course):
-            subinstance.lastSynchronized = course.lastSynchronized
+            self._mark_sync(subinstance)
             notify(CourseInstanceImportedEvent(subinstance))
         result = time.time() - now
-        logger.info("Course %s imported in %s(s)", entry.ntiid, result)
+        logger.info("Course %s imported in %s(s)", 
+                    ICourseCatalogEntry(course).ntiid, result)
         return result
