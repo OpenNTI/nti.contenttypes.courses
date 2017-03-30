@@ -27,7 +27,6 @@ import isodate
 
 from zope.interface.interfaces import IMethod
 
-from nti.coremetadata.interfaces import IRecordable
 from nti.coremetadata.interfaces import ICalendarPublishable
 
 from nti.contentlibrary.filesystem import FilesystemKey
@@ -45,6 +44,7 @@ from nti.externalization.internalization import update_from_external_object
 
 from nti.ntiids.ntiids import is_valid_ntiid_string
 
+from nti.recorder.interfaces import IRecordable
 from nti.recorder.interfaces import ITransactionRecordHistory
 
 from nti.contenttypes.courses.tests import CourseLayerTest
