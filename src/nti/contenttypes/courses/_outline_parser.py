@@ -32,13 +32,13 @@ from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
 from nti.contenttypes.courses.outlines import CourseOutlineNode
 from nti.contenttypes.courses.outlines import CourseOutlineContentNode
 
-from nti.coremetadata.interfaces import IRecordable
-from nti.coremetadata.interfaces import IRecordableContainer
-
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.recorder.interfaces import IRecordable
+from nti.recorder.interfaces import IRecordableContainer
 
 from nti.recorder.record import copy_records
 from nti.recorder.record import get_transactions
