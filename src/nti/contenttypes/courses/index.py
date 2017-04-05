@@ -25,7 +25,7 @@ from zope.intid.interfaces import IIntIds
 
 from zope.location import locate
 
-from nti.base._compat import to_unicode
+from nti.base._compat import unicode_
 
 from nti.contenttypes.courses.common import get_course_site
 from nti.contenttypes.courses.common import get_course_packages
@@ -48,7 +48,9 @@ from nti.zope_catalog.index import SetIndex as RawSetIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
 from nti.zope_catalog.index import IntegerValueIndex as RawIntegerValueIndex
 
+
 # Deprecations
+
 
 deprecated('ValidatingUsernameID', 'Use latest index implementation')
 class ValidatingUsernameID(object):
@@ -70,6 +72,7 @@ class ScopeIndex(ValueIndex):
 deprecated('ValidatingScope', 'Use new implementation')
 class ValidatingScope(object):
     pass
+
 
 # Utilities
 
@@ -98,7 +101,9 @@ class KeepSetIndex(RawSetIndex):
             return super(KeepSetIndex, self).index_doc(doc_id, current)
         return super(KeepSetIndex, self).unindex_doc(doc_id)
 
+
 # Enrollment catalog
+
 
 IndexRecord = namedtuple('IndexRecord', 'username ntiid Scope')
 
@@ -106,7 +111,9 @@ ENROLLMENT_CATALOG_NAME = 'nti.dataserver.++etc++enrollment-catalog'
 
 IX_SITE = 'site'
 IX_SCOPE = 'scope'
+IX_CREATEDTIME = 'createdTime'
 IX_ENTRY = IX_COURSE = 'course'
+IX_LASTMODIFIED = 'lastModified'
 IX_USERNAME = IX_STUDENT = IX_INSTRUCTOR = 'username'
 
 
@@ -138,7 +145,7 @@ class UsernameIndex(KeepSetIndex):
 
     def to_iterable(self, value):
         if isinstance(value, IndexRecord):
-            result = (to_unicode(value.username),)
+            result = (unicode_(value.username),)
         elif ICourseInstanceEnrollmentRecord.providedBy(value):
             principal = value.Principal
             result = (principal.id,) if principal is not None else ()
@@ -151,9 +158,9 @@ class ScopeSetIndex(KeepSetIndex):
 
     def to_iterable(self, value):
         if isinstance(value, IndexRecord):
-            result = (to_unicode(value.Scope),)
+            result = (unicode_(value.Scope),)
         elif ICourseInstanceEnrollmentRecord.providedBy(value):
-            result = (to_unicode(value.Scope),)
+            result = (unicode_(value.Scope),)
         else:
             result = ()
         return result
@@ -166,13 +173,13 @@ class ValidatingCatalogEntryID(object):
     def __init__(self, obj, default=None):
         # See site index notes.
         if isinstance(obj, IndexRecord):
-            self.ntiid = to_unicode(obj.ntiid)
-        elif   ICourseInstanceEnrollmentRecord.providedBy(obj) \
-            or ICourseInstance.providedBy(obj):
+            self.ntiid = unicode_(obj.ntiid)
+        elif ICourseInstanceEnrollmentRecord.providedBy(obj) \
+                or ICourseInstance.providedBy(obj):
             course = getattr(obj, 'CourseInstance', obj)
             entry = ICourseCatalogEntry(course, None)
             if entry is not None:
-                self.ntiid = unicode(entry.ntiid)
+                self.ntiid = unicode_(entry.ntiid)
 
     def __reduce__(self):
         raise TypeError()
@@ -181,6 +188,28 @@ class ValidatingCatalogEntryID(object):
 class CatalogEntryIDIndex(ValueIndex):
     default_field_name = 'ntiid'
     default_interface = ValidatingCatalogEntryID
+
+
+class RecordCreatedTimeRawIndex(RawIntegerValueIndex):
+    pass
+
+
+def RecordCreatedTimeIndex(family=None):
+    return NormalizationWrapper(field_name='createdTime',
+                                interface=ICourseInstanceEnrollmentRecord,
+                                index=RecordCreatedTimeRawIndex(family=family),
+                                normalizer=TimestampToNormalized64BitIntNormalizer())
+
+
+class RecordLastModifiedRawIndex(RawIntegerValueIndex):
+    pass
+
+
+def RecordLastModifiedIndex(family=None):
+    return NormalizationWrapper(field_name='lastModified',
+                                interface=ICourseInstanceEnrollmentRecord,
+                                index=RecordLastModifiedRawIndex(family=family),
+                                normalizer=TimestampToNormalized64BitIntNormalizer())
 
 
 @interface.implementer(ICatalog)
@@ -205,14 +234,18 @@ def install_enrollment_catalog(site_manager_container, intids=None):
     for name, clazz in ((IX_SCOPE, ScopeSetIndex),
                         (IX_SITE, SingleSiteIndex),
                         (IX_USERNAME, UsernameIndex),
-                        (IX_ENTRY, CatalogEntryIDIndex)):
+                        (IX_ENTRY, CatalogEntryIDIndex),
+                        (IX_CREATEDTIME, RecordCreatedTimeIndex),
+                        (IX_LASTMODIFIED, RecordLastModifiedIndex)):
         index = clazz(family=intids.family)
         intids.register(index)
         locate(index, catalog, name)
         catalog[name] = index
     return catalog
 
+
 # Courses catalog
+
 
 IX_NAME = 'name'
 IX_PACKAGES = 'packages'
@@ -326,7 +359,9 @@ def install_courses_catalog(site_manager_container, intids=None):
         catalog[name] = index
     return catalog
 
+
 # outline catalog
+
 
 IX_SOURCE = 'source'
 IX_CONTENT_UNIT = 'ContentUnit'
@@ -358,8 +393,7 @@ class ValidatingAvailableBeginning(object):
     def __init__(self, obj, default=None):
         if      ICourseOutlineCalendarNode.providedBy(obj) \
             and obj.AvailableBeginning is not None:
-            self.AvailableBeginning = time.mktime(
-                obj.AvailableBeginning.timetuple())
+            self.AvailableBeginning = time.mktime(obj.AvailableBeginning.timetuple())
 
     def __reduce__(self):
         raise TypeError()
@@ -381,7 +415,7 @@ class ValidatingAvailableEnding(object):
     __slots__ = (b'AvailableEnding',)
 
     def __init__(self, obj, default=None):
-        if         ICourseOutlineCalendarNode.providedBy(obj) \
+        if      ICourseOutlineCalendarNode.providedBy(obj) \
             and obj.AvailableEnding is not None:
             self.AvailableEnding = time.mktime(obj.AvailableEnding.timetuple())
 
