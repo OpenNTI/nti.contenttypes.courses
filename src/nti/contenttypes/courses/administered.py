@@ -16,7 +16,6 @@ from zope.security.interfaces import IPrincipal
 
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
-from zope.securitypolicy.principalrole import principalRoleManager
 
 from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
@@ -33,14 +32,16 @@ from nti.contenttypes.courses.utils import get_course_editors
 from nti.contenttypes.courses.utils import get_instructed_and_edited_courses
 from nti.contenttypes.courses.utils import AbstractInstanceWrapper
 
-from nti.dataserver.authorization import ROLE_ADMIN
+from nti.dataserver.authorization import is_admin
+from nti.dataserver.authorization import is_content_admin
+
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
-from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
 
 from nti.dataserver.authorization_acl import has_permission
 
 from nti.dataserver.interfaces import IUser
-from nti.dataserver.interfaces import IGroupMember
+
+from nti.property.property import Lazy
 
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
@@ -90,6 +91,23 @@ class CourseInstanceAdministrativeRole(SchemaConfigured,
         AbstractInstanceWrapper.__init__(self, CourseInstance)
 
 
+def get_course_admin_role(course, user, is_admin=False):
+    """
+    Given a user and course, return the `ICourseInstanceAdministrativeRole` that
+    maps to that user's administrative capability.
+    """
+    role = u'editor'
+    if not is_admin:
+        user = IPrincipal(user)
+        roles = IPrincipalRoleMap(course)
+        if roles.getSetting(RID_INSTRUCTOR, user.id) is Allow:
+            role = u'instructor'
+        elif roles.getSetting(RID_TA, user.id) is Allow:
+            role = u'teaching assistant'
+    return CourseInstanceAdministrativeRole(RoleName=role,
+                                            CourseInstance=course)
+
+
 @component.adapter(IUser)
 @interface.implementer(IPrincipalAdministrativeRoleCatalog)
 class _DefaultPrincipalAdministrativeRoleCatalog(object):
@@ -101,29 +119,23 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
     def __init__(self, user):
         self.user = user
 
+    @Lazy
     def _is_admin(self):
-        for _, adapter in component.getAdapters((self.user,), IGroupMember):
-            if adapter.groups and ROLE_ADMIN in adapter.groups:
-                return True
-        return False
+        return is_admin(self.user)
 
+    @Lazy
     def _is_content_admin(self):
-        roles = principalRoleManager.getRolesForPrincipal(self.user.username)
-        for role, access in roles or ():
-            if role == ROLE_CONTENT_ADMIN.id and access == Allow:
-                return True
-        return False
+        return is_content_admin(self.user)
 
     def _iter_all_courses(self):
         # We do not filter based on enrollment or anything else.
         # This will probably move to its own workspace eventually.
-        is_admin = self._is_admin()
         catalog = component.queryUtility(ICourseCatalog)
         for entry in catalog.iterCatalogEntries():
             course = ICourseInstance(entry, None)
             if      course is not None \
                 and not ILegacyCourseInstance.providedBy(course) \
-                and (is_admin
+                and (self._is_admin
                      or has_permission(ACT_CONTENT_EDIT, entry, self.user)):
                 yield course
 
@@ -133,24 +145,18 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
             yield context
 
     def _get_course_iterator(self):
-        result = self._iter_admin_courses
-        if self._is_content_admin() or self._is_admin():
+        if self._is_admin or self._is_content_admin:
             result = self._iter_all_courses
+        else:
+            result = self._iter_admin_courses
         return result
 
     def iter_administrations(self):
-        for course in self._get_course_iterator()():
-            roles = IPrincipalRoleMap(course)
-            # For now, we're including editors in the administered
-            # workspace.
-            if roles.getSetting(RID_INSTRUCTOR, self.user.id) is Allow:
-                role = u'instructor'
-            elif roles.getSetting(RID_TA, self.user.id) is Allow:
-                role = u'teaching assistant'
-            else:
-                role = u'editor'
-            yield CourseInstanceAdministrativeRole(RoleName=role,
-                                                   CourseInstance=course)
+        course_iter_func = self._get_course_iterator()
+        for course in course_iter_func():
+            admin_role = get_course_admin_role(course, self.user, is_admin=self._is_admin)
+            yield admin_role
+
     iter_enrollments = iter_administrations  # for convenience
 
     def count_administrations(self):
