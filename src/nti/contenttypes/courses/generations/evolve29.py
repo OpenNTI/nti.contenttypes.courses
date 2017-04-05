@@ -63,7 +63,7 @@ def do_evolve(context, generation=generation):
         intids = lsm.getUtility(IIntIds)
 
         catalog = install_enrollment_catalog(ds_folder, intids)
-        for name, clazz in ((IX_CREATEDTIME, RecordCreatedTimeIndex)
+        for name, clazz in ((IX_CREATEDTIME, RecordCreatedTimeIndex),
                             (IX_LASTMODIFIED, RecordLastModifiedIndex)):
             if name not in catalog:
                 index = clazz(family=intids.family)
@@ -71,7 +71,7 @@ def do_evolve(context, generation=generation):
                 locate(index, catalog, name)
                 catalog[name] = index
         index = catalog[IX_ENTRY]
-        for doc_id in index.ids():
+        for doc_id in list(index.ids()): # mutating
             obj = intids.queryObject(doc_id)
             if ICourseInstanceEnrollmentRecord.providedBy(obj):
                 catalog.index_doc(doc_id, obj)
@@ -82,6 +82,6 @@ def do_evolve(context, generation=generation):
 
 def evolve(context):
     """
-    Evolve to generation 29 by adding created/last mod times to enrollment index
+    Evolve to generation 29 by adding created/lastMod indexes to enrollment catalog
     """
     do_evolve(context, generation)
