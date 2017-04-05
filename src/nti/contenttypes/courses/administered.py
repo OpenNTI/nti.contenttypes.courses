@@ -67,7 +67,7 @@ class IterableAdminCourses(object):
             instance = ICourseInstance(entry)
             instructors = instance.instructors or ()
             if     principal in instructors \
-                    or principal in get_course_editors(instance):
+                or principal in get_course_editors(instance):
                 yield instance
 
 
@@ -133,9 +133,9 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
         catalog = component.queryUtility(ICourseCatalog)
         for entry in catalog.iterCatalogEntries():
             course = ICourseInstance(entry, None)
-            if      course is not None \
+            if course is not None \
                 and not ILegacyCourseInstance.providedBy(course) \
-                and (self._is_admin
+                and (   self._is_admin
                      or has_permission(ACT_CONTENT_EDIT, entry, self.user)):
                 yield course
 
@@ -154,7 +154,9 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
     def iter_administrations(self):
         course_iter_func = self._get_course_iterator()
         for course in course_iter_func():
-            admin_role = get_course_admin_role(course, self.user, is_admin=self._is_admin)
+            admin_role = get_course_admin_role(course,
+                                               self.user,
+                                               is_admin=self._is_admin)
             yield admin_role
 
     iter_enrollments = iter_administrations  # for convenience
