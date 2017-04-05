@@ -20,6 +20,8 @@ from zope.intid.interfaces import IIntIds
 
 from zope.location import locate
 
+from nti.contentlibrary.interfaces import IContentPackageLibrary
+
 from nti.contenttypes.courses.index import IX_ENTRY
 from nti.contenttypes.courses.index import IX_CREATEDTIME
 from nti.contenttypes.courses.index import IX_LASTMODIFIED
@@ -62,6 +64,10 @@ def do_evolve(context, generation=generation):
         lsm = ds_folder.getSiteManager()
         intids = lsm.getUtility(IIntIds)
 
+        library = component.queryUtility(IContentPackageLibrary)
+        if library is not None:
+            library.syncContentPackages()
+        
         catalog = install_enrollment_catalog(ds_folder, intids)
         for name, clazz in ((IX_CREATEDTIME, RecordCreatedTimeIndex),
                             (IX_LASTMODIFIED, RecordLastModifiedIndex)):
