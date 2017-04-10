@@ -37,8 +37,11 @@ from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
+from nti.assessment.interfaces import IQAssessment
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentDateContext
+from nti.assessment.interfaces import IQEvaluation
+from nti.assessment.interfaces import IQEditableEvaluation
 
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 
@@ -88,6 +91,21 @@ NTIID = StandardExternalFields.NTIID
 
 @interface.implementer(ICourseSectionExporter)
 class BaseSectionExporter(object):
+
+    def _change_ntiid(self, ext_obj, salt=None):
+        if isinstance(ext_obj, Mapping):
+            # when not backing up make sure we take a hash of the current NTIID and
+            # use it as the specific part for a new NTIID to make sure there are
+            # fewer collisions when importing back
+            for name in (NTIID, NTIID.lower()):
+                ntiid = ext_obj.get(name)
+                if ntiid:
+                    ext_obj[name] = self.hash_ntiid(ntiid, salt)
+            for value in ext_obj.values():
+                self._change_ntiid(value, salt)
+        elif isinstance(ext_obj, (list, tuple, set)):
+            for value in ext_obj:
+                self._change_ntiid(value, salt)
 
     def hexdigest(self, data, salt=None):
         salt = salt or ''
@@ -221,18 +239,18 @@ class CourseOutlineExporter(BaseSectionExporter):
             self._export_remover(ext_obj, salt)
         source = self.dump(ext_obj)
         filer.save(COURSE_OUTLINE_NAME,
-                   source, 
+                   source,
                    contentType="application/json",
-                   bucket=bucket, 
+                   bucket=bucket,
                    overwrite=True)
 
         # as xml
-        source = self.asXML(course.Outline, 
+        source = self.asXML(course.Outline,
                             course,
-                            backup=backup, 
+                            backup=backup,
                             salt=salt)
         filer.save("course_outline.xml",
-                   source, 
+                   source,
                    contentType="application/xml",
                    bucket=bucket,
                    overwrite=True)
@@ -255,9 +273,9 @@ class VendorInfoExporter(BaseSectionExporter):
                                          decorate=False)
             source = self.dump(ext_obj)
             filer.save(VENDOR_INFO_NAME,
-                       source, 
+                       source,
                        contentType="application/json",
-                       bucket=bucket, 
+                       bucket=bucket,
                        overwrite=True)
         for sub_instance in get_course_subinstances(course):
             self.export(sub_instance, filer, backup, salt)
@@ -318,8 +336,8 @@ class BundleDCMetadataExporter(BaseSectionExporter):
             k = k.lower()
             # create nodes
             if     isinstance(value, six.string_types) \
-                or isinstance(value, datetime) \
-                or isinstance(value, Number):
+                    or isinstance(value, datetime) \
+                    or isinstance(value, Number):
                 name = self.attr_to_xml.get(k, k)
                 node = xmldoc.createElement("dc:%s" % name)
                 node.appendChild(xmldoc.createTextNode(self._to_text(value)))
@@ -333,8 +351,8 @@ class BundleDCMetadataExporter(BaseSectionExporter):
 
         source = xmldoc.toprettyxml(encoding="UTF-8")
         for name in (DCMETA_FILENAME, "bundle_dc_metadata.xml"):
-            filer.save(name, source, 
-                       contentType="application/xml", 
+            filer.save(name, source,
+                       contentType="application/xml",
                        overwrite=True)
 
 
@@ -423,29 +441,39 @@ class RoleInfoExporter(BaseSectionExporter):
 @interface.implementer(ICourseSectionExporter)
 class AssignmentPoliciesExporter(BaseSectionExporter):
 
-    def _process(self, course):
+    def _process(self, course, backup=True, salt=None):
         policies = IQAssessmentPolicies(course)
         date_context = IQAssessmentDateContext(course)
-        result = to_external_object(policies, decorate=False)
+        ext_obj = to_external_object(policies, decorate=False)
         date_context = to_external_object(date_context, decorate=False)
+        result = {}
         for key, value in date_context.items():
-            entry = result.get(key)
-            if entry is not None:
-                entry.update(value)
+
+            entry = ext_obj.get(key)
+
+            assessment_obj = component.queryUtility(IQAssessment, name=key)
+            if IQEditableEvaluation.providedBy(assessment_obj) \
+                    and IQEvaluation.providedBy(assessment_obj) \
+                    and not backup:
+                hashed_ntiid = self.hash_ntiid(key, salt)
+                if entry is not None:
+                    result[hashed_ntiid] = value
+                    result[hashed_ntiid].update(entry)
             else:
-                result[key] = entry
+                if entry is not None:
+                    result[key] = value
         return result
 
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
         bucket = self.course_bucket(course)
-        result = self._process(course)
+        result = self._process(course, backup, salt)
         if result:
             source = self.dump(result)
-            filer.save(ASSIGNMENT_POLICIES_NAME, 
-                       source, 
+            filer.save(ASSIGNMENT_POLICIES_NAME,
+                       source,
                        bucket=bucket,
-                       contentType="application/json", 
+                       contentType="application/json",
                        overwrite=True)
         for sub_instance in get_course_subinstances(course):
             self.export(sub_instance, filer, backup, salt)
