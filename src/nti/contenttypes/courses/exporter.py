@@ -39,9 +39,8 @@ from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
 from nti.assessment.interfaces import IQAssessment
 from nti.assessment.interfaces import IQAssessmentPolicies
-from nti.assessment.interfaces import IQAssessmentDateContext
-from nti.assessment.interfaces import IQEvaluation
 from nti.assessment.interfaces import IQEditableEvaluation
+from nti.assessment.interfaces import IQAssessmentDateContext
 
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 
@@ -171,8 +170,7 @@ class CourseOutlineExporter(BaseSectionExporter):
             if ICourseOutlineCalendarNode.providedBy(node):
                 xml_node = xmldoc.createElement("lesson")
                 if node.src:
-                    src = self.hash_filename(
-                        node.src, salt) if not backup else node.src
+                    src = self.hash_filename(node.src, salt) if not backup else node.src
                     xml_node.setAttribute("src", src)
                     xml_node.setAttribute("isOutlineStubOnly", "false")
                 else:
@@ -233,8 +231,9 @@ class CourseOutlineExporter(BaseSectionExporter):
         bucket = self.course_bucket(course)
 
         # as json
-        ext_obj = to_external_object(
-            course.Outline, name='exporter', decorate=False)
+        ext_obj = to_external_object(course.Outline, 
+                                     name='exporter',
+                                     decorate=False)
         if not backup:
             self._export_remover(ext_obj, salt)
         source = self.dump(ext_obj)
@@ -336,8 +335,8 @@ class BundleDCMetadataExporter(BaseSectionExporter):
             k = k.lower()
             # create nodes
             if     isinstance(value, six.string_types) \
-                    or isinstance(value, datetime) \
-                    or isinstance(value, Number):
+                or isinstance(value, datetime) \
+                or isinstance(value, Number):
                 name = self.attr_to_xml.get(k, k)
                 node = xmldoc.createElement("dc:%s" % name)
                 node.appendChild(xmldoc.createTextNode(self._to_text(value)))
@@ -442,26 +441,22 @@ class RoleInfoExporter(BaseSectionExporter):
 class AssignmentPoliciesExporter(BaseSectionExporter):
 
     def _process(self, course, backup=True, salt=None):
+        result = {}
         policies = IQAssessmentPolicies(course)
         date_context = IQAssessmentDateContext(course)
         ext_obj = to_external_object(policies, decorate=False)
         date_context = to_external_object(date_context, decorate=False)
-        result = {}
         for key, value in date_context.items():
-
             entry = ext_obj.get(key)
-
             assessment_obj = component.queryUtility(IQAssessment, name=key)
-            if IQEditableEvaluation.providedBy(assessment_obj) \
-                    and IQEvaluation.providedBy(assessment_obj) \
-                    and not backup:
+            if      IQEditableEvaluation.providedBy(assessment_obj) \
+                and not backup:
                 hashed_ntiid = self.hash_ntiid(key, salt)
                 if entry is not None:
                     result[hashed_ntiid] = value
                     result[hashed_ntiid].update(entry)
-            else:
-                if entry is not None:
-                    result[key] = value
+            elif entry is not None:
+                result[key] = value
         return result
 
     def export(self, context, filer, backup=True, salt=None):
