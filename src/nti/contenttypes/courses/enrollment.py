@@ -102,7 +102,7 @@ def save_in_container(container, key, value, event=False):
 	else:
 		container._setitemf(key, value)
 		locate(value, parent=container, name=key)
-		if getattr(value, '_p_jar', None) is None:
+		if IConnection(value, None) is None:
 			IConnection(container).add(value)
 		lifecycleevent.added(value, container, key)
 		try:
