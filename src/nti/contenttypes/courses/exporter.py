@@ -448,8 +448,8 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
         date_context = to_external_object(date_context, decorate=False)
         for key, value in date_context.items():
             entry = ext_obj.get(key)
-            assessment_obj = component.queryUtility(IQAssessment, name=key)
-            if      IQEditableEvaluation.providedBy(assessment_obj) \
+            assessment = component.queryUtility(IQAssessment, name=key)
+            if      IQEditableEvaluation.providedBy(assessment) \
                 and not backup:
                 hashed_ntiid = self.hash_ntiid(key, salt)
                 if entry is not None:
