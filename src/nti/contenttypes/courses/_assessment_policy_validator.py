@@ -14,14 +14,14 @@ from zope import interface
 
 from ZODB import loglevels
 
+from nti.assessment.common import can_be_auto_graded
+
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentPolicyValidator
 
 from nti.common.string import is_true
 from nti.common.string import is_false
-
-from nti.contenttypes.courses.common import can_be_auto_graded
 
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
