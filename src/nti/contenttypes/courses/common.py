@@ -31,6 +31,20 @@ def get_course_packages(context):
 get_course_content_packages = get_course_packages
 
 
+def get_course_content_units(context):
+    course_packages = get_course_packages(context)
+
+    def _recur(content_unit, accum):
+        accum.append(content_unit)
+        for child in content_unit.children or ():
+            _recur(child, accum)
+
+    content_units = []
+    for child in course_packages:
+        _recur(child, content_units)
+    return content_units
+
+
 def get_course_site_name(context):
     course = ICourseInstance(context, None)
     folder = find_interface(course, IHostPolicyFolder, strict=False)
@@ -47,7 +61,7 @@ def get_course_site_registry(context):
 def is_part_auto_gradable(part):
     # Validate every part has grader.
     result = getattr(part, 'grader_interface', None) \
-          or getattr(part, 'grader_name', None)
+        or getattr(part, 'grader_name', None)
     return bool(result)
 
 
