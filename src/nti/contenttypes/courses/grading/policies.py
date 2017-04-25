@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from zope.cachedescriptors.property import CachedProperty
+
 from zope.container.contained import Contained
 
 from zope.i18n import translate
@@ -35,7 +37,6 @@ from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
 from nti.externalization.representation import WithRepr
 
 from nti.property.property import alias
-from nti.property.property import CachedProperty
 
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
