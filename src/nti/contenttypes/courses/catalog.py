@@ -19,6 +19,10 @@ from zope import interface
 
 from zope.cachedescriptors.method import cachedIn
 
+from zope.cachedescriptors.property import Lazy
+from zope.cachedescriptors.property import readproperty
+from zope.cachedescriptors.property import CachedProperty
+
 from nti.containers.containers import CheckingLastModifiedBTreeFolder
 from nti.containers.containers import CheckingLastModifiedBTreeContainer
 
@@ -49,8 +53,6 @@ from nti.links.links import Link
 
 from nti.property.property import alias
 from nti.property.property import LazyOnClass
-from nti.property.property import readproperty
-from nti.property.property import CachedProperty
 
 from nti.schema.eqhash import EqHash
 

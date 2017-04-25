@@ -16,6 +16,8 @@ from itertools import chain
 from zope import component
 from zope import interface
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.catalog.interfaces import ICatalog
 
 from zope.component.hooks import getSite
@@ -81,8 +83,6 @@ from nti.dataserver.authorization import ACT_CONTENT_EDIT
 from nti.dataserver.authorization_acl import has_permission
 
 from nti.dataserver.users import User
-
-from nti.property.property import Lazy
 
 from nti.site.hostpolicy import get_host_site
 

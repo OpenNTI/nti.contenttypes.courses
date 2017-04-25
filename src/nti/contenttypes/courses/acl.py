@@ -16,6 +16,8 @@ from zope import interface
 
 from zope.authentication.interfaces import IUnauthenticatedPrincipal
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.security.interfaces import IPrincipal
 
 from nti.contentlibrary.interfaces import IRenderableContentPackage
@@ -58,8 +60,6 @@ from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 
 from nti.dataserver.interfaces import IACLProvider
 from nti.dataserver.interfaces import ISupplementalACLProvider
-
-from nti.property.property import Lazy
 
 from nti.traversal.traversal import find_interface
 

@@ -15,6 +15,8 @@ import tempfile
 
 from zope import interface
 
+from zope.cachedescriptors.property import Lazy
+
 from nti.cabinet.filer import DirectoryFiler
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -22,8 +24,6 @@ from nti.contenttypes.courses.interfaces import ICourseExportFiler
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.namedfile.file import safe_filename
-
-from nti.property.property import Lazy
 
 
 @interface.implementer(ICourseExportFiler)

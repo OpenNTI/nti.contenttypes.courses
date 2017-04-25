@@ -25,6 +25,9 @@ from zope.annotation.factory import factory as an_factory
 
 from zope.cachedescriptors.method import cachedIn
 
+from zope.cachedescriptors.property import Lazy
+from zope.cachedescriptors.property import CachedProperty
+
 from zope.container.interfaces import IContained
 
 from zope.event import notify
@@ -81,9 +84,7 @@ from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 from nti.externalization.persistence import NoPickle
 from nti.externalization.representation import WithRepr
 
-from nti.property.property import Lazy
 from nti.property.property import alias
-from nti.property.property import CachedProperty
 
 from nti.schema.eqhash import EqHash
 

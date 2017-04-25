@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.security.interfaces import IPrincipal
 
 from zope.securitypolicy.interfaces import Allow
@@ -40,8 +42,6 @@ from nti.dataserver.authorization import ACT_CONTENT_EDIT
 from nti.dataserver.authorization_acl import has_permission
 
 from nti.dataserver.interfaces import IUser
-
-from nti.property.property import Lazy
 
 from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties

@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from zope.cachedescriptors.property import Lazy
+
 from nti.contenttypes.courses.grading.interfaces import ICourseGradingPolicy
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -29,8 +31,6 @@ from nti.dataserver.authorization_acl import acl_from_aces
 from nti.dataserver.interfaces import ALL_PERMISSIONS
 
 from nti.dataserver.interfaces import IACLProvider
-
-from nti.property.property import Lazy
 
 
 @interface.implementer(IACLProvider)
