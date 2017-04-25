@@ -16,6 +16,8 @@ from datetime import datetime
 from zope import component
 from zope import interface
 
+from zope.cachedescriptors.property import readproperty
+
 from nti.contenttypes.courses.catalog import CourseCatalogEntry
 from nti.contenttypes.courses.catalog import CourseCatalogInstructorInfo
 
@@ -26,8 +28,6 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseCatalogInstructorInfo
 
 from nti.contenttypes.courses.utils import path_for_entry
-
-from nti.property.property import readproperty
 
 from nti.schema.field import Int
 from nti.schema.field import Dict

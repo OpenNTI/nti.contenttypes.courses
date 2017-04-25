@@ -19,7 +19,6 @@ from zope import interface
 
 from zope.cachedescriptors.method import cachedIn
 
-from zope.cachedescriptors.property import Lazy
 from zope.cachedescriptors.property import readproperty
 from zope.cachedescriptors.property import CachedProperty
 
