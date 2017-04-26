@@ -39,6 +39,9 @@ def reset_asg_missing_key(course):
 
 
 def fill_asg_from_json(course, index, lastModified=0):
+
+    logger.info('Reading in assignment policies for %s', course)
+
     # remove previous data
     reset_asg_missing_key(course)
 
