@@ -31,12 +31,12 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
 
 from nti.coremetadata.interfaces import ILastModified
 
-from nti.coremetadata.mixins import CalendarPublishableMixin
-
 from nti.dataserver.interfaces import SYSTEM_USER_ID
 from nti.dataserver.interfaces import ITitledDescribedContent
 
 from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
+
+from nti.publishing.mixins import CalendarPublishableMixin
 
 from nti.recorder.mixins import RecordableContainerMixin
 

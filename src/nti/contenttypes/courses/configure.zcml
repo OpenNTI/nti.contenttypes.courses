@@ -15,6 +15,7 @@
 
 	<include package="nti.mimetype" />
 	<include package="nti.recorder" />
+	<include package="nti.publishing" />
 	<include package="nti.contentlibrary" />
 
 	<include package="zope.generations" />

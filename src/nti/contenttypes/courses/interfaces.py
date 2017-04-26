@@ -67,9 +67,6 @@ from nti.contentfragments.schema import HTMLContentFragment
 
 from nti.contenttypes.courses import MessageFactory as _
 
-from nti.coremetadata.interfaces import INoPublishLink
-from nti.coremetadata.interfaces import ICalendarPublishable
-
 from nti.dataserver.interfaces import ICommunity
 from nti.dataserver.interfaces import ILastModified
 from nti.dataserver.interfaces import ITitledDescribedContent
@@ -86,6 +83,9 @@ from nti.invitations.interfaces import IInvitationActor
 from nti.ntiids.schema import ValidNTIID
 
 from nti.property.property import alias
+
+from nti.publishing.interfaces import INoPublishLink
+from nti.publishing.interfaces import ICalendarPublishable
 
 from nti.recorder.interfaces import IRecordableContainer
 
