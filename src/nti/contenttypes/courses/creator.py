@@ -127,7 +127,7 @@ def create_course(admin, key, catalog=None, writeout=False, factory=ContentCours
     return course
 
 
-def create_course_subInstance(course, name, writeout=False, factory=ContentCourseSubInstance):
+def create_course_subinstance(course, name, writeout=False, factory=ContentCourseSubInstance):
     """
     Creates a course subinstance from a file archive
 
