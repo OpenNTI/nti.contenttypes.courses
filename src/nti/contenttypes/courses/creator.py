@@ -129,7 +129,7 @@ def create_course(admin, key, catalog=None, writeout=False, factory=ContentCours
 
 def create_course_subinstance(course, name, writeout=False, factory=ContentCourseSubInstance):
     """
-    Creates a course subinstance from a file archive
+    Creates a course subinstance
 
     :param course Parent course
     :param name subinstance name
