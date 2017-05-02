@@ -4,18 +4,21 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
 from collections import Mapping
 
+from requests.structures import CaseInsensitiveDict
+
 from zope import component
 from zope import interface
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.externalization.datastructures import InterfaceObjectIO
 
@@ -53,13 +56,11 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
                 self.node.childOrderLock(event=False)
 
     def updateFromExternalObject(self, parsed, *args, **kwargs):
+        clazz = self.__class__
         self.set_ntiid(parsed)
         self.set_locked(parsed)
         isPublished = parsed.get('isPublished')  # capture param
-        result = super(_CourseOutlineNodeUpdater, 
-                       self).updateFromExternalObject(parsed,
-                                                      *args,
-                                                      **kwargs)
+        result = clazz.updateFromExternalObject(self, parsed, *args, **kwargs)
         if ITEMS in parsed:
             for item in parsed.get(ITEMS) or ():
                 # parse and update just in case
@@ -70,8 +71,35 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
                 else:
                     new_node = item
                 self.node.append(new_node)
-        if      isPublished \
-            and not ICourseOutline.providedBy(self.node) \
-            and self.node.publishBeginning is None:
+        if isPublished \
+                and not ICourseOutline.providedBy(self.node) \
+                and self.node.publishBeginning is None:
             self.node.publish(event=False)
+        return result
+
+
+@component.adapter(ICourseCatalogEntry)
+@interface.implementer(IInternalObjectUpdater)
+class _CourseCatalogEntryUpdater(InterfaceObjectIO):
+
+    _ext_iface_upper_bound = ICourseCatalogEntry
+
+    def _quiet_delattr(self, o, k):
+        try:
+            delattr(o, k)
+        except AttributeError:
+            if k not in o.__dict__:
+                return
+            if hasattr(o, '_p_jar'):
+                o._p_activate()
+            o.__dict__.pop(k, None)
+            if hasattr(o, '_p_jar'):
+                o._p_changed = 1
+        except TypeError:
+            pass
+
+    def updateFromExternalObject(self, parsed, *args, **kwargs):
+        clazz = self.__class__
+        parsed = CaseInsensitiveDict(parsed)
+        result = clazz.updateFromExternalObject(self, parsed, *args, **kwargs)
         return result
