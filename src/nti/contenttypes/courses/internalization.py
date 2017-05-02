@@ -56,11 +56,10 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
                 self.node.childOrderLock(event=False)
 
     def updateFromExternalObject(self, parsed, *args, **kwargs):
-        clazz = self.__class__
         self.set_ntiid(parsed)
         self.set_locked(parsed)
         isPublished = parsed.get('isPublished')  # capture param
-        result = clazz.updateFromExternalObject(self, parsed, *args, **kwargs)
+        result = InterfaceObjectIO.updateFromExternalObject(self, parsed, *args, **kwargs)
         if ITEMS in parsed:
             for item in parsed.get(ITEMS) or ():
                 # parse and update just in case
@@ -99,7 +98,6 @@ class _CourseCatalogEntryUpdater(InterfaceObjectIO):
             pass
 
     def updateFromExternalObject(self, parsed, *args, **kwargs):
-        clazz = self.__class__
         parsed = CaseInsensitiveDict(parsed)
-        result = clazz.updateFromExternalObject(self, parsed, *args, **kwargs)
+        result = InterfaceObjectIO.updateFromExternalObject(self, parsed, *args, **kwargs)
         return result
