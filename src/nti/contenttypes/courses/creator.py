@@ -53,12 +53,15 @@ def course_catalog(catalog):
     return catalog
 
 
-def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
-    site = getSite() if site is None else site
-
+def library_root():
     library = component.getUtility(IContentPackageLibrary)
     enumeration = IDelimitedHierarchyContentPackageEnumeration(library)
-    enumeration_root = enumeration.root
+    return enumeration.root
+
+
+def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
+    site = getSite() if site is None else site
+    enumeration_root = library_root()
 
     catalog = course_catalog(catalog)
     courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
@@ -82,8 +85,6 @@ def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
     new_level.root = admin_root
     catalog[admin_name] = new_level
     return new_level
-
-
 create_admin_level = install_admin_level
 
 
