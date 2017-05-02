@@ -12,6 +12,7 @@ from hamcrest import none
 from hamcrest import is_not
 from hamcrest import assert_that
 from hamcrest import has_property
+from hamcrest import same_instance
 
 import os
 import shutil
@@ -21,6 +22,7 @@ import fudge
 
 from nti.contentlibrary.filesystem import FilesystemBucket
 
+from nti.contenttypes.courses.creator import create_course
 from nti.contenttypes.courses.creator import make_directories
 from nti.contenttypes.courses.creator import install_admin_level
 
@@ -44,7 +46,7 @@ class TestCreator(CourseLayerTest):
             # create courses place
             courses_path = os.path.join(tmp_dir, 'Courses')
             make_directories(courses_path)
-            
+
             # writeout
             level = install_admin_level("Bleach", catalog=catalog)
             assert_that(level, is_not(none()))
@@ -52,13 +54,51 @@ class TestCreator(CourseLayerTest):
             assert_that(level,
                         has_property('root', has_property('absolute_path', is_(output))))
             assert_that(os.path.exists(output), is_(True))
-            
+
             # not writeout
-            level = install_admin_level("Titan", catalog=catalog, writeout=False)
+            level = install_admin_level("Titan", 
+                                        catalog=catalog, 
+                                        writeout=False)
             assert_that(level, is_not(none()))
             output = os.path.join(courses_path, 'Titan')
             assert_that(level,
                         has_property('root', has_property('absolute_path', is_(output))))
             assert_that(os.path.exists(output), is_(False))
+
+            level2 = install_admin_level("Titan", 
+                                         catalog=catalog, 
+                                         writeout=False)
+            assert_that(level2, is_(same_instance(level)))
+        finally:
+            shutil.rmtree(tmp_dir)
+
+    @fudge.patch('nti.contenttypes.courses.creator.library_root')
+    def test_create_course(self, mock_lr):
+        catalog = LocatedExternalDict()
+        catalog.__name__ = 'Courses'
+
+        tmp_dir = tempfile.mkdtemp()
+        try:
+            root = FilesystemBucket(name="root")
+            root.absolute_path = tmp_dir
+            mock_lr.is_callable().with_args().returns(root)
+            # create courses place
+            courses_path = os.path.join(tmp_dir, 'Courses')
+            make_directories(courses_path)
+
+            # writeout
+            course = create_course("Bleach", "Shikai", catalog, writeout=True)
+            assert_that(course, is_not(none()))
+            output = os.path.join(courses_path, 'Bleach/Shikai')
+            assert_that(course,
+                        has_property('root', has_property('absolute_path', is_(output))))
+            assert_that(os.path.exists(output), is_(True))
+
+            # not writeout
+            output = os.path.join(courses_path, 'Bleach/Bankai')
+            make_directories(output)
+            course = create_course("Bleach", "Bankai", catalog, writeout=False)
+            assert_that(course,
+                        has_property('root', has_property('absolute_path', is_(output))))
         finally:
             shutil.rmtree(tmp_dir)
