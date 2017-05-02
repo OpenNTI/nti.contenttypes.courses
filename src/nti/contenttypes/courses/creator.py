@@ -140,11 +140,12 @@ def create_course_subinstance(course, name, writeout=False, factory=ContentCours
     """
     sub_section_root = None
     course_root = course.root
-    if writeout and IFilesystemBucket.providedBy(course_root):
+    if IFilesystemBucket.providedBy(course_root):
         course_path = course_root.absolute_path
         # create sections path
         sections_path = os.path.join(course_path, SECTIONS)
-        create_directory(sections_path)
+        if writeout:
+            create_directory(sections_path)
         sections_root = course_root.getChildNamed(SECTIONS)
         if sections_root is None:
             sections_root = FilesystemBucket()
@@ -153,7 +154,8 @@ def create_course_subinstance(course, name, writeout=False, factory=ContentCours
             sections_root.absolute_path = sections_path
         # create subinstance path
         subinstance_section_path = os.path.join(sections_path, name)
-        create_directory(subinstance_section_path)
+        if writeout:
+            create_directory(subinstance_section_path)
         # get chained root
         sub_section_root = sections_root.getChildNamed(name)
         if sub_section_root is None:
