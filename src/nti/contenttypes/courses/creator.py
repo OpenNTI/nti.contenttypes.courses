@@ -70,7 +70,7 @@ def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
                 getattr(site, '__name__', None),
                 admin_name)
     admin_root = courses_bucket.getChildNamed(admin_name)
-    if IFilesystemBucket.providedBy(admin_root):
+    if admin_root is None and IFilesystemBucket.providedBy(courses_bucket):
         path = os.path.join(courses_bucket.absolute_path, admin_name)
         if writeout:
             make_directories(path)
