@@ -67,7 +67,7 @@ def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
     courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
 
     logger.info('[%s] Creating admin level %s',
-                site.__name__,
+                getattr(site, '__name__', None),
                 admin_name)
     admin_root = courses_bucket.getChildNamed(admin_name)
     if IFilesystemBucket.providedBy(admin_root):
