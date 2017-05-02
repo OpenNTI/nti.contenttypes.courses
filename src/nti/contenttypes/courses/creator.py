@@ -81,10 +81,13 @@ def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
             admin_root.bucket = courses_bucket
             admin_root.absolute_path = path
     # Create admin level
-    new_level = CourseAdministrativeLevel()
-    new_level.root = admin_root
-    catalog[admin_name] = new_level
-    return new_level
+    if admin_name not in catalog:
+        result = CourseAdministrativeLevel()
+        result.root = admin_root
+        catalog[admin_name] = result
+    else:
+        result = catalog[admin_name]
+    return result
 create_admin_level = install_admin_level
 
 
