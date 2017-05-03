@@ -779,7 +779,8 @@ class ICatalogFamily(IDisplayableContent):
     ProviderDepartmentTitle = ValidTextLine(title=u"The string assigned to the provider's department offering the course")
 
     StartDate = ValidDatetime(title=u"The date on which the course begins",
-                              description=u"Currently optional; a missing value means the course already started")
+                              description=u"Currently optional; a missing value means the course already started",
+                              required=False)
 
     EndDate = ValidDatetime(title=u"The date on which the course ends",
                             description=u"Currently optional; a missing value means the course has no defined end date.",

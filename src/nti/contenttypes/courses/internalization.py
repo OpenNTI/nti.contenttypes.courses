@@ -130,13 +130,15 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
     elif delete:
         context.Duration = None
 
-    for field, key in (('Preview', 'isPreview'),  # XXX: non-interface
-                       ('DisableOverviewCalendar', 'disable_calendar_overview')):
-        value = parsed.get(key, None)
-        if value is not None:
-            parsed[field] = value
-        elif delete:
-            _quiet_delattr(context, str(field))
+    if 'isPreview' in parsed:
+        parsed['Preview'] = parsed['isPreview']
+    elif delete:
+        parsed['Preview'] = context.Preview or False
+
+    if parsed.get('disable_calendar_overview', None) is not None:
+        parsed['DisableOverviewCalendar'] = parsed['disable_calendar_overview']
+    else:
+        parsed['DisableOverviewCalendar'] = False
 
     if parsed.get('video'):
         parsed['Video'] = parsed['video'].encode('utf-8')
