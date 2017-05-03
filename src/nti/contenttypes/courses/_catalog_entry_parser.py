@@ -50,7 +50,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
     # copy to avoid polluting input 
     info_json_dict = copy.deepcopy(info_json_dict)
     info_json_dict['__clear_attrs__'] = True # clean attributes
-    info_json_dict['MimeType'] = 'application/vnd.nextthought.courses.persistentcoursecataloglegacyentry'
+    info_json_dict['MimeType'] = catalog_entry.mimeType
     update_from_external_object(catalog_entry, info_json_dict, notify=False)
 
     # check preview information
