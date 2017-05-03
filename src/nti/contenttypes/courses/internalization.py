@@ -185,7 +185,6 @@ def transform(parsed, context=None, delete=False):
 @component.adapter(ICourseCatalogEntry)
 @interface.implementer(IInternalObjectUpdater)
 class _CourseCatalogEntryUpdater(InterfaceObjectIO):
-
     _ext_iface_upper_bound = ICourseCatalogEntry
 
 
@@ -193,3 +192,29 @@ class _CourseCatalogEntryUpdater(InterfaceObjectIO):
 class _CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
 
     _ext_iface_upper_bound = ICourseCatalogLegacyEntry
+
+    def transform(self, parsed):
+        transform(parsed)
+        return self
+
+    def parseInstructors(self, parsed):
+        instructors = parsed.get('Instructors')
+        for idx, instructor in enumerate(instructors or ()):
+            if not isinstance(instructor, Mapping):
+                continue
+            obj = find_factory_for(instructor)()
+            instructors[idx] = update_from_external_object(obj, instructor)
+        return self
+
+    def parseCredit(self, parsed):
+        credit = parsed.get('Credit')
+        for idx, data in enumerate(credit or ()):
+            if not isinstance(data, Mapping):
+                continue
+            obj = find_factory_for(data)()
+            credit[idx] = update_from_external_object(obj, data)
+        return self
+
+    def updateFromExternalObject(self, parsed, *args, **kwargs):
+        self.transform(parsed).parseInstructors(parsed).parseCredit(parsed)
+        return super(_CourseCatalogLegacyEntryUpdater, self).updateFromExternalObject(parsed, *args, **kwargs)
