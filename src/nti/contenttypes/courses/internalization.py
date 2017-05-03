@@ -20,6 +20,8 @@ from zope.interface.common.idatetime import IDateTime
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
+from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
 from nti.contenttypes.courses.legacy_catalog import ICourseCatalogLegacyEntry
 
@@ -96,7 +98,7 @@ def _quiet_delattr(o, k):
         pass
 
 
-def transform(parsed, context=None, delete=False):
+def legacy_to_schema_transform(parsed, context=None, delete=False):
     for field, key in (('Term', 'term'),  # XXX: non-interface
                        ('ntiid', 'ntiid'),
                        ('Title', 'title'),
@@ -176,7 +178,7 @@ def transform(parsed, context=None, delete=False):
                 'Enrollment': data.get('enrollment'),
             })
         parsed['Credit'] = credit
-    else:
+    elif delete:
         _quiet_delattr(context, 'Credit')
 
     return parsed
@@ -194,7 +196,9 @@ class _CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
     _ext_iface_upper_bound = ICourseCatalogLegacyEntry
 
     def transform(self, parsed):
-        transform(parsed)
+        context = self._ext_replacement()
+        del_attrs = bool(parsed.get('__clear_attrs__'))
+        legacy_to_schema_transform(parsed, context, del_attrs)
         return self
 
     def parseInstructors(self, parsed):
@@ -215,6 +219,24 @@ class _CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
             credit[idx] = update_from_external_object(obj, data)
         return self
 
+    def parseMarkers(self, parsed):
+        context = self._ext_replacement()
+        if parsed.get('is_non_public'):
+            # This should move somewhere else...,
+            # but for nti.app.products.courseware ACL support
+            # (when these are not children of a course) it's convenient
+            interface.alsoProvides(context, INonPublicCourseInstance)
+        elif INonPublicCourseInstance.providedBy(context):
+            interface.noLongerProvides(context, INonPublicCourseInstance)
+    
+        if parsed.get('is_anonymously_but_not_publicly_accessible'):
+            interface.alsoProvides(context, 
+                                   IAnonymouslyAccessibleCourseInstance)
+        elif IAnonymouslyAccessibleCourseInstance.providedBy(context):
+            interface.noLongerProvides(context,
+                                       IAnonymouslyAccessibleCourseInstance)
+        return self
+
     def updateFromExternalObject(self, parsed, *args, **kwargs):
-        self.transform(parsed).parseInstructors(parsed).parseCredit(parsed)
+        self.transform(parsed).parseInstructors(parsed).parseCredit(parsed).parseMarkers(parsed)
         return super(_CourseCatalogLegacyEntryUpdater, self).updateFromExternalObject(parsed, *args, **kwargs)
