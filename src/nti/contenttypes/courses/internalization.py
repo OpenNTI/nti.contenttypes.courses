@@ -154,7 +154,7 @@ def transform(parsed, context, delete=False):
             username = inst.get('username', '')
             userid = inst.get('userid', '')  # legacy
             instructors.append({
-                MIMETYPE: 'application/vnd.nextthought.coursecataloginstructorlegacyinfo',
+                MIMETYPE: 'application/vnd.nextthought.courses.coursecataloginstructorlegacyinfo',
                 'username': username,
                 'userid': userid,
                 'Name': inst.get('name'),
@@ -169,7 +169,7 @@ def transform(parsed, context, delete=False):
         credit = []
         for data in parsed['credit'] or ():
             credit.append({
-                MIMETYPE: 'application/vnd.nextthought.coursecreditlegacyinfo',
+                MIMETYPE: 'application/vnd.nextthought.courses.coursecreditlegacyinfo',
                 'Hours': data.get('hours'),
                 'Enrollment': data.get('enrollment'),
             })
