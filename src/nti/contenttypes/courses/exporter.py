@@ -434,7 +434,7 @@ class RoleInfoExporter(BaseSectionExporter):
         if role_json_key:
             return self._parse_json(role_json_key.readContentsAsYaml(), course)
         else:
-            return ()
+            return {}
 
     def _merge_roles(self, roles_from_db, roles_from_disk):
 
@@ -442,11 +442,11 @@ class RoleInfoExporter(BaseSectionExporter):
             # roles_from_db is the base, and then we check
             # all the roles from disk to make sure they also exist
             # in the db. If not, then we add them to our list.
-            if role_id in roles_from_db.keys():
+            if role_id in roles_from_db:
                 # Exists in both, so we merge the children
                 for permission, roles in roles_from_disk[role_id].items():
                     # this is the "allow" and "deny" keys
-                    if permission in roles_from_db[role_id].keys():
+                    if permission in roles_from_db[role_id]:
                         # if we have entries for both, use a set
                         # to merge, so we don't get duplicates. Storing
                         # these in temporary variables to make it easier
