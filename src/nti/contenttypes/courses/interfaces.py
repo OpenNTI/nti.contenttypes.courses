@@ -829,7 +829,7 @@ class ICourseCatalogEntry(ICatalogFamily,
     entry.
     """
 
-    containers(ICourseCatalog)
+    containers(ICourseCatalog, ICourseInstance)
     __parent__.required = False
 
     # Used to have Title/Description, now the lower case versions.
