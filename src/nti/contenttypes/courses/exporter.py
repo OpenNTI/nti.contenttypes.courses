@@ -340,8 +340,8 @@ class BundleDCMetadataExporter(BaseSectionExporter):
             k = k.lower()
             # create nodes
             if     isinstance(value, six.string_types) \
-                or isinstance(value, datetime) \
-                or isinstance(value, Number):
+                    or isinstance(value, datetime) \
+                    or isinstance(value, Number):
                 name = self.attr_to_xml.get(k, k)
                 node = xmldoc.createElement("dc:%s" % name)
                 node.appendChild(xmldoc.createTextNode(self._to_text(value)))
@@ -446,7 +446,7 @@ class RoleInfoExporter(BaseSectionExporter):
             # in the db. If not, then we add them to our list.
             if role_id in roles_from_db:
                 # Exists in both, so we merge the children
-                for permission, _ in roles_from_disk[role_id].items():
+                for permission in roles_from_disk[role_id]:
                     # this is the "allow" and "deny" keys
                     if permission in roles_from_db[role_id]:
                         # if we have entries for both, use a set
@@ -454,14 +454,18 @@ class RoleInfoExporter(BaseSectionExporter):
                         # these in temporary variables to make it easier
                         # to read. :)
                         principals_from_db = roles_from_db[role_id][permission]
-                        principals_from_disk = roles_from_disk[role_id][permission]
-                        merged_principals_set = set(principals_from_db + principals_from_disk)
-                        roles_from_db[role_id][permission] = list(merged_principals_set)
+                        principals_from_disk = roles_from_disk[
+                            role_id][permission]
+                        merged_principals_set = set(
+                            principals_from_db + principals_from_disk)
+                        roles_from_db[role_id][permission] = list(
+                            merged_principals_set)
                     else:
                         # if the disk has a permission the db doesn't
                         # have, we just copy the disk's data into the
                         # db's dictionary under the appropriate key.
-                        roles_from_db[role_id][permission] = roles_from_disk[role_id][permission]
+                        roles_from_db[role_id][permission] = roles_from_disk[
+                            role_id][permission]
             else:
                 # If the disk has a role_id the db doesn't have,
                 # copy the disk's data into the db's dictionary
@@ -496,7 +500,7 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
             entry = ext_obj.get(key)
             assessment = component.queryUtility(IQAssessment, name=key)
             if      IQEditableEvaluation.providedBy(assessment) \
-                and not backup:
+                    and not backup:
                 hashed_ntiid = self.hash_ntiid(key, salt)
                 if entry is not None:
                     result[hashed_ntiid] = value
