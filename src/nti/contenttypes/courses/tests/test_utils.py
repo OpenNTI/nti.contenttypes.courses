@@ -9,16 +9,17 @@ __docformat__ = "restructuredtext en"
 
 from hamcrest import assert_that
 
+from nti.testing.matchers import verifiably_provides
+
 from nti.contenttypes.courses.utils import ProxyEnrollmentRecord
 
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.dataserver.tests import mock_dataserver
 
-from nti.testing.matchers import verifiably_provides
 
 class TestCourse(mock_dataserver.DataserverLayerTest):
 
-	def test_proxy(self):
-		p = ProxyEnrollmentRecord()
-		assert_that(p, verifiably_provides(ICourseInstanceEnrollmentRecord))
+    def test_proxy(self):
+        p = ProxyEnrollmentRecord()
+        assert_that(p, verifiably_provides(ICourseInstanceEnrollmentRecord))
