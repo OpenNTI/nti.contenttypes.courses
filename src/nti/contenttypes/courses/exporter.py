@@ -434,12 +434,13 @@ class RoleInfoExporter(BaseSectionExporter):
     def _load_course_roles_from_disk(self, course):
         role_json_key = course.root.getChildNamed(ROLE_INFO_NAME)
         if role_json_key:
-            return self._parse_json(role_json_key.readContentsAsYaml(), course)
+            return role_json_key.readContentsAsYaml()
         else:
             return {}
 
     def _merge_roles(self, roles_from_db, roles_from_disk):
-        for role_id, _ in roles_from_disk.items():
+
+        for role_id in roles_from_disk:
             # roles_from_db is the base, and then we check
             # all the roles from disk to make sure they also exist
             # in the db. If not, then we add them to our list.
@@ -468,19 +469,6 @@ class RoleInfoExporter(BaseSectionExporter):
                 roles_from_db[role_id] = roles_from_disk[role_id]
 
         return roles_from_db
-
-    def _parse_json(self, json, course):
-        result = {}
-        for role_id, role_values in json.items():
-            result[role_id] = {'allow': [], 'deny': []}
-            checkRole(course, role_id)
-            allows = role_values.get('allow', None)
-            for principal_id in allows or ():
-                result[role_id]['allow'].append(principal_id)
-            denies = role_values.get('deny', None)
-            for principal_id in denies or ():
-                result[role_id]['deny'].append(principal_id)
-        return result
 
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
