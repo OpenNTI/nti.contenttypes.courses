@@ -136,13 +136,11 @@ class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
 @interface.implementer(ICourseCreditLegacyInfo)
 class CourseCreditLegacyInfo(SchemaConfigured):
     createDirectFieldProperties(ICourseCreditLegacyInfo)
-    __external_can_create__ = False
 
 
 @interface.implementer(ICourseCatalogInstructorLegacyInfo)
 class CourseCatalogInstructorLegacyInfo(CourseCatalogInstructorInfo):
     defaultphoto = None
-    __external_can_create__ = False
 
     createDirectFieldProperties(ICourseCatalogInstructorLegacyInfo)
 
@@ -154,9 +152,7 @@ def _derive_preview(self):
 
 @interface.implementer(ICourseCatalogLegacyEntry)
 class CourseCatalogLegacyEntry(CourseCatalogEntry):
-
     DisableOverviewCalendar = False
-    __external_can_create__ = False
 
     createDirectFieldProperties(ICourseCatalogLegacyEntry)
 
