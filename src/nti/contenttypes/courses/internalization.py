@@ -133,7 +133,8 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
     if 'isPreview' in parsed:
         parsed['Preview'] = parsed['isPreview']
     elif delete:
-        parsed['Preview'] = context.Preview or False
+        parsed['Preview'] = context.Preview
+    parsed['Preview'] = parsed.get('Preview') or False
 
     if parsed.get('disable_calendar_overview', None) is not None:
         parsed['DisableOverviewCalendar'] = parsed['disable_calendar_overview']
@@ -193,7 +194,7 @@ class _CourseCatalogEntryUpdater(InterfaceObjectIO):
 
 
 @component.adapter(ICourseCatalogLegacyEntry)
-class _CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
+class CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
 
     _ext_iface_upper_bound = ICourseCatalogLegacyEntry
 
@@ -241,4 +242,4 @@ class _CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
 
     def updateFromExternalObject(self, parsed, *args, **kwargs):
         self.transform(parsed).parseInstructors(parsed).parseCredit(parsed).parseMarkers(parsed)
-        return super(_CourseCatalogLegacyEntryUpdater, self).updateFromExternalObject(parsed, *args, **kwargs)
+        return super(CourseCatalogLegacyEntryUpdater, self).updateFromExternalObject(parsed, *args, **kwargs)
