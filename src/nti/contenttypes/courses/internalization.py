@@ -33,6 +33,7 @@ ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
 
+
 @component.adapter(ICourseOutlineNode)
 @interface.implementer(IInternalObjectUpdater)
 class _CourseOutlineNodeUpdater(InterfaceObjectIO):
@@ -147,12 +148,12 @@ def transform(parsed, context, delete=False):
         elif delete:
             _quiet_delattr(context, str(field))
 
-    instructors = []
     if 'instructors' in parsed:
+        instructors = []
         for inst in parsed['instructors'] or ():
-            username = inst.get('username', '') 
-            userid = inst.get('userid', '')  # legacy 
-            instructors.append( {
+            username = inst.get('username', '')
+            userid = inst.get('userid', '')  # legacy
+            instructors.append({
                 MIMETYPE: 'application/vnd.nextthought.coursecataloginstructorlegacyinfo',
                 'username': username,
                 'userid': userid,
@@ -163,6 +164,19 @@ def transform(parsed, context, delete=False):
         parsed['Instructors'] = instructors
     elif delete:
         _quiet_delattr(context, 'Instructors')
+
+    if 'credit' in parsed:
+        credit = []
+        for data in parsed['credit'] or ():
+            credit.append({
+                MIMETYPE: 'application/vnd.nextthought.coursecreditlegacyinfo',
+                'Hours': data.get('hours'),
+                'Enrollment': data.get('enrollment'),
+            })
+        parsed['Credit'] = credit
+    else:
+        _quiet_delattr(context, 'Credit')
+
     return parsed
 
 
