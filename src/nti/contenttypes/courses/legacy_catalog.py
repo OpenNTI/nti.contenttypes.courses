@@ -107,18 +107,21 @@ class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
                     "or the empty string or missing.",
                      required=False)
 
-    Schedule = Dict(title=u"An unmodeled dictionary, possibly useful for presentation.")
+    Schedule = Dict(title=u"An unmodeled dictionary, possibly useful for presentation.",
+                    required=False)
 
     Prerequisites = List(title=u"A list of dictionaries suitable for presentation. Expect a `title` key.",
                          value_type=Dict(key_type=ValidTextLine(),
-                                         value_type=ValidTextLine()))
+                                         value_type=ValidTextLine()),
+                         required=False)
 
     Preview = Bool(title=u"Is this entry for a course that is upcoming?",
                    description=u"This course should be considered an advertising preview "
                    "and not yet have its content accessed.")
 
     DisableOverviewCalendar = Bool(title=u"A URL or path of indeterminate type or meaning",
-                                   required=False, default=False)
+                                   required=False, 
+                                   default=False)
 
     # ##
     # These are being replaced with presentation specific asset bundles
