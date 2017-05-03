@@ -106,6 +106,7 @@ class TestCatalogParser(CourseLayerTest):
 
         # Now pop
         del json['startDate']
+        json.pop('StartDate', None)
         fill_entry_from_legacy_json(entry, json)
 
         assert_that(entry.StartDate, none())

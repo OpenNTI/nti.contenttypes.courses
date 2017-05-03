@@ -11,7 +11,6 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-import copy
 from urlparse import urljoin
 from datetime import datetime
 from collections import Mapping
@@ -23,6 +22,8 @@ from nti.contentlibrary.dublincore import read_dublincore_from_named_key
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
+
+from nti.contenttypes.courses.internalization import legacy_to_schema_transform
 
 from nti.externalization.internalization import update_from_external_object
 
@@ -48,9 +49,9 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
                 "Invalid additionalProperties entry"
                
     # copy to avoid polluting input 
-    info_json_dict = copy.deepcopy(info_json_dict)
-    info_json_dict['__clear_attrs__'] = True # clean attributes
+    # info_json_dict = copy.deepcopy(info_json_dict)
     info_json_dict['MimeType'] = catalog_entry.mimeType
+    legacy_to_schema_transform(info_json_dict, catalog_entry, delete=True)
     update_from_external_object(catalog_entry, info_json_dict, notify=False)
 
     # check preview information
