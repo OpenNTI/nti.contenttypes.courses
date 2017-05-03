@@ -1,0 +1,55 @@
+{
+    "id": "BIOL 2124",
+    "term": "Fall2016",
+    "school": "Department of Biology, University of Oklahoma",
+    "video": "kaltura://1500101/0_gpczmps5/",
+    "title": "Human Physiology",
+    "isPreview": false,
+    "is_non_public": false,
+    "credit": [{
+        "hours": 4,
+        "enrollment": {
+            "label": "Enroll with Ozone.",
+            "url": "http://ozone.ou.edu/"
+        }
+    }],
+    "startDate": "2016-08-22T05:00:00+00:00",
+    "endDate": "2016-12-19T05:00:00Z",
+    "schedule": {
+        "days": ["MTWRF"],
+        "times": [
+            "10:30:00-05:00",
+            "12:05:00-05:00"
+        ]
+    },
+    "description": "Human Physiology is the study of normal biological function from atoms to molecules, to cells to tissues, and to organs and organ systems.",
+    "prerequisites": [{
+        "id": "",
+        "title": "Introduction to Biology or Zoology and one semester of Chemistry or Physics"
+    }],
+    "instructors": [
+        {
+            "defaultphoto": "images/He_Ketchum.png",
+            "username": "ketc4743",
+            "name": "Heather R. Ketchum, Ph.D.",
+            "title": "Associate Professor, Biology"
+        },
+        {
+            "name": "Shelby Burridge",
+            "title": "Teaching Assistant"
+        },
+        {
+            "name": "Kevin Hawkins",
+            "title": "Teaching Assistant"
+        },
+        {
+            "name": "Grant Loney",
+            "title": "Teaching Assistant"
+        },
+        {
+            "name": "Dr. Eric Bright",
+            "title": "Teaching Assistant"
+        }
+    ],
+    "MimeType": "application/vnd.nextthought.courses.persistentcoursecataloglegacyentry"
+}

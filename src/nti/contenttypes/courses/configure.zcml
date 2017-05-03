@@ -87,6 +87,14 @@
 			 for=".interfaces.ICourseOutlineNode"
 			 provides="nti.externalization.interfaces.IInternalObjectUpdater" />
 
+	<adapter factory=".internalization._CourseCatalogEntryUpdater"
+			 for=".interfaces.ICourseCatalogEntry"
+			 provides="nti.externalization.interfaces.IInternalObjectUpdater" />
+
+	<adapter factory=".internalization._CourseCatalogLegacyEntryUpdater"
+			 for=".legacy_catalog.ICourseCatalogLegacyEntry"
+			 provides="nti.externalization.interfaces.IInternalObjectUpdater" />
+
 	<adapter factory="._bundle._CourseContentBundleIO" />
 
 	<!-- Decorators -->

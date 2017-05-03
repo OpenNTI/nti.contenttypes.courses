@@ -21,6 +21,8 @@ from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
+from nti.contenttypes.courses.legacy_catalog import ICourseCatalogLegacyEntry
+
 from nti.externalization.datastructures import InterfaceObjectIO
 
 from nti.externalization.interfaces import IInternalObjectUpdater
@@ -94,7 +96,7 @@ def _quiet_delattr(o, k):
         pass
 
 
-def transform(parsed, context, delete=False):
+def transform(parsed, context=None, delete=False):
     for field, key in (('Term', 'term'),  # XXX: non-interface
                        ('ntiid', 'ntiid'),
                        ('Title', 'title'),
@@ -140,7 +142,7 @@ def transform(parsed, context, delete=False):
         _quiet_delattr(context, 'Video')
 
     for field, key, default in (('Schedule', 'schedule', {}),  # XXX: non-interface
-                                ('Prerequisites', 'prerequisites', [])
+                                ('Prerequisites', 'prerequisites', []),
                                 ('AdditionalProperties', 'additionalProperties', None)):
         value = parsed.get(key, None)
         if value:
@@ -158,7 +160,7 @@ def transform(parsed, context, delete=False):
                 'username': username,
                 'userid': userid,
                 'Name': inst.get('name'),
-                'JobTitle:': inst.get('title'),
+                'JobTitle': inst.get('title'),
                 'defaultphoto': inst.get('defaultphoto'),
             })
         parsed['Instructors'] = instructors
@@ -186,6 +188,8 @@ class _CourseCatalogEntryUpdater(InterfaceObjectIO):
 
     _ext_iface_upper_bound = ICourseCatalogEntry
 
-    def updateFromExternalObject(self, parsed, *args, **kwargs):
-        result = InterfaceObjectIO.updateFromExternalObject(self, parsed, *args, **kwargs)
-        return result
+
+@component.adapter(ICourseCatalogLegacyEntry)
+class _CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
+
+    _ext_iface_upper_bound = ICourseCatalogLegacyEntry
