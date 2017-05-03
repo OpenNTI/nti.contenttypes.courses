@@ -104,10 +104,11 @@ class TestExporter(CourseLayerTest):
         result = exporter._merge_roles(base_dict, new_dict)
         assert_that(result, is_({}))
 
-        base_dict = {'role1':
-                     {'allow': ['user1', 'user2']
-                      }
-                     }
+        base_dict = {
+                        'role1': {
+                            'allow': ['user1', 'user2']
+                        }
+                    }
         # If we have data in the base dictionary, but none in
         # the new dictionary, we should get back the values
         # in the base dictionary
@@ -117,9 +118,11 @@ class TestExporter(CourseLayerTest):
 
         # if we use non-unicode strings and merge in from disk, we should
         # still get a correct merge.
-        new_dict = {'role1':
-                    {'allow': [str('user1'), str('user2')]
-                     }
+        new_dict =  {
+                        'role1':
+                        {
+                            'allow': [str('user1'), str('user2')]
+                        }
                     }
 
         result = exporter._merge_roles(base_dict, new_dict)
@@ -127,37 +130,49 @@ class TestExporter(CourseLayerTest):
             'role1', has_entries('allow', contains_inanyorder('user1', 'user2'))))
 
         # if the disk contains more principals than the db
-        new_dict = {'role1':
-                    {'allow': ['user1', 'user2', 'user3']
-                     }
+        new_dict =  {
+                        'role1':
+                        {
+                            'allow': ['user1', 'user2', 'user3']
+                        }
                     }
         result = exporter._merge_roles(base_dict, new_dict)
-        assert_that(result, has_entries(
-            'role1', has_entries('allow', contains_inanyorder('user1', 'user2', 'user3'))))
+        assert_that(result, 
+                    has_entries('role1', 
+                                has_entries('allow', 
+                                            contains_inanyorder('user1', 'user2', 'user3'))))
 
         # should be able to merge permission types correctly too
-        base_dict = {'role1':
-                     {'allow': ['user1', 'user2'],
-                      'deny': ['user4']
-                      }
-                     }
-
-        result = exporter._merge_roles(base_dict, new_dict)
-        assert_that(result, has_entries(
-            'role1', has_entries('allow', contains_inanyorder('user1', 'user2', 'user3'),
-                                 'deny', contains_inanyorder('user4'))))
-
-        # merge with different role ids
-        new_dict = {'role1':
-                    {'allow': ['user1', 'user2', 'user3']
-                     },
-                    'role2':
-                    {'allow': ['user5']
-                     }
+        base_dict = {
+                        'role1':
+                        {
+                            'allow': ['user1', 'user2'],
+                            'deny': ['user4']
+                        }
                     }
 
         result = exporter._merge_roles(base_dict, new_dict)
-        assert_that(result, has_entries(
-            'role1', has_entries('allow', contains_inanyorder('user1', 'user2', 'user3'),
-                                 'deny', contains_inanyorder('user4')),
-            'role2', has_entries('allow', contains_inanyorder('user5'))))
+        assert_that(result, 
+                    has_entries('role1', 
+                                has_entries('allow', contains_inanyorder('user1', 'user2', 'user3'),
+                                            'deny', contains_inanyorder('user4'))))
+
+        # merge with different role ids
+        new_dict = {
+                        'role1':
+                        {
+                            'allow': ['user1', 'user2', 'user3']
+                        },
+                        'role2':
+                        {
+                            'allow': ['user5']
+                        }
+                    }
+
+        result = exporter._merge_roles(base_dict, new_dict)
+        assert_that(result, 
+                    has_entries('role1', 
+                                has_entries('allow', contains_inanyorder('user1', 'user2', 'user3'),
+                                            'deny', contains_inanyorder('user4')),
+                                'role2',
+                                has_entries('allow', contains_inanyorder('user5'))))
