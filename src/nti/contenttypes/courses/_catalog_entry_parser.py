@@ -58,26 +58,27 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
         assert catalog_entry.Preview, 'Preview must be set'
 
     # check instructors
-    instructors = []
-    for instructor in catalog_entry.Instructors or ():
-        username = instructor.username or u''
-        userid = instructor.userid or u'' # e.g legacy
-        # XXX: The need to map catalog instructors to the actual
-        # instructors is going away, coming from a new place
-        try:
-            if      Entity.get_entity(username) is None \
-                and Entity.get_entity(userid) is not None:
-                instructor.username = userid
-        except LookupError:
-            # no dataserver
-            pass
-
-        if instructor.defaultphoto:
-            # Ensure it exists and is readable before we advertise it
-            instructor.defaultphoto = urljoin(base_href, instructor.defaultphoto)
-
-        instructors.append(instructor)
-    catalog_entry.Instructors = tuple(instructors)
+    if catalog_entry.Instructors:
+        instructors = []
+        for instructor in catalog_entry.Instructors:
+            username = instructor.username or u''
+            userid = instructor.userid or u'' # OU legacy
+            # XXX: The need to map catalog instructors to the actual
+            # instructors is going away, coming from a new place
+            try:
+                if      Entity.get_entity(username) is None \
+                    and Entity.get_entity(userid) is not None:
+                    instructor.username = userid
+            except LookupError:
+                # no dataserver
+                pass
+    
+            if instructor.defaultphoto:
+                # Ensure it exists and is readable before we advertise it
+                instructor.defaultphoto = urljoin(base_href, instructor.defaultphoto)
+    
+            instructors.append(instructor)
+        catalog_entry.Instructors = tuple(instructors)
 
     return catalog_entry
 
