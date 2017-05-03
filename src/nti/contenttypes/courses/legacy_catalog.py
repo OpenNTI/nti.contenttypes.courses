@@ -30,6 +30,8 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogInstructorInfo
 
 from nti.contenttypes.courses.utils import path_for_entry
 
+from nti.externalization.representation import WithRepr
+
 from nti.schema.field import Int
 from nti.schema.field import Dict
 from nti.schema.field import List
@@ -133,6 +135,7 @@ class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
 # Legacy extensions
 
 
+@WithRepr
 @interface.implementer(ICourseCreditLegacyInfo)
 class CourseCreditLegacyInfo(SchemaConfigured):
     createDirectFieldProperties(ICourseCreditLegacyInfo)
@@ -180,8 +183,6 @@ class CourseCatalogLegacyEntry(CourseCatalogEntry):
 
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
-
-from nti.externalization.representation import WithRepr
 
 # The objects we're going to be containing we *assume* live somewhere beneath
 # an object that implements course catalog (folder). We automatically derive
