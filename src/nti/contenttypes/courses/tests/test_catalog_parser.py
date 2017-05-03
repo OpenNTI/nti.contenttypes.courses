@@ -67,12 +67,12 @@ class TestCatalogParser(CourseLayerTest):
         assert_that(entry, verifiably_provides(ICourseCatalogLegacyEntry))
 
         richDescription = entry.RichDescription
-        assert_that(richDescription, 
+        assert_that(richDescription,
                     all_of(contains_string('<strong>'), contains_string('<li>')))
 
         assert_that(entry,
                     externalizes(has_entries(
-                                    'MimeType', 'application/vnd.nextthought.courses.persistentcoursecataloglegacyentry',
+                        'MimeType', 'application/vnd.nextthought.courses.persistentcoursecataloglegacyentry',
                                     'DisableOverviewCalendar', True,
                                     'RichDescription', contains_string('<strong>'))))
 
@@ -101,7 +101,7 @@ class TestCatalogParser(CourseLayerTest):
         json['duration'] = '1 Weeks'
         fill_entry_from_legacy_json(entry, json)
         assert_that(entry.Duration, equal_to(timedelta(days=7)))
-        assert_that(entry.EndDate, 
+        assert_that(entry.EndDate,
                     equal_to(IDateTime('2015-07-06T05:00:00+00:00')))
 
         # Now pop
@@ -124,11 +124,11 @@ class TestCatalogParser(CourseLayerTest):
         json['endDate'] = '2015-06-30T05:00:00+00:00'
         fill_entry_from_legacy_json(entry, json)
 
-        assert_that(entry.StartDate, 
+        assert_that(entry.StartDate,
                     equal_to(IDateTime('2015-06-29T05:00:00+00:00')))
-        assert_that(entry.Duration, 
+        assert_that(entry.Duration,
                     equal_to(timedelta(days=7)))
-        assert_that(entry.EndDate, 
+        assert_that(entry.EndDate,
                     equal_to(IDateTime('2015-06-30T05:00:00+00:00')))
 
     def test_toggle_non_public(self):
@@ -145,7 +145,7 @@ class TestCatalogParser(CourseLayerTest):
 
         json['is_non_public'] = False
         fill_entry_from_legacy_json(entry, json)
-        assert_that(entry, 
+        assert_that(entry,
                     does_not(verifiably_provides(INonPublicCourseInstance)))
 
         # Back to true
@@ -174,17 +174,17 @@ class TestCatalogParser(CourseLayerTest):
 
         json['is_anonymously_but_not_publicly_accessible'] = False
         fill_entry_from_legacy_json(entry, json)
-        assert_that(entry, 
+        assert_that(entry,
                     does_not(verifiably_provides(IAnonymouslyAccessibleCourseInstance)))
 
         # Back to true
         json['is_anonymously_but_not_publicly_accessible'] = True
         fill_entry_from_legacy_json(entry, json)
-        assert_that(entry, 
+        assert_that(entry,
                     verifiably_provides(IAnonymouslyAccessibleCourseInstance))
 
         # Now simply missing
         del json['is_anonymously_but_not_publicly_accessible']
         fill_entry_from_legacy_json(entry, json)
-        assert_that(entry, 
+        assert_that(entry,
                     does_not(verifiably_provides(IAnonymouslyAccessibleCourseInstance)))
