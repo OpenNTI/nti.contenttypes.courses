@@ -31,7 +31,7 @@ from nti.externalization.internalization import update_from_external_object
 
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
-
+MIMETYPE = StandardExternalFields.MIMETYPE
 
 @component.adapter(ICourseOutlineNode)
 @interface.implementer(IInternalObjectUpdater)
@@ -147,6 +147,22 @@ def transform(parsed, context, delete=False):
         elif delete:
             _quiet_delattr(context, str(field))
 
+    instructors = []
+    if 'instructors' in parsed:
+        for inst in parsed['instructors'] or ():
+            username = inst.get('username', '') 
+            userid = inst.get('userid', '')  # legacy 
+            instructors.append( {
+                MIMETYPE: 'application/vnd.nextthought.coursecataloginstructorlegacyinfo',
+                'username': username,
+                'userid': userid,
+                'Name': inst.get('name'),
+                'JobTitle:': inst.get('title'),
+                'defaultphoto': inst.get('defaultphoto'),
+            })
+        parsed['Instructors'] = instructors
+    elif delete:
+        _quiet_delattr(context, 'Instructors')
     return parsed
 
 
