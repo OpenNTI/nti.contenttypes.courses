@@ -37,6 +37,8 @@ from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
+from zope.securitypolicy.role import checkRole
+
 from nti.assessment.interfaces import IQAssessment
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQEditableEvaluation
@@ -170,7 +172,8 @@ class CourseOutlineExporter(BaseSectionExporter):
             if ICourseOutlineCalendarNode.providedBy(node):
                 xml_node = xmldoc.createElement("lesson")
                 if node.src:
-                    src = self.hash_filename(node.src, salt) if not backup else node.src
+                    src = self.hash_filename(
+                        node.src, salt) if not backup else node.src
                     xml_node.setAttribute("src", src)
                     xml_node.setAttribute("isOutlineStubOnly", "false")
                 else:
@@ -231,7 +234,7 @@ class CourseOutlineExporter(BaseSectionExporter):
         bucket = self.course_bucket(course)
 
         # as json
-        ext_obj = to_external_object(course.Outline, 
+        ext_obj = to_external_object(course.Outline,
                                      name='exporter',
                                      decorate=False)
         if not backup:
@@ -335,8 +338,8 @@ class BundleDCMetadataExporter(BaseSectionExporter):
             k = k.lower()
             # create nodes
             if     isinstance(value, six.string_types) \
-                or isinstance(value, datetime) \
-                or isinstance(value, Number):
+                    or isinstance(value, datetime) \
+                    or isinstance(value, Number):
                 name = self.attr_to_xml.get(k, k)
                 node = xmldoc.createElement("dc:%s" % name)
                 node.appendChild(xmldoc.createTextNode(self._to_text(value)))
@@ -426,10 +429,68 @@ class RoleInfoExporter(BaseSectionExporter):
                                     RID_CONTENT_EDITOR)
         return result
 
+    def _load_course_roles_from_disk(self, course):
+        role_json_key = course.root.getChildNamed(ROLE_INFO_NAME)
+        if role_json_key:
+            return self._parse_json(role_json_key.readContentsAsYaml(), course)
+        else:
+            return ()
+
+    def _merge_roles(self, roles_from_db, roles_from_disk):
+
+        for role_id, role in roles_from_disk.items():
+            # roles_from_db is the base, and then we check
+            # all the roles from disk to make sure they also exist
+            # in the db. If not, then we add them to our list.
+            if role_id in roles_from_db.keys():
+                # Exists in both, so we merge the children
+                for permission, roles in roles_from_disk[role_id].items():
+                    # this is the "allow" and "deny" keys
+                    if permission in roles_from_db[role_id].keys():
+                        # if we have entries for both, use a set
+                        # to merge, so we don't get duplicates. Storing
+                        # these in temporary variables to make it easier
+                        # to read. :)
+                        principals_from_db = roles_from_db[role_id][permission]
+                        principals_from_disk = roles_from_disk[
+                            role_id][permission]
+                        merged_principals_set = set(
+                            principals_from_db + principals_from_disk)
+                        roles_from_db[role_id][permission] = list(
+                            merged_principals_set)
+                    else:
+                        # if the disk has a permission the db doesn't
+                        # have, we just copy the disk's data into the
+                        # db's dictionary under the appropriate key.
+                        roles_from_db[role_id][permission] = roles_from_disk[
+                            role_id][permission]
+            else:
+                # If the disk has a role_id the db doesn't have,
+                # copy the disk's data into the db's dictionary
+                # (same idea as above).
+                roles_from_db[role_id] = roles_from_disk[role_id]
+
+        return roles_from_db
+
+    def _parse_json(self, json, course):
+        result = {}
+        for role_id, role_values in json.items():
+            result[role_id] = {'allow': [], 'deny': []}
+            checkRole(course, role_id)
+            allows = role_values.get('allow', None)
+            for principal_id in allows or ():
+                result[role_id]['allow'].append(principal_id)
+            denies = role_values.get('deny', None)
+            for principal_id in denies or ():
+                result[role_id]['deny'].append(principal_id)
+        return result
+
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
         bucket = self.course_bucket(course)
-        result = self._role_export_map(course)
+        roles_from_course_db = self._role_export_map(course)
+        roles_from_disk = self._load_course_roles_from_disk(course)
+        result = self._merge_roles(roles_from_course_db, roles_from_disk)
         source = self.dump(result)
         filer.save(ROLE_INFO_NAME, source, bucket=bucket,
                    contentType="application/json", overwrite=True)
@@ -450,7 +511,7 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
             entry = ext_obj.get(key)
             assessment = component.queryUtility(IQAssessment, name=key)
             if      IQEditableEvaluation.providedBy(assessment) \
-                and not backup:
+                    and not backup:
                 hashed_ntiid = self.hash_ntiid(key, salt)
                 if entry is not None:
                     result[hashed_ntiid] = value
