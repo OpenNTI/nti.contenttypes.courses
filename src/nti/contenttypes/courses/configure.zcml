@@ -91,7 +91,7 @@
 			 for=".interfaces.ICourseCatalogEntry"
 			 provides="nti.externalization.interfaces.IInternalObjectUpdater" />
 
-	<adapter factory=".internalization._CourseCatalogLegacyEntryUpdater"
+	<adapter factory=".internalization.CourseCatalogLegacyEntryUpdater"
 			 for=".legacy_catalog.ICourseCatalogLegacyEntry"
 			 provides="nti.externalization.interfaces.IInternalObjectUpdater" />
 
