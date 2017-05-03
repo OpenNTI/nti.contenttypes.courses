@@ -794,7 +794,8 @@ class ICatalogFamily(IDisplayableContent):
 
     subjects = Tuple(title=u'Subjects',
                      description=u"The unqualified Dublin Core 'Subject' element values",
-                     value_type=ValidTextLine())
+                     value_type=ValidTextLine(),
+                     required=False)
     subjects.setTaggedValue('_ext_excluded_out', True)
 
     publisher = Text(title=u'Publisher',
@@ -845,8 +846,8 @@ class ICourseCatalogEntry(ICatalogFamily,
                          description=u"Currently optional, may be None",
                          required=False)
 
-    AdditionalProperties = Dict(
-        title=u"dictionary of additional unmodeled data", required=False)
+    AdditionalProperties = Dict(title=u"dictionary of additional unmodeled data", 
+                                required=False)
 
     RichDescription = HTMLContentFragment(title=u"An embelished version of the description of this course",
                                           description=u"""An HTMLContentFragment providing an embelished description
