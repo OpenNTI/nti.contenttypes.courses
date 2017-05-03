@@ -15,8 +15,6 @@ import codecs
 
 import simplejson
 
-from nti.contenttypes.courses.internalization import transform
-
 from nti.contenttypes.courses.legacy_catalog import PersistentCourseCatalogLegacyEntry as CourseCatalogLegacyEntry
 
 from nti.externalization.internalization import update_from_external_object
@@ -36,5 +34,4 @@ class TestInternalization(CourseLayerTest):
             json_data = simplejson.load(fp)
 
         entry = CourseCatalogLegacyEntry()
-        json_data = transform(json_data, entry, delete=False) 
         update_from_external_object(entry, json_data)
