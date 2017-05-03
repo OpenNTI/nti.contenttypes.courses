@@ -9,12 +9,13 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from datetime import timedelta
 from collections import Mapping
-
-from requests.structures import CaseInsensitiveDict
 
 from zope import component
 from zope import interface
+
+from zope.interface.common.idatetime import IDateTime
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -77,27 +78,84 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
         return result
 
 
+def _quiet_delattr(o, k):
+    try:
+        delattr(o, k)
+    except AttributeError:
+        if k not in o.__dict__:
+            return
+        if hasattr(o, '_p_jar'):
+            o._p_activate()
+        o.__dict__.pop(k, None)
+        if hasattr(o, '_p_jar'):
+            o._p_changed = 1
+    except TypeError:
+        pass
+
+
+def transform(parsed, context, delete=False):
+    for field, key in (('Term', 'term'),  # XXX: non-interface
+                       ('ntiid', 'ntiid'),
+                       ('Title', 'title'),
+                       ('ProviderUniqueID', 'id'),
+                       ('Description', 'description'),
+                       ('RichDescription', 'richDescription'),
+                       ('ProviderDepartmentTitle', 'school'),
+                       ('InstructorsSignature', 'InstructorsSignature')):
+        value = parsed.get(key)
+        if value:
+            parsed[field] = value
+        elif delete:
+            _quiet_delattr(context, str(field))
+
+    for field, key in (('EndDate', 'endDate'),  # XXX: non-interface
+                       ('StartDate', 'startDate')):
+        value = parsed.get(key)
+        if value:
+            parsed[field] = IDateTime(value)
+        elif delete:
+            _quiet_delattr(context, str(field))
+
+    if 'duration' in parsed:
+        # We have durations as strings like "16 weeks"
+        duration_number, duration_kind = parsed['duration'].split()
+        # Turn those into keywords for timedelta.
+        normed = duration_kind.lower()
+        parsed['Duration'] = timedelta(**{normed: int(duration_number)})
+    elif delete:
+        context.Duration = None
+
+    for field, key in (('Preview', 'isPreview'),  # XXX: non-interface
+                       ('DisableOverviewCalendar', 'disable_calendar_overview')):
+        value = parsed.get(key, None)
+        if value is not None:
+            parsed[field] = value
+        elif delete:
+            _quiet_delattr(context, str(field))
+
+    if parsed.get('video'):
+        parsed['Video'] = parsed['video'].encode('utf-8')
+    elif delete:
+        _quiet_delattr(context, 'Video')
+
+    for field, key, default in (('Schedule', 'schedule', {}),  # XXX: non-interface
+                                ('Prerequisites', 'prerequisites', [])
+                                ('AdditionalProperties', 'additionalProperties', None)):
+        value = parsed.get(key, None)
+        if value:
+            parsed[field] = value or default
+        elif delete:
+            _quiet_delattr(context, str(field))
+
+    return parsed
+
+
 @component.adapter(ICourseCatalogEntry)
 @interface.implementer(IInternalObjectUpdater)
 class _CourseCatalogEntryUpdater(InterfaceObjectIO):
 
     _ext_iface_upper_bound = ICourseCatalogEntry
 
-    def _quiet_delattr(self, o, k):
-        try:
-            delattr(o, k)
-        except AttributeError:
-            if k not in o.__dict__:
-                return
-            if hasattr(o, '_p_jar'):
-                o._p_activate()
-            o.__dict__.pop(k, None)
-            if hasattr(o, '_p_jar'):
-                o._p_changed = 1
-        except TypeError:
-            pass
-
     def updateFromExternalObject(self, parsed, *args, **kwargs):
-        parsed = CaseInsensitiveDict(parsed)
         result = InterfaceObjectIO.updateFromExternalObject(self, parsed, *args, **kwargs)
         return result
