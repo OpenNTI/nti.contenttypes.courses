@@ -49,7 +49,7 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
         return self._ext_self
 
     def set_ntiid(self, parsed):
-        if NTIID.lower() in parsed or NTIID in parsed:
+        if 'ntiid' in parsed or NTIID in parsed:
             self.node.ntiid = parsed.get('ntiid') or parsed.get(NTIID)
 
     def set_locked(self, parsed):
