@@ -135,13 +135,13 @@ RID_TA = "nti.roles.course_ta"
 RID_CONTENT_EDITOR = "nti.roles.course_content_editor"
 
 #: Sections folder
-SECTIONS = 'Sections'
+SECTIONS = u'Sections'
 
 #: Discussions folder
-DISCUSSIONS = 'Discussions'
+DISCUSSIONS = u'Discussions'
 
 #: Courses folder
-COURSE_CATALOG_NAME = 'Courses'
+COURSE_CATALOG_NAME = u'Courses'
 
 #: Course outline file name
 COURSE_OUTLINE_NAME = 'course_outline.xml'
