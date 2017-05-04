@@ -18,7 +18,7 @@ from zope import interface
 from zope.interface.common.idatetime import IDateTime
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
-from nti.contenttypes.courses.interfaces import ICourseInstance  
+from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
@@ -192,6 +192,8 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
 @interface.implementer(IInternalObjectUpdater)
 class _CourseCatalogEntryUpdater(InterfaceObjectIO):
     _ext_iface_upper_bound = ICourseCatalogEntry
+    # We do not want to validate until we pull in DC info.
+    validate_after_update = False
 
 
 @component.adapter(ICourseCatalogLegacyEntry)
@@ -231,9 +233,9 @@ class CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
             interface.alsoProvides(context, INonPublicCourseInstance)
         elif INonPublicCourseInstance.providedBy(context):
             interface.noLongerProvides(context, INonPublicCourseInstance)
-    
+
         if parsed.get('is_anonymously_but_not_publicly_accessible'):
-            interface.alsoProvides(context, 
+            interface.alsoProvides(context,
                                    IAnonymouslyAccessibleCourseInstance)
         elif IAnonymouslyAccessibleCourseInstance.providedBy(context):
             interface.noLongerProvides(context,
@@ -247,11 +249,11 @@ class CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
             if INonPublicCourseInstance.providedBy(entry):
                 interface.alsoProvides(course, INonPublicCourseInstance)
             elif INonPublicCourseInstance.providedBy(course):
-                interface.noLongerProvides(course, 
+                interface.noLongerProvides(course,
                                            INonPublicCourseInstance)
-        
+
             if IAnonymouslyAccessibleCourseInstance.providedBy(entry):
-                interface.alsoProvides(course, 
+                interface.alsoProvides(course,
                                        IAnonymouslyAccessibleCourseInstance)
             elif IAnonymouslyAccessibleCourseInstance.providedBy(course):
                 interface.noLongerProvides(course,
