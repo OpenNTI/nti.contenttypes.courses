@@ -48,7 +48,9 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 
     # check preview information
     if catalog_entry.StartDate and datetime.utcnow() < catalog_entry.StartDate:
-        assert catalog_entry.Preview, 'Preview must be set'
+        if not catalog_entry.Preview:
+            logger.info('Enabling catalog entry preview flag based on dates')
+            catalog_entry.Preview = True
 
     # check instructors
     if catalog_entry.Instructors:
@@ -68,7 +70,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 
             if instructor.defaultphoto:
                 # Ensure it exists and is readable before we advertise it
-                instructor.defaultphoto = urljoin(base_href, 
+                instructor.defaultphoto = urljoin(base_href,
                                                   instructor.defaultphoto)
 
             instructors.append(instructor)
