@@ -17,7 +17,8 @@ from zope import interface
 
 from zope.interface.common.idatetime import IDateTime
 
-from nti.contenttypes.courses.interfaces import ICourseOutline, ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseOutline
+from nti.contenttypes.courses.interfaces import ICourseInstance  
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
