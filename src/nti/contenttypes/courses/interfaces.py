@@ -786,6 +786,15 @@ class ICatalogFamily(IDisplayableContent):
                             description=u"Currently optional; a missing value means the course has no defined end date.",
                             required=False)
 
+    # don't required dublin core IDCDescriptiveProperties
+    title = ValidTextLine(title=u"The human-readable section name of this item",
+                          default=u'',
+                          required=False)
+
+    description = ValidText(title=u"The human-readable description",
+                            default=u'',
+                            required=False)
+
     # don't required dublin core IDCExtended
     creators = Tuple(title=u'Creators',
                      description=u"The unqualified Dublin Core 'Creator' element values",

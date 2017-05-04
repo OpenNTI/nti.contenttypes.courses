@@ -192,8 +192,6 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
 @interface.implementer(IInternalObjectUpdater)
 class _CourseCatalogEntryUpdater(InterfaceObjectIO):
     _ext_iface_upper_bound = ICourseCatalogEntry
-    # We do not want to validate until we pull in DC info.
-    validate_after_update = False
 
 
 @component.adapter(ICourseCatalogLegacyEntry)
