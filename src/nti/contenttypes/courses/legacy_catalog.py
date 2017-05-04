@@ -56,14 +56,12 @@ class ICourseCatalogInstructorLegacyInfo(ICourseCatalogInstructorInfo):
                                  required=False)  # TODO: We need a schema field for this
 
     username = ValidTextLine(title=u"A username string that may or may not refer to an actual account.",
-                             default='',
+                             default=u'',
                              required=True)
-    username.setTaggedValue('_ext_excluded_out', True)  # Internal use only
     
     userid = ValidTextLine(title=u"A username string that may or may not refer to an actual account.",
-                           default='',
+                           default=u'',
                            required=False)
-    userid.setTaggedValue('_ext_excluded_out', True)  # Internal use only
 
 
 class ICourseCreditLegacyInfo(interface.Interface):
