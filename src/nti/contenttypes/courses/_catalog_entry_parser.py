@@ -68,8 +68,8 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
 
             if instructor.defaultphoto:
                 # Ensure it exists and is readable before we advertise it
-                instructor.defaultphoto = urljoin(
-                    base_href, instructor.defaultphoto)
+                instructor.defaultphoto = urljoin(base_href, 
+                                                  instructor.defaultphoto)
 
             instructors.append(instructor)
         catalog_entry.Instructors = tuple(instructors)
