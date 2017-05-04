@@ -15,13 +15,7 @@ from urlparse import urljoin
 from datetime import datetime
 from collections import Mapping
 
-from zope import interface
-
 from nti.contentlibrary.dublincore import read_dublincore_from_named_key
-
-from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
-from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
 from nti.contenttypes.courses.internalization import legacy_to_schema_transform
 
@@ -65,8 +59,8 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
             # XXX: The need to map catalog instructors to the actual
             # instructors is going away, coming from a new place
             try:
-                if Entity.get_entity(username) is None \
-                        and Entity.get_entity(userid) is not None:
+                if      Entity.get_entity(username) is None \
+                    and Entity.get_entity(userid) is not None:
                     instructor.username = userid
             except LookupError:
                 # no dataserver
@@ -133,18 +127,5 @@ def update_entry_from_legacy_key(entry, key, bucket, base_href='/', force=False)
     if not getattr(entry, 'root', None):
         entry.root = bucket
         modified = True
-
-    # update course interfaces
-    course = ICourseInstance(entry)
-    if INonPublicCourseInstance.providedBy(entry):
-        interface.alsoProvides(course, INonPublicCourseInstance)
-    elif INonPublicCourseInstance.providedBy(course):
-        interface.noLongerProvides(course, INonPublicCourseInstance)
-
-    if IAnonymouslyAccessibleCourseInstance.providedBy(entry):
-        interface.alsoProvides(course, IAnonymouslyAccessibleCourseInstance)
-    elif IAnonymouslyAccessibleCourseInstance.providedBy(course):
-        interface.noLongerProvides(course,
-                                   IAnonymouslyAccessibleCourseInstance)
 
     return modified

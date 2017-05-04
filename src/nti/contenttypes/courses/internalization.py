@@ -17,7 +17,7 @@ from zope import interface
 
 from zope.interface.common.idatetime import IDateTime
 
-from nti.contenttypes.courses.interfaces import ICourseOutline
+from nti.contenttypes.courses.interfaces import ICourseOutline, ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
@@ -239,6 +239,25 @@ class CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
                                        IAnonymouslyAccessibleCourseInstance)
         return self
 
+    def updateCourse(self):
+        entry = self._ext_replacement()
+        course = ICourseInstance(entry, None)
+        if course is not None:  # update course interfaces
+            if INonPublicCourseInstance.providedBy(entry):
+                interface.alsoProvides(course, INonPublicCourseInstance)
+            elif INonPublicCourseInstance.providedBy(course):
+                interface.noLongerProvides(course, 
+                                           INonPublicCourseInstance)
+        
+            if IAnonymouslyAccessibleCourseInstance.providedBy(entry):
+                interface.alsoProvides(course, 
+                                       IAnonymouslyAccessibleCourseInstance)
+            elif IAnonymouslyAccessibleCourseInstance.providedBy(course):
+                interface.noLongerProvides(course,
+                                           IAnonymouslyAccessibleCourseInstance)
+        return self
+
     def updateFromExternalObject(self, parsed, *args, **kwargs):
-        self.transform(parsed).parseInstructors(parsed).parseCredit(parsed).parseMarkers(parsed)
+        self.transform(parsed).parseInstructors(parsed).parseCredit(parsed)
+        self.parseMarkers(parsed).updateCourse()
         return super(CourseCatalogLegacyEntryUpdater, self).updateFromExternalObject(parsed, *args, **kwargs)
