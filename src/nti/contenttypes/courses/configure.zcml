@@ -106,6 +106,10 @@
 				for=".interfaces.ICourseOutline"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
 
+	<subscriber factory=".decorators._InstructorLegacyInfoDecorator"
+				for=".legacy_catalog.ICourseCatalogInstructorLegacyInfo"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
+
 	<!-- Events -->
 	<subscriber handler=".subscribers.install_site_course_catalog" />
 	<subscriber handler=".subscribers.uninstall_site_course_catalog" />

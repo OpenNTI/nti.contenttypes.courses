@@ -15,6 +15,8 @@ from zope import interface
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 
+from nti.contenttypes.courses.legacy_catalog import ICourseCatalogInstructorLegacyInfo
+
 from nti.externalization.interfaces import IExternalObjectDecorator
 
 from nti.externalization.singleton import SingletonDecorator
@@ -42,3 +44,13 @@ class _CourseOutlineDecorator(object):
     def decorateExternalObject(self, original, external):
         external.pop('publishEnding', None)
         external.pop('publishBeginning', None)
+
+
+@interface.implementer(IExternalObjectDecorator)
+@component.adapter(ICourseCatalogInstructorLegacyInfo)
+class _InstructorLegacyInfoDecorator(object):
+
+    __metaclass__ = SingletonDecorator
+
+    def decorateExternalObject(self, original, external):
+        external.pop('userid', None)
