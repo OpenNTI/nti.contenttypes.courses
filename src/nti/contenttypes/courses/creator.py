@@ -115,6 +115,7 @@ def create_course(admin, key, catalog=None, writeout=False, factory=ContentCours
     course_root = root.getChildNamed(key)
     if course_root is None:
         if not writeout and IFilesystemBucket.providedBy(root):
+            course_root = FilesystemBucket()
             course_root.key = key
             course_root.bucket = root
             course_root.absolute_path = course_path
