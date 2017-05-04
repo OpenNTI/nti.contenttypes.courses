@@ -199,9 +199,8 @@ class CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
     _ext_iface_upper_bound = ICourseCatalogLegacyEntry
 
     def transform(self, parsed):
-        context = self._ext_replacement()
-        del_attrs = bool(parsed.get('__clear_attrs__'))
-        legacy_to_schema_transform(parsed, context, del_attrs)
+        if 'ProviderUniqueID' not in parsed:
+            legacy_to_schema_transform(parsed)
         return self
 
     def parseInstructors(self, parsed):

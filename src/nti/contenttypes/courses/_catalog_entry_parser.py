@@ -45,11 +45,9 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
     # input check
     additionalProperties = info_json_dict.get('additionalProperties')
     if additionalProperties is not None:
-        assert  isinstance(additionalProperties, Mapping), \
-                "Invalid additionalProperties entry"
-               
-    # copy to avoid polluting input 
-    # info_json_dict = copy.deepcopy(info_json_dict)
+        assert isinstance(additionalProperties, Mapping), \
+            "Invalid additionalProperties entry"
+
     info_json_dict['MimeType'] = catalog_entry.mimeType
     legacy_to_schema_transform(info_json_dict, catalog_entry, delete=True)
     update_from_external_object(catalog_entry, info_json_dict, notify=False)
@@ -63,21 +61,22 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
         instructors = []
         for instructor in catalog_entry.Instructors:
             username = instructor.username or u''
-            userid = instructor.userid or u'' # OU legacy
+            userid = instructor.userid or u''  # OU legacy
             # XXX: The need to map catalog instructors to the actual
             # instructors is going away, coming from a new place
             try:
-                if      Entity.get_entity(username) is None \
-                    and Entity.get_entity(userid) is not None:
+                if Entity.get_entity(username) is None \
+                        and Entity.get_entity(userid) is not None:
                     instructor.username = userid
             except LookupError:
                 # no dataserver
                 pass
-    
+
             if instructor.defaultphoto:
                 # Ensure it exists and is readable before we advertise it
-                instructor.defaultphoto = urljoin(base_href, instructor.defaultphoto)
-    
+                instructor.defaultphoto = urljoin(
+                    base_href, instructor.defaultphoto)
+
             instructors.append(instructor)
         catalog_entry.Instructors = tuple(instructors)
 
@@ -102,8 +101,8 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/', force=False):
         __traceback_info__ = key, catalog_entry
         logger.info("Updating catalog entry %s with [legacy] json %s. (dates: key=%s, ce=%s)",
                     catalog_entry.ntiid,
-                    key, 
-                    key.lastModified, 
+                    key,
+                    key.lastModified,
                     catalog_entry.lastModified)
 
         json = key.readContentsAsYaml()
@@ -115,7 +114,7 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/', force=False):
     else:
         logger.info("Skipping catalog entry %s update. (dates: key=%s, ce=%s)",
                     catalog_entry.ntiid,
-                    key.lastModified, 
+                    key.lastModified,
                     catalog_entry.lastModified)
     return False
 
@@ -123,14 +122,13 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/', force=False):
 def update_entry_from_legacy_key(entry, key, bucket, base_href='/', force=False):
     modified = fill_entry_from_legacy_key(entry,
                                           key,
-                                          base_href=base_href,
-                                          force=force)
+                                          force=force,
+                                          base_href=base_href)
 
     # The catalog entry gets the default dublincore info
     # file; for the bundle, we use a different name
-    modified = (read_dublincore_from_named_key(entry,
-                                               bucket,
-                                               force=force) != None) or modified
+    if read_dublincore_from_named_key(entry, bucket, force=force) is not None:
+        modified = True
 
     if not getattr(entry, 'root', None):
         entry.root = bucket
@@ -146,7 +144,7 @@ def update_entry_from_legacy_key(entry, key, bucket, base_href='/', force=False)
     if IAnonymouslyAccessibleCourseInstance.providedBy(entry):
         interface.alsoProvides(course, IAnonymouslyAccessibleCourseInstance)
     elif IAnonymouslyAccessibleCourseInstance.providedBy(course):
-        interface.noLongerProvides(course, 
+        interface.noLongerProvides(course,
                                    IAnonymouslyAccessibleCourseInstance)
 
     return modified
