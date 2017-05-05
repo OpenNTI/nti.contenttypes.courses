@@ -22,6 +22,7 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
+from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
 from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
@@ -249,4 +250,21 @@ class _CourseInstanceSharingScopeExporter(object):
         course = find_interface(self.entity, ICourseInstance, strict=False)
         entry = ICourseCatalogEntry(course, None)
         result['Course'] = getattr(entry, 'ntiid', None)
+        return result
+
+
+@component.adapter(ICourseAdministrativeLevel)
+@interface.implementer(IInternalObjectExternalizer)
+class _AdminLevelExternalizer(object):
+
+    def __init__(self, obj):
+        self.obj = obj
+
+    def toExternalObject(self, **kwargs):
+        result = LocatedExternalDict()
+        result[MIMETYPE] = self.obj.mimeType
+        result[CLASS] = "CourseAdministrativeLevel"
+        items = tuple(self.obj)
+        if items:
+            result[ITEMS] = items
         return result
