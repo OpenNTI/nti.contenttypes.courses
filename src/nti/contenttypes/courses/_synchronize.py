@@ -26,12 +26,9 @@ from zope.site.interfaces import ILocalSiteManager
 
 from nti.base._compat import to_unicode
 
-from nti.contentlibrary import ContentRemovalException
-
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
 
-from nti.contentlibrary.interfaces import ISynchronizationParams
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
 from nti.contentlibrary.interfaces import IDelimitedHierarchyBucket
 
@@ -156,32 +153,16 @@ class _GenericFolderSynchronizer(object):
 		return self._ADMIN_LEVEL_FACTORY
 
 	def synchronize(self, folder, bucket, **kwargs):
-		params = kwargs.get('params')
-		if params and ISynchronizationParams.providedBy(params):
-			allowRemoval = params.allowRemoval
-		else:
-			allowRemoval = True
-
+		"""
+		Pull in any new levels/courses into our db. We no longer
+		remove anything during sync since we may now have API
+		created data.
+		"""
 		# Find the things in the filesystem
 		child_buckets = dict()
 		for item in bucket.enumerateChildren():
 			if IDelimitedHierarchyBucket.providedBy(item):
 				child_buckets[item.__name__] = item
-
-		# Remove anything the folder has that aren't on the
-		# filesystem
-		for folder_child_name in list(folder):
-			if folder_child_name not in child_buckets:
-				child_folder = folder[folder_child_name]
-				if 		not allowRemoval \
-					and self._COURSE_INSTANCE_FACTORY is not None \
-					and isinstance(child_folder, self._COURSE_INSTANCE_FACTORY):
-					raise ContentRemovalException(
-							"Cannot remove course without explicitly allowing it (%s) (%s)" \
-							% (folder_child_name, child_folder))
-				else:
-					logger.info("Removing child %s (%r)", folder_child_name, child_folder)
-					del folder[folder_child_name]
 
 		# Create anything the folder is missing if we have a factory for it
 		for bucket_child_name in child_buckets:
