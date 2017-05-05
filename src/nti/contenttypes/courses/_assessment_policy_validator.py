@@ -12,8 +12,6 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
-from ZODB import loglevels
-
 from nti.assessment.common import can_be_auto_graded
 
 from nti.assessment.interfaces import IQAssignment
@@ -98,7 +96,7 @@ class DefaultAssessmentPolicyValidator(object):
 			return  # pragma no cover
 		assignment = component.queryUtility(IQAssignment, name=ntiid)
 		if assignment is None:
-			logger.log(loglevels.TRACE, "Could not find assessment with ntiid %s", ntiid)
+			logger.info("Could not find assessment (%s)", ntiid)
 		auto_grade = self.valid_auto_grade(policy, assignment, ntiid)
 		self.validate_pointbased_policy(auto_grade, assignment, ntiid)
 
