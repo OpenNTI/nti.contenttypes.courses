@@ -877,31 +877,31 @@ class ICourseCatalogEntry(ICatalogFamily,
 
 
 #: Open enrollment
-OPEN = 'Open'
+OPEN = u'Open'
 
 #: Purchased enrollment
-PURCHASED = 'Purchased'
+PURCHASED = u'Purchased'
 
 #: For Credit enrollment
-FOR_CREDIT = 'For Credit'
+FOR_CREDIT = u'For Credit'
 
 #: For Credit Degree Enrollment
-FOR_CREDIT_DEGREE = 'For Credit (Degree)'
+FOR_CREDIT_DEGREE = u'For Credit (Degree)'
 
 #: For Credit Non Degree Enrollment
-FOR_CREDIT_NON_DEGREE = 'For Credit (Non-degree)'
+FOR_CREDIT_NON_DEGREE = u'For Credit (Non-degree)'
 
 #: Vendor key Credit Enrollment
-IN_CLASS = 'In-Class'
+IN_CLASS = u'In-Class'
 
 #: Vendor key prefix Credit Enrollment
-IN_CLASS_PREFIX = 'InClass'
+IN_CLASS_PREFIX = u'InClass'
 
 #: Scope
-SCOPE = 'Scope'
+SCOPE = u'Scope'
 
 #: Scope Description
-DESCRIPTION = 'Description'
+DESCRIPTION = u'Description'
 
 #: Now we list the scopes and create a vocabulary
 #: for them. In the future, we can use a vocabularyregistry
@@ -915,23 +915,23 @@ ES_ALL = u'All'
 #: scope objects do not actually nest (are non-transitive), it is implied that
 #: a member of a nested scope will actually also be members of
 #: the parent scopes.
-ES_PUBLIC = "Public"
+ES_PUBLIC = u"Public"
 
 #: This scope extends the public scope with people that have purchase the course
-ES_PURCHASED = "Purchased"
+ES_PURCHASED = u"Purchased"
 
 #: This scope extends the public scope with people taking the course
 #: to earn academic credit. They have probably paid money.
-ES_CREDIT = "ForCredit"
+ES_CREDIT = u"ForCredit"
 
 #: This scope extends the ForCredit scope to be specific to people who
 #: are engaged in a degree-seeking program.
-ES_CREDIT_DEGREE = "ForCreditDegree"
+ES_CREDIT_DEGREE = u"ForCreditDegree"
 
 #: This scope extends the ForCredit scope to be specific to people who
 #: are taking the course for credit, but are not engaged in
 #: seeking a degree.
-ES_CREDIT_NONDEGREE = "ForCreditNonDegree"
+ES_CREDIT_NONDEGREE = u"ForCreditNonDegree"
 
 from zope.schema.vocabulary import SimpleTerm
 from zope.schema.vocabulary import SimpleVocabulary
