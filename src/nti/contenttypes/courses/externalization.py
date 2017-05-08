@@ -26,6 +26,7 @@ from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
 from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
+from nti.dataserver.interfaces import ILinkExternalHrefOnly
 from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
 
 from nti.externalization.externalization import to_external_object
@@ -33,6 +34,8 @@ from nti.externalization.externalization import to_external_object
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IInternalObjectExternalizer
+
+from nti.links.links import Link
 
 from nti.mimetype import decorateMimeType
 
@@ -265,6 +268,9 @@ class _AdminLevelExternalizer(object):
         result[MIMETYPE] = self.obj.mimeType
         result[CLASS] = "CourseAdministrativeLevel"
         result['Name'] = self.obj.__name__
+        context_link = Link(self.obj)
+        interface.alsoProvides(context_link, ILinkExternalHrefOnly)
+        result['href'] = context_link
         items = tuple(self.obj)
         if items:
             result[ITEMS] = items
