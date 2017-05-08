@@ -709,6 +709,15 @@ class ICourseCatalog(interface.Interface):
                 be found.
         """
 
+    def getAdminLevels():
+        """
+        Returns a mapping of admin key to :class:`.ICourseAdministrativeLevel`.
+
+        Entries from this site level shadow entries from
+        higher site levels, and entries from this site
+        level are returned first.
+        """
+
 
 from persistent.interfaces import IPersistent
 
@@ -856,7 +865,7 @@ class ICourseCatalogEntry(ICatalogFamily,
                          description=u"Currently optional, may be None",
                          required=False)
 
-    AdditionalProperties = Dict(title=u"dictionary of additional unmodeled data", 
+    AdditionalProperties = Dict(title=u"dictionary of additional unmodeled data",
                                 required=False)
 
     RichDescription = HTMLContentFragment(title=u"An embelished version of the description of this course",
@@ -1281,10 +1290,10 @@ class ICourseInstancePurchasedScopedForum(ICourseInstanceScopedForum):
 
 class ICourseLessonSyncResults(IGenericSynchronizationResults):
 
-    LessonsUpdated = ListOrTuple(title=u"Lessons updated on sync.", 
+    LessonsUpdated = ListOrTuple(title=u"Lessons updated on sync.",
                                  required=False)
-    
-    LessonsSyncLocked = ListOrTuple(title=u"Lessons not updated due to sync locks.", 
+
+    LessonsSyncLocked = ListOrTuple(title=u"Lessons not updated due to sync locks.",
                                     required=False)
 
 
@@ -1299,58 +1308,58 @@ class CourseLessonSyncResults(object):
 class ICourseSynchronizationResults(IGenericSynchronizationResults):
     NTIID = ValidTextLine(title=u"Course NTIID", required=False)
 
-    CatalogEntryUpdated = Bool(title=u"CatalogEntry updated", 
-                               required=False, 
+    CatalogEntryUpdated = Bool(title=u"CatalogEntry updated",
+                               required=False,
                                default=False)
-    
-    SharingScopesUpdated = Bool(title=u"Sharing scopes updated", 
-                                required=False, 
+
+    SharingScopesUpdated = Bool(title=u"Sharing scopes updated",
+                                required=False,
                                 default=False)
-    
-    CourseDiscussionsUpdated = Bool(title=u"Sharing scopes updated", 
-                                    required=False, 
+
+    CourseDiscussionsUpdated = Bool(title=u"Sharing scopes updated",
+                                    required=False,
                                     default=False)
 
-    ContentBundleCreated = Bool(title=u"Bundle created", 
+    ContentBundleCreated = Bool(title=u"Bundle created",
                                 required=False,
                                 default=False)
     ContentBundleUpdated = Bool(title=u"Bundle updated",
-                                required=False, 
+                                required=False,
                                 default=False)
 
     VendorInfoReseted = Bool(title=u"Vendor info reseted",
                              required=False, default=False)
-    
+
     VendorInfoUpdated = Bool(title=u"Vendor info updated",
                              required=False, default=False)
 
     OutlineDeleted = Bool(title=u"Outline deleted",
                           required=False, default=False)
-    
+
     OutlineUpdated = Bool(title=u"Outline updated",
-                          required=False, 
+                          required=False,
                           default=False)
 
     InstructorRolesReseted = Bool(title=u"Instructor Roles reseted",
-                                  required=False, 
-                                  default=False)
-    
-    InstructorRolesUpdated = Bool(title=u"Instructor Roles updated",
-                                  required=False, 
+                                  required=False,
                                   default=False)
 
-    AssignmentPoliciesReseted = Bool(title=u"Assignment Policies reseted", 
-                                     required=False, 
+    InstructorRolesUpdated = Bool(title=u"Instructor Roles updated",
+                                  required=False,
+                                  default=False)
+
+    AssignmentPoliciesReseted = Bool(title=u"Assignment Policies reseted",
+                                     required=False,
                                      default=False)
     AssignmentPoliciesUpdated = Bool(title=u"Assignment Policies updated",
-                                     required=False, 
+                                     required=False,
                                      default=False)
 
-    GradingPolicyUpdated = Bool(title=u"Grading Policy updated", 
-                                required=False, 
+    GradingPolicyUpdated = Bool(title=u"Grading Policy updated",
+                                required=False,
                                 default=False)
 
-    EvaluationsUpdated = Bool(title=u"Course Evaluations", 
+    EvaluationsUpdated = Bool(title=u"Course Evaluations",
                               required=False,
                               default=False)
 
@@ -1571,7 +1580,7 @@ def get_course_assessment_predicate_for_user(user, course):
             the assessment passed to them is actually hosted within the
             course.
     """
-    filters = component.subscribers((user, course), 
+    filters = component.subscribers((user, course),
                                     ICourseAssessmentUserFilter)
     filters = list(filters)
 

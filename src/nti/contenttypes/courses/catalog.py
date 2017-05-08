@@ -33,6 +33,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IGlobalCourseCatalog
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
 from nti.contenttypes.courses.interfaces import ICourseCatalogInstructorInfo
 
 from nti.contenttypes.courses.utils import path_for_entry
@@ -142,6 +143,20 @@ class _AbstractCourseCatalogMixin(object):
         if parent is None:
             raise KeyError(name)
         return parent.getCatalogEntry(name)
+
+    def get_admin_levels(self):
+        # XXX: Check recursively?
+        result = dict()
+        for key, val in self.items():
+            if ICourseAdministrativeLevel.providedBy(val):
+                result[key] = val
+        parent = self._next_catalog
+        if parent is not None:
+            for key, val in parent.get_admin_levels().items():
+                if key not in result:
+                    result[key] = val
+        return result
+    getAdminLevels = get_admin_levels
 
 
 @NoPickle
