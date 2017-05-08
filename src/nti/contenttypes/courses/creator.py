@@ -59,12 +59,21 @@ def library_root():
     return enumeration.root
 
 
+def _get_course_bucket(catalog, site):
+    enumeration_root = library_root()
+    courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
+    if courses_bucket is None:
+        path = os.path.join(enumeration_root.absolute_path, catalog.__name__)
+        make_directories(path)
+        courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
+        logger.info('[%s] Creating Courses dir in site',
+                getattr(site, '__name__', None))
+    return courses_bucket
+
 def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
     site = getSite() if site is None else site
-    enumeration_root = library_root()
-
     catalog = course_catalog(catalog)
-    courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
+    courses_bucket = _get_course_bucket(catalog, site)
 
     logger.info('[%s] Creating admin level %s',
                 getattr(site, '__name__', None),
@@ -80,8 +89,8 @@ def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
             admin_root.key = admin_name
             admin_root.bucket = courses_bucket
             admin_root.absolute_path = path
-    # Create admin level
-    if admin_name not in catalog:
+    # Create admin level; do not want to overwrite parent catalog levels.
+    if admin_name not in catalog.get_admin_levels():
         result = CourseAdministrativeLevel()
         result.root = admin_root
         catalog[admin_name] = result

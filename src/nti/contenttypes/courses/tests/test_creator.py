@@ -22,6 +22,8 @@ import fudge
 
 from nti.contentlibrary.filesystem import FilesystemBucket
 
+from nti.contenttypes.courses.catalog import CourseCatalogFolder
+
 from nti.contenttypes.courses.creator import create_course
 from nti.contenttypes.courses.creator import make_directories
 from nti.contenttypes.courses.creator import install_admin_level
@@ -36,7 +38,7 @@ class TestCreator(CourseLayerTest):
 
     @fudge.patch('nti.contenttypes.courses.creator.library_root')
     def test_install_admin_level(self, mock_lr):
-        catalog = LocatedExternalDict()
+        catalog = CourseCatalogFolder()
         catalog.__name__ = u'Courses'
 
         tmp_dir = tempfile.mkdtemp()
@@ -57,8 +59,8 @@ class TestCreator(CourseLayerTest):
             assert_that(os.path.exists(output), is_(True))
 
             # not writeout
-            level = install_admin_level(u"Titan", 
-                                        catalog=catalog, 
+            level = install_admin_level(u"Titan",
+                                        catalog=catalog,
                                         writeout=False)
             assert_that(level, is_not(none()))
             output = os.path.join(courses_path, 'Titan')
@@ -66,8 +68,8 @@ class TestCreator(CourseLayerTest):
                         has_property('root', has_property('absolute_path', is_(output))))
             assert_that(os.path.exists(output), is_(False))
 
-            level2 = install_admin_level(u"Titan", 
-                                         catalog=catalog, 
+            level2 = install_admin_level(u"Titan",
+                                         catalog=catalog,
                                          writeout=False)
             assert_that(level2, is_(same_instance(level)))
         finally:
@@ -75,7 +77,7 @@ class TestCreator(CourseLayerTest):
 
     @fudge.patch('nti.contenttypes.courses.creator.library_root')
     def test_create_course(self, mock_lr):
-        catalog = LocatedExternalDict()
+        catalog = CourseCatalogFolder()
         catalog.__name__ = u'Courses'
 
         tmp_dir = tempfile.mkdtemp()
@@ -104,10 +106,10 @@ class TestCreator(CourseLayerTest):
                         has_property('root', has_property('absolute_path', is_(output))))
         finally:
             shutil.rmtree(tmp_dir)
-            
+
     @fudge.patch('nti.contenttypes.courses.creator.library_root')
     def test_create_course_subinstance(self, mock_lr):
-        catalog = LocatedExternalDict()
+        catalog = CourseCatalogFolder()
         catalog.__name__ = u'Courses'
 
         tmp_dir = tempfile.mkdtemp()
@@ -127,7 +129,7 @@ class TestCreator(CourseLayerTest):
             assert_that(subinstance,
                         has_property('root', has_property('absolute_path', is_(output))))
             assert_that(os.path.exists(output), is_(True))
-            
+
             # not writeout
             output = os.path.join(courses_path, 'Bleach/Shikai/Sections/Ice')
             subinstance = create_course_subinstance(course, u'Ice', writeout=False)
