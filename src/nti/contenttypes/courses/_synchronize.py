@@ -195,10 +195,14 @@ class _GenericFolderSynchronizer(object):
 
 		# Synchronize everything
 		for child_name, child in folder.items():
-			child_bucket = child_buckets[child_name]
-			sync = component.getMultiAdapter((child, child_bucket),
-											 IObjectEntrySynchronizer)
-			sync.synchronize(child, child_bucket, **kwargs)
+			try:
+				child_bucket = child_buckets[child_name]
+			except KeyError:
+				pass
+			else:
+				sync = component.getMultiAdapter((child, child_bucket),
+												 IObjectEntrySynchronizer)
+				sync.synchronize(child, child_bucket, **kwargs)
 
 @interface.implementer(IObjectEntrySynchronizer)
 @component.adapter(ICourseInstance, IDelimitedHierarchyBucket)
