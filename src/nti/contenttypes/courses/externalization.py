@@ -264,6 +264,7 @@ class _AdminLevelExternalizer(object):
         result = LocatedExternalDict()
         result[MIMETYPE] = self.obj.mimeType
         result[CLASS] = "CourseAdministrativeLevel"
+        result['Name'] = self.obj.__name__
         items = tuple(self.obj)
         if items:
             result[ITEMS] = items
