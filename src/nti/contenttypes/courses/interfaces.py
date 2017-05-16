@@ -855,11 +855,15 @@ class ICourseCatalogEntry(ICatalogFamily,
     # The T/D should be aliased in implementations.
 
     Instructors = ListOrTuple(title=u"The instuctors. Order might matter",
-                              value_type=Object(ICourseCatalogInstructorInfo))
+                              value_type=Object(ICourseCatalogInstructorInfo),
+                              required=False,
+                              default=())
 
     InstructorsSignature = ValidText(title=u"The sign-off or closing signature of the instructors",
                                      description=u"As used in an email. If this is not specifically provided, "
-                                     "one can be derived from the names and titles of the instructors.")
+                                     u"one can be derived from the names and titles of the instructors.",
+                                     required=False,
+                                     default=u'')
     InstructorsSignature.setTaggedValue('_ext_excluded_out', True)
 
     Duration = Timedelta(title=u"The length of the course",
@@ -873,7 +877,7 @@ class ICourseCatalogEntry(ICatalogFamily,
                                           description=u"""An HTMLContentFragment providing an embelished description
                                           for the course.  This provides storage for a description with basic html formatting""",
                                           required=False,
-                                          default='')
+                                          default='u')
 
     def isCourseCurrentlyActive():
         """
