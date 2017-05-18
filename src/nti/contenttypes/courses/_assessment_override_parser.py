@@ -87,6 +87,12 @@ def fill_asg_from_json(course, index, lastModified=0):
                 raise ValueError("Bad positive integer value: %r" % int_val)
             val[k] = int_val
 
+        # Add verbose logging to help track down a weird bug where
+        # policies with total_points are not being imported correctly.
+        # TODO: Change this to DEBUG or TRACE when we're done
+        logger.info('Importing assignment policy for ntiid %s and value %s'
+                    % (key, val))
+
         # Policies stores it directly, with the exception
         # of things we know we don't want/need
         policies[key] = PersistentMapping({k: v for k, v in val.items()
