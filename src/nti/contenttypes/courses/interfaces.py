@@ -877,7 +877,7 @@ class ICourseCatalogEntry(ICatalogFamily,
                                           description=u"""An HTMLContentFragment providing an embelished description
                                           for the course.  This provides storage for a description with basic html formatting""",
                                           required=False,
-                                          default='u')
+                                          default=u'')
 
     def isCourseCurrentlyActive():
         """
