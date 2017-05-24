@@ -429,51 +429,10 @@ class RoleInfoExporter(BaseSectionExporter):
                                     RID_CONTENT_EDITOR)
         return result
 
-    def _load_course_roles_from_disk(self, course):
-        role_json_key = course.root.getChildNamed(ROLE_INFO_NAME)
-        if role_json_key:
-            return role_json_key.readContentsAsYaml()
-        return {}
-
-    def _merge_roles(self, roles_from_db, roles_from_disk):
-        """
-        Merge roles/perms from the disk store to the database store. This means
-        that if a user is removed from access through the API, they could
-        potentially gain it here if they are listed in the roles file.
-        """
-
-        for role_id, disk_role_map in roles_from_disk.items():
-            if role_id in roles_from_db:
-                db_perm_map = roles_from_db[role_id]
-                # Exists in both, so we merge the children
-                for permission, prins_from_disk in disk_role_map.items():
-                    if permission in db_perm_map:
-                        # If we have entries for both, use a set to merge, so
-                        # we don't get duplicates. Storing these in temporary
-                        # variables to make it easier to read.
-                        principals_from_db = db_perm_map[permission]
-                        merged_principals_set = set(principals_from_db +
-                                                    prins_from_disk)
-                        db_perm_map[permission] = list(merged_principals_set)
-                    else:
-                        # If the disk has a permission the db doesn't
-                        # have, we just copy the disk's data into the
-                        # db's dictionary under the appropriate key.
-                        db_perm_map[permission] = prins_from_disk
-            else:
-                # If the disk has a role_id the db doesn't have,
-                # copy the disk's data into the db's dictionary
-                # (same idea as above).
-                roles_from_db[role_id] = disk_role_map
-
-        return roles_from_db
-
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
         bucket = self.course_bucket(course)
-        roles_from_course_db = self._role_export_map(course)
-        roles_from_disk = self._load_course_roles_from_disk(course)
-        result = self._merge_roles(roles_from_course_db, roles_from_disk)
+        result = self._role_export_map(course)
         source = self.dump(result)
         filer.save(ROLE_INFO_NAME, source, bucket=bucket,
                    contentType="application/json", overwrite=True)
