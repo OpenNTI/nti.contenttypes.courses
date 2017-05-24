@@ -433,45 +433,38 @@ class RoleInfoExporter(BaseSectionExporter):
         role_json_key = course.root.getChildNamed(ROLE_INFO_NAME)
         if role_json_key:
             return role_json_key.readContentsAsYaml()
-        else:
-            return {}
+        return {}
 
     def _merge_roles(self, roles_from_db, roles_from_disk):
+        """
+        Merge roles/perms from the disk store to the database store. This means
+        that if a user is removed from access through the API, they could
+        potentially gain it here if they are listed in the roles file.
+        """
 
-        for role_id in roles_from_disk:
-            # roles_from_db is the base, and then we check
-            # all the roles from disk to make sure they also exist
-            # in the db. If not, then we add them to our list.
+        for role_id, disk_role_map in roles_from_disk.items():
             if role_id in roles_from_db:
+                db_perm_map = roles_from_db[role_id]
                 # Exists in both, so we merge the children
-                for permission in roles_from_disk[role_id]:
-                    # this is the "allow" and "deny" keys
-                    if permission in roles_from_db[role_id]:
-                        # if we have entries for both, use a set
-                        # to merge, so we don't get duplicates. Storing
-                        # these in temporary variables to make it easier
-                        # to read. :)
-                        db_role = roles_from_db[role_id]
-                        principals_from_db = db_role[permission]
-                        
-                        disk_role = roles_from_disk[role_id]
-                        principals_from_disk = disk_role[permission]
-                        
+                for permission, prins_from_disk in disk_role_map.items():
+                    if permission in db_perm_map:
+                        # If we have entries for both, use a set to merge, so
+                        # we don't get duplicates. Storing these in temporary
+                        # variables to make it easier to read.
+                        principals_from_db = db_perm_map[permission]
                         merged_principals_set = set(principals_from_db +
-                                                    principals_from_disk)
-                        db_role[permission] = list(merged_principals_set)
+                                                    prins_from_disk)
+                        db_perm_map[permission] = list(merged_principals_set)
                     else:
-                        # if the disk has a permission the db doesn't
+                        # If the disk has a permission the db doesn't
                         # have, we just copy the disk's data into the
                         # db's dictionary under the appropriate key.
-                        db_role = roles_from_db[role_id]
-                        disk_role = roles_from_disk[role_id]
-                        db_role[permission] = disk_role[permission]
+                        db_perm_map[permission] = prins_from_disk
             else:
                 # If the disk has a role_id the db doesn't have,
                 # copy the disk's data into the db's dictionary
                 # (same idea as above).
-                roles_from_db[role_id] = roles_from_disk[role_id]
+                roles_from_db[role_id] = disk_role_map
 
         return roles_from_db
 
