@@ -213,7 +213,7 @@ class TestFunctionalSharing(CourseLayerTest):
 		assert_that( principal, is_in(purchased) )
 
 	@WithMockDSTrans
-	@fudge.patch( 'nti.contenttypes.courses.sharing.get_enrollments' )
+	@fudge.patch( 'nti.contenttypes.courses.utils.get_enrollments' )
 	def test_sub_and_parent_drop_parent(self, mock_get_enroll):
 		self._shared_setup()
 		# Need to mock out enrollments since these are mock courses.

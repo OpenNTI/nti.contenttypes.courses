@@ -31,13 +31,7 @@ from zope.lifecycleevent import IObjectModifiedEvent
 
 from zope.security.interfaces import IPrincipal
 
-from ZODB.POSException import POSError
-
 from nti.containers.containers import CheckingLastModifiedBTreeContainer
-
-from nti.contentlibrary.interfaces import IEditableContentPackage
-
-from nti.contenttypes.courses.common import get_course_packages
 
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
@@ -52,16 +46,18 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScopes
 from nti.contenttypes.courses.interfaces import ICourseInstanceImportedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
-from nti.contenttypes.courses.utils import get_enrollments
+from nti.contenttypes.courses.utils import get_principal
 from nti.contenttypes.courses.utils import get_course_editors
+from nti.contenttypes.courses.utils import deny_access_to_course
 from nti.contenttypes.courses.utils import get_course_instructors
+from nti.contenttypes.courses.utils import grant_access_to_course
+from nti.contenttypes.courses.utils import adjust_scope_membership
+from nti.contenttypes.courses.utils import add_principal_to_course_content_roles
+from nti.contenttypes.courses.utils import remove_principal_from_course_content_roles
 
 from nti.dataserver.authorization import _CommunityGroup
-from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
-from nti.dataserver.authorization import role_for_providers_content
 
 from nti.dataserver.interfaces import IUser
-from nti.dataserver.interfaces import IMutableGroupMember
 from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
 
 from nti.dataserver.users import User
@@ -72,7 +68,6 @@ from nti.externalization.oids import to_external_ntiid_oid
 from nti.intid.wref import ArbitraryOrderableWeakRef
 
 from nti.ntiids.ntiids import TYPE_OID
-from nti.ntiids.ntiids import get_parts
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
 
@@ -219,156 +214,6 @@ class CourseSubInstanceSharingScopes(CourseInstanceSharingScopes):
 				for i in scopes:
 					yield i
 
-def _adjust_scope_membership(record, course,
-							 join, follow,
-							 ignored_exceptions=(),
-							 currently_in=(),
-							 relevant_scopes=None,
-							 related_enrolled_courses=()):
-	course = course or record.CourseInstance
-	principal = record.Principal
-	if principal is not None:
-		join = getattr(principal, join)
-		follow = getattr(principal, follow)
-	else:
-		join = follow = None
-
-	scopes = course.SharingScopes
-
-	if relevant_scopes is None:
-		relevant_scopes = scopes.getAllScopesImpliedbyScope(record.Scope)
-
-	scopes_to_ignore = []
-	for related_course in related_enrolled_courses:
-		sharing_scopes = related_course.SharingScopes
-		scopes_to_ignore.extend(sharing_scopes.getAllScopesImpliedbyScope(record.Scope))
-
-	for scope in relevant_scopes:
-		if scope in currently_in:
-			continue
-
-		if scope in scopes_to_ignore:
-			continue
-
-		try:
-			if join is not None:
-				join(scope)
-		except ignored_exceptions:
-			pass
-
-		try:
-			if follow is not None:
-				follow(scope)
-		except ignored_exceptions:
-			pass
-
-def get_principal(principal):
-	try:
-		if principal is None or IUser(principal, None) is None:
-			principal = None
-	except (TypeError, POSError):
-		principal = None
-	return principal
-
-def _content_roles_for_course_instance(course, packages=None):
-	"""
-	Returns the content roles for all the applicable content
-	packages in the course, if there are any.
-
-	:return: A set.
-	"""
-	if packages is None:
-		packages = get_course_packages(course)
-	roles = []
-	for pack in packages:
-		# Editable content packages may have fluxuating permissible
-		# state; so we handle those elsewhere.
-		if IEditableContentPackage.providedBy( pack ):
-			continue
-		ntiid = pack.ntiid
-		ntiid = get_parts(ntiid)
-		provider = ntiid.provider
-		specific = ntiid.specific
-		roles.append(role_for_providers_content(provider, specific))
-	return set(roles)
-
-def _principal_is_enrolled_in_related_course(principal, course):
-	"""
-	If the principal is enrolled in a parent or sibling course,
-	return those courses.
-	"""
-	result = []
-	potential_other_courses = []
-	potential_other_courses.extend(course.SubInstances.values())
-	if ICourseSubInstance.providedBy(course):
-		main_course = course.__parent__.__parent__
-		potential_other_courses.append(main_course)
-		potential_other_courses.extend((x for x in main_course.SubInstances.values()
-										if x is not course))
-
-	principal = get_principal(principal)
-	if principal is not None:
-		for other in potential_other_courses:
-			enrollments = ICourseEnrollments(other)
-			if enrollments.get_enrollment_for_principal(principal) is not None:
-				result.append(other)
-	return tuple(result)
-
-def add_principal_to_course_content_roles(principal, course, packages=None):
-	if get_principal(principal) is None:
-		return
-
-	membership = component.getAdapter(principal, IMutableGroupMember,
-									  CONTENT_ROLE_PREFIX)
-	orig_groups = set(membership.groups)
-	new_groups = _content_roles_for_course_instance(course, packages)
-
-	final_groups = orig_groups | new_groups
-	if final_groups != orig_groups:
-		# be idempotent
-		membership.setGroups(final_groups)
-
-def _get_principal_enrollment_packages(principal, courses_to_exclude=()):
-	"""
-	Gather the set of course packages for the principal's enrollments,
-	excluding any courses given.
-	"""
-	result = set()
-	enrollments = get_enrollments(principal.username)
-	for record in enrollments:
-		course = ICourseInstance(record, None)  # dup enrollment
-		if 		course is not None \
-			and course not in courses_to_exclude:
-			packages = get_course_packages(course)
-			result.update(packages)
-	return result
-
-def remove_principal_from_course_content_roles(principal, course, packages=None, unenroll=False):
-	"""
-	Remove the principal from the given course roles (and optional packages).
-	We must verify the principal does not have access to this content
-	outside of the given course.
-	"""
-	if get_principal(principal) is None:
-		return
-
-	if not packages:
-		packages = get_course_packages(course)
-
-	courses_to_exclude = (course,) if unenroll else ()
-
-	# Get the minimal set of packages to remove roles for.
-	enrollment_packages = _get_principal_enrollment_packages(principal,
-															 courses_to_exclude=courses_to_exclude)
-	to_remove = set(packages) - enrollment_packages
-
-	roles_to_remove = _content_roles_for_course_instance(course, to_remove)
-	membership = component.getAdapter(principal, IMutableGroupMember,
-									  CONTENT_ROLE_PREFIX)
-	groups = set(membership.groups)
-	new_groups = groups - roles_to_remove
-	if new_groups != groups:
-		membership.setGroups(new_groups)
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IIntIdAddedEvent)
 def on_enroll_record_scope_membership(record, event, course=None):
@@ -376,12 +221,9 @@ def on_enroll_record_scope_membership(record, event, course=None):
 	When you enroll in a course, record your membership in the
 	proper scopes, including content access.
 	"""
-	_adjust_scope_membership(record, course,
-							 'record_dynamic_membership',
-							 'follow')
-	# Add the content roles
-	add_principal_to_course_content_roles(record.Principal,
-										  course or record.CourseInstance)
+	course = course or record.CourseInstance
+	grant_access_to_course(record.Principal, course, record.Scope)
+
 
 # We may have intid-weak references to these things,
 # so we need to catch them on the IntIdRemoved event
@@ -392,28 +234,9 @@ def on_drop_exit_scope_membership(record, event, course=None):
 	When you drop a course, leave the scopes you were in, including
 	content access.
 	"""
-
-	principal = get_principal(record.Principal)
 	course = course or record.CourseInstance
+	deny_access_to_course(record.Principal, course, record.Scope)
 
-	related_enrolled_courses = \
-			_principal_is_enrolled_in_related_course(principal, course)
-
-	# If the course was in the process of being deleted,
-	# the sharing scopes may already have been deleted, which
-	# shouldn't be a problem: the removal listeners for those
-	# events should have cleaned up
-	_adjust_scope_membership(record, course,
-							 'record_no_longer_dynamic_member',
-							 'stop_following',
-							 # Depending on the order, we may have already
-							 # cleaned this up (e.g, deleting a principal
-							 # fires events twice due to various cleanups)
-							 # So the entity may no longer have an intid -> KeyError
-							 ignored_exceptions=(KeyError,),
-							 related_enrolled_courses=related_enrolled_courses)
-
-	remove_principal_from_course_content_roles(principal, course, unenroll=True)
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectModifiedEvent)
 def on_modified_update_scope_membership(record, event):
@@ -448,13 +271,14 @@ def on_modified_update_scope_membership(record, event):
 				drop_from.append(scope)
 
 	# First, the drops
-	_adjust_scope_membership(record, None,
+	course = record.CourseInstance
+	adjust_scope_membership(principal, record.Scope, course,
 							 'record_no_longer_dynamic_member',
 							 'stop_following',
 							 relevant_scopes=drop_from)
 
 	# Now any adds
-	_adjust_scope_membership(record, None,
+	adjust_scope_membership(principal, record.Scope, course,
 							 'record_dynamic_membership',
 							 'follow',
 							 currently_in=currently_in,

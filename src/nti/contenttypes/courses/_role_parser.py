@@ -27,20 +27,12 @@ from zope.securitypolicy.securitymap import PersistentSecurityMap
 from ZODB.interfaces import IConnection
 
 from nti.contenttypes.courses.interfaces import RID_TA
-from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
 
-from nti.contenttypes.courses.interfaces import ICourseSubInstance
-from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
-
 from nti.contenttypes.courses.sharing import add_principal_to_course_content_roles
-from nti.contenttypes.courses.sharing import remove_principal_from_course_content_roles
 
-from nti.contenttypes.courses.utils import is_enrolled
-from nti.contenttypes.courses.utils import get_parent_course
-from nti.contenttypes.courses.utils import get_course_hierarchy
+from nti.contenttypes.courses.utils import grant_instructor_access_to_course
 
 from nti.dataserver.interfaces import IUser
 
@@ -105,40 +97,20 @@ def _check_scopes(course):
                 intids.register(scope)
 
 
-def _unenroll_instructor(instructor, course):
-    """
-    Unenroll the instructor from any courses they may have
-    pre-emptively enrolled in.
-    """
-    for course in get_course_hierarchy(course) or ():
-        if is_enrolled(course, instructor):
-            entry_ntiid = ICourseCatalogEntry(course).ntiid
-            manager = ICourseEnrollmentManager(course)
-            manager.drop(instructor)
-            logger.info('Dropping instructor from course (%s) (%s)',
-                        instructor, entry_ntiid)
-
-
 def fill_roles_from_json(course, json):
+    """
+    Give our roles permissions on the course and course objects. We will only
+    allow granting of new access here; removal of access must occur through
+    the API.
+    """
     _check_scopes(course)
 
     role_manager = IPrincipalRoleManager(course)
     reset_roles_missing_key(role_manager)
 
     _populate_roles_from_json(course, role_manager, json)
-
     # We must update the instructor list too, it's still used internally
     # in a few places...plus it's how we know who to remove from the scopes
-
-    # Any instructors that were present but aren't present
-    # anymore need to lose access to the sharing scopes
-    orig_instructors = course.instructors
-    course.instructors = ()
-
-    # For any of these that exist as users, we need to make sure they
-    # are in the appropriate sharing scopes too...
-    # NOTE: We only take care of addition, we do not handle removal,
-    # (that could be done with some extra work)
     for role_id, pid, setting in role_manager.getPrincipalsAndRoles():
         is_instructor = bool(role_id in (RID_INSTRUCTOR, RID_TA))
         if     setting is not Allow \
@@ -147,53 +119,16 @@ def fill_roles_from_json(course, json):
 
         try:
             user = User.get_user(pid)
-            if is_instructor:
-                course.instructors += (IPrincipal(user),)
-                _unenroll_instructor(user, course)
+            user_prin = IPrincipal(user)
+            if is_instructor and user_prin not in course.instructors:
+                course.instructors += (user_prin,)
         except (LookupError, TypeError):
             # lookuperror if we're not in a ds context,
             # TypeError if no named user was found and none was returned
             # and the adaptation failed
             pass
         else:
-            # XXX: The addition and removal here are eerily similar
-            # to what enrollment does and they've gotten out of sync
-            # in the past.
-            add_principal_to_course_content_roles(user, course)
-            if not is_instructor:
-                continue
-            for scope in course.SharingScopes.values():
-                # They're a member...
-                user.record_dynamic_membership(scope)
-                # ...and they follow it to get notifications of things
-                # shared to it
-                user.follow(scope)
-
-            # If they're an instructor of a section, give them
-            # access to the public community of the main course.
-            if ICourseSubInstance.providedBy(course):
-                parent_course = get_parent_course(course)
-                public_scope = parent_course.SharingScopes[ES_PUBLIC]
-                user.record_dynamic_membership(public_scope)
-                user.follow(public_scope)
-
-    for orig_instructor in orig_instructors:
-        if orig_instructor not in course.instructors:
-            user = IUser(orig_instructor)
-            # by definition here we have an IPrincipal that *came* from an IUser
-            # and has a hard reference to it, and so can become an IUser again
-            remove_principal_from_course_content_roles(user, course)
-            for scope in course.SharingScopes.values():
-                user.record_no_longer_dynamic_member(scope)
-                user.stop_following(scope)
-
-            # And remove access to the parent public scope.
-            if ICourseSubInstance.providedBy(course):
-                parent_course = get_parent_course(course)
-                public_scope = parent_course.SharingScopes[ES_PUBLIC]
-                user.record_no_longer_dynamic_member(public_scope)
-                user.stop_following(public_scope)
-
+            grant_instructor_access_to_course(user, course)
     return True
 
 

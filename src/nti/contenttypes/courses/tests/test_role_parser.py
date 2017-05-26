@@ -80,12 +80,14 @@ class TestRoleParser(CourseLayerTest):
 		assert_that(roles.getSetting('nti.roles.course_content_editor', 'course_editor_name'),
 					is_(Allow))
 
+		# orig_instructor still has access/is-instructor even though not in roles file.
 		assert_that(inst.instructors, contains_inanyorder(IPrincipal(users['jmadden']),
-														  IPrincipal(users['harp4162'])))
+														  IPrincipal(users['harp4162']),
+														  IPrincipal(users['orig_instructor'])))
 
 		for scope in inst.SharingScopes.values():
 			assert_that(users['harp4162'], is_in(scope))
-			assert_that(users['orig_instructor'], is_not(is_in(scope)))
+			assert_that(users['orig_instructor'], is_in(scope))
 
 	@WithMockDSTrans
 	def test_section_parse(self):
