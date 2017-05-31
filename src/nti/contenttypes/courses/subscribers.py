@@ -65,6 +65,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseRoleRemovedEvent
+from nti.contenttypes.courses.interfaces import ICourseEditorAddedEvent
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
@@ -72,6 +74,7 @@ from nti.contenttypes.courses.interfaces import ICourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import CourseCatalogDidSyncEvent
 from nti.contenttypes.courses.interfaces import ICourseBundleUpdatedEvent
+from nti.contenttypes.courses.interfaces import ICourseInstructorAddedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceImportedEvent
 from nti.contenttypes.courses.interfaces import ICourseOutlineNodeMovedEvent
 from nti.contenttypes.courses.interfaces import ICourseRolePermissionManager
@@ -84,9 +87,11 @@ from nti.contenttypes.courses.interfaces import iface_of_node
 from nti.contenttypes.courses.utils import unenroll
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import index_course_roles
+from nti.contenttypes.courses.utils import index_course_editor
 from nti.contenttypes.courses.utils import get_courses_catalog
 from nti.contenttypes.courses.utils import clear_course_outline
 from nti.contenttypes.courses.utils import unindex_course_roles
+from nti.contenttypes.courses.utils import index_course_instructor
 from nti.contenttypes.courses.utils import get_content_unit_courses
 from nti.contenttypes.courses.utils import get_courses_for_packages
 
@@ -468,3 +473,20 @@ def _package_ntiid_updated(package, event):
         # XXX: Removed packages?
         notify(CourseBundleUpdatedEvent(course,
                                         added_packages=(package,)))
+
+
+@component.adapter(IUser, ICourseInstructorAddedEvent)
+def on_course_instructor_added(user, event):
+    index_course_instructor(user, event.course)
+
+
+@component.adapter(IUser, ICourseEditorAddedEvent)
+def on_course_editor_added(user, event):
+    index_course_editor(user, event.course)
+
+
+@component.adapter(IUser, ICourseRoleRemovedEvent)
+def on_course_role_removed(user, event):
+    # On role removed, we need to re-index our course.
+    unindex_course_roles(event.course)
+    index_course_roles(event.course)

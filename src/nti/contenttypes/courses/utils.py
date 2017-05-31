@@ -213,6 +213,28 @@ def _index_instructors(course, catalog, entry, doc_id):
     return result
 
 
+def _index_course_role(user, course, role):
+    intids = component.getUtility(IIntIds)
+    entry = ICourseCatalogEntry(course, None)
+    doc_id = intids.queryId(course)
+    if doc_id is None:
+        return 0
+    catalog = get_enrollment_catalog()
+    principal = IPrincipal(user, None)
+    if principal is not None:
+        pid = principal.id
+        record = IndexRecord(pid, entry.ntiid, role)
+        catalog.index_doc(doc_id, record)
+
+
+def index_course_instructor(user, course):
+    _index_course_role(user, course, INSTRUCTOR)
+
+
+def index_course_editor(user, course):
+    _index_course_role(user, course, EDITOR)
+
+
 def _index_editors(course, catalog, entry, doc_id):
     result = 0
     for editor in get_course_editors(course) or ():
@@ -502,7 +524,7 @@ def get_instructors_in_roles(roles, setting=Allow):
     return result
 
 
-def get_course_editors(context, setting=Allow):
+def get_course_editors(context, permission=Allow):
     """
     return the principals for the specified course with the specified setting
     """
@@ -512,7 +534,7 @@ def get_course_editors(context, setting=Allow):
     if role_manager is not None:
         for prin, setting in role_manager.getPrincipalsForRole(
                 RID_CONTENT_EDITOR):
-            if setting is setting:
+            if setting is permission:
                 try:
                     user = User.get_user(prin)
                     principal = IPrincipal(user, None)

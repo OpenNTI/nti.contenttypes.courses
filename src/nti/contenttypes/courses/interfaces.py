@@ -1403,6 +1403,77 @@ class CourseRolesSynchronized(ObjectEvent):
     pass
 
 
+class ICourseRoleUpdatedEvent(IObjectEvent):
+    """
+    Event to indicate a course role has been updated.
+    """
+
+
+class AbstractCourseRoleUpdatedEvent(ObjectEvent):
+
+    user = alias('object')
+
+    def __init__(self, obj, course):
+        super(AbstractCourseRoleUpdatedEvent, self).__init__(obj)
+        self.course = course
+
+
+class ICourseRoleAddedEvent(ICourseRoleUpdatedEvent):
+    """
+    Event to indicate a user has been added to a course role.
+    """
+
+
+class ICourseInstructorAddedEvent(ICourseRoleAddedEvent):
+    """
+    Event to indicate a user has been added as a course instructor.
+    """
+
+
+@interface.implementer(ICourseInstructorAddedEvent)
+class CourseInstructorAddedEvent(AbstractCourseRoleUpdatedEvent):
+    pass
+
+
+class ICourseEditorAddedEvent(ICourseRoleAddedEvent):
+    """
+    Event to indicate a user has been added as a course editor.
+    """
+
+
+@interface.implementer(ICourseEditorAddedEvent)
+class CourseEditorAddedEvent(AbstractCourseRoleUpdatedEvent):
+    pass
+
+
+class ICourseRoleRemovedEvent(ICourseRoleUpdatedEvent):
+    """
+    Event to indicate a user has been removed from a course role.
+    """
+
+
+class ICourseInstructorRemovedEvent(ICourseRoleRemovedEvent):
+    """
+    Event to indicate a user has been removed as a course instructor.
+    """
+
+
+@interface.implementer(ICourseInstructorRemovedEvent)
+class CourseInstructorRemovedEvent(AbstractCourseRoleUpdatedEvent):
+    pass
+
+
+class ICourseEditorRemovedEvent(ICourseRoleRemovedEvent):
+    """
+    Event to indicate a user has been removed as a course editor.
+    """
+
+
+@interface.implementer(ICourseEditorRemovedEvent)
+class CourseEditorRemovedEvent(AbstractCourseRoleUpdatedEvent):
+    pass
+
+
 class ICourseVendorInfoSynchronized(IObjectEvent):
     pass
 

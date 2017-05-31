@@ -136,6 +136,10 @@
 	<subscriber handler=".subscribers.on_unlock_assessment_policies" />
 	<subscriber handler=".subscribers.on_assessment_date_context_modified" />
 
+    <subscriber handler=".subscribers.on_course_role_removed" />
+    <subscriber handler=".subscribers.on_course_editor_added" />
+    <subscriber handler=".subscribers.on_course_instructor_added" />
+
 	<!-- Roles and permissions -->
 	<include package="zope.securitypolicy" file="meta.zcml" />
 	<include package="zope.security" file="meta.zcml" />
