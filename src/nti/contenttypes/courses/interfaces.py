@@ -107,16 +107,16 @@ from nti.schema.jsonschema import TAG_HIDDEN_IN_UI
 from nti.schema.jsonschema import TAG_REQUIRED_IN_UI
 
 #: The catalog entry NTIID provider
-NTIID_ENTRY_PROVIDER = 'NTI'
+NTIID_ENTRY_PROVIDER = u'NTI'
 
 #: The catalog entry NTIID type
-NTIID_ENTRY_TYPE = 'CourseInfo'
+NTIID_ENTRY_TYPE = u'CourseInfo'
 
 #: NTIID Type for outline
-NTI_COURSE_OUTLINE = 'NTICourseOutline'
+NTI_COURSE_OUTLINE = u'NTICourseOutline'
 
 #: NTIID Type for outline node
-NTI_COURSE_OUTLINE_NODE = 'NTICourseOutlineNode'
+NTI_COURSE_OUTLINE_NODE = u'NTICourseOutlineNode'
 
 # Permissions defined for courses here should also be
 # registered in ZCML:
@@ -147,26 +147,26 @@ COURSE_CATALOG_NAME = u'Courses'
 COURSE_OUTLINE_NAME = 'course_outline.xml'
 
 #: Instructor role
-INSTRUCTOR = "Instructor"
+INSTRUCTOR = u"Instructor"
 
 #: Editor role
-EDITOR = "Editor"
+EDITOR = u"Editor"
 
 #: Outline node move type
 TRX_OUTLINE_NODE_MOVE_TYPE = u'outlinenodemove'
 
 #: Supported string keys
-SUPPORTED_STRING_KEYS = ('title',)
+SUPPORTED_STRING_KEYS = (u'title',)
 
 #: Supported bool keys
-SUPPORTED_BOOL_KEYS = ('excluded',)
+SUPPORTED_BOOL_KEYS = (u'excluded',)
 
 #: Supported positive integer keys
-SUPPORTED_PVE_INT_KEYS = ('maximum_time_allowed',)
+SUPPORTED_PVE_INT_KEYS = (u'maximum_time_allowed',)
 
 #: Supported date keys
-SUPPORTED_DATE_KEYS = ('available_for_submission_beginning',
-                       'available_for_submission_ending')
+SUPPORTED_DATE_KEYS = (u'available_for_submission_beginning',
+                       u'available_for_submission_ending')
 
 #: NTI Course file scheme
 NTI_COURSE_FILE = u'nti-course-file'
@@ -448,6 +448,7 @@ class ICourseInstanceScopedForum(ICourseInstanceForum):
         "an optional field that should match the name of a sharing scope;"
         "If not found also check the tagged value on this attribute")
 
+
 # Course instances
 
 
@@ -494,7 +495,7 @@ class ICourseInstance(IFolder,
     SharingScopes = Object(ICourseInstanceSharingScopes,
                            title=u"The sharing scopes for this instance",
                            description=u"Each course has one or more sharing scopes. "
-                           "See :class:`ICourseInstanceEnrollmentRecord` for details.")
+                           u"See :class:`ICourseInstanceEnrollmentRecord` for details.")
     # SharingScopes are externalized via a decorator to take into account
     # membership
     SharingScopes.setTaggedValue('_ext_excluded_out', True)
@@ -502,7 +503,7 @@ class ICourseInstance(IFolder,
     Discussions = Object(IBoard,
                          title=u"The root discussion board for this course.",
                          description=u"Typically, courses will 'contain' their own discussions, "
-                         "but this may be a reference to another object.")
+                         u"but this may be a reference to another object.")
 
     Outline = Object(ICourseOutline,
                      title=u"The course outline or syllabus, if there is one.",
@@ -636,8 +637,6 @@ class INonPublicCourseInstance(interface.Interface):
     course itself. This enrollment typically happens in a backend
     process.
     """
-
-
 # Don't try to consider this when determining most-derived
 # interfaces.
 INonPublicCourseInstance.setTaggedValue('_ext_is_marker_interface', True)
@@ -651,8 +650,6 @@ class IAnonymouslyAccessibleCourseInstance(interface.Interface):
     courses are not "publicly" accessible.  Authenticated users cannot
     access them without being enrolled.
     """
-
-
 # Don't try to consider this when determining most-derived
 # interfaces.
 IAnonymouslyAccessibleCourseInstance.setTaggedValue('_ext_is_marker_interface', True)
@@ -666,8 +663,6 @@ class IDenyOpenEnrollment(interface.Interface):
     course itself. This enrollment typically happens in a backend
     process.
     """
-
-
 # Don't try to consider this when determining most-derived
 # interfaces.
 IDenyOpenEnrollment.setTaggedValue('_ext_is_marker_interface', True)
@@ -1024,8 +1019,8 @@ class ICourseInstanceEnrollmentRecord(ILastModified,
     CourseInstance = Object(ICourseInstance,
                             title=u"The course instance",
                             description=u"This should also be in the lineage of this object. "
-                            "This is to allow ObjectMovedEvents to be able to find both the current "
-                            "and previous course, given the current and previous parents",
+                            u"This is to allow ObjectMovedEvents to be able to find both the current "
+                            u"and previous course, given the current and previous parents",
                             required=False)
 
     Principal = Object(interface.Interface,
@@ -1256,6 +1251,7 @@ class CourseInstanceEnrollmentRecordCreatedEvent(ObjectCreatedEvent):
     def __init__(self, obj, context=None):
         super(CourseInstanceEnrollmentRecordCreatedEvent, self).__init__(obj)
         self.context = context
+
 
 # Back to discussions
 
@@ -1591,8 +1587,7 @@ class ICourseInstanceAdministrativeRole(IShouldHaveTraversablePath):
     and the corresponding catalog entry.
     """
 
-    __name__ = interface.Attribute(
-        "The name of the administration is the same as the CourseInstance.")
+    __name__ = interface.Attribute("The name of the administration is the same as the CourseInstance.")
 
     RoleName = Choice(title=u"The name of the role this principal holds",
                       values=('instructor', 'teaching assistant', 'editor'))
@@ -1824,8 +1819,6 @@ def iface_of_outline_node(node):
         if node_interface.providedBy(node):
             return node_interface
     return None
-
-
 iface_of_node = iface_of_outline_node  # alias
 
 
@@ -1835,8 +1828,6 @@ def _set_ifaces():
             if IMethod.providedBy(v) or v.queryTaggedValue(TAG_HIDDEN_IN_UI) is not None:
                 continue
             iSchema[k].setTaggedValue(TAG_HIDDEN_IN_UI, True)
-
-
 _set_ifaces()
 del _set_ifaces
 del _tag_iface_fields

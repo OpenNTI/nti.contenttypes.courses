@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -41,7 +41,7 @@ from nti.schema.fieldproperty import createDirectFieldProperties
 class JoinCourseInvitation(Invitation):
     createDirectFieldProperties(IJoinCourseInvitation)
 
-    mimeType = mime_type = u"application/vnd.nextthought.joincourseinvitation"
+    mimeType = mime_type = "application/vnd.nextthought.joincourseinvitation"
 
     @readproperty
     def scope(self):
@@ -81,8 +81,8 @@ class JoinCourseInvitationActor(object):
 
         record = get_enrollment_in_hierarchy(course, user)
         if record is not None:
-            raise AlreadyEnrolledException(
-                _("You are already enrolled in this course."))
+            msg = _(u"You are already enrolled in this course.")
+            raise AlreadyEnrolledException(msg)
 
         enrollment_manager = ICourseEnrollmentManager(course)
         enrollment_manager.enroll(user, scope=scope)
