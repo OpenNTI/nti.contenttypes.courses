@@ -458,15 +458,17 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
             else:
                 assignments[key] = value
 
-        # Hash the ntiids if needed, as we export them
-        for key, value in assignments.items():
-            assessment = component.queryUtility(IQAssessment, name=key)
-            if      IQEditableEvaluation.providedBy(assessment) \
-                    and not backup:
-                hashed_ntiid = self.hash_ntiid(key, salt)
-                result[hashed_ntiid] = value
-            else:
-                result[key] = value
+        # If not backing up, hash the ntiids if needed, as we export them
+        if not backup:
+            for key, value in assignments.items():
+                assessment = component.queryUtility(IQAssessment, name=key)
+                if IQEditableEvaluation.providedBy(assessment):
+                    hashed_ntiid = self.hash_ntiid(key, salt)
+                    result[hashed_ntiid] = value
+                else:
+                    result[key] = value
+        else:
+            result = assignments
 
         return result
 
