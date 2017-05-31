@@ -347,13 +347,11 @@
 			 for=".interfaces.IJoinCourseInvitation" />
 
 	<!-- Metadata -->
-	<configure zcml:condition="installed nti.metadata">
-		<subscriber	factory=".predicates._CoursePrincipalObjects"
-					provides="nti.dataserver.interfaces.IPrincipalMetadataObjects" />
+	<subscriber	factory=".predicates._CoursePrincipalObjects"
+				provides="nti.dataserver.metadata.interfaces.IPrincipalMetadataObjects" />
 
-		<subscriber	factory=".predicates._EnrollmentPrincipalObjects"
-					provides="nti.dataserver.interfaces.IPrincipalMetadataObjects" />
-	</configure>
+	<subscriber	factory=".predicates._EnrollmentPrincipalObjects"
+				provides="nti.dataserver.metadata.interfaces.IPrincipalMetadataObjects" />
 
 	<!--
 		To get maximum externalization testing, let the dataserver
