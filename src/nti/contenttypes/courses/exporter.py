@@ -454,9 +454,9 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
         # dict of assignments.
         for key, value in date_context.items():
             if key in assignments:
-                assignments[key].update(date_context[key])
+                assignments[key].update(value)
             else:
-                assignments[key] = date_context[key]
+                assignments[key] = value
 
         # Hash the ntiids if needed, as we export them
         for key, value in assignments.items():
