@@ -6,7 +6,7 @@ Vendor information objects.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -33,14 +33,15 @@ class DefaultCourseInstanceVendorInfo(PersistentMapping,
     to be small.
     """
 
-    __parent__ = None
     __name__ = None
+    __parent__ = None
 
     # Leave these at 0 until they get set externally
     _SET_CREATED_MODTIME_ON_INIT = False
 
     def __init__(self):
         super(DefaultCourseInstanceVendorInfo, self).__init__()
+
 
 VENDOR_INFO_KEY = 'CourseInstanceVendorInfo'
 CourseInstanceVendorInfo = an_factory(DefaultCourseInstanceVendorInfo,

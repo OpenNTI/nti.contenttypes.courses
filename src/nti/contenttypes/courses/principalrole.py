@@ -9,7 +9,7 @@ The possible roles are defined in ZCML.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -38,10 +38,10 @@ from nti.contenttypes.courses.interfaces import ICourseRolePermissionManager
 @interface.implementer(IPrincipalRoleMap)
 class CourseInstancePrincipalRoleMap(object):
 
+    _SUPPORTED_ROLES = (RID_TA, RID_INSTRUCTOR)
+
     def __init__(self, course):
         self.context = course
-
-    _SUPPORTED_ROLES = (RID_TA, RID_INSTRUCTOR)
 
     def _principals_for_ta(self):
         # XXX: FIXME: Right now, we don't have anything that distinguishes

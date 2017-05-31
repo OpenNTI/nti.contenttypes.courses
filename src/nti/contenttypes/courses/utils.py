@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -159,6 +159,10 @@ def get_sites_4_index(sites=None):
 _get_sites_4_index = get_sites_4_index
 
 
+def get_current_site():
+    return getattr(getSite(), '__name__', None)
+
+
 # index
 
 
@@ -192,10 +196,12 @@ def unindex_course_roles(context, catalog=None):
     entry = ICourseCatalogEntry(course, None)
     catalog = get_enrollment_catalog() if catalog is None else catalog
     if entry is not None:  # remove all instructors
-        site = getSite().__name__
-        query = {IX_SITE: {'any_of': (site,)},
-                 IX_COURSE: {'any_of': (entry.ntiid,)},
-                 IX_SCOPE: {'any_of': (INSTRUCTOR, EDITOR)}}
+        site = get_current_site() or ''
+        query = {
+            IX_SITE: {'any_of': (site,)},
+            IX_COURSE: {'any_of': (entry.ntiid,)},
+            IX_SCOPE: {'any_of': (INSTRUCTOR, EDITOR)}
+        }
         for uid in catalog.apply(query) or ():
             catalog.unindex_doc(uid)
 
@@ -532,8 +538,7 @@ def get_course_editors(context, permission=Allow):
     course = ICourseInstance(context, None)
     role_manager = IPrincipalRoleManager(course, None)
     if role_manager is not None:
-        for prin, setting in role_manager.getPrincipalsForRole(
-                RID_CONTENT_EDITOR):
+        for prin, setting in role_manager.getPrincipalsForRole(RID_CONTENT_EDITOR):
             if setting is permission:
                 try:
                     user = User.get_user(prin)
@@ -659,7 +664,7 @@ def get_instructed_course_in_hierarchy(context, user):
 
 
 def is_course_instructor_or_editor(context, user):
-    result =   is_course_instructor(context, user) \
+    result = is_course_instructor(context, user) \
         or is_course_editor(context, user)
     return result
 
@@ -741,11 +746,11 @@ def get_principal(principal):
 
 
 def adjust_scope_membership(principal, scope, course,
-                             join, follow,
-                             ignored_exceptions=(),
-                             currently_in=(),
-                             relevant_scopes=None,
-                             related_enrolled_courses=()):
+                            join, follow,
+                            ignored_exceptions=(),
+                            currently_in=(),
+                            relevant_scopes=None,
+                            related_enrolled_courses=()):
     if principal is not None:
         join = getattr(principal, join)
         follow = getattr(principal, follow)
@@ -760,7 +765,8 @@ def adjust_scope_membership(principal, scope, course,
     scopes_to_ignore = []
     for related_course in related_enrolled_courses:
         sharing_scopes = related_course.SharingScopes
-        scopes_to_ignore.extend(sharing_scopes.getAllScopesImpliedbyScope(scope))
+        scopes_to_ignore.extend(
+            sharing_scopes.getAllScopesImpliedbyScope(scope))
 
     for scope in relevant_scopes:
         if scope in currently_in or scope in scopes_to_ignore:
@@ -791,7 +797,7 @@ def _content_roles_for_course_instance(course, packages=None):
     for pack in packages:
         # Editable content packages may have fluxuating permissible
         # state; so we handle those elsewhere.
-        if IEditableContentPackage.providedBy( pack ):
+        if IEditableContentPackage.providedBy(pack):
             continue
         ntiid = pack.ntiid
         ntiid = get_parts(ntiid)
@@ -825,8 +831,8 @@ def _get_principal_enrollment_packages(principal, courses_to_exclude=()):
     enrollments = get_enrollments(principal.username)
     for record in enrollments:
         course = ICourseInstance(record, None)  # dup enrollment
-        if         course is not None \
-            and course not in courses_to_exclude:
+        if course is not None \
+                and course not in courses_to_exclude:
             packages = get_course_packages(course)
             result.update(packages)
     return result
@@ -847,8 +853,9 @@ def remove_principal_from_course_content_roles(principal, course, packages=None,
     courses_to_exclude = (course,) if unenroll else ()
 
     # Get the minimal set of packages to remove roles for.
-    enrollment_packages = _get_principal_enrollment_packages(principal,
-                                                             courses_to_exclude=courses_to_exclude)
+    enrollment_packages = \
+        _get_principal_enrollment_packages(principal,
+                                           courses_to_exclude=courses_to_exclude)
     to_remove = set(packages) - enrollment_packages
 
     roles_to_remove = _content_roles_for_course_instance(course, to_remove)
@@ -879,7 +886,7 @@ def _principal_is_enrolled_in_related_course(principal, course):
     potential_other_courses = []
     potential_other_courses.extend(course.SubInstances.values())
     if ICourseSubInstance.providedBy(course):
-        main_course = course.__parent__.__parent__
+        main_course = get_parent_course(course)
         potential_other_courses.append(main_course)
         potential_other_courses.extend((x for x in main_course.SubInstances.values()
                                         if x is not course))
@@ -900,23 +907,25 @@ def deny_access_to_course(user, course, scope):
     principal = get_principal(user)
 
     related_enrolled_courses = \
-            _principal_is_enrolled_in_related_course(principal, course)
+        _principal_is_enrolled_in_related_course(principal, course)
 
     # If the course was in the process of being deleted,
     # the sharing scopes may already have been deleted, which
     # shouldn't be a problem: the removal listeners for those
     # events should have cleaned up
     adjust_scope_membership(user, scope, course,
-                             'record_no_longer_dynamic_member',
-                             'stop_following',
-                             # Depending on the order, we may have already
-                             # cleaned this up (e.g, deleting a principal
-                             # fires events twice due to various cleanups)
-                             # So the entity may no longer have an intid -> KeyError
-                             ignored_exceptions=(KeyError,),
-                             related_enrolled_courses=related_enrolled_courses)
+                            'record_no_longer_dynamic_member',
+                            'stop_following',
+                            # Depending on the order, we may have already
+                            # cleaned this up (e.g, deleting a principal
+                            # fires events twice due to various cleanups)
+                            # So the entity may no longer have an intid ->
+                            # KeyError
+                            ignored_exceptions=(KeyError,),
+                            related_enrolled_courses=related_enrolled_courses)
 
-    remove_principal_from_course_content_roles(principal, course, unenroll=True)
+    remove_principal_from_course_content_roles(
+        principal, course, unenroll=True)
 
 
 def grant_instructor_access_to_course(user, course):
@@ -964,6 +973,7 @@ def deny_instructor_access_to_course(user, course):
         user.stop_following(public_scope)
 
 # catalog entry
+
 
 def path_for_entry(context):
     parents = []
