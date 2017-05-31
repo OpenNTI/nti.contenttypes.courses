@@ -338,8 +338,8 @@ class BundleDCMetadataExporter(BaseSectionExporter):
             k = k.lower()
             # create nodes
             if     isinstance(value, six.string_types) \
-                or isinstance(value, datetime) \
-                or isinstance(value, Number):
+                    or isinstance(value, datetime) \
+                    or isinstance(value, Number):
                 name = self.attr_to_xml.get(k, k)
                 node = xmldoc.createElement("dc:%s" % name)
                 node.appendChild(xmldoc.createTextNode(self._to_text(value)))
@@ -447,19 +447,27 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
         result = {}
         policies = IQAssessmentPolicies(course)
         date_context = IQAssessmentDateContext(course)
-        ext_obj = to_external_object(policies, decorate=False)
+        assignments = to_external_object(policies, decorate=False)
         date_context = to_external_object(date_context, decorate=False)
+
+        # Merge the date context externalized dict into the
+        # dict of assignments.
         for key, value in date_context.items():
-            entry = ext_obj.get(key)
+            if key in assignments:
+                assignments[key].update(date_context[key])
+            else:
+                assignments[key] = date_context[key]
+
+        # Hash the ntiids if needed, as we export them
+        for key, value in assignments.items():
             assessment = component.queryUtility(IQAssessment, name=key)
             if      IQEditableEvaluation.providedBy(assessment) \
-                and not backup:
+                    and not backup:
                 hashed_ntiid = self.hash_ntiid(key, salt)
-                if entry is not None:
-                    result[hashed_ntiid] = value
-                    result[hashed_ntiid].update(entry)
-            elif entry is not None:
+                result[hashed_ntiid] = value
+            else:
                 result[key] = value
+
         return result
 
     def export(self, context, filer, backup=True, salt=None):
