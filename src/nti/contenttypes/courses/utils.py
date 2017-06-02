@@ -956,10 +956,6 @@ def grant_instructor_access_to_course(user, course):
         # shared to it
         user.follow(scope)
 
-    # reflect change in index
-    site = get_course_site(course)
-    index_course_instructor(user, course, site=site)
-
     # If they're an instructor of a section, give them
     # access to the public community of the main course.
     if ICourseSubInstance.providedBy(course):
@@ -989,9 +985,6 @@ def deny_instructor_access_to_course(user, course):
         public_scope = parent_course.SharingScopes[ES_PUBLIC]
         user.record_no_longer_dynamic_member(public_scope)
         user.stop_following(public_scope)
-
-    # reflect change in index
-    unindex_course_instructor(user, course)
 
 
 # catalog entry
