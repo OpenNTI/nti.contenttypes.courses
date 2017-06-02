@@ -13,8 +13,6 @@ from six import string_types
 
 from itertools import chain
 
-from ZODB.POSException import POSError
-
 from zope import component
 from zope import interface
 
@@ -35,6 +33,8 @@ from zope.security.interfaces import IPrincipal
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
+
+from ZODB.POSException import POSError
 
 from nti.base.mixins import CreatedAndModifiedTimeMixin
 
