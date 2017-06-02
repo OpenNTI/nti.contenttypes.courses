@@ -190,10 +190,28 @@ def unindex_course_roles(context, catalog=None):
         query = {
             IX_SITE: {'any_of': (site,)},
             IX_COURSE: {'any_of': (entry.ntiid,)},
-            IX_SCOPE: {'any_of': (INSTRUCTOR, EDITOR)}
+            IX_SCOPE: {'any_of': (INSTRUCTOR, EDITOR, RID_TA)}
         }
         for uid in catalog.apply(query) or ():
             catalog.unindex_doc(uid)
+
+
+def unindex_user_course_role(user, course, role):
+    intids = component.getUtility(IIntIds)
+    entry = ICourseCatalogEntry(course, None)
+    doc_id = intids.queryId(course)
+    if doc_id is not None:
+        user = getattr(user, 'id', user)
+        user = getattr(user, 'username', user)
+        query = {
+            IX_SCOPE: {'any_of': (role,)},
+            IX_USERNAME: {'any_of': (user,)},
+            IX_COURSE: {'any_of': (entry.ntiid,)},
+        }
+        catalog = get_enrollment_catalog()
+        for uid in catalog.apply(query) or ():
+            if uid == doc_id:
+                catalog.unindex_doc(uid)
 
 
 def index_course_instructors(course, catalog, entry, doc_id):
@@ -224,8 +242,8 @@ def index_user_course_role(user, course, role, site=None):
         catalog.index_doc(doc_id, record)
 
 
-def index_course_instructor(user, course, site=None):
-    index_user_course_role(user, course, INSTRUCTOR, site)
+def index_course_instructor(user, course, role=INSTRUCTOR, site=None):
+    index_user_course_role(user, course, role, site)
 
 
 def index_course_editor(user, course, site=None):
@@ -261,6 +279,10 @@ def index_course_roles(context, catalog=None, intids=None):
     result += index_course_editors(course, catalog, entry, doc_id)
     result += index_course_instructors(course, catalog, entry, doc_id)
     return result
+
+
+def unindex_course_instructor(user, course, role=INSTRUCTOR):
+    unindex_user_course_role(user, course, role)
 
 
 # course & hierarchy
@@ -936,7 +958,7 @@ def grant_instructor_access_to_course(user, course):
 
     # reflect change in index
     site = get_course_site(course)
-    index_course_instructor(user, course, site)
+    index_course_instructor(user, course, site=site)
 
     # If they're an instructor of a section, give them
     # access to the public community of the main course.
@@ -969,7 +991,7 @@ def deny_instructor_access_to_course(user, course):
         user.stop_following(public_scope)
 
     # reflect change in index
-    # index_course_instructor(user, course)
+    unindex_course_instructor(user, course)
 
 
 # catalog entry
