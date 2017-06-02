@@ -285,7 +285,7 @@ def on_user_removed(user, event):
             IX_USERNAME: {'any_of': (user.username,)},
         }
         for uid in catalog.apply(query) or ():
-            record = IndexRecord(user.username, None, None)
+            record = IndexRecord(user.username)
             index.remove(uid, record)  # KeepSet index
 
 

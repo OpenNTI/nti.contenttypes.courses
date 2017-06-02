@@ -20,8 +20,6 @@ from zope import interface
 
 from zope.cachedescriptors.property import Lazy
 
-from zope.catalog.interfaces import ICatalog
-
 from zope.component.hooks import getSite
 
 from zope.component.interfaces import ComponentLookupError
@@ -55,9 +53,9 @@ from nti.contenttypes.courses.index import IX_USERNAME
 from nti.contenttypes.courses.index import IX_CONTENT_UNIT
 
 from nti.contenttypes.courses.index import IndexRecord
-from nti.contenttypes.courses.index import COURSES_CATALOG_NAME
-from nti.contenttypes.courses.index import ENROLLMENT_CATALOG_NAME
-from nti.contenttypes.courses.index import COURSE_OUTLINE_CATALOG_NAME
+from nti.contenttypes.courses.index import get_courses_catalog
+from nti.contenttypes.courses.index import get_enrollment_catalog
+from nti.contenttypes.courses.index import get_course_outline_catalog
 
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import RID_TA
@@ -166,10 +164,6 @@ def get_current_site():
 # index
 
 
-def get_courses_catalog():
-    return component.queryUtility(ICatalog, name=COURSES_CATALOG_NAME)
-
-
 def get_courses_for_packages(sites=(), packages=(), intids=None):
     result = set()
     catalog = get_courses_catalog()
@@ -187,10 +181,6 @@ def get_courses_for_packages(sites=(), packages=(), intids=None):
     return tuple(result)
 
 
-def get_enrollment_catalog():
-    return component.queryUtility(ICatalog, name=ENROLLMENT_CATALOG_NAME)
-
-
 def unindex_course_roles(context, catalog=None):
     course = ICourseInstance(context, None)
     entry = ICourseCatalogEntry(course, None)
@@ -206,7 +196,7 @@ def unindex_course_roles(context, catalog=None):
             catalog.unindex_doc(uid)
 
 
-def _index_instructors(course, catalog, entry, doc_id):
+def index_course_instructors(course, catalog, entry, doc_id):
     result = 0
     for instructor in course.instructors or ():
         principal = IPrincipal(instructor, None)
@@ -219,7 +209,7 @@ def _index_instructors(course, catalog, entry, doc_id):
     return result
 
 
-def _index_course_role(user, course, role):
+def index_user_course_role(user, course, role, site=None):
     intids = component.getUtility(IIntIds)
     entry = ICourseCatalogEntry(course, None)
     doc_id = intids.queryId(course)
@@ -229,26 +219,27 @@ def _index_course_role(user, course, role):
     principal = IPrincipal(user, None)
     if principal is not None:
         pid = principal.id
-        record = IndexRecord(pid, entry.ntiid, role)
+        site = site or get_current_site()
+        record = IndexRecord(pid, entry.ntiid, role, site)
         catalog.index_doc(doc_id, record)
 
 
-def index_course_instructor(user, course):
-    _index_course_role(user, course, INSTRUCTOR)
+def index_course_instructor(user, course, site=None):
+    index_user_course_role(user, course, INSTRUCTOR, site)
 
 
-def index_course_editor(user, course):
-    _index_course_role(user, course, EDITOR)
+def index_course_editor(user, course, site=None):
+    index_user_course_role(user, course, EDITOR, site)
 
 
-def _index_editors(course, catalog, entry, doc_id):
+def index_course_editors(course, catalog, entry, doc_id, site=None):
     result = 0
     for editor in get_course_editors(course) or ():
         principal = IPrincipal(editor, None)
         if principal is None:
             continue
         pid = principal.id
-        record = IndexRecord(pid, entry.ntiid, EDITOR)
+        record = IndexRecord(pid, entry.ntiid, EDITOR, site)
         catalog.index_doc(doc_id, record)
         result += 1
     return result
@@ -267,8 +258,8 @@ def index_course_roles(context, catalog=None, intids=None):
         return 0
 
     result = 0
-    result += _index_instructors(course, catalog, entry, doc_id)
-    result += _index_editors(course, catalog, entry, doc_id)
+    result += index_course_editors(course, catalog, entry, doc_id)
+    result += index_course_instructors(course, catalog, entry, doc_id)
     return result
 
 
@@ -305,8 +296,9 @@ def get_content_unit_courses(context, include_sub_instances=True):
     if package is not None:
         courses = get_courses_for_packages(packages=package.ntiid)
         if not include_sub_instances:
-            result = tuple(x for x in courses
-                           if not ICourseSubInstance.providedBy(x))
+            result = tuple(
+                x for x in courses if not ICourseSubInstance.providedBy(x)
+            )
         else:
             result = courses
     return result
@@ -665,15 +657,11 @@ def get_instructed_course_in_hierarchy(context, user):
 
 def is_course_instructor_or_editor(context, user):
     result = is_course_instructor(context, user) \
-        or is_course_editor(context, user)
+          or is_course_editor(context, user)
     return result
 
 
 # outlines
-
-
-def get_course_outline_catalog():
-    return component.queryUtility(ICatalog, name=COURSE_OUTLINE_CATALOG_NAME)
 
 
 def get_content_outline_nodes(ntiid, intids=None):
@@ -831,8 +819,8 @@ def _get_principal_enrollment_packages(principal, courses_to_exclude=()):
     enrollments = get_enrollments(principal.username)
     for record in enrollments:
         course = ICourseInstance(record, None)  # dup enrollment
-        if course is not None \
-                and course not in courses_to_exclude:
+        if      course is not None \
+            and course not in courses_to_exclude:
             packages = get_course_packages(course)
             result.update(packages)
     return result
@@ -888,8 +876,9 @@ def _principal_is_enrolled_in_related_course(principal, course):
     if ICourseSubInstance.providedBy(course):
         main_course = get_parent_course(course)
         potential_other_courses.append(main_course)
-        potential_other_courses.extend((x for x in main_course.SubInstances.values()
-                                        if x is not course))
+        potential_other_courses.extend(
+            x for x in main_course.SubInstances.values() if x is not course
+        )
 
     principal = get_principal(principal)
     if principal is not None:
@@ -924,8 +913,9 @@ def deny_access_to_course(user, course, scope):
                             ignored_exceptions=(KeyError,),
                             related_enrolled_courses=related_enrolled_courses)
 
-    remove_principal_from_course_content_roles(
-        principal, course, unenroll=True)
+    remove_principal_from_course_content_roles(principal, 
+                                               course, 
+                                               unenroll=True)
 
 
 def grant_instructor_access_to_course(user, course):
@@ -934,6 +924,7 @@ def grant_instructor_access_to_course(user, course):
     this, we ensure the user is not enrolled (if necessary).
     """
     unenroll_instructor(user, course)
+
     # XXX: Can we re-use some of the access grant that occurs with students?
     add_principal_to_course_content_roles(user, course)
     for scope in course.SharingScopes.values():
@@ -942,6 +933,10 @@ def grant_instructor_access_to_course(user, course):
         # ...and they follow it to get notifications of things
         # shared to it
         user.follow(scope)
+
+    # reflect change in index
+    site = get_course_site(course)
+    index_course_instructor(user, course, site)
 
     # If they're an instructor of a section, give them
     # access to the public community of the main course.
@@ -958,6 +953,7 @@ def deny_instructor_access_to_course(user, course):
     be enrolled as students.
     """
     user = IUser(user)
+
     # by definition here we have an IPrincipal that *came* from an IUser
     # and has a hard reference to it, and so can become an IUser again
     remove_principal_from_course_content_roles(user, course)
@@ -971,6 +967,10 @@ def deny_instructor_access_to_course(user, course):
         public_scope = parent_course.SharingScopes[ES_PUBLIC]
         user.record_no_longer_dynamic_member(public_scope)
         user.stop_following(public_scope)
+
+    # reflect change in index
+    # index_course_instructor(user, course)
+
 
 # catalog entry
 
