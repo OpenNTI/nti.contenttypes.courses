@@ -4,12 +4,13 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
 import os
+import six
 
 from urllib import unquote
 from urlparse import urlparse
@@ -41,8 +42,8 @@ from nti.ntiids.ntiids import make_specific_safe
 
 from nti.traversal.traversal import find_interface
 
-ENROLLED_COURSE_ROOT = ':EnrolledCourseRoot'
-ENROLLED_COURSE_SECTION = ':EnrolledCourseSection'
+ENROLLED_COURSE_ROOT = u':EnrolledCourseRoot'
+ENROLLED_COURSE_SECTION = u':EnrolledCourseSection'
 
 
 def get_discussion_id(discussion):
@@ -113,8 +114,8 @@ def get_discussion_for_path(path, context):
         if course is not None and name:
             discussions = ICourseDiscussions(course, None) or {}
             for prefix in (name, name.replace(' ', '_')):
-                result =   discussions.get(prefix) \
-                        or discussions.get(prefix + '.json')
+                result = discussions.get(prefix) \
+                      or discussions.get(prefix + '.json')
                 if result is not None:
                     break
             return result
@@ -129,7 +130,7 @@ def get_topic_key(discussion):
         name = discussion.title
         if not name:
             name = u''
-        elif not isinstance(name, unicode):
+        elif not isinstance(name, six.text_type):
             name = name.decode('utf-8', 'ignore')
     name = make_specific_safe(name)
     return name
@@ -208,7 +209,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
         key = get_discussion_key(item)
         discussion = ICourseDiscussions(course).get(key) if key else None
     if discussion is not None:
-        scopes = get_implied_by_scopes(discussion.scopes) 
+        scopes = get_implied_by_scopes(discussion.scopes)
         logger.debug("Implied scopes for %s are %s", discussion.id, scopes)
     else:
         scopes = ()

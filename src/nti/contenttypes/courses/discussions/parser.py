@@ -57,8 +57,8 @@ def load_discussion(name, source, discussions, path, discussion=None):
         json = simplejson.loads(prepare_json_text(source))
     factory = find_factory_for(json)
     if factory is None:
-        raise InvalidDiscussionException(
-            "Cannot find factory for discussion in json file. Check MimeType")
+        msg = "Cannot find factory for discussion in json file. Check MimeType"
+        raise InvalidDiscussionException(msg)
     new_discussion = factory() if discussion is None else discussion
     update_from_external_object(new_discussion, json, notify=False)
 

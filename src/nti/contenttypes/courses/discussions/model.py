@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -48,8 +48,8 @@ class CourseDiscussion(SchemaConfigured,
                        Contained):
     createDirectFieldProperties(ICourseDiscussion)
 
-    __external_class_name__ = u"Discussion"
-    mime_type = mimeType = u'application/vnd.nextthought.courses.discussion'
+    __external_class_name__ = "Discussion"
+    mime_type = mimeType = 'application/vnd.nextthought.courses.discussion'
 
     parameters = {}  # IContentTypeAware
 
@@ -91,8 +91,8 @@ class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer
     The default representation of course discussions.
     """
 
-    __external_class_name__ = u"CourseDiscussions"
-    mime_type = mimeType = u'application/vnd.nextthought.courses.discussions'
+    __external_class_name__ = "CourseDiscussions"
+    mime_type = mimeType = 'application/vnd.nextthought.courses.discussions'
 
     __name__ = None
     __parent__ = None
@@ -100,4 +100,5 @@ class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer
     def __init__(self):
         super(DefaultCourseDiscussions, self).__init__()
 
-CourseDiscussions = an_factory(DefaultCourseDiscussions, 'CourseDiscussions')
+CourseDiscussions = an_factory(DefaultCourseDiscussions, 
+                               'CourseDiscussions')

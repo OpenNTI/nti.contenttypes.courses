@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -15,9 +15,12 @@ from hamcrest import assert_that
 from hamcrest import has_property
 
 from nti.contenttypes.courses.courses import CourseInstance
-from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.discussions.model import CourseDiscussion
+
 from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussions
+
+from nti.contenttypes.courses.discussions.model import CourseDiscussion
+
+from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 
@@ -38,8 +41,8 @@ class TestAdapters(CourseLayerTest):
         assert_that(discussions, has_property('__parent__', is_(inst)))
 
         discussion = CourseDiscussion()
-        discussion.id = 'foo'
-        discussions['foo'] = discussion
+        discussion.id = u'foo'
+        discussions[u'foo'] = discussion
         assert_that(discussions, has_entry('foo', is_(discussion)))
 
         course = ICourseInstance(discussion, None)
