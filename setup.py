@@ -37,6 +37,7 @@ setup(
         'nti.containers',
         'nti.contentfragments',
         'nti.contentlibrary',
+        'nti.contenttypes.reports',
         'nti.coremetadata',
         'nti.dublincore',
         'nti.externalization',

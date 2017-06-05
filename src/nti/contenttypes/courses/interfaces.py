@@ -67,6 +67,8 @@ from nti.contentfragments.schema import HTMLContentFragment
 
 from nti.contenttypes.courses import MessageFactory as _
 
+from nti.contenttypes.reports.interfaces import IReportContext
+
 from nti.dataserver.interfaces import ICommunity
 from nti.dataserver.interfaces import ILastModified
 from nti.dataserver.interfaces import ITitledDescribedContent
@@ -472,7 +474,8 @@ class ISynchronizable(interface.Interface):
 class ICourseInstance(IFolder,
                       IShouldHaveTraversablePath,
                       _ICourseOutlineNodeContainer,
-                      ISynchronizable):
+                      ISynchronizable,
+                      IReportContext):
     """
     A concrete instance of a course (typically
     in progress or opening). This can be annotated,
