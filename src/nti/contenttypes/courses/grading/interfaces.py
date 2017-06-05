@@ -6,7 +6,7 @@ Course-related grading interfaces.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -42,13 +42,13 @@ class INullGrader(IGrader):
 
 
 class ICategoryGradeScheme(interface.Interface):
-    Weight = Number(title="Category weight",
+    Weight = Number(title=u"Category weight",
                     default=0.0,
                     min=0.0,
                     max=1.0,
                     required=True)
 
-    LatePenalty = Number(title="Late penalty",
+    LatePenalty = Number(title=u"Late penalty",
                          default=1,
                          min=0.0,
                          max=1.0,
@@ -57,9 +57,9 @@ class ICategoryGradeScheme(interface.Interface):
 
 class IEqualGroupGrader(IGrader):
 
-    Groups = Dict(key_type=ValidTextLine(title="Category Name"),
+    Groups = Dict(key_type=ValidTextLine(title=u"Category Name"),
                   value_type=Object(ICategoryGradeScheme,
-                                    title="Category grade scheme",
+                                    title=u"Category grade scheme",
                                     required=True),
                   min_length=1)
 
@@ -69,7 +69,7 @@ class ICourseGradingPolicy(IContained, ILastModified, ICreated):
     A marker interface to store a course grading policy
     """
 
-    Grader = Object(IGrader, required=True, title="Grader")
+    Grader = Object(IGrader, required=True, title=u"Grader")
 
     def validate():
         """
@@ -94,18 +94,23 @@ class IPredictedGrade(interface.Interface):
     related to IGrade.
     """
 
-    Grade = ValidTextLine(title="The student's grade according to the current grade scheme",
-                          description="A grade useful for display purposes.""")
-    RawValue = Number(title="The raw value of the grade",
-                      description="""Represents the fraction of PointsEarned to
+    Grade = ValidTextLine(title=u"The student's grade according to the current grade scheme",
+                          description=u"A grade useful for display purposes.""")
+
+    RawValue = Number(title=u"The raw value of the grade",
+                      description=u"""Represents the fraction of PointsEarned to
                                   PointsAvailable.""")
-    Correctness = Number(title="The correctness value of the grade, 100 * RawValue",
-                         description="""This is RawValue * 100, e.g. the percentage
-                                    representation of raw value.""")
+
+    Correctness = Number(title=u"The correctness value of the grade, 100 * RawValue",
+                         description=u"""This is RawValue * 100, e.g. the percentage
+                                     representation of raw value.""")
+
     DisplayableGrade = ValidTextLine(
-        title="A formatted description of the grade",
-        description="Should default to the same value as Correctness unless a grading scheme is set")
-    PointsEarned = Number(title="The number of points earned at this point in the course",
+        title=u"A formatted description of the grade",
+        description=u"Should default to the same value as Correctness unless a grading scheme is set")
+
+    PointsEarned = Number(title=u"The number of points earned at this point in the course",
                           required=False)
-    PointsAvailable = Number(title="The number of available points at this point in the course",
+
+    PointsAvailable = Number(title=u"The number of available points at this point in the course",
                              required=False)

@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -69,7 +69,7 @@ class BaseMixin(PersistentPropertyHolder, SchemaConfigured, Contained):
 @interface.implementer(ICategoryGradeScheme)
 class CategoryGradeScheme(BaseMixin):
 
-    mime_type = mimeType = u'application/vnd.nextthought.courses.grading.categorygradescheme'
+    mime_type = mimeType = 'application/vnd.nextthought.courses.grading.categorygradescheme'
 
     createDirectFieldProperties(ICategoryGradeScheme)
 
@@ -85,7 +85,7 @@ class CategoryGradeScheme(BaseMixin):
 class NullGrader(CreatedAndModifiedTimeMixin, BaseMixin):
     createDirectFieldProperties(INullGrader)
 
-    mime_type = mimeType = u'application/vnd.nextthought.courses.grading.nullgrader'
+    mime_type = mimeType = 'application/vnd.nextthought.courses.grading.nullgrader'
 
     def validate(self):
         pass
@@ -96,19 +96,19 @@ class NullGrader(CreatedAndModifiedTimeMixin, BaseMixin):
 class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
     createDirectFieldProperties(IEqualGroupGrader)
 
-    mime_type = mimeType = u'application/vnd.nextthought.courses.grading.equalgroupgrader'
+    mime_type = mimeType = 'application/vnd.nextthought.courses.grading.equalgroupgrader'
 
     groups = alias('Groups')
 
     def validate(self):
         if not self.groups:
-            raise ValueError(_("Must specify at least a group"))
+            raise ValueError(_(u"Must specify at least a group"))
 
         count = 0
         for name, category in self.groups.items():
             weight = category.Weight
             if weight <= 0 or weight > 1:
-                msg = translate(_("Invalid weight for category ${category}",
+                msg = translate(_(u"Invalid weight for category ${category}",
                                   mapping={'category': weight}))
                 raise ValueError(msg)
             count += weight
@@ -120,7 +120,7 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
         categories = self._raw_categories()
         for name in categories.keys():
             if name not in self.groups:
-                msg = translate(_("${group} is an invalid group name",
+                msg = translate(_(u"${group} is an invalid group name",
                                   mapping={'group': name}))
                 raise ValueError(msg)
 
@@ -128,19 +128,19 @@ class EqualGroupGrader(CreatedAndModifiedTimeMixin, BaseMixin):
         for name in self.groups.keys():
             data = categories.get(name)
             if not data:
-                msg = translate(_("No assignments are defined for category ${category}",
+                msg = translate(_(u"No assignments are defined for category ${category}",
                                   mapping={'category': name}))
                 raise ValueError(msg)
 
             for ntiid in [x['assignment'] for x in data]:
                 if ntiid in seen:
-                    msg = translate(_("Assignment ${asg} is in multiple groups",
+                    msg = translate(_(u"Assignment ${asg} is in multiple groups",
                                       mapping={'asg': ntiid}))
                     raise ValueError(msg)
                 seen.add(ntiid)
                 assignment = get_assignment(ntiid)
                 if assignment is None:
-                    msg = translate(_("Assignment ${asg} does not exists",
+                    msg = translate(_(u"Assignment ${asg} does not exists",
                                       mapping={'asg': ntiid}))
                     raise ValueError(msg)
 

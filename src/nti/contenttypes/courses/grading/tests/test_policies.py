@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -15,6 +15,8 @@ from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import has_property
+
+from nti.testing.matchers import validly_provides
 
 import fudge
 
@@ -36,25 +38,24 @@ from nti.externalization import externalization
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 
-import nti.dataserver.tests.mock_dataserver as mock_dataserver
-from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
+from nti.dataserver.tests import mock_dataserver
 
-from nti.testing.matchers import validly_provides
+from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 
 
 class TestPolicies(CourseLayerTest):
 
     def test_equal_grader(self):
         grader = EqualGroupGrader()
-        grader.groups = {'exams': CategoryGradeScheme(Weight=0.2)}
+        grader.groups = {u'exams': CategoryGradeScheme(Weight=0.2)}
         assert_that(grader, validly_provides(IEqualGroupGrader))
 
         ext_obj = externalization.toExternalObject(grader)
         assert_that(ext_obj, all_of(has_key('Class'),
-                                    has_entry('Groups', 
-											  has_entry('exams', has_entry('Weight', 0.2))),
-                                    has_entry('MimeType', 
-											  'application/vnd.nextthought.courses.grading.equalgroupgrader')))
+                                    has_entry('Groups',
+                                              has_entry('exams', has_entry('Weight', 0.2))),
+                                    has_entry('MimeType',
+                                              'application/vnd.nextthought.courses.grading.equalgroupgrader')))
 
         assert_that(internalization.find_factory_for(ext_obj),
                     is_(not_none()))
@@ -64,17 +65,22 @@ class TestPolicies(CourseLayerTest):
                                                     ext_obj,
                                                     require_updater=True)
 
-        assert_that(internal, has_property(
-            'Groups', has_entry('exams',  has_property('Weight', 0.2))))
+        assert_that(internal,
+                    has_property('Groups',
+                                 has_entry('exams', has_property('Weight', 0.2))))
 
     def test_validation_equal_grader(self):
         grader = EqualGroupGrader()
-        grader.groups = {'exams': CategoryGradeScheme(Weight=0.2),
-                         "homeworks": CategoryGradeScheme(Weight=0.9)}
+        grader.groups = {
+            u'exams': CategoryGradeScheme(Weight=0.2),
+            u"homeworks": CategoryGradeScheme(Weight=0.9)
+        }
         with self.assertRaises(ValueError):
             grader.validate()  # add more than one
-        grader.groups = {'exams': CategoryGradeScheme(Weight=0.2),
-                         'homeworks': CategoryGradeScheme(Weight=0.7)}
+        grader.groups = {
+            u'exams': CategoryGradeScheme(Weight=0.2),
+            u'homeworks': CategoryGradeScheme(Weight=0.7)
+        }
         with self.assertRaises(ValueError):
             grader.validate()
 
@@ -87,8 +93,10 @@ class TestPolicies(CourseLayerTest):
         connection.add(course)
 
         grader = EqualGroupGrader()
-        grader.groups = {'exams': CategoryGradeScheme(Weight=0.2),
-                         'homeworks': CategoryGradeScheme(Weight=0.8)}
+        grader.groups = {
+            u'exams': CategoryGradeScheme(Weight=0.2),
+            u'homeworks': CategoryGradeScheme(Weight=0.8)
+        }
 
         policy = DefaultCourseGradingPolicy(Grader=grader)
         assert_that(policy, has_property('Grader', is_(not_none())))
@@ -113,16 +121,22 @@ class TestPolicies(CourseLayerTest):
                                                     ext_obj,
                                                     require_updater=True)
 
-        assert_that(internal, has_property('Grader', has_property('Groups',
-                                                                  has_entry('homeworks', has_property('Weight', 0.8)))))
-        assert_that(internal, has_property('Grader', has_property('Groups',
-                                                                  has_entry('exams', has_property('Weight', 0.2)))))
+        assert_that(internal,
+                    has_property('Grader',
+                                 has_property('Groups',
+                                              has_entry('homeworks',
+                                                        has_property('Weight', 0.8)))))
+
+        assert_that(internal,
+                    has_property('Grader',
+                                 has_property('Groups',
+                                              has_entry('exams', has_property('Weight', 0.2)))))
 
         mock_ga.is_callable().with_args().returns(fudge.Fake())
 
         cap = MappingAssignmentPolicies()
-        cap['a1'] = {'grader': {'group': 'exams'}}
-        cap['a2'] = {'grader': {'group': 'homeworks'}}
+        cap[u'a1'] = {u'grader': {u'group': u'exams'}}
+        cap[u'a2'] = {u'grader': {u'group': u'homeworks'}}
 
         mock_gap.is_callable().with_args().returns(cap)
         policy.validate()
