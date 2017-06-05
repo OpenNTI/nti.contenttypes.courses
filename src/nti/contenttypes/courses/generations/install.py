@@ -6,7 +6,7 @@ Generations for managing courses.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -28,13 +28,10 @@ class _CoursesSchemaManager(SchemaManager):
     """
 
     def __init__(self):
-        super(_CoursesSchemaManager, self).__init__(generation=generation,
-                                                    minimum_generation=generation,
-                                                    package_name='nti.contenttypes.courses.generations')
-
-
-def evolve(context):
-    install_catalog(context)
+        super(_CoursesSchemaManager, self).__init__(
+            generation=generation,
+            minimum_generation=generation,
+            package_name='nti.contenttypes.courses.generations')
 
 
 def install_catalog(context):
@@ -46,3 +43,7 @@ def install_catalog(context):
     install_courses_catalog(dataserver_folder, intids)
     install_enrollment_catalog(dataserver_folder, intids)
     install_course_outline_catalog(dataserver_folder, intids)
+
+
+def evolve(context):
+    install_catalog(context)
