@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -88,6 +88,24 @@ OID = StandardExternalFields.OID
 NTIID = StandardExternalFields.NTIID
 
 
+def hexdigest(data, salt=None):
+    salt = salt or ''
+    hasher = hashlib.sha256()
+    hasher.update(data + salt)
+    return hasher.hexdigest()
+
+
+def hash_ntiid(ntiid, salt=None):
+    parts = get_parts(ntiid)
+    digest = hexdigest(ntiid, salt).upper()
+    specific = make_specific_safe("%s_%04d" % (digest, len(ntiid)))
+    ntiid = make_ntiid(parts.date,
+                       parts.provider,
+                       parts.nttype,
+                       specific=specific)
+    return ntiid
+
+
 @interface.implementer(ICourseSectionExporter)
 class BaseSectionExporter(object):
 
@@ -107,20 +125,10 @@ class BaseSectionExporter(object):
                 self._change_ntiid(value, salt)
 
     def hexdigest(self, data, salt=None):
-        salt = salt or ''
-        hasher = hashlib.sha256()
-        hasher.update(data + salt)
-        return hasher.hexdigest()
+        return hexdigest(data, salt)
 
     def hash_ntiid(self, ntiid, salt=None):
-        parts = get_parts(ntiid)
-        digest = self.hexdigest(ntiid, salt).upper()
-        specific = make_specific_safe("%s_%04d" % (digest, len(ntiid)))
-        ntiid = make_ntiid(parts.date,
-                           parts.provider,
-                           parts.nttype,
-                           specific=specific)
-        return ntiid
+        return hash_ntiid(ntiid, salt)
 
     def hash_filename(self, name, salt=None):
         root, ext = os.path.splitext(name)
@@ -239,6 +247,7 @@ class CourseOutlineExporter(BaseSectionExporter):
                                      decorate=False)
         if not backup:
             self._export_remover(ext_obj, salt)
+
         source = self.dump(ext_obj)
         filer.save(COURSE_OUTLINE_NAME,
                    source,
@@ -291,9 +300,11 @@ class BundleMetaInfoExporter(BaseSectionExporter):
         if ICourseSubInstance.providedBy(course):
             return
         entry = ICourseCatalogEntry(course)
-        data = {u'ntiid': u'',
-                u'title': entry.Title,
-                u"ContentPackages": [x.ntiid for x in get_course_packages(course)]}
+        data = {
+            'ntiid': u'',
+            'title': entry.Title,
+            "ContentPackages": [x.ntiid for x in get_course_packages(course)]
+        }
         ext_obj = to_external_object(data, decorate=False)
         source = self.dump(ext_obj)
         filer.save(BUNDLE_META_NAME, source,
@@ -306,8 +317,8 @@ class BundleDCMetadataExporter(BaseSectionExporter):
 
     attr_to_xml = {
         'creators': 'creator',
+        'subjects': 'subject',
         'contributors': 'contributors',
-        'subjects': 'subject'
     }
 
     def _to_text(self, value):
@@ -338,8 +349,8 @@ class BundleDCMetadataExporter(BaseSectionExporter):
             k = k.lower()
             # create nodes
             if     isinstance(value, six.string_types) \
-                    or isinstance(value, datetime) \
-                    or isinstance(value, Number):
+                or isinstance(value, datetime) \
+                or isinstance(value, Number):
                 name = self.attr_to_xml.get(k, k)
                 node = xmldoc.createElement("dc:%s" % name)
                 node.appendChild(xmldoc.createTextNode(self._to_text(value)))
@@ -396,7 +407,7 @@ class BundlePresentationAssetsExporter(BaseSectionExporter):
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
         bucket = self.course_bucket(course)
-        bucket = u'' if not bucket else bucket + '/'
+        bucket = '' if not bucket else bucket + '/'
         for resource in course.PlatformPresentationResources or ():
             self._process_root(resource.root, bucket, filer)
 
