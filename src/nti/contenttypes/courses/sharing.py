@@ -52,6 +52,7 @@ from nti.contenttypes.courses.utils import deny_access_to_course
 from nti.contenttypes.courses.utils import get_course_instructors
 from nti.contenttypes.courses.utils import grant_access_to_course
 from nti.contenttypes.courses.utils import adjust_scope_membership
+from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import add_principal_to_course_content_roles
 from nti.contenttypes.courses.utils import remove_principal_from_course_content_roles
 
@@ -316,25 +317,29 @@ def update_package_permissions(course, event):
 	if not event.added_packages and not event.removed_packages:
 		# Nothing to do
 		return
+	courses = [course]
+	subinstances = get_course_subinstances(course)
+	courses.extend(subinstances)
 
-	entry = ICourseCatalogEntry(course)
-	logger.info('Updating package permissions for course (%s)', entry.ntiid)
-	for principal in chain(enrollments.iter_principals(),
-							get_course_instructors(course),
-							get_course_editors(course)):
-		if IPrincipal.providedBy(principal):
-			principal = principal.id
-		if not IUser.providedBy(principal):
-			principal = User.get_user(principal)
-		if event.added_packages:
-			add_principal_to_course_content_roles(principal,
-										  		  course,
-										  		  event.added_packages)
+	for course in courses:
+		entry = ICourseCatalogEntry(course)
+		logger.info('Updating package permissions for course (%s)', entry.ntiid)
+		for principal in chain(enrollments.iter_principals(),
+								get_course_instructors(course),
+								get_course_editors(course)):
+			if IPrincipal.providedBy(principal):
+				principal = principal.id
+			if not IUser.providedBy(principal):
+				principal = User.get_user(principal)
+			if event.added_packages:
+				add_principal_to_course_content_roles(principal,
+											  		  course,
+											  		  event.added_packages)
 
-		if event.removed_packages:
-			remove_principal_from_course_content_roles(principal,
-													   course,
-													   packages=event.removed_packages)
+			if event.removed_packages:
+				remove_principal_from_course_content_roles(principal,
+														   course,
+														   packages=event.removed_packages)
 
 @component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
 def on_course_instance_imported(course, event):
