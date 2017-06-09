@@ -272,7 +272,7 @@
 	<subscriber handler=".enrollment.on_modified_potentially_move_courses" />
 
 	<!-- managing the scope as you enroll/drop/modify -->
-	<subscriber handler=".sharing.update_package_permissions" />
+	<subscriber handler=".sharing._course_bundle_updated" />
 	<subscriber handler=".sharing.on_course_instance_imported" />
 	<subscriber handler=".sharing.on_drop_exit_scope_membership" />
 	<subscriber handler=".sharing.on_enroll_record_scope_membership" />

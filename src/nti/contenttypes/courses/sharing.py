@@ -307,14 +307,13 @@ def on_moved_between_courses_update_scope_membership(record, event):
 	on_drop_exit_scope_membership(record, event, old_course)
 	on_enroll_record_scope_membership(record, event, new_course)
 
-@component.adapter(ICourseInstance, ICourseBundleUpdatedEvent)
-def update_package_permissions(course, event):
+
+def update_package_permissions(course, added=None, removed=None):
 	"""
 	Update the package permissions for the enrollees, instructors
 	and editors of this course if packages have been added/removed.
 	"""
-	enrollments = ICourseEnrollments(course)
-	if not event.added_packages and not event.removed_packages:
+	if not added and not removed:
 		# Nothing to do
 		return
 	courses = [course]
@@ -322,6 +321,7 @@ def update_package_permissions(course, event):
 	courses.extend(subinstances)
 
 	for course in courses:
+		enrollments = ICourseEnrollments(course)
 		entry = ICourseCatalogEntry(course)
 		logger.info('Updating package permissions for course (%s)', entry.ntiid)
 		for principal in chain(enrollments.iter_principals(),
@@ -331,15 +331,21 @@ def update_package_permissions(course, event):
 				principal = principal.id
 			if not IUser.providedBy(principal):
 				principal = User.get_user(principal)
-			if event.added_packages:
+			if added:
 				add_principal_to_course_content_roles(principal,
 											  		  course,
-											  		  event.added_packages)
+											  		  added)
 
-			if event.removed_packages:
+			if removed:
 				remove_principal_from_course_content_roles(principal,
 														   course,
-														   packages=event.removed_packages)
+														   packages=removed)
+
+
+@component.adapter(ICourseInstance, ICourseBundleUpdatedEvent)
+def _course_bundle_updated(course, event):
+	update_package_permissions(course, event.added_packages, event.removed_packages)
+
 
 @component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
 def on_course_instance_imported(course, event):
