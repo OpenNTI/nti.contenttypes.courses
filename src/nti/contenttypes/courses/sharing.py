@@ -312,6 +312,7 @@ def update_package_permissions(course, added=None, removed=None):
 	"""
 	Update the package permissions for the enrollees, instructors
 	and editors of this course if packages have been added/removed.
+	This should be idempotent.
 	"""
 	if not added and not removed:
 		# Nothing to do
