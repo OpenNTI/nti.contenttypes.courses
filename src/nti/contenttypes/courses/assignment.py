@@ -177,7 +177,8 @@ class MappingAssessmentMixin(PersistentCreatedAndModifiedTimeObject, Contained):
                 for value in result:
                     _remover(value)
             return result
-        result = to_external_object(self._mapping)
+
+        result = to_external_object(self._mapping, **kwargs)
         return _remover(result)
 
 
