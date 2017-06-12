@@ -470,7 +470,6 @@ class ISynchronizable(interface.Interface):
                               default=0.0)
     lastSynchronized.setTaggedValue('_ext_excluded_out', True)
 
-
 class ICourseInstance(IFolder,
                       IShouldHaveTraversablePath,
                       _ICourseOutlineNodeContainer,
@@ -490,7 +489,7 @@ class ICourseInstance(IFolder,
 
     Instances may be adaptable to :class:`.IDisplayableContent`.
     """
-
+    
     containers(ICourseAdministrativeLevel,
                ICourseSubInstances)
     __parent__.required = False
