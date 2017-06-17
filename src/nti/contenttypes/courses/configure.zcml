@@ -364,6 +364,10 @@
 				 zcml:condition="installed nti.dataserver.contenttypes.forums" />
 	</configure>
 
+	<!-- Site -->
+	<adapter factory=".adapters._entry_to_site" />
+	<adapter factory=".adapters._course_to_site" />
+	
 	<!-- Outline nodes -->
 	<adapter factory=".adapters._outlinenode_to_course" />
 

@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -27,7 +27,21 @@ from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_vendor_info
 
+from nti.site.interfaces import IHostPolicyFolder
+
 from nti.traversal.traversal import find_interface
+
+
+@component.adapter(ICourseInstance)
+@interface.implementer(IHostPolicyFolder)
+def _course_to_site(context):
+    return find_interface(context, IHostPolicyFolder, strict=False)
+
+
+@component.adapter(ICourseCatalogEntry)
+@interface.implementer(IHostPolicyFolder)
+def _entry_to_site(context):
+    return _course_to_site(ICourseInstance(context, None))
 
 
 @component.adapter(ICourseOutlineNode)
@@ -35,12 +49,13 @@ from nti.traversal.traversal import find_interface
 def _outlinenode_to_course(outline):
     return find_interface(outline, ICourseInstance, strict=False)
 
+
 # keywords
 
 
 class _Keywords(object):
 
-    __slots__ = (b'keywords',)
+    __slots__ = ('keywords',)
 
     def __init__(self, keywords=()):
         self.keywords = keywords
@@ -94,7 +109,7 @@ def _names(course):
         entry = ICourseCatalogEntry(course, None)
         if entry is not None:
             result.add(entry.ProviderUniqueID)
-        result.discard(u'')
+        result.discard('')
         result.discard(None)
     return tuple(x.strip() for x in result or () if x)
 
@@ -114,6 +129,6 @@ def _course_keywords(context):
     # paths
     result.update(_names(ICourseInstance(context, None)))
     # clean and return
-    result.discard(u'')
+    result.discard('')
     result.discard(None)
     return _Keywords(sorted(result))

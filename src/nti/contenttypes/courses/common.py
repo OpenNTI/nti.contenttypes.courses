@@ -13,8 +13,6 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.site.interfaces import IHostPolicyFolder
 
-from nti.traversal.traversal import find_interface
-
 
 def get_course_packages(context):
     course = ICourseInstance(context, None)
@@ -45,13 +43,11 @@ def get_course_content_units(context):
 
 
 def get_course_site_name(context):
-    course = ICourseInstance(context, None)
-    folder = find_interface(course, IHostPolicyFolder, strict=False)
+    folder = IHostPolicyFolder(ICourseInstance(context, None), None)
     return folder.__name__ if folder is not None else None
 get_course_site = get_course_site_name
 
 
 def get_course_site_registry(context):
-    course = ICourseInstance(context, None)
-    folder = find_interface(course, IHostPolicyFolder, strict=False)
+    folder = IHostPolicyFolder(ICourseInstance(context, None))
     return folder.getSiteManager() if folder is not None else None
