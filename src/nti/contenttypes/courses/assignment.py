@@ -119,8 +119,7 @@ class MappingAssessmentMixin(PersistentCreatedAndModifiedTimeObject, Contained):
         return size > 0
 
     def get_ntiid(self, assessment):
-        ntiid = getattr(assessment, 'ntiid', assessment)
-        return ntiid
+        return getattr(assessment, 'ntiid', assessment)
 
     def get(self, assessment, key, default=None):
         ntiid = self.get_ntiid(assessment)
