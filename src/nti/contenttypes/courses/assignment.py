@@ -6,7 +6,7 @@ Support for assessments/assignment.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -165,7 +165,6 @@ class MappingAssessmentMixin(PersistentCreatedAndModifiedTimeObject, Contained):
 
     def toExternalObject(self, **kwargs):
         REMOVAL = getattr(StandardExternalFields, 'ALL')
-
         def _remover(result):
             if isinstance(result, Mapping):
                 for key, value in tuple(result.items()):  # mutating
@@ -177,7 +176,6 @@ class MappingAssessmentMixin(PersistentCreatedAndModifiedTimeObject, Contained):
                 for value in result:
                     _remover(value)
             return result
-
         result = to_external_object(self._mapping, **kwargs)
         return _remover(result)
 
