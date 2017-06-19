@@ -64,6 +64,7 @@ def fill_asg_from_json(course, index, lastModified=0, force=False):
         elif not values:
             continue
         # save locked value
+        locked = values.get('locked', False)
         if force and locked:
             policies.set(ntiid, 'locked', True)
         # validate date keys in policy
