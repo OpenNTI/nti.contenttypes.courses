@@ -11,7 +11,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from persistent.mapping import PersistentMapping
+from collections import Mapping
 
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentDateContext
@@ -24,12 +24,12 @@ from nti.externalization.datetime import datetime_from_string
 from nti.ntiids.ntiids import validate_ntiid_string
 
 
-def reset_asg_missing_key(course):
+def reset_asg_missing_key(course, force=False):
     dates = IQAssessmentDateContext(course)
     policies = IQAssessmentPolicies(course)
     # Always test locked status before clearing state in dates and policies.
     for key in policies.assessments():
-        if not policies.get(key, 'locked', False):
+        if force or not policies.get(key, 'locked', False):
             del policies[key]
             try:
                 del dates[key]
@@ -38,12 +38,12 @@ def reset_asg_missing_key(course):
     return policies
 
 
-def fill_asg_from_json(course, index, lastModified=0):
+def fill_asg_from_json(course, index, lastModified=0, force=False):
 
     logger.info('Reading in assignment policies for %s', course)
 
     # remove previous data
-    reset_asg_missing_key(course)
+    reset_asg_missing_key(course, force=force)
 
     dates = IQAssessmentDateContext(course)
     policies = IQAssessmentPolicies(course)
@@ -52,51 +52,54 @@ def fill_asg_from_json(course, index, lastModified=0):
     policies.lastModified = lastModified
 
     dropped_policies_keys = SUPPORTED_DATE_KEYS + ('Title', 'locked')
-    for key, val in index.items():
-        if policies.get(key, 'locked', False):
-            logger.warn("Policy for %s is locked", key)
+    for ntiid, values in index.items():
+        # check for locked status
+        locked = policies.get(ntiid, 'locked', False)
+        if not force and locked:
+            logger.warn("Policy for %s is locked", ntiid)
             continue
-        if val is None:
+
+        # validate input values
+        if values is None:
             continue
-        validate_ntiid_string(key)
-        if not isinstance(val, dict):
-            raise ValueError("Expected a dictionary")
-        elif not val:
+        validate_ntiid_string(ntiid)
+        if not isinstance(values, Mapping):
+            raise ValueError("Expected a mapping object")
+        elif not values:
             continue
-        stored_dates = PersistentMapping()
-        for k in SUPPORTED_DATE_KEYS:
-            if k in val:
-                date_str = val[k]
-                __traceback_info__ = key, k, date_str
+
+        # save locked value
+        if force:
+            values['locked'] = locked
+
+        # validate date keys in policy
+        for date_key in SUPPORTED_DATE_KEYS:
+            if date_key in values:
+                date_str = values[date_key]
+                __traceback_info__ = ntiid, date_key, date_str
                 if date_str:
-                    stored_dates[k] = datetime_from_string(date_str)
+                    value = datetime_from_string(date_str)
                 else:
-                    stored_dates[k] = None
+                    value = None
+                dates.set(ntiid, date_key, value)
 
-        # Date policy is stored in its own map
-        dates[key] = stored_dates
-
+        # validate positive integer keys in policy
         for k in SUPPORTED_PVE_INT_KEYS:
-            if k not in val:
+            if k not in values:
                 continue
-            int_val = val.get(k)
+            int_val = values.get(k)
             try:
                 int_val = int(int_val)
                 assert int_val > 0
             except (AssertionError, TypeError, ValueError):
                 raise ValueError("Bad positive integer value: %r" % int_val)
-            val[k] = int_val
+            values[k] = int_val
 
-        # Add verbose logging to help track down a weird bug where
-        # policies with total_points are not being imported correctly.
-        # TODO: Change this to DEBUG or TRACE when we're done
-        logger.info('Importing assignment policy for ntiid %s and value %s'
-                    % (key, val))
-
-        # Policies stores it directly, with the exception
+        # store values directly, with the exception
         # of things we know we don't want/need
-        policies[key] = PersistentMapping({k: v for k, v in val.items()
-                                           if k not in dropped_policies_keys})
+        for k, v in values.items():
+            if k not in dropped_policies_keys:
+                policies.set(ntiid, k, v)
 
     return policies
 
