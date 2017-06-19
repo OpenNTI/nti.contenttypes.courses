@@ -6,7 +6,7 @@ Reads the assignment overrides and policies and synchronizes them.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -39,18 +39,15 @@ def reset_asg_missing_key(course, force=False):
 
 
 def fill_asg_from_json(course, index, lastModified=0, force=False):
-
     logger.info('Reading in assignment policies for %s', course)
-
     # remove previous data
     reset_asg_missing_key(course, force=force)
-
+    # set last mod dates
     dates = IQAssessmentDateContext(course)
     policies = IQAssessmentPolicies(course)
-
     dates.lastModified = lastModified
     policies.lastModified = lastModified
-
+    # loop through values
     dropped_policies_keys = SUPPORTED_DATE_KEYS + ('Title', 'locked')
     for ntiid, values in index.items():
         # check for locked status
@@ -58,7 +55,6 @@ def fill_asg_from_json(course, index, lastModified=0, force=False):
         if not force and locked:
             logger.warn("Policy for %s is locked", ntiid)
             continue
-
         # validate input values
         if values is None:
             continue
@@ -67,11 +63,9 @@ def fill_asg_from_json(course, index, lastModified=0, force=False):
             raise ValueError("Expected a mapping object")
         elif not values:
             continue
-
         # save locked value
-        if force:
+        if force and locked:
             values['locked'] = locked
-
         # validate date keys in policy
         for date_key in SUPPORTED_DATE_KEYS:
             if date_key in values:
@@ -82,7 +76,6 @@ def fill_asg_from_json(course, index, lastModified=0, force=False):
                 else:
                     value = None
                 dates.set(ntiid, date_key, value)
-
         # validate positive integer keys in policy
         for k in SUPPORTED_PVE_INT_KEYS:
             if k not in values:
@@ -94,13 +87,12 @@ def fill_asg_from_json(course, index, lastModified=0, force=False):
             except (AssertionError, TypeError, ValueError):
                 raise ValueError("Bad positive integer value: %r" % int_val)
             values[k] = int_val
-
         # store values directly, with the exception
         # of things we know we don't want/need
         for k, v in values.items():
             if k not in dropped_policies_keys:
                 policies.set(ntiid, k, v)
-
+    # return
     return policies
 
 

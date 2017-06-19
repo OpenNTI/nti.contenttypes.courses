@@ -297,7 +297,7 @@ class AssignmentPoliciesImporter(BaseSectionImporter):
         if source is not None:
             # do import
             source = self.load(source)
-            fill_asg_from_json(course, source, time.time())
+            fill_asg_from_json(course, source, time.time(), force=True)
             # save source
             if writeout and IFilesystemBucket.providedBy(course.root):
                 source = self.safe_get(filer, path)  # reload
