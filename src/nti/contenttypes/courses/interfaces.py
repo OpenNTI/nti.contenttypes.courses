@@ -489,7 +489,7 @@ class ICourseInstance(IFolder,
 
     Instances may be adaptable to :class:`.IDisplayableContent`.
     """
-    
+
     containers(ICourseAdministrativeLevel,
                ICourseSubInstances)
     __parent__.required = False
@@ -1219,19 +1219,34 @@ class ICourseBundleUpdatedEvent(IObjectEvent):
     """
     An event that is sent, usually during startup or synchronization,
     to notify that a course instance bundle has been updated, typically
-    by adding or removing IContentPackages.
+    by adding or removing :class:`IContentPackage` objects.
     """
 
-
-@interface.implementer(ICourseBundleUpdatedEvent)
-class CourseBundleUpdatedEvent(ObjectEvent):
-
+class AbstractCourseBundleUpdateEvent(ObjectEvent):
     course = alias('object')
 
     def __init__(self, obj, added_packages=(), removed_packages=()):
-        super(CourseBundleUpdatedEvent, self).__init__(obj)
+        super(AbstractCourseBundleUpdateEvent, self).__init__(obj)
         self.added_packages = added_packages
         self.removed_packages = removed_packages
+
+
+@interface.implementer(ICourseBundleUpdatedEvent)
+class CourseBundleUpdatedEvent(AbstractCourseBundleUpdateEvent):
+    pass
+
+
+class ICourseBundleWillUpdateEvent(IObjectEvent):
+    """
+    An event that is sent, usually during startup or synchronization,
+    to notify that a course instance bundle will be updated, typically
+    by adding or removing :class:`IContentPackage` objects.
+    """
+
+
+@interface.implementer(ICourseBundleWillUpdateEvent)
+class CourseBundleWillUpdateEvent(AbstractCourseBundleUpdateEvent):
+    pass
 
 
 from zope.lifecycleevent import ObjectCreatedEvent

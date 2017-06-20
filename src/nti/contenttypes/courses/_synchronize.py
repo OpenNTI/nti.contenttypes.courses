@@ -84,7 +84,7 @@ from nti.contenttypes.courses.interfaces import ICourseSynchronizationResults
 
 from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CatalogEntrySynchronized
-from nti.contenttypes.courses.interfaces import CourseBundleUpdatedEvent
+from nti.contenttypes.courses.interfaces import CourseBundleWillUpdateEvent
 from nti.contenttypes.courses.interfaces import CourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
 
@@ -247,7 +247,7 @@ class _ContentCourseSynchronizer(object):
 			new_packages = set(bundle.ContentPackages)
 			added_packages = new_packages - old_packages
 			removed_packages = old_packages - new_packages
-			notify( CourseBundleUpdatedEvent(course, added_packages, removed_packages) )
+			notify( CourseBundleWillUpdateEvent(course, added_packages, removed_packages) )
 			sync_results.ContentBundleUpdated = True
 
 		if created_bundle:

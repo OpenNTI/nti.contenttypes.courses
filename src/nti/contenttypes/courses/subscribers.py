@@ -73,7 +73,8 @@ from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import CourseCatalogDidSyncEvent
-from nti.contenttypes.courses.interfaces import ICourseBundleUpdatedEvent
+from nti.contenttypes.courses.interfaces import CourseBundleWillUpdateEvent
+from nti.contenttypes.courses.interfaces import ICourseBundleWillUpdateEvent
 from nti.contenttypes.courses.interfaces import ICourseInstructorAddedEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceImportedEvent
 from nti.contenttypes.courses.interfaces import ICourseOutlineNodeMovedEvent
@@ -397,7 +398,7 @@ def on_unlock_assessment_policies(event):
         _unlock_assessment_policy(event.object, event.courses)
 
 
-@component.adapter(ICourseInstance, ICourseBundleUpdatedEvent)
+@component.adapter(ICourseInstance, ICourseBundleWillUpdateEvent)
 def update_course_packages(course, event=None):
     """
     Update the course packages
@@ -409,12 +410,17 @@ def update_course_packages(course, event=None):
         doc_id = intids.queryId(course)
         if doc_id is not None:
             index.index_doc(doc_id, course)
+    # Once our index is up-to-date, we can notify that the bundle
+    # has been updated.
+    if event is not None:
+        notify(CourseBundleUpdatedEvent(course,
+                                        event.added_packages,
+                                        event.removed_packages))
 
 
 @component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
 def on_course_imported(course, event):
     update_course_packages(course)
-
 
 
 @component.adapter(IContentPackage, IContentPackageAddedEvent)
@@ -437,7 +443,7 @@ def _update_course_bundle(new_package, event):
             # bundle has essentially been updated.
             logger.info('Updating course bundle with new package (%s) (%s)',
                         new_package.ntiid, entry.ntiid)
-            notify(CourseBundleUpdatedEvent(course, (new_package,)))
+            notify(CourseBundleWillUpdateEvent(course, (new_package,)))
 
 
 @component.adapter(IContentPackage, IContentPackageRemovedEvent)
@@ -452,7 +458,7 @@ def _update_course_bundle_on_package_removal(package, event):
         logger.info('Removing package from course (%s) (%s)',
                     package.ntiid, entry.ntiid)
         course.ContentPackageBundle.remove(package)
-        notify(CourseBundleUpdatedEvent(course, removed_packages=(package,)))
+        notify(CourseBundleWillUpdateEvent(course, removed_packages=(package,)))
 
 
 @component.adapter(IContentPackage, IUpdatedNTIIDEvent)
@@ -471,8 +477,8 @@ def _package_ntiid_updated(package, event):
         old_ref = contentunit_wref_to_missing_ntiid( event.old_ntiid )
         course.ContentPackageBundle.remove(old_ref)
         # XXX: Removed packages?
-        notify(CourseBundleUpdatedEvent(course,
-                                        added_packages=(package,)))
+        notify(CourseBundleWillUpdateEvent(course,
+                                           added_packages=(package,)))
 
 
 @component.adapter(IUser, ICourseInstructorAddedEvent)
