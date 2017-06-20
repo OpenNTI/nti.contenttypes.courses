@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -80,7 +80,8 @@ class _CourseContentBundleIO(ContentBundleIO):
     _ext_iface_upper_bound = ICourseContentPackageBundle
 
     _excluded_in_ivars_ = getattr(ContentBundleIO, '_excluded_in_ivars_').union(
-        {'ntiid', 'root', 'ContentPackages'})
+        {'ntiid', 'root', 'ContentPackages'}
+    )
 
     @classmethod
     def resolve(cls, ntiid, library):
