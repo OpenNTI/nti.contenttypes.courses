@@ -370,8 +370,8 @@ file. Full information is in
 This file defines who has access to the administrative functions of
 the course, such as the gradebook, and content editing roles for the
 course. It maps from role name to permission to a list of users given
-or denied that role. It is inherited (important for sections). Only
-the roles documented here are supported. For example::
+or denied that role. Only the roles documented here are supported.
+For example::
 
 	{
           "nti.roles.course_instructor": {
