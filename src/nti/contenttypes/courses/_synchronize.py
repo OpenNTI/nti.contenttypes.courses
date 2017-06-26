@@ -119,8 +119,7 @@ def _get_sync_ntiids(**kwargs):
 	return ntiids
 
 def _get_sync_results(**kwargs):
-	results = kwargs.get('results')
-	return results if results is not None else []
+	return kwargs.get('results')
 
 def _get_course_sync_results(context, sync_results=None, **kwargs):
 	if sync_results is None:
