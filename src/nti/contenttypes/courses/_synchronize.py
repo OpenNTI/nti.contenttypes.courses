@@ -124,9 +124,11 @@ def _get_sync_results(**kwargs):
 def _get_course_sync_results(context, sync_results=None, **kwargs):
 	if sync_results is None:
 		entry = ICourseCatalogEntry(context)
+		sync_results = CourseSynchronizationResults(NTIID=entry.ntiid, 
+													Site=_site_name())
 		results = _get_sync_results(**kwargs)
-		sync_results = CourseSynchronizationResults(NTIID=entry.ntiid, Site=_site_name())
-		results.append(sync_results)
+		if results is not None: 
+			results.append(sync_results)
 	return sync_results
 
 @interface.implementer(IObjectEntrySynchronizer)
