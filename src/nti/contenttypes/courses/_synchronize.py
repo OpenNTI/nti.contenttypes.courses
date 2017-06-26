@@ -24,7 +24,7 @@ from zope.event import notify
 
 from zope.site.interfaces import ILocalSiteManager
 
-from nti.base._compat import to_unicode
+from nti.base._compat import text_
 
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
@@ -110,7 +110,7 @@ def _site_name(registry=None):
 		result = registry.__parent__.__name__
 	else:
 		result = getattr(registry, '__name__', None)
-	return to_unicode(result)
+	return text_(result)
 
 def _get_sync_ntiids(**kwargs):
 	params = kwargs.get('params')  # sync params
@@ -275,6 +275,8 @@ class _ContentCourseSynchronizer(object):
 
 		# mark last sync time
 		course.lastSynchronized = entry.lastSynchronized = time.time()
+		
+		return sync_results
 
 	@classmethod
 	def update_common_info(cls, course, bucket,
@@ -554,6 +556,8 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		notify(CourseInstanceAvailableEvent(subcourse,
 											bucket,
 											_get_sync_results(**kwargs)))
+		
+		return course_sync_results
 
 def synchronize_catalog_from_root(catalog_folder, root, **kwargs):
 	"""
