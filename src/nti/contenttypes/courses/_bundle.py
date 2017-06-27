@@ -20,13 +20,10 @@ from nti.contentlibrary.bundle import PersistentContentPackageBundle
 from nti.contentlibrary.externalization import ContentBundleIO
 
 from nti.contentlibrary.interfaces import IContentPackage
-from nti.contentlibrary.interfaces import IContentPackageLibrary
 
 from nti.contenttypes.courses.legacy_catalog import _ntiid_from_entry
 
 from nti.contenttypes.courses.interfaces import ICourseContentPackageBundle
-
-from nti.externalization.datastructures import InterfaceObjectIO
 
 from nti.externalization.interfaces import StandardExternalFields
 
@@ -80,25 +77,6 @@ class _CourseContentBundleIO(ContentBundleIO):
     _ext_iface_upper_bound = ICourseContentPackageBundle
 
     _excluded_in_ivars_ = getattr(ContentBundleIO, '_excluded_in_ivars_').union(
-        {'ntiid', 'root', 'ContentPackages'}
+        {'ntiid'}
     )
 
-    @classmethod
-    def resolve(cls, ntiid, library):
-        paths = library.pathToNTIID(ntiid) if library is not None else None
-        return paths[0] if paths else None
-
-    def updateFromExternalObject(self, parsed, *args, **kwargs):
-        result = InterfaceObjectIO.updateFromExternalObject(self, parsed)
-        items = parsed.get('ContentPackages') or parsed.get(ITEMS)
-        library = component.queryUtility(IContentPackageLibrary)
-        if items is not None:
-            packages = []
-            for ntiid in items:
-                package = self.resolve(ntiid, library)
-                if package is None:
-                    raise KeyError("Cannot find content package", ntiid)
-                packages.append(package)
-            self._ext_self.ContentPackages = packages
-            result = True
-        return result
