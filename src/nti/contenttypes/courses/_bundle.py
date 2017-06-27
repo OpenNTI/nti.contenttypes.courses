@@ -79,3 +79,6 @@ class _CourseContentBundleIO(ContentBundleIO):
     _excluded_in_ivars_ = getattr(ContentBundleIO, '_excluded_in_ivars_').union(
         {'ntiid'}
     )
+    
+    validate_packages = True
+
