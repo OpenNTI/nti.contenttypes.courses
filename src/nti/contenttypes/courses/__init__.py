@@ -21,9 +21,6 @@ from nti.contenttypes.courses.utils import get_course_vendor_info
 
 from nti.contenttypes.courses.vendorinfo import VENDOR_INFO_KEY
 
-#: SubInstances constants
-SUB_INSTANCES = u'SubInstances'
-
 #: Course role info file name
 ROLE_INFO_NAME = 'role_info.json'
 
