@@ -297,29 +297,23 @@ class VendorInfoExporter(BaseSectionExporter):
 class BundleMetaInfoExporter(BaseSectionExporter):
 
     def _get_package_ntiids(self, course, backup, salt):
-        packages = get_course_packages(course)
-        if backup:
-            package_list = [x.ntiid for x in get_course_packages(course)]
-        else:
-            # Not backing up, salt our API created content.
-            package_list = []
-            for package in packages:
-                package_ntiid = package.ntiid
-                if IEditableContentPackage.providedBy(package):
-                    package_ntiid = self.hash_ntiid(package_ntiid, salt)
-                package_list.append(package_ntiid)
-        return package_list
+        for package in get_course_packages(course):
+            if backup:
+                yield package.ntiid
+            elif IEditableContentPackage.providedBy(package):
+                yield self.hash_ntiid(package.ntiid, salt)
+            else:
+                yield package.ntiid
 
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
         if ICourseSubInstance.providedBy(course):
             return
         entry = ICourseCatalogEntry(course)
-        package_list = self._get_package_ntiids(course, backup, salt)
         data = {
             'ntiid': u'',
             'title': entry.Title,
-            "ContentPackages": package_list
+            "ContentPackages": list(self._get_package_ntiids(course, backup, salt))
         }
         ext_obj = to_external_object(data, decorate=False)
         source = self.dump(ext_obj)
