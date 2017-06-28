@@ -47,6 +47,7 @@ from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.dublincore import DCMETA_FILENAME
 
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
+from nti.contentlibrary.interfaces import IEditableContentPackage
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
 from nti.contenttypes.courses import ROLE_INFO_NAME
@@ -295,15 +296,30 @@ class VendorInfoExporter(BaseSectionExporter):
 @interface.implementer(ICourseSectionExporter)
 class BundleMetaInfoExporter(BaseSectionExporter):
 
+    def _get_package_ntiids(self, course, backup, salt):
+        packages = get_course_packages(course)
+        if backup:
+            package_list = [x.ntiid for x in get_course_packages(course)]
+        else:
+            # Not backing up, salt our API created content.
+            package_list = []
+            for package in packages:
+                package_ntiid = package.ntiid
+                if IEditableContentPackage.providedBy(package):
+                    package_ntiid = self.hash_ntiid(package_ntiid, salt)
+                package_list.append(package_ntiid)
+        return package_list
+
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
         if ICourseSubInstance.providedBy(course):
             return
         entry = ICourseCatalogEntry(course)
+        package_list = self._get_package_ntiids(course, backup, salt)
         data = {
             'ntiid': u'',
             'title': entry.Title,
-            "ContentPackages": [x.ntiid for x in get_course_packages(course)]
+            "ContentPackages": package_list
         }
         ext_obj = to_external_object(data, decorate=False)
         source = self.dump(ext_obj)
