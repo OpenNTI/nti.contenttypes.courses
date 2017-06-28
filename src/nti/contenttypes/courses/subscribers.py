@@ -92,6 +92,7 @@ from nti.contenttypes.courses.utils import index_course_editor
 from nti.contenttypes.courses.utils import get_courses_catalog
 from nti.contenttypes.courses.utils import clear_course_outline
 from nti.contenttypes.courses.utils import unindex_course_roles
+from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.courses.utils import index_course_instructor
 from nti.contenttypes.courses.utils import get_content_unit_courses
 from nti.contenttypes.courses.utils import get_courses_for_packages
@@ -399,7 +400,7 @@ def on_unlock_assessment_policies(event):
 
 
 @component.adapter(ICourseInstance, ICourseBundleWillUpdateEvent)
-def update_course_packages(course, event=None):
+def update_course_packages(root_course, event=None):
     """
     Update the course packages
     """
@@ -407,13 +408,16 @@ def update_course_packages(course, event=None):
     if catalog is not None:  # tests
         index = catalog[IX_PACKAGES]
         intids = component.getUtility(IIntIds)
-        doc_id = intids.queryId(course)
-        if doc_id is not None:
-            index.index_doc(doc_id, course)
+        courses = get_course_hierarchy(root_course)
+        # The bundle is shared between all course hierarchy members.
+        for course in courses:
+            doc_id = intids.queryId(course)
+            if doc_id is not None:
+                index.index_doc(doc_id, course)
     # Once our index is up-to-date, we can notify that the bundle
     # has been updated.
     if event is not None:
-        notify(CourseBundleUpdatedEvent(course,
+        notify(CourseBundleUpdatedEvent(root_course,
                                         event.added_packages,
                                         event.removed_packages))
 
