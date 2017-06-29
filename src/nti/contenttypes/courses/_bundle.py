@@ -81,4 +81,3 @@ class _CourseContentBundleIO(ContentBundleIO):
     )
     
     validate_packages = True
-
