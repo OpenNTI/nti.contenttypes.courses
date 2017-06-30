@@ -102,8 +102,6 @@ from nti.site.utils import unregisterUtility
 
 from nti.traversal.traversal import find_interface
 
-from nti.zope_catalog.catalog import ResultSet
-
 
 class AbstractInstanceWrapper(Contained):
 
@@ -268,13 +266,11 @@ def index_course_roles(context, catalog=None, intids=None):
     entry = ICourseCatalogEntry(context, None)
     if entry is None:
         return 0
-
     catalog = get_enrollment_catalog() if catalog is None else catalog
     intids = component.getUtility(IIntIds) if intids is None else intids
     doc_id = intids.queryId(course)
     if doc_id is None:
         return 0
-
     result = 0
     result += index_course_editors(course, catalog, entry, doc_id)
     result += index_course_instructors(course, catalog, entry, doc_id)
@@ -424,6 +420,7 @@ def get_course_enrollments(context, sites=None, intids=None):
         courses = context.split()
     else:
         courses = context
+    result = []
     sites = get_sites_4_index(sites)
     catalog = get_enrollment_catalog()
     intids = component.getUtility(IIntIds) if intids is None else intids
@@ -432,15 +429,20 @@ def get_course_enrollments(context, sites=None, intids=None):
         IX_COURSE: {'any_of': courses},
         IX_SCOPE: {'any_of': ENROLLMENT_SCOPE_NAMES}
     }
-    uids = catalog.apply(query) or ()
-    return ResultSet(uids, intids, True)
+    for doc_id in catalog.apply(query) or ():
+        obj = intids.queryObject(doc_id)
+        if     ICourseInstanceEnrollmentRecord.providedBy(obj) \
+            or ICourseInstance.providedBy(obj):
+            result.append(obj)
+    return result
 
 
-def _get_courses_for_scope(user, scopes=(), sites=None, intids=None):
+def get_courses_for_scope(user, scopes=(), sites=None, intids=None):
     """
     Fetch the enrollment records for the given user (or username)
     and the given enrollment scopes, including instructor/editor scopes.
     """
+    result = []
     intids = component.getUtility(IIntIds) if intids is None else intids
     catalog = get_enrollment_catalog()
     sites = get_sites_4_index(sites)
@@ -450,18 +452,23 @@ def _get_courses_for_scope(user, scopes=(), sites=None, intids=None):
         IX_SCOPE: {'any_of': scopes},
         IX_USERNAME: {'any_of': (username,)},
     }
-    uids = catalog.apply(query) or ()
-    return ResultSet(uids, intids, True)
+    for doc_id in catalog.apply(query) or ():
+        obj = intids.queryObject(doc_id)
+        if     ICourseInstanceEnrollmentRecord.providedBy(obj) \
+            or ICourseInstance.providedBy(obj):
+            result.append(obj)
+    return result
+_get_courses_for_scope = get_courses_for_scope
 
 
 def get_enrollments(user, **kwargs):
     """
-    Returns a ResultSet containing all the courses
+    Returns an iterable containing all the courses
     in which this user is enrolled
     """
-    return _get_courses_for_scope(user,
-                                  scopes=ENROLLMENT_SCOPE_NAMES,
-                                  **kwargs)
+    return get_courses_for_scope(user,
+                                 scopes=ENROLLMENT_SCOPE_NAMES,
+                                 **kwargs)
 
 
 def has_enrollments(user, intids=None):
@@ -510,23 +517,23 @@ def get_user_or_instructor_enrollment_record(context, user):
 
 def get_instructed_courses(user, **kwargs):
     """
-    Returns a ResultSet containing all the courses
+    Returns an iterable containing all the courses
     in which this user is an instructor
     """
-    return _get_courses_for_scope(user,
-                                  scopes=(INSTRUCTOR,),
-                                  **kwargs)
+    return get_courses_for_scope(user,
+                                 scopes=(INSTRUCTOR,),
+                                 **kwargs)
 
 
 def get_instructed_and_edited_courses(user, **kwargs):
     """
-    Returns a ResultSet containing all the courses
+    Returns an iterable containing all the courses
     in which this user is either an instructor
     or an editor.
     """
-    return _get_courses_for_scope(user,
-                                  scopes=(INSTRUCTOR, EDITOR),
-                                  **kwargs)
+    return get_courses_for_scope(user,
+                                 scopes=(INSTRUCTOR, EDITOR),
+                                 **kwargs)
 
 
 def get_instructors_in_roles(roles, setting=Allow):
@@ -887,7 +894,7 @@ def grant_access_to_course(user, course, scope):
     add_principal_to_course_content_roles(user, course)
 
 
-def _principal_is_enrolled_in_related_course(principal, course):
+def principal_is_enrolled_in_related_course(principal, course):
     """
     If the principal is enrolled in a parent or sibling course,
     return those courses.
@@ -908,7 +915,8 @@ def _principal_is_enrolled_in_related_course(principal, course):
             enrollments = ICourseEnrollments(other)
             if enrollments.get_enrollment_for_principal(principal) is not None:
                 result.append(other)
-    return tuple(result)
+    return result
+_principal_is_enrolled_in_related_course = principal_is_enrolled_in_related_course
 
 
 def deny_access_to_course(user, course, scope):
@@ -918,7 +926,7 @@ def deny_access_to_course(user, course, scope):
     principal = get_principal(user)
 
     related_enrolled_courses = \
-        _principal_is_enrolled_in_related_course(principal, course)
+        principal_is_enrolled_in_related_course(principal, course)
 
     # If the course was in the process of being deleted,
     # the sharing scopes may already have been deleted, which
@@ -996,13 +1004,11 @@ def path_for_entry(context):
     while o is not None and not ICourseCatalog.providedBy(o):
         parents.append(o.__name__)
         o = getattr(o, '__parent__', None)
-
     parents.reverse()
     if None in parents:
         logger.warn("Unable to get path for %r, missing parents: %r",
                     context, parents)
         return None
-
     result = '/'.join(parents) if parents else None
     return result
 
