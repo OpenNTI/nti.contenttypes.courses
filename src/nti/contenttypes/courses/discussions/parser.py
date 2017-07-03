@@ -61,10 +61,16 @@ def load_discussion(name, source, discussions, path, discussion=None):
         raise InvalidDiscussionException(msg)
     new_discussion = factory() if discussion is None else discussion
     update_from_external_object(new_discussion, json, notify=False)
-
-    # set discusion course bundle id before firing events
-    path = os.path.join(path, name)
-    new_discussion.id = "%s://%s" % (NTI_COURSE_BUNDLE, path)
+    # set creator if available
+    creator = json.get('creator')
+    if creator: # save creator
+        new_discussion.creator = creator
+    if not json.get('id'):
+        # set discusion course bundle id before firing events
+        path = os.path.join(path, name)
+        new_discussion.id = "%s://%s" % (NTI_COURSE_BUNDLE, path)
+    else:
+        new_discussion.id = json['id']
 
     if discussion is None:
         lifecycleevent.created(new_discussion)
