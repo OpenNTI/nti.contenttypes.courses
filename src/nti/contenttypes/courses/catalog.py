@@ -54,6 +54,8 @@ from nti.links.links import Link
 from nti.property.property import alias
 from nti.property.property import LazyOnClass
 
+from nti.recorder.mixins import RecordableMixin
+
 from nti.schema.eqhash import EqHash
 
 from nti.schema.fieldproperty import AdaptingFieldProperty
@@ -282,7 +284,8 @@ class CatalogFamily(SchemaConfigured,
 @total_ordering
 @EqHash('ntiid')
 class CourseCatalogEntry(CatalogFamily,
-                         CreatedAndModifiedTimeMixin):
+                         CreatedAndModifiedTimeMixin,
+                         RecordableMixin):
     # shut up pylint
     ntiid = None
     Duration = None

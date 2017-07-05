@@ -206,7 +206,8 @@ def _ntiid_from_entry(entry, nttype=NTIID_ENTRY_TYPE):
 
 
 class PersistentCourseCatalogLegacyEntry(CourseCatalogLegacyEntry,
-                                         PersistentCreatedAndModifiedTimeObject):
+                                         PersistentCreatedAndModifiedTimeObject,
+                                         RecordableMixin):
 
     def __init__(self, *args, **kwargs):
         # Schema configured is not cooperative
@@ -231,8 +232,7 @@ from nti.traversal.traversal import find_interface
 
 
 @component.adapter(ICourseInstance)
-class _CourseInstanceCatalogLegacyEntry(PersistentCourseCatalogLegacyEntry,
-                                        RecordableMixin):
+class _CourseInstanceCatalogLegacyEntry(PersistentCourseCatalogLegacyEntry):
     __external_class_name__ = 'CourseCatalogLegacyEntry'
     __external_can_create__ = False
 
