@@ -90,6 +90,7 @@ from nti.publishing.interfaces import INoPublishLink
 from nti.publishing.interfaces import ICalendarPublishable
 
 from nti.recorder.interfaces import IRecordableContainer
+from nti.recorder.interfaces import IRecordable
 
 from nti.schema.field import Bool
 from nti.schema.field import Dict
@@ -831,7 +832,8 @@ class ICourseCatalogEntry(ICatalogFamily,
                           ILastModified,
                           IShouldHaveTraversablePath,
                           IContained,
-                          ISynchronizable):
+                          ISynchronizable,
+                          IRecordable):
     """
     An entry in the course catalog containing metadata
     and presentation data about the course.

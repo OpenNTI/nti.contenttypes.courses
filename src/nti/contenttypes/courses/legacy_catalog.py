@@ -32,6 +32,8 @@ from nti.contenttypes.courses.utils import path_for_entry
 
 from nti.externalization.representation import WithRepr
 
+from nti.recorder.mixins import RecordableMixin
+
 from nti.schema.field import Int
 from nti.schema.field import Dict
 from nti.schema.field import List
@@ -229,7 +231,8 @@ from nti.traversal.traversal import find_interface
 
 
 @component.adapter(ICourseInstance)
-class _CourseInstanceCatalogLegacyEntry(PersistentCourseCatalogLegacyEntry):
+class _CourseInstanceCatalogLegacyEntry(PersistentCourseCatalogLegacyEntry,
+                                        RecordableMixin):
     __external_class_name__ = 'CourseCatalogLegacyEntry'
     __external_can_create__ = False
 
