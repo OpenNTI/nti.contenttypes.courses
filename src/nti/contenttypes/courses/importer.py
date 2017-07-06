@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -97,7 +97,7 @@ class BaseSectionImporter(object):
 
     def _prepare(self, data):
         if isinstance(data, bytes):
-            data = unicode(data, 'utf-8')
+            data = data.decode('utf-8')
         return data
 
     def load(self, source):
@@ -116,14 +116,14 @@ class BaseSectionImporter(object):
 
     def course_bucket(self, course):
         if ICourseSubInstance.providedBy(course):
-            bucket = "%s/%s" % (SECTIONS, course.__name__)
+            bucket = u"%s/%s" % (SECTIONS, course.__name__)
         else:
             bucket = None
         return bucket
 
     def course_bucket_path(self, course):
         bucket = self.course_bucket(course)
-        bucket = bucket + "/" if bucket else u''
+        bucket = bucket + u"/" if bucket else u''
         return bucket
 
     def safe_get(self, filer, href):
@@ -153,7 +153,7 @@ class CourseOutlineImporter(BaseSectionImporter):
         else:
             base = parent.ntiid
 
-        provider = get_provider(base) or 'NTI'
+        provider = get_provider(base) or u'NTI'
         specific_base = get_specific(base)
         specific = specific_base + ".%s" % idx
         ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
