@@ -6,7 +6,7 @@ Legacy extensions to the catalog.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -54,13 +54,13 @@ class ICourseCatalogInstructorLegacyInfo(ICourseCatalogInstructorInfo):
 
     defaultphoto = ValidTextLine(title=u"A URL path for an extra copy of the instructor's photo",
                                  description=u"ideally this should be the profile photo",
-                                 default='',
+                                 default=u'',
                                  required=False)  # TODO: We need a schema field for this
 
     username = ValidTextLine(title=u"A username string that may or may not refer to an actual account.",
                              default=u'',
                              required=True)
-    
+
     userid = ValidTextLine(title=u"A username string that may or may not refer to an actual account.",
                            default=u'',
                            required=False)
@@ -76,6 +76,7 @@ class ICourseCreditLegacyInfo(interface.Interface):
     Hours = Int(title=u"The number of hours that can be earned.",
                 default=0,
                 min=0)
+
     Enrollment = Dict(title=u"Information about how to enroll. This is not modeled.",
                       key_type=ValidTextLine(title=u"A key"),
                       value_type=ValidTextLine(title=u"A value"))
@@ -104,7 +105,7 @@ class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
                   required=False)
 
     Video = ValidURI(title=u"A URL-like string, possibly using private-but-un-prefixed schemes, "
-                    "or the empty string or missing.",
+                     u"or the empty string or missing.",
                      required=False)
 
     Schedule = Dict(title=u"An unmodeled dictionary, possibly useful for presentation.",
@@ -117,10 +118,10 @@ class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
 
     Preview = Bool(title=u"Is this entry for a course that is upcoming?",
                    description=u"This course should be considered an advertising preview "
-                   "and not yet have its content accessed.")
+                   u"and not yet have its content accessed.")
 
     DisableOverviewCalendar = Bool(title=u"A URL or path of indeterminate type or meaning",
-                                   required=False, 
+                                   required=False,
                                    default=False)
 
     # ##

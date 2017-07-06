@@ -6,7 +6,7 @@ Reads the instructor role grants and synchronizes them.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -84,7 +84,6 @@ def _check_scopes(course):
         if uid is None or obj != scope:
             if IConnection(scope, None) is None:
                 IConnection(course).add(scope)
-
             if uid is not None and obj is None:
                 logger.warn("Reregistering scope %s in course %r with intid facility",
                             scope, course)
@@ -142,7 +141,7 @@ def fill_roles_from_key(course, key):
         # sync, then put them back and sync again, I'm temporarily
         # setting roles each time we get here. It's an idempotent process,
         # though, so we won't be churning the database.
-        for instructor in course.instructors:
+        for instructor in course.instructors or ():
             user = IUser(instructor)
             add_principal_to_course_content_roles(user, course)
         return False
