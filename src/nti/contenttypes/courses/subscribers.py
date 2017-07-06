@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -172,8 +172,7 @@ def install_site_course_catalog(local_library, _=None):
         if _ is None:
             if not IPersistentContentPackageLibrary.providedBy(local_library):
                 # because we cold have been handed the site
-                local_library = local_site_manager.getUtility(
-                    IContentPackageLibrary)
+                local_library = local_site_manager.getUtility(IContentPackageLibrary)
             sync_catalog_when_library_synched(local_library, None)
         return catalog
 
@@ -203,8 +202,8 @@ def sync_catalog_when_library_synched(library, event):
     # Find the local site manager
     site_manager = component.getSiteManager(library)
     if library.__parent__ is not site_manager:
-        logger.warn(
-            "Expected to find persistent library in its own site; refusing to sync")
+        msg =  "Expected to find persistent library in its own site; refusing to sync"
+        logger.warn(msg)
         return
 
     catalog = site_manager.get(COURSE_CATALOG_NAME)
