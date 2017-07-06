@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -205,7 +205,7 @@ class ContentCourseSubInstance(ContentCourseInstance):
         self._p_activate()
         if 'Outline' not in self.__dict__:
             outline = self._make_Outline()
-            self.__dict__[str('Outline')] = outline
+            self.__dict__['Outline'] = outline
 
     def _get_Outline(self):
         self._p_activate()
@@ -216,7 +216,7 @@ class ContentCourseSubInstance(ContentCourseInstance):
     def _set_Outline(self, outline):
         self._p_activate()
         self._p_changed = True
-        self.__dict__[str('Outline')] = outline
+        self.__dict__['Outline'] = outline
 
     def _del_Outline(self):
         self._p_activate()
