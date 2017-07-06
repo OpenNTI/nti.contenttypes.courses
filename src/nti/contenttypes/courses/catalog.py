@@ -6,7 +6,7 @@ Implementations of course catalogs.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -39,6 +39,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogInstructorInfo
 from nti.contenttypes.courses.utils import path_for_entry
 
 from nti.dataserver.authorization import ACT_READ
+
 from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
@@ -78,7 +79,7 @@ class _AbstractCourseCatalogMixin(object):
     catalog, including tree searching.
     """
 
-    __name__ = 'CourseCatalog'
+    __name__ = u'CourseCatalog'
 
     @LazyOnClass
     def __acl__(self):
@@ -242,7 +243,6 @@ class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
     def __contains__(self, ix):
         if CheckingLastModifiedBTreeContainer.__contains__(self, ix):
             return True
-
         try:
             return self[ix] is not None
         except KeyError:
@@ -296,8 +296,7 @@ class CourseCatalogEntry(CatalogFamily,
 
     createDirectFieldProperties(ICourseCatalogEntry)
 
-    RichDescription = AdaptingFieldProperty(
-        ICourseCatalogEntry['RichDescription'])
+    RichDescription = AdaptingFieldProperty(ICourseCatalogEntry['RichDescription'])
 
     __name__ = alias('ntiid')
     __parent__ = None
@@ -380,7 +379,7 @@ class CourseCatalogEntry(CatalogFamily,
         if sig_lines:
             # always at least one instructor. take off the last trailing line
             del sig_lines[-1]
-        signature = '\n\n'.join(sig_lines)
+        signature = u'\n\n'.join(sig_lines)
         return signature
 
     def isCourseCurrentlyActive(self):
@@ -419,6 +418,12 @@ class CourseCatalogFolder(_AbstractCourseCatalogMixin,
             application level).
     """
 
+    def _record(self, entries, context):
+        entry = ICourseCatalogEntry(context, None)
+        if entry:
+            entries[entry.ntiid] = entry
+        return entry
+
     @cachedIn('_v_all_my_entries')
     def _get_all_my_entries(self):
         entries = dict()
@@ -426,13 +431,10 @@ class CourseCatalogFolder(_AbstractCourseCatalogMixin,
         def _recur(folder):
             course = ICourseInstance(folder, None)
             if course:
-                entry = ICourseCatalogEntry(course, None)
-                if entry:
-                    entries[entry.ntiid] = entry
+                entry = self._record(entries, course)
+                if entry is not None:
                     for subinstance in course.SubInstances.values():
-                        entry = ICourseCatalogEntry(subinstance, None)
-                        if entry:
-                            entries[entry.ntiid] = entry
+                        self._record(entries, subinstance)
                 # We don't need to go any deeper than two levels
                 # (If we hit the community members in the scope, we
                 # can get infinite recursion)
@@ -478,15 +480,15 @@ def _clear_catalog_cache_when_course_updated(course, event):
     catalogs = []
 
     # Include the parent, if we have one
-    catalogs.append(find_interface(course,
-                                   IPersistentCourseCatalog,
-                                   strict=False))
+    catalog = find_interface(course, IPersistentCourseCatalog, strict=False)
+    catalogs.append(catalog)
 
     # If the event has oldParent and/or newParent, include them
     for n in 'oldParent', 'newParent':
-        catalogs.append(find_interface(getattr(event, n, None),
-                                       IPersistentCourseCatalog,
-                                       strict=False))
+        context = getattr(event, n, None)
+        catalog = find_interface(context, IPersistentCourseCatalog, strict=False)
+        catalogs.append(catalog)
+
     # finally, anything else we can find
     catalogs.extend(component.getAllUtilitiesRegisteredFor(ICourseCatalog))
 
