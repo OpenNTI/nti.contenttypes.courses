@@ -6,7 +6,7 @@ Forum objects related to courses.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -47,9 +47,8 @@ class CourseInstanceBoard(CommunityBoard):
     def createDefaultForum(self):
         if CommunityForum.__default_name__ in self:
             return self[CommunityForum.__default_name__]
-
         forum = CommunityForum()
         forum.creator = self.creator
         self[forum.__default_name__] = forum
-        forum.title = _('Forum')
+        forum.title = _(u'Forum')
         return forum
