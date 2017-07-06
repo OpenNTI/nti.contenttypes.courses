@@ -1009,7 +1009,7 @@ def path_for_entry(context):
         logger.warn("Unable to get path for %r, missing parents: %r",
                     context, parents)
         return None
-    result = '/'.join(parents) if parents else None
+    result = u'/'.join(parents) if parents else None
     return result
 
 
