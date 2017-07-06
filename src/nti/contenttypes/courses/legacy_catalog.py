@@ -6,7 +6,7 @@ Legacy extensions to the catalog.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -248,7 +248,7 @@ class _CourseInstanceCatalogLegacyEntry(PersistentCourseCatalogLegacyEntry):
 
 
 CourseInstanceCatalogLegacyEntryFactory = an_factory(_CourseInstanceCatalogLegacyEntry,
-                                                     key='CourseCatalogEntry')
+                                                     key=u'CourseCatalogEntry')
 
 from functools import total_ordering
 
@@ -315,7 +315,6 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
         # a start date, then we want to use that; otherwise we want to
         # inherit as normal
         self._p_activate()
-
         if 'StartDate' in self.__dict__:  # whether or not its None
             return _derive_preview(self)
         return getattr(self._next_entry, 'Preview', None)
@@ -364,7 +363,7 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 
 
 CourseSubInstanceCatalogLegacyEntryFactory = an_factory(_CourseSubInstanceCatalogLegacyEntry,
-                                                        key='CourseCatalogEntry')
+                                                        key=u'CourseCatalogEntry')
 
 # For externalization of the interfaces defined in this module,
 # which does not fit the traditional pattern
@@ -377,6 +376,7 @@ class _LegacyCatalogAutoPackageSearchingScopedInterfaceObjectIO(object):
     @classmethod
     def _ap_find_package_interface_module(cls):
         return dottedname.resolve('nti.contenttypes.courses.legacy_catalog')
+
 
 # legacy course
 
