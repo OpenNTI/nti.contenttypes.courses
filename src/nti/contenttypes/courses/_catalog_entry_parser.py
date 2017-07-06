@@ -6,7 +6,7 @@ A parser for the on-disk representation of catalog information.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -22,6 +22,11 @@ from nti.contenttypes.courses.internalization import legacy_to_schema_transform
 from nti.externalization.internalization import update_from_external_object
 
 from nti.dataserver.users import Entity
+
+
+def prepare_json_text(s):
+    result = s.decode('utf-8') if isinstance(s, bytes) else s
+    return result
 
 
 def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
@@ -40,7 +45,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
     additionalProperties = info_json_dict.get('additionalProperties')
     if additionalProperties is not None:
         assert isinstance(additionalProperties, Mapping), \
-            "Invalid additionalProperties entry"
+               "Invalid additionalProperties entry"
 
     info_json_dict['MimeType'] = catalog_entry.mimeType
     legacy_to_schema_transform(info_json_dict, catalog_entry, delete=True)
@@ -100,8 +105,7 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/', force=False):
                     key,
                     key.lastModified,
                     catalog_entry.lastModified)
-
-        json = key.readContentsAsYaml()
+        json = prepare_json_text(key.readContentsAsYaml())
         fill_entry_from_legacy_json(catalog_entry, json, base_href=base_href)
         catalog_entry.key = key
         catalog_entry.root = key.__parent__
@@ -125,9 +129,7 @@ def update_entry_from_legacy_key(entry, key, bucket, base_href='/', force=False)
     # file; for the bundle, we use a different name
     if read_dublincore_from_named_key(entry, bucket, force=force) is not None:
         modified = True
-
     if not getattr(entry, 'root', None):
         entry.root = bucket
         modified = True
-
     return modified
