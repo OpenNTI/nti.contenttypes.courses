@@ -89,8 +89,8 @@ from nti.property.property import alias
 from nti.publishing.interfaces import INoPublishLink
 from nti.publishing.interfaces import ICalendarPublishable
 
-from nti.recorder.interfaces import IRecordableContainer
 from nti.recorder.interfaces import IRecordable
+from nti.recorder.interfaces import IRecordableContainer
 
 from nti.schema.field import Bool
 from nti.schema.field import Dict
