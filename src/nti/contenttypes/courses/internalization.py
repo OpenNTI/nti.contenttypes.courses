@@ -19,6 +19,8 @@ from zope import interface
 
 from zope.interface.common.idatetime import IDateTime
 
+from nti.base._compat import text_
+
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -123,36 +125,36 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
                        ('InstructorsSignature', 'InstructorsSignature')):
         value = parsed.get(key)
         if value:
-            parsed[field] = value
+            parsed[text_(field)] = value
         elif delete:
-            _quiet_delattr(context, str(field))
+            _quiet_delattr(context, field)
 
     for field, key in (('EndDate', 'endDate'),  # XXX: non-interface
                        ('StartDate', 'startDate')):
         value = parsed.get(key)
         if value:
-            parsed[field] = IDateTime(value)
+            parsed[text_(field)] = IDateTime(value)
         elif delete:
-            _quiet_delattr(context, str(field))
+            _quiet_delattr(context, field)
 
     if 'duration' in parsed:
         duration = parse_duration(parsed['duration'])
-        parsed['Duration'] = duration
+        parsed[u'Duration'] = duration
     elif delete:
         context.Duration = None
 
     if 'isPreview' in parsed:
-        parsed['Preview'] = parsed['isPreview']
+        parsed[u'Preview'] = parsed['isPreview']
     if 'Preview' not in parsed:
-        parsed['Preview'] = context.Preview or False
+        parsed[u'Preview'] = context.Preview or False
 
     if parsed.get('disable_calendar_overview', None) is not None:
-        parsed['DisableOverviewCalendar'] = parsed['disable_calendar_overview']
+        parsed[u'DisableOverviewCalendar'] = parsed['disable_calendar_overview']
     elif delete:
-        parsed['DisableOverviewCalendar'] = False
+        parsed[u'DisableOverviewCalendar'] = False
 
     if parsed.get('video'):
-        parsed['Video'] = parsed['video'].encode('utf-8')
+        parsed[u'Video'] = parsed['video'].encode('utf-8')
     elif delete:
         _quiet_delattr(context, 'Video')
 
@@ -161,9 +163,9 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
                                 ('AdditionalProperties', 'additionalProperties', None)):
         value = parsed.get(key, None)
         if value:
-            parsed[field] = value or default
+            parsed[text_(field)] = value or default
         elif delete:
-            _quiet_delattr(context, str(field))
+            _quiet_delattr(context, field)
 
     if 'instructors' in parsed:
         instructors = []
@@ -172,13 +174,13 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
             userid = inst.get('userid', u'')  # legacy
             instructors.append({
                 MIMETYPE: 'application/vnd.nextthought.courses.coursecataloginstructorlegacyinfo',
-                'username': username,
-                'userid': userid,
-                'Name': inst.get('name'),
-                'JobTitle': inst.get('title'),
-                'defaultphoto': inst.get('defaultphoto'),
+                u'username': username,
+                u'userid': userid,
+                u'Name': inst.get('name'),
+                u'JobTitle': inst.get('title'),
+                u'defaultphoto': inst.get('defaultphoto'),
             })
-        parsed['Instructors'] = instructors
+        parsed[u'Instructors'] = instructors
     elif delete:
         _quiet_delattr(context, 'Instructors')
 
@@ -187,10 +189,10 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
         for data in parsed['credit'] or ():
             credit.append({
                 MIMETYPE: 'application/vnd.nextthought.courses.coursecreditlegacyinfo',
-                'Hours': data.get('hours'),
-                'Enrollment': data.get('enrollment'),
+                u'Hours': data.get('hours'),
+                u'Enrollment': data.get('enrollment'),
             })
-        parsed['Credit'] = credit
+        parsed[u'Credit'] = credit
     elif delete:
         _quiet_delattr(context, 'Credit')
 
