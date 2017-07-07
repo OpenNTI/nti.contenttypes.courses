@@ -18,8 +18,6 @@ from hamcrest import has_properties
 from hamcrest import contains_string
 does_not = is_not
 
-from nose.tools import assert_raises
-
 from nti.testing.matchers import verifiably_provides
 
 import os.path
@@ -64,9 +62,9 @@ class TestCatalogParser(CourseLayerTest):
         
         duration = parse_duration(u'118 Days')
         assert_that(duration, is_not(none()))
-        
-        with assert_raises(ValueError):
-            parse_duration(u'P118D')
+    
+        duration = parse_duration(u'P118D')
+        assert_that(duration, is_not(none()))
 
     def test_trivial_parse(self):
         key = self.key

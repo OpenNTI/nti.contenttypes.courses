@@ -143,13 +143,12 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
 
     if 'isPreview' in parsed:
         parsed['Preview'] = parsed['isPreview']
-    elif delete:
-        parsed['Preview'] = context.Preview
-    parsed['Preview'] = parsed.get('Preview') or False
+    if 'Preview' not in parsed:
+        parsed['Preview'] = context.Preview or False
 
     if parsed.get('disable_calendar_overview', None) is not None:
         parsed['DisableOverviewCalendar'] = parsed['disable_calendar_overview']
-    else:
+    elif delete:
         parsed['DisableOverviewCalendar'] = False
 
     if parsed.get('video'):
