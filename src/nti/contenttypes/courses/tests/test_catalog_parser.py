@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -18,6 +18,8 @@ from hamcrest import has_properties
 from hamcrest import contains_string
 does_not = is_not
 
+from nose.tools import assert_raises
+
 from nti.testing.matchers import verifiably_provides
 
 import os.path
@@ -33,6 +35,8 @@ from nti.contenttypes.courses._catalog_entry_parser import fill_entry_from_legac
 
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
+
+from nti.contenttypes.courses.internalization import parse_duration
 
 from nti.contenttypes.courses.legacy_catalog import ICourseCatalogLegacyEntry
 from nti.contenttypes.courses.legacy_catalog import PersistentCourseCatalogLegacyEntry as CourseCatalogLegacyEntry
@@ -53,6 +57,16 @@ class TestCatalogParser(CourseLayerTest):
         key = FilesystemKey()
         key.absolute_path = path
         self.key = key
+
+    def test_parse_duration(self):
+        duration = parse_duration(u'1 Weeks')
+        assert_that(duration, is_not(none()))
+        
+        duration = parse_duration(u'118 Days')
+        assert_that(duration, is_not(none()))
+        
+        with assert_raises(ValueError):
+            parse_duration(u'P118D')
 
     def test_trivial_parse(self):
         key = self.key
@@ -89,7 +103,7 @@ class TestCatalogParser(CourseLayerTest):
         fill_entry_from_legacy_key(entry, key)
 
         json = key.readContentsAsJson()
-        json['startDate'] = '2015-06-29T05:00:00+00:00'
+        json['startDate'] = u'2015-06-29T05:00:00+00:00'
         del json['duration']
 
         fill_entry_from_legacy_json(entry, json)
@@ -98,7 +112,7 @@ class TestCatalogParser(CourseLayerTest):
         assert_that(entry.Duration, is_(none()))
         assert_that(entry.EndDate, is_(none()))
 
-        json['duration'] = '1 Weeks'
+        json['duration'] = u'1 Weeks'
         fill_entry_from_legacy_json(entry, json)
         assert_that(entry.Duration, equal_to(timedelta(days=7)))
         assert_that(entry.EndDate,
@@ -120,9 +134,9 @@ class TestCatalogParser(CourseLayerTest):
         fill_entry_from_legacy_key(entry, key)
 
         json = key.readContentsAsJson()
-        json['startDate'] = '2015-06-29T05:00:00+00:00'
-        json['duration'] = '1 Weeks'
-        json['endDate'] = '2015-06-30T05:00:00+00:00'
+        json['startDate'] = u'2015-06-29T05:00:00+00:00'
+        json['duration'] = u'1 Weeks'
+        json['endDate'] = u'2015-06-30T05:00:00+00:00'
         fill_entry_from_legacy_json(entry, json)
 
         assert_that(entry.StartDate,

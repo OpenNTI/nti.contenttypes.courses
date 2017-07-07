@@ -99,6 +99,14 @@ def _quiet_delattr(o, k):
         pass
 
 
+def parse_duration(duration):
+    # We have durations as strings like "16 weeks"
+    duration_number, duration_kind = duration.split()
+    # Turn those into keywords for timedelta.
+    normed = duration_kind.lower()
+    return timedelta(**{normed: int(duration_number)})
+
+
 def legacy_to_schema_transform(parsed, context=None, delete=False):
     for field, key in (('Term', 'term'),  # XXX: non-interface
                        ('ntiid', 'ntiid'),
@@ -123,11 +131,8 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
             _quiet_delattr(context, str(field))
 
     if 'duration' in parsed:
-        # We have durations as strings like "16 weeks"
-        duration_number, duration_kind = parsed['duration'].split()
-        # Turn those into keywords for timedelta.
-        normed = duration_kind.lower()
-        parsed['Duration'] = timedelta(**{normed: int(duration_number)})
+        duration = parse_duration(parsed['duration'])
+        parsed['Duration'] = duration
     elif delete:
         context.Duration = None
 
