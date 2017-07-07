@@ -24,12 +24,7 @@ from nti.externalization.internalization import update_from_external_object
 from nti.dataserver.users import Entity
 
 
-def prepare_json_text(s):
-    result = s.decode('utf-8') if isinstance(s, bytes) else s
-    return result
-
-
-def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
+def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/', notify=False, delete=True):
     """
     Given a course catalog entry, fill in the data
     from an old-style ``course_info.json``.
@@ -48,8 +43,8 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/'):
                "Invalid additionalProperties entry"
 
     info_json_dict['MimeType'] = catalog_entry.mimeType
-    legacy_to_schema_transform(info_json_dict, catalog_entry, delete=True)
-    update_from_external_object(catalog_entry, info_json_dict, notify=False)
+    legacy_to_schema_transform(info_json_dict, catalog_entry, delete=delete)
+    update_from_external_object(catalog_entry, info_json_dict, notify=notify)
 
     # check preview information
     if catalog_entry.StartDate and datetime.utcnow() < catalog_entry.StartDate:

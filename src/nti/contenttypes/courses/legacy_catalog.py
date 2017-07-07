@@ -160,7 +160,7 @@ def _derive_preview(self):
 @interface.implementer(ICourseCatalogLegacyEntry)
 class CourseCatalogLegacyEntry(CourseCatalogEntry):
     DisableOverviewCalendar = False
-
+    creators = ()
     createDirectFieldProperties(ICourseCatalogLegacyEntry)
 
     # For legacy catalog entries created from a content package,
