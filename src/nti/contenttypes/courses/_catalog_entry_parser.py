@@ -29,7 +29,8 @@ def prepare_json_text(s):
     return result
 
 
-def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/', notify=False, delete=True):
+def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/', 
+                                notify=False, delete=True):
     """
     Given a course catalog entry, fill in the data
     from an old-style ``course_info.json``.
@@ -120,6 +121,11 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/', force=False):
 
 
 def update_entry_from_legacy_key(entry, key, bucket, base_href='/', force=False):
+    if not force and entry.isLocked():
+        logger.info("Skipping catalog entry %s update due to locking",
+                     entry.ntiid)
+        return False
+
     modified = fill_entry_from_legacy_key(entry,
                                           key,
                                           force=force,
