@@ -12,6 +12,8 @@ logger = __import__('logging').getLogger(__name__)
 from datetime import timedelta
 from collections import Mapping
 
+import isodate
+
 from zope import component
 from zope import interface
 
@@ -100,11 +102,14 @@ def _quiet_delattr(o, k):
 
 
 def parse_duration(duration):
-    # We have durations as strings like "16 weeks"
-    duration_number, duration_kind = duration.split()
-    # Turn those into keywords for timedelta.
-    normed = duration_kind.lower()
-    return timedelta(**{normed: int(duration_number)})
+    splits = duration.split()
+    if len(splits) >= 2:
+        # We have durations as strings like "16 weeks"
+        duration_number, duration_kind = duration.split()
+        # Turn those into keywords for timedelta.
+        normed = duration_kind.lower()
+        return timedelta(**{normed: int(duration_number)})
+    return isodate.parse_duration(duration)
 
 
 def legacy_to_schema_transform(parsed, context=None, delete=False):
