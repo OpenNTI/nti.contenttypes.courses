@@ -37,7 +37,7 @@ from nti.externalization.interfaces import IInternalObjectExternalizer
 
 from nti.links.links import Link
 
-from nti.mimetype import decorateMimeType
+from nti.mimetype.externalization import decorateMimeType
 
 from nti.namedfile.file import safe_filename
 
