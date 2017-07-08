@@ -12,7 +12,7 @@ are explained on the object itself.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -129,13 +129,13 @@ NTI_COURSE_OUTLINE_NODE = u'NTICourseOutlineNode'
 # Roles defined and used by this package
 
 #: The ID of a role for instructors
-RID_INSTRUCTOR = "nti.roles.course_instructor"
+RID_INSTRUCTOR = u"nti.roles.course_instructor"
 
 #: The ID of a role for teaching assistants
-RID_TA = "nti.roles.course_ta"
+RID_TA = u"nti.roles.course_ta"
 
 #: The ID of the content editor role.
-RID_CONTENT_EDITOR = "nti.roles.course_content_editor"
+RID_CONTENT_EDITOR = u"nti.roles.course_content_editor"
 
 #: Sections folder
 SECTIONS = u'Sections'
@@ -147,7 +147,7 @@ DISCUSSIONS = u'Discussions'
 COURSE_CATALOG_NAME = u'Courses'
 
 #: Course outline file name
-COURSE_OUTLINE_NAME = 'course_outline.xml'
+COURSE_OUTLINE_NAME = u'course_outline.xml'
 
 #: Instructor role
 INSTRUCTOR = u"Instructor"
@@ -217,9 +217,11 @@ class ICourseAdministrativeLevel(IFolder):
     containers or instances of courses.
     """
 
-    contains(str('.ICourseInstance'),
-             str('.ICourseAdministrativeLevel'))
+    contains('.ICourseInstance',
+             '.ICourseAdministrativeLevel')
+
     __setitem__.__doc__ = None
+
 
 # Outlines
 
@@ -250,8 +252,9 @@ class ICourseOutlineNode(IRecordableContainer,
     .. note:: This is only partially modeled.
     """
 
-    containers(str('._ICourseOutlineNodeContainer'))
-    contains(str('.ICourseOutlineNode'))
+    containers('._ICourseOutlineNodeContainer')
+    contains('.ICourseOutlineNode')
+
     __parent__.required = False
     __setitem__.__doc__ = None
 
@@ -261,7 +264,7 @@ class ICourseOutlineNode(IRecordableContainer,
     title = PlainTextLine(max_length=300,
                           required=False,
                           title=u"The human-readable title of this object",
-                          __name__='title')
+                          __name__=u'title')
 
     LessonOverviewNTIID = ValidNTIID(title=u"The NTIID of the lesson overview",
                                      required=False,
@@ -309,8 +312,8 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
         required=False)
 
 
-_tag_iface_fields(ICourseOutlineCalendarNode, 'title', 'description', 'AvailableEnding',
-                  'AvailableBeginning')
+_tag_iface_fields(ICourseOutlineCalendarNode, 
+                  'title', 'description', 'AvailableEnding', 'AvailableBeginning')
 
 
 class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
@@ -323,8 +326,8 @@ class ICourseOutlineContentNode(ICourseOutlineCalendarNode):
                               required=False)
 
 
-_tag_iface_fields(ICourseOutlineContentNode, 'title', 'description', 'AvailableEnding',
-                  'AvailableBeginning')
+_tag_iface_fields(ICourseOutlineContentNode,
+                  'title', 'description', 'AvailableEnding', 'AvailableBeginning')
 
 
 class ICourseOutlineNodes(ISequence):
@@ -353,7 +356,8 @@ class ICourseOutline(ICourseOutlineNode,
     # syllabus/outline based on the active principal, and unless
     # extreme care is taken with the URL structure, we could
     # run into caching issues (see the MD5 hacks for forums).
-    containers(str('.ICourseInstance'))
+    containers('.ICourseInstance')
+
     __parent__.required = False
 
 
@@ -387,7 +391,8 @@ class ICourseInstanceSharingScope(ICommunity,
     A sharing scope within an instance.
     """
 
-    containers(str('.ICourseInstanceSharingScopes'))
+    containers('.ICourseInstanceSharingScopes')
+
     __parent__.required = False
 
 
@@ -400,7 +405,8 @@ class ICourseInstanceSharingScopes(IContainer):
     """
 
     contains(ICourseInstanceSharingScope)
-    containers(str('.ICourseInstance'))
+    containers('.ICourseInstance')
+
     __parent__.required = False
     __setitem__.__doc__ = None
 
@@ -429,7 +435,7 @@ class ICourseInstanceBoard(IUseOIDForNTIID,
     (for BWC, mostly), but this is required to be
     contained by a course.
     """
-    containers(str('.ICourseInstance'))
+    containers('.ICourseInstance')
 
 
 class ICourseInstanceForum(ICommunityForum):
@@ -460,8 +466,9 @@ class ICourseSubInstances(IContainer):
     A container for the subinstances (sections) of a course.
     """
 
-    contains(str('.ICourseSubInstance'))
-    containers(str('.ICourseInstance'))
+    contains('.ICourseSubInstance')
+    containers('.ICourseInstance')
+
     __parent__.required = False
     __setitem__.__doc__ = None
 
@@ -470,6 +477,7 @@ class ISynchronizable(interface.Interface):
     lastSynchronized = Number(title=u"The timestamp at which this object was last synchronized .",
                               default=0.0)
     lastSynchronized.setTaggedValue('_ext_excluded_out', True)
+
 
 class ICourseInstance(IFolder,
                       IShouldHaveTraversablePath,
@@ -493,6 +501,7 @@ class ICourseInstance(IFolder,
 
     containers(ICourseAdministrativeLevel,
                ICourseSubInstances)
+
     __parent__.required = False
 
     SharingScopes = Object(ICourseInstanceSharingScopes,
@@ -610,7 +619,8 @@ class IEnrollmentMappedCourseInstance(ICourseInstance):
 # Don't try to consider this when determining most-derived
 # interfaces. (This one does need to be a kind-of ICourseInstance because
 # we want to register enrollment managers for it.)
-IEnrollmentMappedCourseInstance.setTaggedValue('_ext_is_marker_interface', True)
+IEnrollmentMappedCourseInstance.setTaggedValue('_ext_is_marker_interface',
+                                               True)
 
 
 class ICourseInstanceVendorInfo(IEnumerableMapping,
@@ -626,8 +636,6 @@ class ICourseInstanceVendorInfo(IEnumerableMapping,
     keys be the vendor names and within them be the actual vendor specific
     information.
     """
-
-
 # both spellings are acceptable
 ICourseInstanceVenderInfo = ICourseInstanceVendorInfo
 
@@ -655,7 +663,8 @@ class IAnonymouslyAccessibleCourseInstance(interface.Interface):
     """
 # Don't try to consider this when determining most-derived
 # interfaces.
-IAnonymouslyAccessibleCourseInstance.setTaggedValue('_ext_is_marker_interface', True)
+IAnonymouslyAccessibleCourseInstance.setTaggedValue(
+    '_ext_is_marker_interface', True)
 
 
 class IDenyOpenEnrollment(interface.Interface):
@@ -669,6 +678,7 @@ class IDenyOpenEnrollment(interface.Interface):
 # Don't try to consider this when determining most-derived
 # interfaces.
 IDenyOpenEnrollment.setTaggedValue('_ext_is_marker_interface', True)
+
 
 # Catalog
 
@@ -733,7 +743,8 @@ class IWritableCourseCatalog(ICourseCatalog, IContentContainer):
     a container and be writable.
     """
 
-    contains(str('.ICourseCatalogEntry'))
+    contains('.ICourseCatalogEntry')
+
     __setitem__.__doc__ = None
 
     def addCatalogEntry(entry, event=True):
@@ -772,9 +783,12 @@ class ICourseCatalogInstructorInfo(interface.Interface):
     """
 
     Name = ValidTextLine(title=u"The instructor's name")
+
     Title = ValidTextLine(title=u"The instructor's title of address such as Dr.",
                           required=False)
+
     JobTitle = ValidTextLine(title=u"The instructor's academic job title")
+
     Suffix = ValidTextLine(title=u"The instructor's suffix such as PhD or Jr",
                            required=False)
 
@@ -848,6 +862,7 @@ class ICourseCatalogEntry(ICatalogFamily,
     """
 
     containers(ICourseCatalog, ICourseInstance)
+
     __parent__.required = False
 
     # Used to have Title/Description, now the lower case versions.
@@ -1018,6 +1033,7 @@ class ICourseInstanceEnrollmentRecord(ILastModified,
     """
 
     containers(ICourseInstanceEnrollmentRecordContainer)
+
     __parent__.required = False
 
     CourseInstance = Object(ICourseInstance,
@@ -1180,13 +1196,13 @@ class IEnrollmentException(interface.Interface):
 
 @interface.implementer(IEnrollmentException)
 class AlreadyEnrolledException(ValidationError):
-    __doc__ = _('User already enrolled in course.')
+    __doc__ = _(u'User already enrolled in course.')
     i18n_message = __doc__
 
 
 @interface.implementer(IEnrollmentException)
 class InstructorEnrolledException(ValidationError):
-    __doc__ = _('Instructor cannot enroll in course.')
+    __doc__ = _(u'Instructor cannot enroll in course.')
     i18n_message = __doc__
 
 
@@ -1200,6 +1216,7 @@ class ICourseInstanceAvailableEvent(IObjectEvent):
     """
 
     bucket = Object(IDelimitedHierarchyBucket, title=u"Bucket", required=False)
+
     results = Object(ISynchronizationResults,
                      title=u"Sync Results", required=False)
 
@@ -1224,7 +1241,9 @@ class ICourseBundleUpdatedEvent(IObjectEvent):
     by adding or removing :class:`IContentPackage` objects.
     """
 
+
 class AbstractCourseBundleUpdateEvent(ObjectEvent):
+
     course = alias('object')
 
     def __init__(self, obj, added_packages=(), removed_packages=()):
@@ -1326,6 +1345,7 @@ class CourseLessonSyncResults(object):
 
 
 class ICourseSynchronizationResults(IGenericSynchronizationResults):
+
     NTIID = ValidTextLine(title=u"Course NTIID", required=False)
 
     CatalogEntryUpdated = Bool(title=u"CatalogEntry updated",
@@ -1606,7 +1626,8 @@ class ICourseInstanceAdministrativeRole(IShouldHaveTraversablePath):
     and the corresponding catalog entry.
     """
 
-    __name__ = interface.Attribute("The name of the administration is the same as the CourseInstance.")
+    __name__ = interface.Attribute(
+        "The name of the administration is the same as the CourseInstance.")
 
     RoleName = Choice(title=u"The name of the role this principal holds",
                       values=('instructor', 'teaching assistant', 'editor'))
@@ -1686,12 +1707,12 @@ class CourseInvitationException(ValidationError):
 
 
 class CourseCatalogUnavailableException(CourseInvitationException):
-    __doc__ = _("Course catalog not available.")
+    __doc__ = _(u"Course catalog not available.")
     i18n_message = __doc__
 
 
 class CourseNotFoundException(CourseInvitationException):
-    __doc__ = _("Course not found.")
+    __doc__ = _(u"Course not found.")
     i18n_message = __doc__
 
 
@@ -1699,8 +1720,12 @@ class IJoinCourseInvitation(IInvitation):
     """
     Marker interface for a invitation to join a course
     """
+    course = ValidTextLine(title=u"The NTIID of the course.", required=False)
+
     scope = ValidTextLine(title=u"The enrollment scope.", required=False)
+
     name = ValidTextLine(title=u"Invitation receiver name.", required=False)
+
     email = ValidTextLine(title=u"Invitation receiver email.", required=False)
 
 
@@ -1816,6 +1841,7 @@ class ICourseInstanceImportedEvent(IObjectEvent):
 @interface.implementer(ICourseInstanceImportedEvent)
 class CourseInstanceImportedEvent(ObjectEvent):
     pass
+
 
 # index
 

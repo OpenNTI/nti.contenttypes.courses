@@ -34,6 +34,8 @@ from nti.invitations.model import Invitation
 
 from nti.ntiids.ntiids import find_object_with_ntiid
 
+from nti.property.property import alias
+
 from nti.schema.fieldproperty import createDirectFieldProperties
 
 
@@ -42,6 +44,8 @@ class JoinCourseInvitation(Invitation):
     createDirectFieldProperties(IJoinCourseInvitation)
 
     mimeType = mime_type = "application/vnd.nextthought.joincourseinvitation"
+
+    entry = alias('course')
 
     @readproperty
     def scope(self):
