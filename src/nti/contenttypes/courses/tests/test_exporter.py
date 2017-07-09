@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -51,7 +51,7 @@ class TestExporter(CourseLayerTest):
                             'Spring2014',
                             'Gateway')
         inst = ContentCourseInstance()
-        inst.root = FilesystemBucket(name="Gateway")
+        inst.root = FilesystemBucket(name=u"Gateway")
         inst.root.absolute_path = path
 
         key = FilesystemKey()
@@ -77,7 +77,7 @@ class TestExporter(CourseLayerTest):
                             'Spring2014',
                             'Gateway')
         inst = ContentCourseInstance()
-        inst.root = FilesystemBucket(name="Gateway")
+        inst.root = FilesystemBucket(name=u"Gateway")
         inst.root.absolute_path = path
         tmp_dir = tempfile.mkdtemp(dir="/tmp")
         try:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -21,22 +21,24 @@ from nti.contenttypes.courses import interfaces
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 
+
 class TestVendorInfo(unittest.TestCase):
 
-	def test_provides(self):
-		assert_that( vendorinfo.DefaultCourseInstanceVendorInfo(),
-					 validly_provides(interfaces.ICourseInstanceVenderInfo) )
+    def test_provides(self):
+        assert_that(vendorinfo.DefaultCourseInstanceVendorInfo(),
+                    validly_provides(interfaces.ICourseInstanceVenderInfo))
 
-	def test_fresh_time(self):
-		vi = vendorinfo.DefaultCourseInstanceVendorInfo()
-		assert_that( vi, has_property('createdTime', 0))
-		assert_that( vi, has_property('lastModified', 0))
+    def test_fresh_time(self):
+        vi = vendorinfo.DefaultCourseInstanceVendorInfo()
+        assert_that(vi, has_property('createdTime', 0))
+        assert_that(vi, has_property('lastModified', 0))
+
 
 class TestFunctionalVendorInfo(CourseLayerTest):
 
-	def test_annotation(self):
-		course = courses.CourseInstance()
+    def test_annotation(self):
+        course = courses.CourseInstance()
 
-		vi = interfaces.ICourseInstanceVenderInfo(course)
-		assert_that(vi, is_(vendorinfo.DefaultCourseInstanceVendorInfo))
-		assert_that( vi, has_property('__parent__', course))
+        vi = interfaces.ICourseInstanceVenderInfo(course)
+        assert_that(vi, is_(vendorinfo.DefaultCourseInstanceVendorInfo))
+        assert_that(vi, has_property('__parent__', course))

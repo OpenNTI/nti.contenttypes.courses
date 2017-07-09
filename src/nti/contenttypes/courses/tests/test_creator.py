@@ -29,8 +29,6 @@ from nti.contenttypes.courses.creator import make_directories
 from nti.contenttypes.courses.creator import install_admin_level
 from nti.contenttypes.courses.creator import create_course_subinstance
 
-from nti.externalization.interfaces import LocatedExternalDict
-
 from nti.contenttypes.courses.tests import CourseLayerTest
 
 

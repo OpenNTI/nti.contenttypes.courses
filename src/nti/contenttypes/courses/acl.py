@@ -6,7 +6,7 @@ ACL providers for course data.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -63,6 +63,7 @@ from nti.dataserver.interfaces import ISupplementalACLProvider
 
 from nti.traversal.traversal import find_interface
 
+
 def editor_aces_for_course(course, provider):
     """
     Gather the editor aces for a given course.
@@ -71,13 +72,11 @@ def editor_aces_for_course(course, provider):
             ace_allowing(ROLE_CONTENT_ADMIN, ACT_READ, type(provider)),
             ace_allowing(ROLE_CONTENT_ADMIN, ACT_CONTENT_EDIT, type(provider)),
             ace_allowing(ROLE_CONTENT_ADMIN, ACT_SYNC_LIBRARY, type(provider))]
-
     # Now our content editors/admins.
     for editor in get_course_editors(course):
         aces.append(ace_allowing(editor, ACT_READ, type(provider)))
         aces.append(ace_allowing(editor, ACT_UPDATE, type(provider)))
         aces.append(ace_allowing(editor, ACT_CONTENT_EDIT, type(provider)))
-
     return aces
 
 
@@ -159,10 +158,7 @@ class CourseCatalogEntryACLProvider(object):
         cce = self.context
         # catalog entries can be non-public children of public courses,
         # or public children of non-public courses.
-        non_public = find_interface(cce,
-                                    INonPublicCourseInstance,
-                                    strict=False)
-
+        non_public = find_interface(cce, INonPublicCourseInstance, strict=False)
         if non_public:
             # Ok, was that us, or are we not non-public and our direct parent
             # is also not non-public?
@@ -173,20 +169,16 @@ class CourseCatalogEntryACLProvider(object):
                 # We don't directly provide it, neither does our parent, so
                 # we actually want to be public and not inherit this.
                 non_public = False
-
         acl = []
         if non_public:
             # Although it might be be nice to inherit from the non-public
             # course in our lineage, we actually need to be a bit stricter
             # than that...the course cannot forbid creation or do a deny-all
             # (?)
-            course_in_lineage = find_interface(cce,
-                                               ICourseInstance,
-                                               strict=False)
-
+            course = find_interface(cce, ICourseInstance, strict=False)
             # Do we have a course instance? If it's not in our lineage its the legacy
             # case
-            course = course_in_lineage or ICourseInstance(cce, None)
+            course = course or ICourseInstance(cce, None)
             if course is not None:
                 # Use our course ACL to give enrolled students access.
                 acl.extend(IACLProvider(course).__acl__)
@@ -256,8 +248,7 @@ class CourseBoardACLProvider(CommunityBoardACLProvider):
         course = find_interface(self.context, ICourseInstance, strict=False)
         if course is None:
             __traceback_info__ = self.context
-            raise TypeError(
-                "Not enough context information to get all parents")
+            raise TypeError("Not enough context information to get all parents")
         for editor in get_course_editors(course):
             acl.append(ace_allowing(editor, ACT_READ, type(self)))
 
@@ -297,30 +288,30 @@ class RenderableContentPackageSupplementalACLProvider(object):
         """
         Get all courses and subinstances that contain this package.
         """
-        package = self.context
-        courses = get_content_unit_courses( package )
         result = set()
+        package = self.context
+        courses = get_content_unit_courses(package)
         for course in courses or ():
             course_tree = get_course_hierarchy(course)
             for course in course_tree or ():
                 course_packages = get_course_packages(course)
                 if package in course_packages:
-                    result.add( course )
+                    result.add(course)
         return result
 
     @Lazy
     def __acl__(self):
-        is_published = self.context.is_published()
         result = []
+        is_published = self.context.is_published()
         courses = self._get_courses()
         for course in courses:
             if is_published:
                 # If published, we want the whole ACL
                 # XXX: Eliminate dupes?
                 course_acl = IACLProvider(course).__acl__
-                result.extend( course_acl )
+                result.extend(course_acl)
             else:
                 # Otherwise, fetch just the course editors
                 aces = editor_aces_for_course(course, self)
-                result.extend( aces )
+                result.extend(aces)
         return acl_from_aces(result)

@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -271,7 +271,7 @@ class _AdminLevelExternalizer(object):
         context_link = Link(self.obj)
         interface.alsoProvides(context_link, ILinkExternalHrefOnly)
         result['href'] = context_link
-        items = tuple(self.obj)
+        items = list(self.obj)
         if items:
             result[ITEMS] = items
         return result

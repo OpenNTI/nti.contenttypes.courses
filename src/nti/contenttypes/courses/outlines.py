@@ -6,7 +6,7 @@ Implementation of the course outline structure.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -185,10 +185,9 @@ class CourseOutlineCalendarNode(SchemaConfigured,
                                 CourseOutlineNode):
     createDirectFieldProperties(ICourseOutlineCalendarNode)
 
-    AvailableEnding = AdaptingFieldProperty(
-        ICourseOutlineCalendarNode['AvailableEnding'])
-    AvailableBeginning = AdaptingFieldProperty(
-        ICourseOutlineCalendarNode['AvailableBeginning'])
+    AvailableEnding = AdaptingFieldProperty(ICourseOutlineCalendarNode['AvailableEnding'])
+
+    AvailableBeginning = AdaptingFieldProperty(ICourseOutlineCalendarNode['AvailableBeginning'])
 
     def __init__(self, *args, **kwargs):
         SchemaConfigured.__init__(self, *args, **kwargs)

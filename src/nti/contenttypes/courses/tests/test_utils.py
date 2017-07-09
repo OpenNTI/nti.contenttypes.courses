@@ -11,9 +11,9 @@ from hamcrest import assert_that
 
 from nti.testing.matchers import verifiably_provides
 
-from nti.contenttypes.courses.utils import ProxyEnrollmentRecord
-
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
+
+from nti.contenttypes.courses.utils import ProxyEnrollmentRecord
 
 from nti.dataserver.tests import mock_dataserver
 
