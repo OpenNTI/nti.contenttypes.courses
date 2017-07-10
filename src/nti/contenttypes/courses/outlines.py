@@ -24,6 +24,8 @@ from zope.container.constraints import checkObject
 
 from zope.container.ordered import OrderedContainer  # this is persistent
 
+from nti.base._compat import text_
+
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
@@ -77,7 +79,7 @@ class _AbstractCourseOutlineNode(Contained,
         try:
             name = node.ntiid
         except AttributeError:
-            name = unicode(len(self))
+            name = text_(str(len(self)))
         self[name] = node
 
     def rename(self, old, new):

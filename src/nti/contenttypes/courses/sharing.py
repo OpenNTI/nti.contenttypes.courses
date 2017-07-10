@@ -31,6 +31,8 @@ from zope.lifecycleevent import IObjectModifiedEvent
 
 from zope.security.interfaces import IPrincipal
 
+from nti.base._compat import text_
+
 from nti.containers.containers import CheckingLastModifiedBTreeContainer
 
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
@@ -102,7 +104,7 @@ class CourseInstanceSharingScope(Community):
 		del self._v_ntiid
 		# Sigh, probably in testing, we don't have an OID
 		# or intid yet.
-		return unicode(str(self))
+		return text_(str(self))
 
 	# We want, essentially, identity equality:
 	# nothing is equal to this because nothing can be contained
