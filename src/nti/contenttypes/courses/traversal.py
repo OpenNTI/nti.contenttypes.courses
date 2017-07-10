@@ -19,7 +19,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 
 @interface.implementer(IPathAdapter)
-def CourseCatalogEntryTraverser(instance, request):
+def CourseCatalogEntryTraverser(instance, _):
     """
     Courses can be traversed to their catalog entry.
     """
