@@ -9,6 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from zope import interface
+
 from zope.container.constraints import contains
 from zope.container.interfaces import IContainer
 
@@ -19,6 +21,7 @@ from zope.location.interfaces import IContained
 from zope.schema.vocabulary import SimpleTerm
 from zope.schema.vocabulary import SimpleVocabulary
 
+from nti.base.interfaces import IFile
 from nti.base.interfaces import ITitled
 from nti.base.interfaces import ICreated
 from nti.base.interfaces import ILastModified
@@ -30,7 +33,6 @@ from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
 from nti.coremetadata.interfaces import ITaggedContent
 
-from nti.namedfile.interfaces import INamedFile
 from nti.namedfile.interfaces import IFileConstrained
 
 from nti.schema.field import Choice
@@ -50,22 +52,23 @@ ALL_SCOPES_VOCABULARY = SimpleVocabulary([SimpleTerm(ES_ALL)] +
 def href_schema_field(title=u'', required=False, default=None):
     return Variant((ValidTextLine(title=u"href name"),
                     ValidURI(title=u"href source uri"),
-                    Object(INamedFile, title=u"href file")),
+                    Object(IFile, title=u"href file")),
                    title=title,
                    default=default,
                    required=required)
 
 
-class ICourseDiscussion(ITitled, ITaggedContent, ILastModified, 
+class ICourseDiscussion(ITitled, ITaggedContent, ILastModified,
                         IContained, ICreated, IFileConstrained):
+
     title = ValidTextLine(title=u"Discussion title", required=True)
 
     icon = href_schema_field(title=u"Discussion icon href")
 
     label = ValidTextLine(title=u"The label", required=False, default=u'')
-    
+
     body = DiscussionModeledContentBody(required=False)
-    
+
     scopes = ListOrTuple(Choice(vocabulary=ALL_SCOPES_VOCABULARY),
                          title=u'scopes', required=True, min_length=1)
 
@@ -88,4 +91,10 @@ class ICourseDiscussions(IContainer, IContained, ILastModified):
 class ICourseDiscussionList(ISequence):
     """
     A marker interface for a sequence of course discussion objects
+    """
+
+
+class ICourseDiscussionTopic(interface.Interface):
+    """
+    A marker interface for a created topics
     """
