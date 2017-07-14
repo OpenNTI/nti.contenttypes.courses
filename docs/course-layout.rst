@@ -232,6 +232,10 @@ course instance. This file is a standard bundle file as defined by
 	    "title": "A Title"
 	}
 
+.. note:: ``RestrictedAccess`` for a course not bundle should be left False
+          (the default). Access to bundles and the underlying packages should
+          be defined by course membership.
+
 .. note:: Regular (non-course) bundles are required to specify an
 		  NTIID. However, any NTIID, specified here is ignored and
 		  overwritten by an automatically generated ID. No client or
@@ -253,10 +257,6 @@ course instance. This file is a standard bundle file as defined by
 			 automatically. Users enrolled in the course will be
 			 automatically added to the groups that can access the content.
 
-.. danger:: The packages referenced by a course **MUST NOT** change
-			after the course is installed and has users enrolled.
-			Doing so will result in stale permissions. (This is a
-			limitation that can be fixed given time.)
 
 ``bundle_dc_metadata.xml`` (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

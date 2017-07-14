@@ -310,10 +310,11 @@ class BundleMetaInfoExporter(BaseSectionExporter):
         if ICourseSubInstance.providedBy(course):
             return
         entry = ICourseCatalogEntry(course)
+        package_ntiids = list(self._get_package_ntiids(course, backup, salt))
         data = {
             'ntiid': u'',
             'title': entry.Title,
-            "ContentPackages": list(self._get_package_ntiids(course, backup, salt))
+            "ContentPackages": package_ntiids
         }
         ext_obj = to_external_object(data, decorate=False)
         source = self.dump(ext_obj)
