@@ -14,12 +14,16 @@ from zope import interface
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
 
 from nti.contenttypes.courses.legacy_catalog import ICourseCatalogInstructorLegacyInfo
 
+from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalObjectDecorator
 
 from nti.externalization.singleton import SingletonDecorator
+
+MIMETYPE = StandardExternalFields.MIMETYPE
 
 
 @component.adapter(ICourseOutlineNode)
@@ -54,3 +58,13 @@ class _InstructorLegacyInfoDecorator(object):
 
     def decorateExternalObject(self, original, external):
         external.pop('userid', None)
+
+
+@component.adapter(ICourseInstanceSharingScope)
+@interface.implementer(IExternalObjectDecorator)
+class _CourseInstanceSharingScopeDecorator(object):
+
+    __metaclass__ = SingletonDecorator
+
+    def decorateExternalObject(self, original, external):
+        external[MIMETYPE] = 'application/vnd.nextthought.community'

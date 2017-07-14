@@ -115,6 +115,10 @@
 				for=".legacy_catalog.ICourseCatalogInstructorLegacyInfo"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
 
+	<subscriber factory=".decorators._CourseInstanceSharingScopeDecorator"
+				for=".interfaces.ICourseInstanceSharingScope"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
+
 	<!-- Events -->
 	<subscriber handler=".subscribers.install_site_course_catalog" />
 	<subscriber handler=".subscribers.uninstall_site_course_catalog" />
