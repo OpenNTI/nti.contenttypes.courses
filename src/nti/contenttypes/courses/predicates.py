@@ -20,8 +20,6 @@ from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import IPrincipalEnrollments
 
-from nti.site.hostpolicy import run_job_in_all_host_sites
-
 
 def course_collector():
     catalog = component.getUtility(ICourseCatalog)
@@ -47,17 +45,13 @@ def outline_nodes_collector(course):
 @component.adapter(ISystemUserPrincipal)
 class _CoursePrincipalObjects(BasePrincipalObjects):
 
-    def iter_objects(self, intids=None):
+    def iter_objects(self):
         result = []
-
-        def _collector():
-            for course in course_collector():
-                result.append(course)
-                for node in outline_nodes_collector(course):
-                    result.append(node)
-        run_job_in_all_host_sites(_collector)
-        for obj in result:
-            yield obj
+        for course in course_collector():
+            result.append(course)
+            for node in outline_nodes_collector(course):
+                result.append(node)
+        return result
 
 
 @component.adapter(IUser)
@@ -65,13 +59,8 @@ class _EnrollmentPrincipalObjects(BasePrincipalObjects):
 
     def iter_objects(self):
         result = []
-        user = self.user
-
-        def _collector():
-            for enrollments in component.subscribers((user,),
-                                                     IPrincipalEnrollments):
-                for enrollment in enrollments.iter_enrollments():
-                    result.append(enrollment)
-        run_job_in_all_host_sites(_collector)
-        for obj in result:
-            yield obj
+        for enrollments in component.subscribers((self.user,),
+                                                 IPrincipalEnrollments):
+            for enrollment in enrollments.iter_enrollments():
+                result.append(enrollment)
+        return result

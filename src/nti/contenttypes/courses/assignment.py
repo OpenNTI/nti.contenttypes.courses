@@ -193,7 +193,7 @@ class MappingAssessmentDateContext(MappingAssessmentMixin):
 MappingAssignmentDateContext = MappingAssessmentDateContext  # BWC
 
 COURSE_INSTANCE_DATE_CONTEXT_KEY = 'nti.contenttypes.courses.assignment.MappingAssignmentDateContext'
-COURSE_SUBINSTANCE_DATE_CONTEXT_KEY = COURSE_INSTANCE_DATE_CONTEXT_KEY # BWC
+COURSE_SUBINSTANCE_DATE_CONTEXT_KEY = COURSE_INSTANCE_DATE_CONTEXT_KEY  # BWC
 CourseSubInstanceAssignmentDateContextFactory = an_factory(MappingAssignmentDateContext,
                                                            key=COURSE_INSTANCE_DATE_CONTEXT_KEY)
 

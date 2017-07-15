@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 
 __docformat__ = "restructuredtext en"
 
@@ -39,14 +39,14 @@ def update_sharing_scopes_friendly_names(course):
         if sharing_scope_data.get('alias'):
             alias = sharing_scope_data['alias']
         elif entry.ProviderUniqueID:
-            alias = entry.ProviderUniqueID + ' - ' + friendly_title
+            alias = entry.ProviderUniqueID + u' - ' + friendly_title
         else:
             alias = friendly_scope.alias
 
         if sharing_scope_data.get('realname'):
             realname = sharing_scope_data['realname']
         elif entry.title:
-            realname = entry.title + ' - ' + friendly_title
+            realname = entry.title + u' - ' + friendly_title
         else:
             realname = friendly_scope.realname
 
@@ -84,10 +84,10 @@ def update_sharing_scopes_friendly_names(course):
                                 scope_name, image_attr, entry.ntiid)
             return result
 
-        modified_scope = _imageURL(scope, 
-                                   IAvatarURL, 
+        modified_scope = _imageURL(scope,
+                                   IAvatarURL,
                                    'avatarURL') or modified_scope
-            
+
         modified_scope = _imageURL(scope,
                                    IBackgroundURL,
                                    'backgroundURL') or modified_scope
