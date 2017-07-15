@@ -357,6 +357,9 @@
 	<subscriber	factory=".predicates._EnrollmentPrincipalObjects"
 				provides="nti.dataserver.metadata.interfaces.IPrincipalMetadataObjects" />
 
+	<subscriber	factory=".predicates._UserBoardPrincipalObjects"
+				provides="nti.dataserver.metadata.interfaces.IPrincipalMetadataObjects" />
+
 	<!--
 		To get maximum externalization testing, let the dataserver
 		register all its decorators.
