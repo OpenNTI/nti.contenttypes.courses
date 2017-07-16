@@ -22,6 +22,8 @@ from nti.dataserver.interfaces import ISystemUserPrincipal
 from nti.dataserver.metadata.predicates import BoardObjectsMixin
 from nti.dataserver.metadata.predicates import BasePrincipalObjects
 
+from nti.contenttypes.courses.utils import get_parent_course
+
 
 def course_collector():
     catalog = component.getUtility(ICourseCatalog)
@@ -88,4 +90,7 @@ class _UserBoardPrincipalObjects(BasePrincipalObjects, BoardObjectsMixin):
             enrollments = ICourseEnrollments(course)
             if enrollments.is_principal_enrolled(self.user):
                 result.extend(self.board_objects(course.Discussions))
+                parent = get_parent_course(course)
+                if parent is not course:
+                    result.extend(self.board_objects(parent.Discussions))
         return result
