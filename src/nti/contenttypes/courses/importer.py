@@ -488,7 +488,11 @@ class CourseImporter(object):
         course = ICourseInstance(context)
         for name, importer in sorted(component.getUtilitiesFor(ICourseSectionImporter)):
             logger.info("Processing %s", name)
-            importer.process(course, filer, writeout)
+            try:
+                importer.process(course, filer, writeout)
+            except Exception as e:
+                logger.exception("Error while processing %s", name)
+                raise e
         # notify
         self._mark_sync(course)
         notify(CourseInstanceImportedEvent(course))
