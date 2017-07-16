@@ -11,16 +11,16 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import component
 
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseEnrollments
+from nti.contenttypes.courses.interfaces import IPrincipalEnrollments
+
 from nti.dataserver.interfaces import IUser
 from nti.dataserver.interfaces import ISystemUserPrincipal
 
 from nti.dataserver.metadata.predicates import BoardObjectsMixin
 from nti.dataserver.metadata.predicates import BasePrincipalObjects
-
-from nti.contenttypes.courses.interfaces import ICourseCatalog
-from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import ICourseEnrollments
-from nti.contenttypes.courses.interfaces import IPrincipalEnrollments
 
 
 def course_collector():
