@@ -11,9 +11,6 @@ logger = __import__('logging').getLogger(__name__)
 
 from zope import component
 
-from nti.coremetadata.interfaces import SYSTEM_USER_ID
-from nti.coremetadata.interfaces import SYSTEM_USER_NAME
-
 from nti.dataserver.interfaces import IUser
 from nti.dataserver.interfaces import ISystemUserPrincipal
 
@@ -50,12 +47,9 @@ def outline_nodes_collector(course):
 @component.adapter(ISystemUserPrincipal)
 class _CoursePrincipalObjects(BasePrincipalObjects, BoardObjectsMixin):
 
-    system = (None, SYSTEM_USER_ID, SYSTEM_USER_NAME)
-
     def board_objects(self, board):
-        generator = super(_CoursePrincipalObjects, self).board_objects(board)
-        for item in generator:
-            if self.creator(item) in self.system:
+        for item in super(_CoursePrincipalObjects, self).board_objects(board):
+            if self.is_system_username(self.creator(item)):
                 yield item
 
     def iter_objects(self):
@@ -84,9 +78,8 @@ class _EnrollmentPrincipalObjects(BasePrincipalObjects, BoardObjectsMixin):
 class _UserBoardPrincipalObjects(BasePrincipalObjects, BoardObjectsMixin):
 
     def board_objects(self, board):
-        username = self.user.username.lower()
         for item in super(_UserBoardPrincipalObjects, self).board_objects(board):
-            if self.creator(item) == username:
+            if self.creator(item) == self.username:
                 yield item
 
     def iter_objects(self):
