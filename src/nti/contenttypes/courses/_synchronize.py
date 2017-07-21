@@ -48,9 +48,6 @@ from nti.contenttypes.courses._evaluation_parser import fill_evaluations_from_ke
 
 from nti.contenttypes.courses._outline_parser import fill_outline_from_key
 
-from nti.contenttypes.courses._role_parser import fill_roles_from_key
-from nti.contenttypes.courses._role_parser import reset_roles_missing_key
-
 from nti.contenttypes.courses._sharing_scopes import update_sharing_scopes_friendly_names
 
 from nti.contenttypes.courses import ROLE_INFO_NAME
@@ -82,7 +79,6 @@ from nti.contenttypes.courses.interfaces import IContentCourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseSynchronizationResults
 
-from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CatalogEntrySynchronized
 from nti.contenttypes.courses.interfaces import CourseBundleWillUpdateEvent
 from nti.contenttypes.courses.interfaces import CourseInstanceAvailableEvent
@@ -124,10 +120,10 @@ def _get_sync_results(**kwargs):
 def _get_course_sync_results(context, sync_results=None, **kwargs):
 	if sync_results is None:
 		entry = ICourseCatalogEntry(context)
-		sync_results = CourseSynchronizationResults(NTIID=entry.ntiid, 
+		sync_results = CourseSynchronizationResults(NTIID=entry.ntiid,
 													Site=_site_name())
 		results = _get_sync_results(**kwargs)
-		if results is not None: 
+		if results is not None:
 			results.append(sync_results)
 	return sync_results
 
@@ -276,7 +272,7 @@ class _ContentCourseSynchronizer(object):
 
 		# mark last sync time
 		course.lastSynchronized = entry.lastSynchronized = time.time()
-		
+
 		return sync_results
 
 	@classmethod
@@ -316,7 +312,6 @@ class _ContentCourseSynchronizer(object):
 
 		cls.update_vendor_info(course, bucket, sync_results)
 
-		cls.update_instructor_roles(course, bucket, sync_results=sync_results)
 		cls.update_assignment_policies(course, bucket, sync_results=sync_results)
 
 		# make sure Discussions are initialized
@@ -429,18 +424,6 @@ class _ContentCourseSynchronizer(object):
 			notify(CatalogEntrySynchronized(catalog_entry))
 			sync_results.CatalogEntryUpdated = True
 
-	@classmethod
-	def update_instructor_roles(cls, course, bucket, sync_results=None):
-		sync_results = _get_course_sync_results(course, sync_results)
-		role_json_key = bucket.getChildNamed(ROLE_INFO_NAME)
-		if role_json_key:
-			if fill_roles_from_key(course, role_json_key):
-				notify(CourseRolesSynchronized(course))
-				sync_results.InstructorRolesUpdated = True
-		else:
-			reset_roles_missing_key(course)
-			notify(CourseRolesSynchronized(course))
-			sync_results.InstructorRolesReseted = True
 
 	@classmethod
 	def update_assignment_policies(cls, course, bucket, sync_results=None):
@@ -557,7 +540,7 @@ class _ContentCourseSubInstanceSynchronizer(object):
 		notify(CourseInstanceAvailableEvent(subcourse,
 											bucket,
 											_get_sync_results(**kwargs)))
-		
+
 		return course_sync_results
 
 def synchronize_catalog_from_root(catalog_folder, root, **kwargs):
