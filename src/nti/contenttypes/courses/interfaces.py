@@ -71,6 +71,7 @@ from nti.contenttypes.reports.interfaces import IReportContext
 
 from nti.dataserver.interfaces import ICommunity
 from nti.dataserver.interfaces import ILastModified
+from nti.dataserver.interfaces import IGrantAccessException
 from nti.dataserver.interfaces import ITitledDescribedContent
 from nti.dataserver.interfaces import IShouldHaveTraversablePath
 from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
@@ -312,7 +313,7 @@ class ICourseOutlineCalendarNode(ICourseOutlineNode):
         required=False)
 
 
-_tag_iface_fields(ICourseOutlineCalendarNode, 
+_tag_iface_fields(ICourseOutlineCalendarNode,
                   'title', 'description', 'AvailableEnding', 'AvailableBeginning')
 
 
@@ -1188,7 +1189,7 @@ class IDefaultCourseCatalogEnrollmentStorage(IContainer, IContained):
         """
 
 
-class IEnrollmentException(interface.Interface):
+class IEnrollmentException(IGrantAccessException):
     """
     marker interface for enrollment exception"
     """
