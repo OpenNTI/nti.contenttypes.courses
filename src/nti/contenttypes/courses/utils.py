@@ -547,7 +547,8 @@ def get_instructors_in_roles(roles, setting=Allow):
     for principal, stored in instructors:
         if stored == setting:
             pid = getattr(principal, 'id', str(principal))
-            result.add(pid)
+            if User.get_user(pid) is not None:
+                result.add(pid)
     return result
 
 
@@ -943,8 +944,8 @@ def deny_access_to_course(user, course, scope):
                             ignored_exceptions=(KeyError,),
                             related_enrolled_courses=related_enrolled_courses)
 
-    remove_principal_from_course_content_roles(principal, 
-                                               course, 
+    remove_principal_from_course_content_roles(principal,
+                                               course,
                                                unenroll=True)
 
 
