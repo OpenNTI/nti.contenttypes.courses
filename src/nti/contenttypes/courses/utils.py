@@ -547,8 +547,14 @@ def get_instructors_in_roles(roles, setting=Allow):
     for principal, stored in instructors:
         if stored == setting:
             pid = getattr(principal, 'id', str(principal))
-            if User.get_user(pid) is not None:
+            try:
+                user = User.get_user(pid)
+            except (LookupError, TypeError):
+                # lookuperror if we're not in a ds context,
                 result.add(pid)
+            else:
+                if user is not None:
+                    result.add(pid)
     return result
 
 
