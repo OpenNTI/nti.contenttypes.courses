@@ -178,10 +178,11 @@ def install_site_course_catalog(local_library, _=None):
 
 
 @component.adapter(IPersistentContentPackageLibrary, IUnregistered)
-def uninstall_site_course_catalog(library, event):
+def uninstall_site_course_catalog(_, event):
     uninstall_utility_on_unregistration(COURSE_CATALOG_NAME,
                                         IPersistentCourseCatalog,
                                         event)
+
 
 # Sync-related subscribers
 
@@ -241,7 +242,7 @@ def sync_catalog_when_library_synched(library, event):
 
 
 @component.adapter(ICourseInstance, ICourseRolesSynchronized)
-def roles_sync_on_course_instance(course, event):
+def roles_sync_on_course_instance(course, _):
     catalog = get_enrollment_catalog()
     intids = component.queryUtility(IIntIds)
     if catalog is not None and intids is not None:
@@ -256,7 +257,7 @@ def roles_sync_on_course_instance(course, event):
 
 
 @component.adapter(ICourseInstance, ICourseVendorInfoSynchronized)
-def on_course_vendor_info_synced(course, event):
+def on_course_vendor_info_synced(course, _):
     catalog = get_courses_catalog()
     intids = component.queryUtility(IIntIds)
     doc_id = intids.queryId(course) if intids is not None else None
@@ -265,7 +266,7 @@ def on_course_vendor_info_synced(course, event):
 
 
 @component.adapter(IUser, IWillDeleteEntityEvent)
-def on_user_removed(user, event):
+def on_user_removed(user, _):
     logger.info('Removing enrollment records for %s', user.username)
     catalog = get_enrollment_catalog()
     if catalog is not None:
@@ -310,7 +311,7 @@ def unindex_enrollment_records(course):
 
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
-def on_course_instance_removed(course, event):
+def on_course_instance_removed(course, _):
     remove_enrollment_records(course)
     unindex_enrollment_records(course)
     if     not ICourseSubInstance.providedBy(course) \
@@ -325,12 +326,12 @@ def course_default_roles(course):
 
 
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
-def on_course_instance_available(course, event):
+def on_course_instance_available(course, _):
     course_default_roles(course)
 
 
 @component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
-def on_course_instance_imported(course, event):
+def on_course_instance_imported(course, _):
     course_default_roles(course)
 
 
@@ -343,7 +344,7 @@ def on_course_outline_node_moved(node, event):
 
 
 @component.adapter(ICourseOutlineNode, IIntIdAddedEvent)
-def on_course_outline_node_added(node, event):
+def on_course_outline_node_added(node, _):
     ntiid = getattr(node, 'ntiid', None)
     if ntiid and not ICourseOutline.providedBy(node):
         registry = component.getSiteManager()
@@ -422,12 +423,12 @@ def update_course_packages(root_course, event=None):
 
 
 @component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
-def on_course_imported(course, event):
+def on_course_imported(course, _):
     update_course_packages(course)
 
 
 @component.adapter(IContentPackage, IContentPackageAddedEvent)
-def _update_course_bundle(new_package, event):
+def _update_course_bundle(new_package, _):
     """
     With content package added, make sure we update our state
     (index, permissions, etc) in case we have a bundle wref
@@ -450,7 +451,7 @@ def _update_course_bundle(new_package, event):
 
 
 @component.adapter(IContentPackage, IContentPackageRemovedEvent)
-def _update_course_bundle_on_package_removal(package, event):
+def _update_course_bundle_on_package_removal(package, _):
     """
     When a content package is deleted, remove it from the
     appropriate courses.
@@ -495,7 +496,7 @@ def on_course_editor_added(user, event):
 
 
 @component.adapter(IUser, ICourseRoleRemovedEvent)
-def on_course_role_removed(user, event):
+def on_course_role_removed(_, event):
     # On role removed, we need to re-index our course.
     unindex_course_roles(event.course)
     index_course_roles(event.course)
