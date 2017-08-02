@@ -12,7 +12,6 @@ logger = __import__('logging').getLogger(__name__)
 import os
 import six
 import time
-import hashlib
 import mimetypes
 from six import StringIO
 from numbers import Number
@@ -80,31 +79,13 @@ from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import StandardExternalFields
 
-from nti.ntiids.ntiids import get_parts
+from nti.ntiids.ntiids import hexdigest
+from nti.ntiids.ntiids import hash_ntiid
 from nti.ntiids.ntiids import make_ntiid
-from nti.ntiids.ntiids import make_specific_safe
 
 ID = StandardExternalFields.ID
 OID = StandardExternalFields.OID
 NTIID = StandardExternalFields.NTIID
-
-
-def hexdigest(data, salt=None):
-    salt = salt or ''
-    hasher = hashlib.sha256()
-    hasher.update(data + salt)
-    return hasher.hexdigest()
-
-
-def hash_ntiid(ntiid, salt=None):
-    parts = get_parts(ntiid)
-    digest = hexdigest(ntiid, salt).upper()
-    specific = make_specific_safe("%s_%04d" % (digest, len(ntiid)))
-    ntiid = make_ntiid(parts.date,
-                       parts.provider,
-                       parts.nttype,
-                       specific=specific)
-    return ntiid
 
 
 @interface.implementer(ICourseSectionExporter)
