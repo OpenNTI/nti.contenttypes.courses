@@ -471,7 +471,7 @@ def _package_ntiid_updated(package, event):
     When a content package changes ntiids, change our bundle
     ref appropriately.
     """
-    courses = get_courses_for_packages(packages=event.old_ntiid)
+    courses = get_courses_for_packages(event.old_ntiid)
     for course in courses or ():
         entry = ICourseCatalogEntry(course)
         logger.info('Changing package ref in course (%s) (old_ntiid=%s) (%s)',

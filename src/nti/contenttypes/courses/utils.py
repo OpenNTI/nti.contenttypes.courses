@@ -162,7 +162,7 @@ def get_current_site():
 # index
 
 
-def get_courses_for_packages(sites=(), packages=(), intids=None):
+def get_courses_for_packages(packages=(), sites=(), intids=None):
     result = set()
     catalog = get_courses_catalog()
     sites = get_sites_4_index(sites)
