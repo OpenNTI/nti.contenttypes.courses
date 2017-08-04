@@ -73,13 +73,12 @@ class _CourseInstanceSharingScopeDecorator(object):
         external[MIMETYPE] = 'application/vnd.nextthought.community'
 
 
-@component.adapter(ICourseCatalogEntry)
 @interface.implementer(IExternalObjectDecorator)
-class _CourseCatalogEntryNonPublicStatusDecorator(object):
+class _CourseNonPublicStatusDecorator(object):
 
     __metaclass__ = SingletonDecorator
 
     def decorateExternalObject(self, original, external):
         if 'is_non_public' not in external:
             external['is_non_public'] = INonPublicCourseInstance.providedBy(
-                ICourseInstance(original))
+                original)
