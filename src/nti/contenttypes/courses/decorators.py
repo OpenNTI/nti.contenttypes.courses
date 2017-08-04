@@ -13,7 +13,10 @@ from zope import component
 from zope import interface
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
+from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
 
 from nti.contenttypes.courses.legacy_catalog import ICourseCatalogInstructorLegacyInfo
@@ -68,3 +71,15 @@ class _CourseInstanceSharingScopeDecorator(object):
 
     def decorateExternalObject(self, original, external):
         external[MIMETYPE] = 'application/vnd.nextthought.community'
+
+
+@component.adapter(ICourseCatalogEntry)
+@interface.implementer(IExternalObjectDecorator)
+class _CourseCatalogEntryNonPublicStatusDecorator(object):
+
+    __metaclass__ = SingletonDecorator
+
+    def decorateExternalObject(self, original, external):
+        if 'is_non_public' not in external:
+            external['is_non_public'] = INonPublicCourseInstance.providedBy(
+                ICourseInstance(original))
