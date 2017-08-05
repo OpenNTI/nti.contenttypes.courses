@@ -13,9 +13,7 @@ from zope import component
 from zope import interface
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
-from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
-from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
 
