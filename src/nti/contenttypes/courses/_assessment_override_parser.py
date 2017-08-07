@@ -82,6 +82,8 @@ def fill_asg_from_json(course, index, lastModified=0, force=False):
             if k not in values:
                 continue
             int_val = values.get(k)
+            if int_val is None:
+                continue
             try:
                 int_val = int(int_val)
                 assert int_val > 0
