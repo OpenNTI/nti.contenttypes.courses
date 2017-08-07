@@ -140,13 +140,13 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
     if 'duration' in parsed:
         duration = parse_duration(parsed['duration'])
         parsed[u'Duration'] = duration
-    elif delete:
+    elif delete and context is not None:
         context.Duration = None
 
     if 'isPreview' in parsed:
-        parsed[u'Preview'] = parsed['isPreview']
-    if 'Preview' not in parsed:
-        parsed[u'Preview'] = context.Preview or False
+        parsed[u'Preview'] = parsed['isPreview'] or False
+    else:
+        parsed[u'Preview'] = getattr(context, 'Preview', '') or False
 
     if parsed.get('disable_calendar_overview', None) is not None:
         parsed[u'DisableOverviewCalendar'] = parsed['disable_calendar_overview']
