@@ -14,6 +14,8 @@ logger = __import__('logging').getLogger(__name__)
 import os
 import shutil
 
+from pyramid import httpexceptions as hexc
+
 from zope import component
 
 from zope.component.hooks import getSite
@@ -67,8 +69,9 @@ def _get_course_bucket(catalog, site):
         make_directories(path)
         courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
         logger.info('[%s] Creating Courses dir in site',
-                getattr(site, '__name__', None))
+                    getattr(site, '__name__', None))
     return courses_bucket
+
 
 def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
     site = getSite() if site is None else site
@@ -100,12 +103,14 @@ def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
 create_admin_level = install_admin_level
 
 
-def create_course(admin, key, catalog=None, writeout=False, factory=ContentCourseInstance):
+def create_course(admin, key, catalog=None, writeout=False, factory=ContentCourseInstance, strict=False):
     """
     Creates a course
 
     :param admin Administrative level key
     :param key Course name
+    :param strict If True, raises an error when the key already exists,
+    otherwise returns the existing course by default.
     """
     catalog = course_catalog(catalog)
     if admin not in catalog:
@@ -132,6 +137,9 @@ def create_course(admin, key, catalog=None, writeout=False, factory=ContentCours
             raise IOError("Could not access course bucket %s", course_path)
 
     if key in administrative_level:
+        if strict:
+            raise hexc.HTTPUnprocessableEntity(
+                "Course with key %s already exists" % key)
         course = administrative_level[key]
         logger.debug("Course '%s' already created", key)
     else:
