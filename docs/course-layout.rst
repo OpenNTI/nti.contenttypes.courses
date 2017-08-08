@@ -31,7 +31,7 @@ accessible to people enrolled in, instructing, or administering it.
 Each course instance is associated with a :dfn:`course catalog entry`.
 The catalog entry provides the metadata about the course, useful to
 potential students, such as a description, weekly schedule, etc.
-Typically the catalog entry is visible and browsable to everyone, but
+Typically the catalog entry is visible and browsable by everyone, but
 in certain instances it may be restricted or hidden (see below).
 Course catalog entries also live in the NTI database.
 

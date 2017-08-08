@@ -16,8 +16,8 @@ from datetime import datetime
 from zope import component
 from zope import interface
 
+from zope.cachedescriptors.property import Lazy
 from zope.cachedescriptors.property import readproperty
-from zope.cachedescriptors.property import CachedProperty
 
 from nti.contenttypes.courses.catalog import CourseCatalogEntry
 from nti.contenttypes.courses.catalog import CourseCatalogInstructorInfo
@@ -215,12 +215,9 @@ class PersistentCourseCatalogLegacyEntry(CourseCatalogLegacyEntry,
         CourseCatalogLegacyEntry.__init__(self, *args, **kwargs)
         PersistentCreatedAndModifiedTimeObject.__init__(self)
 
-    @CachedProperty('__parent__')
-    def _cached_ntiid(self):
+    @Lazy
+    def ntiid(self):
         return _ntiid_from_entry(self)
-
-    ntiid = property(lambda s: s._cached_ntiid,
-                     lambda s, nv: None)
 
 
 from zope.annotation.factory import factory as an_factory

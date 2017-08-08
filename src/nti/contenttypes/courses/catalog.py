@@ -476,7 +476,6 @@ def _clear_catalog_cache_when_course_updated(course, event):
     # there (still invalidate locally, though, so it takes effect for
     # the rest of the transaction). Fortunately these objects are tiny and
     # have almost no state, so this doesn't bloat the transaction much
-
     catalogs = []
 
     # Include the parent, if we have one

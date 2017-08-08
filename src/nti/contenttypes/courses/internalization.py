@@ -129,6 +129,9 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
         elif delete:
             _quiet_delattr(context, field)
 
+    if 'ntiid' in parsed and not parsed['ntiid']:
+        parsed.pop('ntiid')
+
     for field, key in (('EndDate', 'endDate'),  # XXX: non-interface
                        ('StartDate', 'startDate')):
         value = parsed.get(key)
