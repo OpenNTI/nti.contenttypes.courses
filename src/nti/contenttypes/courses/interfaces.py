@@ -796,7 +796,8 @@ class ICourseCatalogInstructorInfo(interface.Interface):
 
 class ICatalogFamily(IDisplayableContent):
 
-    ProviderUniqueID = ValidTextLine(title=u"The unique id assigned by the provider")
+    ProviderUniqueID = ValidTextLine(
+        title=u"The unique id assigned by the provider")
 
     ProviderDepartmentTitle = ValidTextLine(title=u"The string assigned to the provider's department offering the course",
                                             required=False)
@@ -1204,6 +1205,11 @@ class AlreadyEnrolledException(ValidationError):
 @interface.implementer(IEnrollmentException)
 class InstructorEnrolledException(ValidationError):
     __doc__ = _(u'Instructor cannot enroll in course.')
+    i18n_message = __doc__
+
+
+class CourseAlreadyExistsException(ValidationError):
+    __doc__ = _(u"Course already exists.")
     i18n_message = __doc__
 
 

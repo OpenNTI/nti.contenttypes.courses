@@ -14,8 +14,6 @@ logger = __import__('logging').getLogger(__name__)
 import os
 import shutil
 
-from pyramid import httpexceptions as hexc
-
 from zope import component
 
 from zope.component.hooks import getSite
@@ -32,6 +30,7 @@ from nti.contenttypes.courses.courses import CourseAdministrativeLevel
 
 from nti.contenttypes.courses.interfaces import SECTIONS
 from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import CourseAlreadyExistsException
 
 
 def create_directory(path):
@@ -138,7 +137,7 @@ def create_course(admin, key, catalog=None, writeout=False, factory=ContentCours
 
     if key in administrative_level:
         if strict:
-            raise hexc.HTTPUnprocessableEntity(
+            raise CourseAlreadyExistsException(
                 "Course with key %s already exists" % key)
         course = administrative_level[key]
         logger.debug("Course '%s' already created", key)
