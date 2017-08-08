@@ -42,6 +42,9 @@ from zope.interface.interfaces import IMethod
 from zope.interface.interfaces import ObjectEvent
 from zope.interface.interfaces import IObjectEvent
 
+from zope.lifecycleevent import ObjectCreatedEvent
+from zope.lifecycleevent.interfaces import IObjectCreatedEvent
+
 from zope.schema import ValidationError
 
 from zope.security.interfaces import IPrincipal
@@ -796,8 +799,7 @@ class ICourseCatalogInstructorInfo(interface.Interface):
 
 class ICatalogFamily(IDisplayableContent):
 
-    ProviderUniqueID = ValidTextLine(
-        title=u"The unique id assigned by the provider")
+    ProviderUniqueID = ValidTextLine(title=u"The unique id assigned by the provider")
 
     ProviderDepartmentTitle = ValidTextLine(title=u"The string assigned to the provider's department offering the course",
                                             required=False)
@@ -1275,10 +1277,6 @@ class ICourseBundleWillUpdateEvent(IObjectEvent):
 @interface.implementer(ICourseBundleWillUpdateEvent)
 class CourseBundleWillUpdateEvent(AbstractCourseBundleUpdateEvent):
     pass
-
-
-from zope.lifecycleevent import ObjectCreatedEvent
-from zope.lifecycleevent.interfaces import IObjectCreatedEvent
 
 
 class ICourseInstanceEnrollmentRecordCreatedEvent(IObjectCreatedEvent):

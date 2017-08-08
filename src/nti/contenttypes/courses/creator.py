@@ -76,7 +76,6 @@ def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
     site = getSite() if site is None else site
     catalog = course_catalog(catalog)
     courses_bucket = _get_course_bucket(catalog, site)
-
     logger.info('[%s] Creating admin level %s',
                 getattr(site, '__name__', None),
                 admin_name)
@@ -102,7 +101,8 @@ def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
 create_admin_level = install_admin_level
 
 
-def create_course(admin, key, catalog=None, writeout=False, factory=ContentCourseInstance, strict=False):
+def create_course(admin, key, catalog=None, writeout=False, 
+                  factory=ContentCourseInstance, strict=False):
     """
     Creates a course
 
@@ -137,8 +137,8 @@ def create_course(admin, key, catalog=None, writeout=False, factory=ContentCours
 
     if key in administrative_level:
         if strict:
-            raise CourseAlreadyExistsException(
-                "Course with key %s already exists" % key)
+            msg = "Course with key %s already exists" % key
+            raise CourseAlreadyExistsException(msg)
         course = administrative_level[key]
         logger.debug("Course '%s' already created", key)
     else:
