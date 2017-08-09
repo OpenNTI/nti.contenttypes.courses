@@ -9,7 +9,7 @@ formally defined. Instead, see :mod:`nti.contentrendering.plastexpackages.course
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -55,8 +55,7 @@ from nti.traversal.traversal import find_interface
 
 def _get_catalog_entry(outline):
     course = find_interface(outline, ICourseInstance, strict=False)
-    result = ICourseCatalogEntry(course, None)
-    return result
+    return ICourseCatalogEntry(course, None)
 
 
 def _outline_nodes(outline):
@@ -65,7 +64,6 @@ def _outline_nodes(outline):
         # XXX: Check ntiid attribute in case of global courses
         if not ICourseOutline.providedBy(node) and getattr(node, 'ntiid', None):
             result.append(node)
-
         # parse children
         for child in node.values():
             _recur(child)
@@ -102,8 +100,8 @@ def _is_node_move_locked(container, children):
 
 
 def _can_be_removed(registered, force=False):
-    result = registered is not None and (
-        force or not _is_node_locked(registered))
+    result = registered is not None \
+        and (force or not _is_node_locked(registered))
     return result
 can_be_removed = _can_be_removed
 
@@ -184,14 +182,14 @@ def _get_unit_ntiid(outline, unit, idx):
     entry = _get_catalog_entry(outline)
     base = entry.ntiid if entry is not None else None
     if base:
-        provider = get_provider(base) or 'NTI'
-        specific = get_specific(base) + ".%s" % idx
+        provider = get_provider(base) or u'NTI'
+        specific = get_specific(base) + u".%s" % idx
         ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
                            base=base,
                            provider=provider,
                            specific=specific)
     else:
-        ntiid = _attr_val(unit, str('ntiid'))
+        ntiid = _attr_val(unit, 'ntiid')
     return ntiid
 
 
@@ -200,9 +198,9 @@ def _get_lesson_ntiid(parent, idx):
     Build an ntiid for the current node.
     """
     base = parent.ntiid
-    provider = get_provider(base) or 'NTI'
+    provider = get_provider(base) or u'NTI'
     specific_base = get_specific(base)
-    specific = specific_base + ".%s" % idx
+    specific = specific_base + u".%s" % idx
     ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
                        base=base,
                        provider=provider,
@@ -240,13 +238,13 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
     for attr in 'title', 'label':
         val = _attr_val(lesson, attr) or getattr(content_unit, attr, None)
         if val:
-            setattr(lesson_node, str('title'), val)
+            setattr(lesson_node, 'title', val)
             break
 
     desc_val = _attr_val(lesson, 'description') \
             or getattr(content_unit, 'description', None)
     if desc_val:
-        setattr(lesson_node, str('description'), desc_val)
+        setattr(lesson_node, 'description', desc_val)
 
     # Now, if our node is supposed to have the NTIID, expose it.
     # Even if it doesn't (and won't be in the schema and won't be
@@ -294,8 +292,8 @@ def _update_parent_children(parent_node, old_children, transactions, force=False
                 new_child = new_children[i]
             except IndexError:
                 new_child = None
-            if new_child is not None \
-                    and old_child.ntiid != new_child.ntiid:
+            if      new_child is not None \
+                and old_child.ntiid != new_child.ntiid:
                 # TODO: Event?
                 logger.info('Found moved node on sync (old=%s) (new=%s)',
                             old_child.ntiid, new_child.ntiid)
@@ -317,8 +315,8 @@ def _update_parent_children(parent_node, old_children, transactions, force=False
             logger.info('Not appending new node (%s) since parent node (%s) has sync locked children',
                         ignored_child,
                         getattr(parent_node, 'ntiid', 'Outline'))
-    elif old_children \
-            and len(old_children) > len(new_child_map):
+    elif    old_children \
+        and len(old_children) > len(new_child_map):
         # Our parent node may be losing children, including those with API
         # created data underneath. We allow it only if none of those
         # underlying elements are locked (or we have a force flag).
@@ -342,7 +340,7 @@ def _update_parent_children(parent_node, old_children, transactions, force=False
 
 
 def _is_outline_stub(lesson):
-    return lesson.get(bytes('isOutlineStubOnly')) == 'true'
+    return lesson.get('isOutlineStubOnly') == 'true'
 
 
 def _use_or_create_node(node_ntiid, new_node, removed_nodes, builder, registry=None):
@@ -443,8 +441,8 @@ def fill_outline_from_node(outline, course_element, force=False, registry=None, 
 
         def builder():
             new_node = CourseOutlineNode()
-            new_node.title = _attr_val(unit, str('label'))
-            new_node.src = _attr_val(unit, str('src'))
+            new_node.title = _attr_val(unit, 'label')
+            new_node.src = _attr_val(unit, 'src')
             new_node.ntiid = unit_ntiid
             _publish(new_node)
             return new_node
@@ -485,7 +483,6 @@ def fill_outline_from_key(outline, key, xml_parent_name=None, force=False,
     :keyword xml_parent_name: If given, then we will first seek to the first
             occurrence of an element with this name in the DOM and fill from
             than node rather than filling from the root.
-
 
     :return: The outline node.
     """
