@@ -46,7 +46,7 @@ class _CourseOutlineDecorator(object):
 
     __metaclass__ = SingletonDecorator
 
-    def decorateExternalObject(self, original, external):
+    def decorateExternalObject(self, unused_original, external):
         external.pop('publishEnding', None)
         external.pop('publishBeginning', None)
 
@@ -57,7 +57,7 @@ class _InstructorLegacyInfoDecorator(object):
 
     __metaclass__ = SingletonDecorator
 
-    def decorateExternalObject(self, original, external):
+    def decorateExternalObject(self, unused_original, external):
         external.pop('userid', None)
 
 
@@ -67,7 +67,7 @@ class _CourseInstanceSharingScopeDecorator(object):
 
     __metaclass__ = SingletonDecorator
 
-    def decorateExternalObject(self, original, external):
+    def decorateExternalObject(self, unused_original, external):
         external[MIMETYPE] = 'application/vnd.nextthought.community'
 
 
@@ -78,5 +78,4 @@ class _CourseNonPublicStatusDecorator(object):
 
     def decorateExternalObject(self, original, external):
         if 'is_non_public' not in external:
-            external['is_non_public'] = INonPublicCourseInstance.providedBy(
-                original)
+            external['is_non_public'] = INonPublicCourseInstance.providedBy(original)
