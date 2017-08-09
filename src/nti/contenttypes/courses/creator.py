@@ -122,7 +122,7 @@ def create_course(admin, key, catalog=None, writeout=False,
     """
     catalog = course_catalog(catalog)
     if admin not in catalog:
-        install_admin_level(admin, catalog)
+        install_admin_level(admin, catalog, writeout=writeout)
 
     administrative_level = catalog[admin]
     root = administrative_level.root
