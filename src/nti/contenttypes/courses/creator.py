@@ -16,6 +16,8 @@ import shutil
 
 from zope import component
 
+from zope.annotation.interfaces import IAnnotations
+
 from zope.component.hooks import getSite
 
 from nti.contentlibrary.filesystem import FilesystemBucket
@@ -145,6 +147,7 @@ def create_course(admin, key, catalog=None, writeout=False,
         course = factory()
         course.root = course_root
         administrative_level[key] = course  # gain intid
+    IAnnotations(course) # create annotations
     return course
 
 
@@ -187,4 +190,5 @@ def create_course_subinstance(course, name, writeout=False, factory=ContentCours
         course.SubInstances[name] = subinstance
     else:
         subinstance = course.SubInstances[name]
+    IAnnotations(subinstance) # create annotations
     return subinstance
