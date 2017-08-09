@@ -26,6 +26,8 @@ from nti.contentlibrary.interfaces import IFilesystemBucket
 from nti.contentlibrary.interfaces import IContentPackageLibrary
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
 
+from nti.contenttypes.courses import EVALUATION_INDEX_LAST_MODIFIED
+
 from nti.contenttypes.courses.courses import ContentCourseInstance
 from nti.contenttypes.courses.courses import ContentCourseSubInstance
 from nti.contenttypes.courses.courses import CourseAdministrativeLevel
@@ -33,6 +35,11 @@ from nti.contenttypes.courses.courses import CourseAdministrativeLevel
 from nti.contenttypes.courses.interfaces import SECTIONS
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import CourseAlreadyExistsException
+
+
+def create_annotations(course):
+    annotations = IAnnotations(course)
+    annotations[EVALUATION_INDEX_LAST_MODIFIED] = 0
 
 
 def create_directory(path):
@@ -147,7 +154,7 @@ def create_course(admin, key, catalog=None, writeout=False,
         course = factory()
         course.root = course_root
         administrative_level[key] = course  # gain intid
-    IAnnotations(course) # create annotations
+    create_annotations(course)
     return course
 
 
@@ -190,5 +197,5 @@ def create_course_subinstance(course, name, writeout=False, factory=ContentCours
         course.SubInstances[name] = subinstance
     else:
         subinstance = course.SubInstances[name]
-    IAnnotations(subinstance) # create annotations
+    create_annotations(subinstance)
     return subinstance
