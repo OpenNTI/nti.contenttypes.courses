@@ -41,6 +41,10 @@ from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQEditableEvaluation
 from nti.assessment.interfaces import IQAssessmentDateContext
 
+from nti.base._compat import text_
+
+from nti.base.interfaces import DEFAULT_CONTENT_TYPE
+
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 
 from nti.contentlibrary.dublincore import DCMETA_FILENAME
@@ -380,7 +384,7 @@ class BundlePresentationAssetsExporter(BaseSectionExporter):
         return '/'.join(result)
 
     def _guess_type(self, name):
-        return mimetypes.guess_type(name)[0] or u'application/octet-stream'
+        return mimetypes.guess_type(name)[0] or text_(DEFAULT_CONTENT_TYPE)
 
     def _process_root(self, root, bucket, filer):
         if IEnumerableDelimitedHierarchyBucket.providedBy(root):
