@@ -256,7 +256,7 @@ def _build_outline_node(node_factory, lesson, lesson_ntiid, library):
     # For the legacy calendar nodes, we now create content nodes
     # that we guarantee has no src.
     if not _is_outline_stub(lesson):
-        lesson_node.src = _attr_val(lesson, str('src'))
+        lesson_node.src = _attr_val(lesson, 'src')
     lesson_node.ntiid = lesson_ntiid
 
     # Sigh. It looks like date is optionally a comma-separated
