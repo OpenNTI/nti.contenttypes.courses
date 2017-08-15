@@ -225,7 +225,7 @@ class CourseOutlineExporter(BaseSectionExporter):
 
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
-        bucket = self.course_bucket(course)
+        filer.default_bucket = bucket = self.course_bucket(course)
 
         # as json
         ext_obj = to_external_object(course.Outline,
@@ -262,7 +262,7 @@ class VendorInfoExporter(BaseSectionExporter):
 
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
-        bucket = self.course_bucket(course)
+        filer.default_bucket = bucket = self.course_bucket(course)
         verdor_info = get_course_vendor_info(course, False)
         if verdor_info:
             ext_obj = to_external_object(verdor_info,
@@ -291,6 +291,7 @@ class BundleMetaInfoExporter(BaseSectionExporter):
                 yield package.ntiid
 
     def export(self, context, filer, backup=True, salt=None):
+        filer.default_bucket = None
         course = ICourseInstance(context)
         if ICourseSubInstance.providedBy(course):
             return
@@ -324,7 +325,8 @@ class BundleDCMetadataExporter(BaseSectionExporter):
             value = value.strftime('%Y-%m-%d %H:%M:%S %Z')
         return value
 
-    def export(self, context, filer, backup=True, salt=None):
+    def export(self, context, filer, unused_backup=True, unused_salt=None):
+        filer.default_bucket = None
         course = ICourseInstance(context)
         if ICourseSubInstance.providedBy(course):
             return
@@ -400,9 +402,9 @@ class BundlePresentationAssetsExporter(BaseSectionExporter):
                 elif IEnumerableDelimitedHierarchyBucket.providedBy(child):
                     self._process_root(child, bucket, filer)
 
-    def export(self, context, filer, backup=True, salt=None):
+    def export(self, context, filer, unused_backup=True, unused_salt=None):
         course = ICourseInstance(context)
-        bucket = self.course_bucket(course)
+        filer.default_bucket = bucket = self.course_bucket(course)
         bucket = '' if not bucket else bucket + '/'
         for resource in course.PlatformPresentationResources or ():
             self._process_root(resource.root, bucket, filer)
@@ -438,9 +440,9 @@ class RoleInfoExporter(BaseSectionExporter):
 
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
-        bucket = self.course_bucket(course)
         result = self._role_export_map(course)
         source = self.dump(result)
+        filer.default_bucket = bucket = self.course_bucket(course)
         filer.save(ROLE_INFO_NAME, source, bucket=bucket,
                    contentType="application/json", overwrite=True)
         for sub_instance in get_course_subinstances(course):
@@ -481,10 +483,10 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
 
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
-        bucket = self.course_bucket(course)
         result = self._process(course, backup, salt)
         if result:
             source = self.dump(result)
+            filer.default_bucket = bucket = self.course_bucket(course)
             filer.save(ASSIGNMENT_POLICIES_NAME,
                        source,
                        bucket=bucket,
@@ -499,10 +501,10 @@ class CourseInfoExporter(BaseSectionExporter):
 
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
-        bucket = self.course_bucket(course)
         entry = ICourseCatalogEntry(course)
         ext_obj = to_external_object(entry, name="exporter", decorate=False)
         source = self.dump(ext_obj)
+        filer.default_bucket = bucket = self.course_bucket(course)
         filer.save(CATALOG_INFO_NAME, source, bucket=bucket,
                    contentType="application/json", overwrite=True)
         for sub_instance in get_course_subinstances(course):
@@ -522,6 +524,7 @@ class CourseExporter(object):
         for name, exporter in sorted(component.getUtilitiesFor(ICourseSectionExporter)):
             logger.info("Processing %s", name)
             exporter.export(course, filer, backup, salt)
+            filer.default_bucket = None # restore
         notify(CourseInstanceExportedEvent(course))
         for subinstance in get_course_subinstances(course):
             notify(CourseInstanceExportedEvent(subinstance))
