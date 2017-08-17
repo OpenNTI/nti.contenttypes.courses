@@ -135,7 +135,7 @@ class ValidatingSiteName(object):
 
     __slots__ = ('site',)
 
-    def __init__(self, obj, default=None):
+    def __init__(self, obj, unused_default=None):
         # For value indexes, we do not want our course to be unindexed
         # (on modification events, e.g. assessment policies modified) because
         # this validator returns None.
@@ -186,7 +186,7 @@ class ValidatingCatalogEntryID(object):
 
     __slots__ = ('ntiid',)
 
-    def __init__(self, obj, default=None):
+    def __init__(self, obj, unused_default=None):
         # See site index notes.
         if isinstance(obj, IndexRecord):
             self.ntiid = text_(obj.ntiid)
@@ -210,7 +210,7 @@ class RecordCreatedTimeRawIndex(RawIntegerValueIndex):
     pass
 
 
-def RecordCreatedTimeIndex(family=None):
+def RecordCreatedTimeIndex(family=BTrees.family64):
     return NormalizationWrapper(field_name='createdTime',
                                 interface=ICourseInstanceEnrollmentRecord,
                                 index=RecordCreatedTimeRawIndex(family=family),
@@ -221,7 +221,7 @@ class RecordLastModifiedRawIndex(RawIntegerValueIndex):
     pass
 
 
-def RecordLastModifiedIndex(family=None):
+def RecordLastModifiedIndex(family=BTrees.family64):
     return NormalizationWrapper(field_name='lastModified',
                                 interface=ICourseInstanceEnrollmentRecord,
                                 index=RecordLastModifiedRawIndex(family=family),
@@ -284,7 +284,7 @@ class ValidatingCourseSiteName(object):
 
     __slots__ = ('site',)
 
-    def __init__(self, obj, default=None):
+    def __init__(self, obj, unused_default=None):
         if ICourseInstance.providedBy(obj):
             self.site = text_(get_course_site(obj) or '')
 
@@ -301,7 +301,7 @@ class ValidatingCourseName(object):
 
     __slots__ = ('name',)
 
-    def __init__(self, obj, default=None):
+    def __init__(self, obj, unused_default=None):
         if ICourseInstance.providedBy(obj):
             self.name = obj.__name__
 
@@ -318,7 +318,7 @@ class ValidatingCourseCatalogEntry(object):
 
     __slots__ = ('ntiid',)
 
-    def __init__(self, obj, default=None):
+    def __init__(self, obj, unused_default=None):
         if ICourseInstance.providedBy(obj):
             entry = ICourseCatalogEntry(obj, None)
             self.ntiid = getattr(entry, 'ntiid', None)
@@ -336,7 +336,7 @@ class ValidatingCoursePackages(object):
 
     __slots__ = ('packages',)
 
-    def __init__(self, obj, default=None):
+    def __init__(self, obj, unused_default=None):
         if ICourseInstance.providedBy(obj):
             packs = get_course_packages(obj)
             self.packages = {
@@ -430,7 +430,7 @@ class ValidatingAvailableBeginning(object):
 
     __slots__ = ('AvailableBeginning',)
 
-    def __init__(self, obj, default=None):
+    def __init__(self, obj, unused_default=None):
         if      ICourseOutlineCalendarNode.providedBy(obj) \
             and obj.AvailableBeginning is not None:
             data = obj.AvailableBeginning.timetuple()
@@ -444,7 +444,7 @@ class NodeAvailableBeginningRawIndex(RawIntegerValueIndex):
     pass
 
 
-def NodeAvailableBeginningIndex(family=None):
+def NodeAvailableBeginningIndex(family=BTrees.family64):
     return NormalizationWrapper(field_name='AvailableBeginning',
                                 interface=ValidatingAvailableBeginning,
                                 index=NodeAvailableBeginningRawIndex(family=family),
@@ -455,7 +455,7 @@ class ValidatingAvailableEnding(object):
 
     __slots__ = ('AvailableEnding',)
 
-    def __init__(self, obj, default=None):
+    def __init__(self, obj, unused_default=None):
         if      ICourseOutlineCalendarNode.providedBy(obj) \
             and obj.AvailableEnding is not None:
             data = obj.AvailableEnding.timetuple()
@@ -469,7 +469,7 @@ class NodeAvailableEndingRawIndex(RawIntegerValueIndex):
     pass
 
 
-def NodeAvailableEndingIndex(family=None):
+def NodeAvailableEndingIndex(family=BTrees.family64):
     return NormalizationWrapper(field_name='AvailableEnding',
                                 interface=ValidatingAvailableEnding,
                                 index=NodeAvailableEndingRawIndex(family=family),
