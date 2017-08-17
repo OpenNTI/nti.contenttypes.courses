@@ -15,10 +15,13 @@ import os
 import shutil
 
 from zope import component
+from zope import interface
 
 from zope.annotation.interfaces import IAnnotations
 
 from zope.component.hooks import getSite
+
+from nti.coremetadata.utils import current_principal
 
 from nti.contentlibrary.filesystem import FilesystemBucket
 
@@ -34,6 +37,7 @@ from nti.contenttypes.courses.courses import CourseAdministrativeLevel
 
 from nti.contenttypes.courses.interfaces import SECTIONS
 from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICreatedCourse
 from nti.contenttypes.courses.interfaces import CourseAlreadyExistsException
 
 
@@ -111,7 +115,7 @@ create_admin_level = install_admin_level
 
 
 def create_course(admin, key, catalog=None, writeout=False, 
-                  factory=ContentCourseInstance, strict=False):
+                  strict=False, creator=None, factory=ContentCourseInstance):
     """
     Creates a course
 
@@ -154,11 +158,17 @@ def create_course(admin, key, catalog=None, writeout=False,
         course = factory()
         course.root = course_root
         administrative_level[key] = course  # gain intid
+    # make sure annotations are created to get a connection
     create_annotations(course)
+    # mark & set creator
+    creator = creator or current_principal().id
+    interface.alsoProvides(course, ICreatedCourse)
+    course.creator = creator
     return course
 
 
-def create_course_subinstance(course, name, writeout=False, factory=ContentCourseSubInstance):
+def create_course_subinstance(course, name, writeout=False, creator=None,
+                              factory=ContentCourseSubInstance):
     """
     Creates a course subinstance
 
@@ -197,5 +207,10 @@ def create_course_subinstance(course, name, writeout=False, factory=ContentCours
         course.SubInstances[name] = subinstance
     else:
         subinstance = course.SubInstances[name]
+    # mark & set creator
+    creator = creator or current_principal().id
+    interface.alsoProvides(subinstance, ICreatedCourse)
+    subinstance.creator = creator
+    # make sure annotations are created to get a connection
     create_annotations(subinstance)
     return subinstance

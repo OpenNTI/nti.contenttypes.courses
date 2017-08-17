@@ -1704,6 +1704,7 @@ def get_course_assessment_predicate_for_user(user, course):
         return all((f.allow_assessment_for_user_in_course(asg, user, course) for f in filters))
     return uber_filter
 
+
 # Invitations
 
 
@@ -1742,6 +1743,14 @@ class IJoinCourseInvitationActor(IInvitationActor):
 
 
 # Import / Export
+
+
+class ICreatedCourse(interface.Interface):
+    """
+    Course created by an identified entity.
+    """
+    creator = interface.Attribute(u"The creator of this object.")
+ICreatedCourse.setTaggedValue('_ext_is_marker_interface', True)
 
 
 class ICourseExportFiler(ISourceFiler):
