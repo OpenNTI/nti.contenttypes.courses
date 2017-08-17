@@ -82,6 +82,7 @@ from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import StandardExternalFields
+from nti.externalization.interfaces import StandardInternalFields
 
 from nti.ntiids.ntiids import hexdigest
 from nti.ntiids.ntiids import hash_ntiid
@@ -90,6 +91,8 @@ from nti.ntiids.ntiids import make_ntiid
 ID = StandardExternalFields.ID
 OID = StandardExternalFields.OID
 NTIID = StandardExternalFields.NTIID
+
+INTERNAL_NTIID = StandardInternalFields.NTIID
 
 
 @interface.implementer(ICourseSectionExporter)
@@ -100,7 +103,7 @@ class BaseSectionExporter(object):
             # when not backing up make sure we take a hash of the current NTIID and
             # use it as the specific part for a new NTIID to make sure there are
             # fewer collisions when importing back
-            for name in (NTIID, NTIID.lower()):
+            for name in (NTIID, INTERNAL_NTIID):
                 ntiid = ext_obj.get(name)
                 if ntiid:
                     ext_obj[name] = self.hash_ntiid(ntiid, salt)
@@ -206,7 +209,7 @@ class CourseOutlineExporter(BaseSectionExporter):
 
     def _export_remover(self, ext_obj, salt):
         if isinstance(ext_obj, Mapping):
-            for key in (ID, OID, NTIID, NTIID.lower()):
+            for key in (ID, OID, NTIID, INTERNAL_NTIID):
                 ext_obj.pop(key, None)
             ContentNTIID = ext_obj.get('ContentNTIID', None)
             LessonOverviewNTIID = ext_obj.get('LessonOverviewNTIID', None)
@@ -267,7 +270,8 @@ class VendorInfoExporter(BaseSectionExporter):
         if verdor_info:
             ext_obj = to_external_object(verdor_info,
                                          name="exporter",
-                                         decorate=False)
+                                         decorate=False,
+                                         backup=backup, salt=salt)
             source = self.dump(ext_obj)
             filer.save(VENDOR_INFO_NAME,
                        source,
@@ -302,7 +306,8 @@ class BundleMetaInfoExporter(BaseSectionExporter):
             'title': entry.Title,
             "ContentPackages": package_ntiids
         }
-        ext_obj = to_external_object(data, decorate=False)
+        ext_obj = to_external_object(data, decorate=False, 
+                                     backup=backup, salt=salt)
         source = self.dump(ext_obj)
         filer.save(BUNDLE_META_NAME, source,
                    contentType="application/json",
@@ -347,8 +352,7 @@ class BundleDCMetadataExporter(BaseSectionExporter):
             k = k.lower()
             # create nodes
             if     isinstance(value, six.string_types) \
-                or isinstance(value, datetime) \
-                or isinstance(value, Number):
+                or isinstance(value, (datetime, Number)):
                 name = self.attr_to_xml.get(k, k)
                 node = xmldoc.createElement("dc:%s" % name)
                 node.appendChild(xmldoc.createTextNode(self._to_text(value)))
@@ -523,8 +527,12 @@ class CourseExporter(object):
             salt = str(time.time())
         for name, exporter in sorted(component.getUtilitiesFor(ICourseSectionExporter)):
             logger.info("Processing %s", name)
-            exporter.export(course, filer, backup, salt)
-            filer.default_bucket = None # restore
+            try:
+                exporter.export(course, filer, backup, salt)
+            except Exception as e:
+                logger.exception("Error while processing %s", name)
+                raise e
+            filer.default_bucket = None  # restore
         notify(CourseInstanceExportedEvent(course))
         for subinstance in get_course_subinstances(course):
             notify(CourseInstanceExportedEvent(subinstance))
