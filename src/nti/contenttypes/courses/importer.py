@@ -24,6 +24,7 @@ from zope.event import notify
 
 from ZODB.interfaces import IConnection
 
+from nti.cabinet.filer import read_source
 from nti.cabinet.filer import transfer_to_native_file
 
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
@@ -101,18 +102,8 @@ class BaseSectionImporter(object):
         return data
 
     def load(self, source):
-        if hasattr(source, "read"):
-            data = self._prepare(source.read())
-            result = simplejson.loads(data)
-        elif hasattr(source, "readContents"):
-            data = self._prepare(source.readContents())
-            result = simplejson.loads(data)
-        elif hasattr(source, "data"):
-            data = self._prepare(source.data)
-            result = simplejson.loads(data)
-        else:
-            result = simplejson.loads(self._prepare(source))
-        return result
+        data = read_source(source)
+        return simplejson.loads(self._prepare(data))
 
     def course_bucket(self, course):
         if ICourseSubInstance.providedBy(course):
@@ -166,7 +157,7 @@ class CourseOutlineImporter(BaseSectionImporter):
         # require connection
         connection = IConnection(course)
 
-        def _object_hook(k, v, x):
+        def _object_hook(unused_k, v, unused_x):
             if      ICourseOutlineNode.providedBy(v) \
                 and not ICourseOutline.providedBy(v):
                 connection.add(v)
