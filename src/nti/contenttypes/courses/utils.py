@@ -152,7 +152,6 @@ def get_sites_4_index(sites=None):
     sites = get_component_hierarchy_names() if not sites else sites
     sites = sites.split() if isinstance(sites, string_types) else sites
     return sites
-_get_sites_4_index = get_sites_4_index
 
 
 def get_current_site():
@@ -166,7 +165,8 @@ def get_courses_for_packages(packages=(), sites=(), intids=None):
     result = set()
     catalog = get_courses_catalog()
     sites = get_sites_4_index(sites)
-    packages = packages.split() if isinstance(packages, string_types) else packages
+    if isinstance(packages, string_types):
+        packages = packages.split()
     query = {
         IX_SITE: {'any_of': sites},
         IX_PACKAGES: {'any_of': packages}
