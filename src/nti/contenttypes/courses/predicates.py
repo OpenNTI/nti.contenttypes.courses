@@ -26,11 +26,12 @@ from nti.contenttypes.courses.utils import get_parent_course
 
 
 def course_collector():
-    catalog = component.getUtility(ICourseCatalog)
-    for entry in catalog.iterCatalogEntries():
-        course = ICourseInstance(entry, None)
-        if course is not None:
-            yield course
+    catalog = component.queryUtility(ICourseCatalog)
+    if catalog is not None:
+        for entry in catalog.iterCatalogEntries():
+            course = ICourseInstance(entry, None)
+            if course is not None:
+                yield course
 
 
 def outline_nodes_collector(course):
