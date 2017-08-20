@@ -8,8 +8,8 @@
 	<include package="zope.component" />
 
 	<!-- Adapters -->
-	<adapter factory=".grading_policy_for_course" />
 	<adapter factory=".grading_policy_to_course" />
+	<adapter factory=".grading_policy_for_course" />
 
 	<!-- ACL -->
 	<adapter factory=".acl.GradingPolicyACLProvider" />
@@ -20,9 +20,9 @@
 		
 	<ext:registerAutoPackageIO
 		root_interfaces=".interfaces.IGrader
+						 .interfaces.IPredictedGrade
 						 .interfaces.IEqualGroupGrader
 						 .interfaces.ICategoryGradeScheme
-						 .interfaces.IPredictedGrade
 						 .interfaces.ICourseGradingPolicy"
 		modules=".policies" />
 

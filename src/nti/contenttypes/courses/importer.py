@@ -90,7 +90,7 @@ from nti.site.utils import registerUtility
 
 from nti.traversal.traversal import find_interface
 
-BUNDLE_DC_METADATA = u"bundle_dc_metadata.xml"
+BUNDLE_DC_METADATA = "bundle_dc_metadata.xml"
 
 
 @interface.implementer(ICourseSectionImporter)
@@ -107,14 +107,14 @@ class BaseSectionImporter(object):
 
     def course_bucket(self, course):
         if ICourseSubInstance.providedBy(course):
-            bucket = u"%s/%s" % (SECTIONS, course.__name__)
+            bucket = "%s/%s" % (SECTIONS, course.__name__)
         else:
             bucket = None
         return bucket
 
     def course_bucket_path(self, course):
         bucket = self.course_bucket(course)
-        bucket = bucket + u"/" if bucket else u''
+        bucket = bucket + "/" if bucket else ''
         return bucket
 
     def safe_get(self, filer, href):
@@ -146,7 +146,7 @@ class CourseOutlineImporter(BaseSectionImporter):
 
         provider = get_provider(base) or u'NTI'
         specific_base = get_specific(base)
-        specific = specific_base + ".%s" % idx
+        specific = specific_base + u".%s" % idx
         ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
                            base=base,
                            provider=provider,

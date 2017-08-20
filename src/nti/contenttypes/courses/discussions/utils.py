@@ -90,7 +90,9 @@ def get_course_for_discussion(discussion, context):
             path = get_discussion_path(iden)
             splits = path.split(os.path.sep)
             if SECTIONS in splits:  # e.g. /Sections/02/Discussions
-                return parent.SubInstances.get(splits[2]) if len(splits) >= 3 else None
+                if len(splits) >= 3:
+                    return parent.SubInstances.get(splits[2]) 
+                return None
             else:
                 return parent
     return None

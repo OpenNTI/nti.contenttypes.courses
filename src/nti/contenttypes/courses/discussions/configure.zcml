@@ -6,9 +6,7 @@
 			i18n_domain="nti.dataserver">
 
 	<include package="zope.component" file="meta.zcml" />
-	<include package="zope.security" file="meta.zcml" />
 	<include package="zope.component" />
-	<include package="zope.security" />
 
 	<!-- Adapters -->
 	<adapter factory=".model.CourseDiscussions" />	

@@ -15,6 +15,8 @@ import simplejson
 
 from zope import lifecycleevent
 
+from nti.cabinet.filer import read_source
+
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
 from nti.contentlibrary.synchronize import SynchronizationException
 
@@ -49,12 +51,8 @@ def prepare_json_text(s):
 
 
 def load_discussion(name, source, discussions, path, discussion=None):
-    if hasattr(source, "read"):
-        json = simplejson.loads(prepare_json_text(source.read()))
-    elif hasattr(source, "readContents"):
-        json = simplejson.loads(prepare_json_text(source.readContents()))
-    else:
-        json = simplejson.loads(prepare_json_text(source))
+    data = read_source(source)
+    json = simplejson.loads(prepare_json_text(data))
     factory = find_factory_for(json)
     if factory is None:
         msg = "Cannot find factory for discussion in json file. Check MimeType"
@@ -82,7 +80,7 @@ def load_discussion(name, source, discussions, path, discussion=None):
     return new_discussion
 
 
-def parse_discussions(course, bucket, force=False, *args, **kwargs):
+def parse_discussions(course, bucket, force=False):
     __traceback_info__ = bucket, course
     discussions = ICourseDiscussions(course)
 
@@ -106,7 +104,6 @@ def parse_discussions(course, bucket, force=False, *args, **kwargs):
             and discussion is not None \
             and key.lastModified <= discussion.lastModified:
             continue
-
         # parse and discussion
         __traceback_info__ = name, key
         discussion = load_discussion(name,

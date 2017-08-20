@@ -59,7 +59,7 @@ class CourseDiscussion(SchemaConfigured,
         SchemaConfigured.__init__(self, *args, **kwargs)
         PersistentCreatedModDateTrackingObject.__init__(self, *args, **kwargs)
 
-    def __str__(self, *args, **kwargs):
+    def __str__(self, *unused_args, **unused_kwargs):
         try:
             clazz = self.__class__.__name__
             if self.id:
@@ -101,4 +101,4 @@ class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer
         super(DefaultCourseDiscussions, self).__init__()
 
 CourseDiscussions = an_factory(DefaultCourseDiscussions, 
-                               'CourseDiscussions')
+                               u'CourseDiscussions')

@@ -64,7 +64,7 @@ from nti.contenttypes.courses.courses import ContentCourseInstance
 from nti.contenttypes.courses.courses import ContentCourseSubInstance
 from nti.contenttypes.courses.courses import CourseAdministrativeLevel
 
-from nti.contenttypes.courses.discussions import parse_discussions
+from nti.contenttypes.courses.discussions.parser import parse_discussions
 
 from nti.contenttypes.courses.grading import fill_grading_policy_from_key
 

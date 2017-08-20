@@ -97,8 +97,9 @@ def _names(course):
     result = None
     if course is not None:
         result = set()
-        level = find_interface(
-            course, ICourseAdministrativeLevel, strict=False)
+        level = find_interface(course, 
+                               ICourseAdministrativeLevel,
+                               strict=False)
         if level is not None:
             result.add(level.__name__)  # admin level
         parent = get_parent_course(course)
