@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 # disable: accessing protected members, too many methods
@@ -39,95 +39,103 @@ from nti.contenttypes.courses.tests import CourseLayerTest
 
 from nti.externalization.tests import externalizes
 
+
 class TestOutlineParser(CourseLayerTest):
 
-	def _as_utils(self):
-		registry = component.getSiteManager()
-		return sorted(list(registry.getUtilitiesFor(ICourseOutlineNode)))
+    def _as_utils(self):
+        registry = component.getSiteManager()
+        return sorted(list(registry.getUtilitiesFor(ICourseOutlineNode)))
 
-	def test_parse(self):
-		path = os.path.join(os.path.dirname(__file__),
-							'TestSynchronizeWithSubInstances',
-							'Spring2014',
-							'Gateway',
-							'course_outline.xml')
-		key = FilesystemKey()
-		key.absolute_path = path
+    def test_parse(self):
+        path = os.path.join(os.path.dirname(__file__),
+                            'TestSynchronizeWithSubInstances',
+                            'Spring2014',
+                            'Gateway',
+                            'course_outline.xml')
+        key = FilesystemKey()
+        key.absolute_path = path
 
-		assert_that(self._as_utils(), has_length(0))
+        assert_that(self._as_utils(), has_length(0))
 
-		outline = CourseOutline()
-		fill_outline_from_key(outline, key)
-		assert_that(outline, validly_provides(ICourseOutline))
-		assert_that(self._as_utils(), has_length(40))
+        outline = CourseOutline()
+        fill_outline_from_key(outline, key)
+        assert_that(outline, validly_provides(ICourseOutline))
+        assert_that(self._as_utils(), has_length(40))
 
-		unit_1 = outline['tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.1']
-		assert_that(unit_1, has_property('title', 'Introduction'))
-		assert_that(unit_1, has_property('ntiid', 'tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.1'))
+        unit_1 = outline['tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.1']
+        assert_that(unit_1, has_property('title', 'Introduction'))
+        assert_that(unit_1, 
+					has_property('ntiid', 'tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.1'))
 
-		lesson_1 = unit_1['tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.0']
-		assert_that(lesson_1.AvailableBeginning, is_(not_none()))
-		assert_that(lesson_1.AvailableEnding, is_(not_none()))
-		assert_that(lesson_1, has_property('title', '1. Defining Law and Justice'))
-		assert_that(lesson_1, has_property('AvailableEnding', has_property('tzinfo', none())))
-		assert_that(lesson_1, has_property('ntiid', 'tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.0'))
-		assert_that(lesson_1, externalizes(has_entries(	'AvailableEnding', '2013-08-22T04:59:59Z',
-														'title', '1. Defining Law and Justice',
-														'NTIID', 'tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.0',
-														'description', '')))
+        lesson_1 = unit_1['tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.0']
+        assert_that(lesson_1.AvailableBeginning, is_(not_none()))
+        assert_that(lesson_1.AvailableEnding, is_(not_none()))
+        assert_that(lesson_1, 
+					has_property('title', '1. Defining Law and Justice'))
+        assert_that(lesson_1, 
+					has_property('AvailableEnding', has_property('tzinfo', none())))
+        assert_that(lesson_1, 
+					has_property('ntiid', 'tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.0'))
+        assert_that(lesson_1, 
+					externalizes(has_entries('AvailableEnding', '2013-08-22T04:59:59Z',
+                                             'title', '1. Defining Law and Justice',
+                                             'NTIID', 'tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.0',
+                                             'description', '')))
 
-		# Sub-lessons
-		assert_that(lesson_1, has_length(1))
-		assert_that(lesson_1["tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.0.0"],
-					has_property('ContentNTIID', "tag:nextthought.com,2011-10:OU-HTML-DNE"))
+        # Sub-lessons
+        assert_that(lesson_1, has_length(1))
+        assert_that(lesson_1["tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.0.0"],
+                    has_property('ContentNTIID', "tag:nextthought.com,2011-10:OU-HTML-DNE"))
 
-		# This one is a stub: now with a null src only, and a ContentNTIID.
-		lesson_2 = unit_1["tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.1"]
-		assert_that(lesson_2,
-					externalizes(
-						 all_of(
-							has_key('ContentNTIID'),
-							has_entry('Class', 'CourseOutlineContentNode'),
-							has_entry( 'src', none() ),
-							has_entry('NTIID', 'tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.1'))))
+        # This one is a stub: now with a null src only, and a ContentNTIID.
+        lesson_2 = unit_1["tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.1"]
+        assert_that(lesson_2,
+                    externalizes(
+                        all_of(
+                            has_key('ContentNTIID'),
+                            has_entry('Class', 'CourseOutlineContentNode'),
+                            has_entry('src', none()),
+                            has_entry('NTIID', 'tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.1'))))
 
-		unit_7 = outline['tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.7']
-		assert_that(unit_7, has_property('title', 'Dateless Resources'))
-		lesson_1 = unit_7["tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.7.0"]
-		assert_that(lesson_1, has_property('AvailableEnding', is_(none())))
-		assert_that(lesson_1, has_property('AvailableBeginning', is_(none())))
+        unit_7 = outline['tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.7']
+        assert_that(unit_7, has_property('title', 'Dateless Resources'))
+        lesson_1 = unit_7["tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.7.0"]
+        assert_that(lesson_1, has_property('AvailableEnding', is_(none())))
+        assert_that(lesson_1, has_property('AvailableBeginning', is_(none())))
 
-		# Doing it again does nothing...
-		assert_that(outline, has_length(7))
-		assert_that(self._as_utils(), has_length(40))
+        # Doing it again does nothing...
+        assert_that(outline, has_length(7))
+        assert_that(self._as_utils(), has_length(40))
 
-		fill_outline_from_key(outline, key)
-		assert_that(outline, has_length(7))
-		assert_that(self._as_utils(), has_length(40))
+        fill_outline_from_key(outline, key)
+        assert_that(outline, has_length(7))
+        assert_that(self._as_utils(), has_length(40))
 
-		# ...even if we set modification back
-		outline.lastModified = -1
+        # ...even if we set modification back
+        outline.lastModified = -1
 
-		fill_outline_from_key(outline, key)
-		assert_that(outline, has_length(7))
-		assert_that(self._as_utils(), has_length(40))
+        fill_outline_from_key(outline, key)
+        assert_that(outline, has_length(7))
+        assert_that(self._as_utils(), has_length(40))
 
-	def test_parse_empty(self):
+    def test_parse_empty(self):
 
-		class Key(object):
-			lastModified = 99999999
-			def readContentsAsETree(self):
-				return self
-			def iterchildren(self, tag=''):
-				return iter(())
+        class Key(object):
+            lastModified = 99999999
 
-		outline = CourseOutline()
-		key = Key()
-		try:
-			fill_outline_from_key(outline, key, xml_parent_name='foo')
-			assert False
-		except ValueError as e:
-			assert_that(e.args,
-						 is_(('No outline child in key',
-							  key,
-							  'foo')))
+            def readContentsAsETree(self):
+                return self
+
+            def iterchildren(self, tag=''):
+                return iter(())
+
+        outline = CourseOutline()
+        key = Key()
+        try:
+            fill_outline_from_key(outline, key, xml_parent_name='foo')
+            assert False
+        except ValueError as e:
+            assert_that(e.args,
+                        is_(('No outline child in key',
+                             key,
+                             'foo')))
