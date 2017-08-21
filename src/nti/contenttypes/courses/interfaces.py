@@ -667,8 +667,7 @@ class IAnonymouslyAccessibleCourseInstance(interface.Interface):
     """
 # Don't try to consider this when determining most-derived
 # interfaces.
-IAnonymouslyAccessibleCourseInstance.setTaggedValue(
-    '_ext_is_marker_interface', True)
+IAnonymouslyAccessibleCourseInstance.setTaggedValue('_ext_is_marker_interface', True)
 
 
 class IDenyOpenEnrollment(interface.Interface):
@@ -1631,8 +1630,7 @@ class ICourseInstanceAdministrativeRole(IShouldHaveTraversablePath):
     and the corresponding catalog entry.
     """
 
-    __name__ = interface.Attribute(
-        "The name of the administration is the same as the CourseInstance.")
+    __name__ = interface.Attribute("The name of the administration is the same as the CourseInstance.")
 
     RoleName = Choice(title=u"The name of the role this principal holds",
                       values=('instructor', 'teaching assistant', 'editor'))
