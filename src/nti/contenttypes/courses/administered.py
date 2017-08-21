@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -83,7 +83,7 @@ class CourseInstanceAdministrativeRole(SchemaConfigured,
                                 omit=('CourseInstance',))
 
     # legacy
-    mime_type = mimeType = u"application/vnd.nextthought.courseware.courseinstanceadministrativerole"
+    mime_type = mimeType = "application/vnd.nextthought.courseware.courseinstanceadministrativerole"
 
     def __init__(self, CourseInstance=None, RoleName=None):
         # SchemaConfigured is not cooperative
