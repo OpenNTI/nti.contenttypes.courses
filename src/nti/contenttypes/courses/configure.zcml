@@ -292,10 +292,10 @@
 	<subscriber handler=".sharing.on_moved_between_courses_update_scope_membership" />
 
 	<!-- update packages -->
-	<subscriber handler=".subscribers.on_course_imported" />
-	<subscriber handler=".subscribers._package_ntiid_updated" />
-	<subscriber handler=".subscribers.update_course_packages" />
+	<subscriber handler=".subscribers._on_course_imported" />
 	<subscriber handler=".subscribers._update_course_bundle" />
+	<subscriber handler=".subscribers._package_ntiid_updated" />
+	<subscriber handler=".subscribers._update_course_packages" />
 	<subscriber handler=".subscribers._update_course_bundle_on_package_removal" />
 
 	<!-- weak references -->

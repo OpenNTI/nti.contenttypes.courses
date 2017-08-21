@@ -400,7 +400,7 @@ def on_unlock_assessment_policies(event):
 
 
 @component.adapter(ICourseInstance, ICourseBundleWillUpdateEvent)
-def update_course_packages(root_course, event=None):
+def _update_course_packages(root_course, event=None):
     """
     Update the course packages
     """
@@ -420,11 +420,13 @@ def update_course_packages(root_course, event=None):
         notify(CourseBundleUpdatedEvent(root_course,
                                         event.added_packages,
                                         event.removed_packages))
+update_course_packages = _update_course_packages
 
 
 @component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
-def on_course_imported(course, _):
-    update_course_packages(course)
+def _on_course_imported(course, _):
+    _update_course_packages(course)
+on_course_imported = _on_course_imported
 
 
 @component.adapter(IContentPackage, IContentPackageAddedEvent)
