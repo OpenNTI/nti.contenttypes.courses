@@ -245,8 +245,8 @@ class VendorInfoImporter(BaseSectionImporter):
             if writeout and IFilesystemBucket.providedBy(course.root):
                 source = self.safe_get(filer, path)  # reload
                 self.makedirs(course.root.absolute_path)
-                new_path = os.path.join(
-                    course.root.absolute_path, VENDOR_INFO_NAME)
+                new_path = os.path.join(course.root.absolute_path, 
+                                        VENDOR_INFO_NAME)
                 transfer_to_native_file(source, new_path)
 
         # process subinstances
