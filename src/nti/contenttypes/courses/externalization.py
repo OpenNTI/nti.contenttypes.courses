@@ -67,7 +67,7 @@ class _CourseInstanceEnrollmentRecordExternalizer(object):
     def __init__(self, obj):
         self.obj = obj
 
-    def toExternalObject(self, **kwargs):
+    def toExternalObject(self, **unused_kwargs):
         result = LocatedExternalDict()
         result[MIMETYPE] = self.obj.mimeType
         result[CLASS] = "CourseInstanceEnrollmentRecord"
@@ -238,7 +238,7 @@ class _CourseInstanceSharingScopeExporter(object):
     def __init__(self, obj):
         self.entity = obj
 
-    def toExternalObject(self, **kwargs):
+    def toExternalObject(self, **unused_kwargs):
         result = LocatedExternalDict()
         clazz = getattr(self.entity, '__external_class_name__', None)
         if clazz:
@@ -263,7 +263,7 @@ class _AdminLevelExternalizer(object):
     def __init__(self, obj):
         self.obj = obj
 
-    def toExternalObject(self, **kwargs):
+    def toExternalObject(self, **unused_kwargs):
         result = LocatedExternalDict()
         result[MIMETYPE] = self.obj.mimeType
         result[CLASS] = "CourseAdministrativeLevel"
