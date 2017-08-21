@@ -33,6 +33,7 @@ from nti.externalization.externalization import to_external_object
 
 from nti.externalization.interfaces import LocatedExternalDict
 from nti.externalization.interfaces import StandardExternalFields
+from nti.externalization.interfaces import StandardInternalFields
 from nti.externalization.interfaces import IInternalObjectExternalizer
 
 from nti.links.links import Link
@@ -55,6 +56,8 @@ NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
 CREATED_TIME = StandardExternalFields.CREATED_TIME
 LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
+
+INTERNAL_NTIID = StandardInternalFields.NTIID
 
 CONTENT_NTIID = u'ContentNTIID'
 LESSON_OVERVIEW_NTIID = u'LessonOverviewNTIID'
@@ -136,7 +139,7 @@ class _CourseOutlineNodeExporter(object):
             result.pop(LESSON_OVERVIEW_NTIID, None)
 
         # don't leak internal OIDs
-        for name in (NTIID, NTIID.lower(), OID, LESSON_OVERVIEW_NTIID, CONTENT_NTIID):
+        for name in (NTIID, INTERNAL_NTIID, OID, LESSON_OVERVIEW_NTIID, CONTENT_NTIID):
             value = result.get(name)
             if      value \
                 and is_valid_ntiid_string(value) \
