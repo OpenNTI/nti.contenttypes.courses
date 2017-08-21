@@ -406,7 +406,7 @@ def _handle_node(parent_lxml, parent_node, old_children, library,
     _update_parent_children(parent_node, old_children, transactions, force)
 
 
-def fill_outline_from_node(outline, course_element, force=False, registry=None, **kwargs):
+def fill_outline_from_node(outline, course_element, force=False, registry=None, **unused_kwargs):
     """
     Given a CourseOutline object and an eTree element object containing its
     ``unit`` and ``lesson`` definitions,
