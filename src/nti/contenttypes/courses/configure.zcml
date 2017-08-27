@@ -405,7 +405,7 @@
 	<!-- Importer -->
 	<utility factory=".importer.CourseImporter" />
 	<!-- 1. -->
-	<utility factory=".importer.BundleMetaInfoImporter" name="001:Bundle_Metainfo" /
+	<utility factory=".importer.BundleMetaInfoImporter" name="001:Bundle_Metainfo" />
 	<!-- 2. -->
 	<utility factory=".importer.BundlePresentationAssetsImporter" name="002:Presentation_Assets" />
 	<!-- 3. -->
