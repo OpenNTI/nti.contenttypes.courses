@@ -404,13 +404,20 @@
 
 	<!-- Importer -->
 	<utility factory=".importer.CourseImporter" />
-	<utility factory=".importer.RoleInfoImporter" name="666:Role_Info" />
-	<utility factory=".importer.CourseInfoImporter" name="004:Course_Info" />
-	<utility factory=".importer.VendorInfoImporter" name="777:Vendor_Info" />
-	<utility factory=".importer.CourseOutlineImporter" name="008:Course_Outline" />
-	<utility factory=".importer.BundleMetaInfoImporter" name="001:Bundle_Metainfo" />
+	<!-- 1. -->
+	<utility factory=".importer.BundleMetaInfoImporter" name="001:Bundle_Metainfo" /
+	<!-- 2. -->
+	<utility factory=".importer.BundlePresentationAssetsImporter" name="002:Presentation_Assets" />
+	<!-- 3. -->
+	<utility factory=".importer.CourseInfoImporter" name="003:Course_Info" />
+	<!-- 4. -->
+	<utility factory=".importer.VendorInfoImporter" name="004:Vendor_Info" />
+	<!-- 5. -->
+	<utility factory=".importer.CourseOutlineImporter" name="005:Course_Outline" />
+	<!-- 6. -->
+	<utility factory=".importer.RoleInfoImporter" name="006:Role_Info" />
+	<!-- 100 -->
 	<utility factory=".importer.AssignmentPoliciesImporter" name="100:Assignment_Policies" />
-	<utility factory=".importer.BundlePresentationAssetsImporter" name="003:Presentation_Assets" />
 
 	<!-- Grading -->
 	<include package=".grading" />
