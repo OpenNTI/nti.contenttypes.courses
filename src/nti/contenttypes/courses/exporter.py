@@ -75,6 +75,7 @@ from nti.contenttypes.courses.interfaces import ICourseSectionExporter
 from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
 
 from nti.contenttypes.courses.interfaces import CourseInstanceExportedEvent
+from nti.contenttypes.courses.interfaces import CourseSectionExporterExecutedEvent
 
 from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
@@ -529,6 +530,7 @@ class CourseExporter(object):
             logger.info("Processing %s", name)
             try:
                 exporter.export(course, filer, backup, salt)
+                notify(CourseSectionExporterExecutedEvent(course, exporter, filer, backup, salt))
             except Exception as e:
                 logger.exception("Error while processing %s", name)
                 raise e

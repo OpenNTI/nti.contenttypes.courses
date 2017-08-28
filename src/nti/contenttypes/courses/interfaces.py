@@ -1855,6 +1855,40 @@ class CourseInstanceImportedEvent(ObjectEvent):
     pass
 
 
+class ICourseSectionExporterExecutedEvent(IObjectEvent):
+    exporter = interface.Attribute("The exporter object.")
+    filer = interface.Attribute("The filer object.")
+    salt = interface.Attribute("The salt string.")
+    backup = interface.Attribute("The backup flag.")
+
+
+@interface.implementer(ICourseSectionExporterExecutedEvent)
+class CourseSectionExporterExecutedEvent(ObjectEvent):
+    
+    def __init__(self, course, exporter, filer=None, backup=True, salt=None):
+        ObjectEvent.__init__(self, course)
+        self.salt = salt
+        self.filer = filer
+        self.backup = backup
+        self.exporter = exporter
+
+
+class ICourseSectionImporterExecutedEvent(IObjectEvent):
+    importer = interface.Attribute("The importer object.")
+    filer = interface.Attribute("The filer object.")
+    writeout = interface.Attribute("The writeout flag.")
+
+
+@interface.implementer(ICourseSectionImporterExecutedEvent)
+class CourseSectionImporterExecutedEvent(ObjectEvent):
+    
+    def __init__(self, course, importer, filer=None, writeout=False):
+        ObjectEvent.__init__(self, course)
+        self.filer = filer
+        self.importer = importer
+        self.writeout = writeout
+
+
 # index
 
 

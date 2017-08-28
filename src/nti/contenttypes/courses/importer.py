@@ -72,6 +72,7 @@ from nti.contenttypes.courses.interfaces import ICourseSectionImporter
 from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CourseInstanceImportedEvent
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
+from nti.contenttypes.courses.interfaces import CourseSectionImporterExecutedEvent
 
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import clear_course_outline
@@ -481,6 +482,7 @@ class CourseImporter(object):
             logger.info("Processing %s", name)
             try:
                 importer.process(course, filer, writeout)
+                notify(CourseSectionImporterExecutedEvent(course, importer, filer, writeout))
             except Exception as e:
                 logger.exception("Error while processing %s", name)
                 raise e
