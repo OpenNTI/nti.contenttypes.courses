@@ -27,6 +27,8 @@ from ZODB.interfaces import IConnection
 from nti.cabinet.filer import read_source
 from nti.cabinet.filer import transfer_to_native_file
 
+from nti.contentlibrary import NTI
+
 from nti.contentlibrary.bundle import BUNDLE_META_NAME
 from nti.contentlibrary.bundle import sync_bundle_from_json_key
 
@@ -145,7 +147,7 @@ class CourseOutlineImporter(BaseSectionImporter):
         else:
             base = parent.ntiid
 
-        provider = get_provider(base) or u'NTI'
+        provider = get_provider(base) or NTI
         specific_base = get_specific(base)
         specific = specific_base + u".%s" % idx
         ntiid = make_ntiid(nttype=NTI_COURSE_OUTLINE_NODE,
