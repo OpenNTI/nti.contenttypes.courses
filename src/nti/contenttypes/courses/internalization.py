@@ -21,6 +21,9 @@ from zope.interface.common.idatetime import IDateTime
 
 from nti.base._compat import text_
 
+from nti.common.string import is_true
+from nti.common.string import is_false
+
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -237,18 +240,22 @@ class CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
 
     def parseMarkers(self, parsed):
         context = self._ext_replacement()
-        if parsed.get('is_non_public'):
+        is_non_public = parsed.get('is_non_public')
+        if is_true(is_non_public):
             # This should move somewhere else...,
             # but for nti.app.products.courseware ACL support
             # (when these are not children of a course) it's convenient
             interface.alsoProvides(context, INonPublicCourseInstance)
-        elif INonPublicCourseInstance.providedBy(context):
+        elif    is_false(is_non_public) \
+            and INonPublicCourseInstance.providedBy(context):
             interface.noLongerProvides(context, INonPublicCourseInstance)
 
-        if parsed.get('is_anonymously_but_not_publicly_accessible'):
+        is_anon = parsed.get('is_anonymously_but_not_publicly_accessible')
+        if is_true(is_anon):
             interface.alsoProvides(context,
                                    IAnonymouslyAccessibleCourseInstance)
-        elif IAnonymouslyAccessibleCourseInstance.providedBy(context):
+        elif    is_false(is_anon) \
+            and IAnonymouslyAccessibleCourseInstance.providedBy(context):
             interface.noLongerProvides(context,
                                        IAnonymouslyAccessibleCourseInstance)
         return self

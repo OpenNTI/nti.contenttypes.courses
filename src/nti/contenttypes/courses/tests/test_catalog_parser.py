@@ -59,10 +59,10 @@ class TestCatalogParser(CourseLayerTest):
     def test_parse_duration(self):
         duration = parse_duration(u'1 Weeks')
         assert_that(duration, is_not(none()))
-        
+
         duration = parse_duration(u'118 Days')
         assert_that(duration, is_not(none()))
-    
+
         duration = parse_duration(u'P118D')
         assert_that(duration, is_not(none()))
 
@@ -152,6 +152,11 @@ class TestCatalogParser(CourseLayerTest):
 
         json = key.readContentsAsJson()
 
+        json['is_non_public'] = False
+        fill_entry_from_legacy_json(entry, json)
+        assert_that(entry,
+                    does_not(verifiably_provides(INonPublicCourseInstance)))
+
         json['is_non_public'] = True
         fill_entry_from_legacy_json(entry, json)
         assert_that(entry, verifiably_provides(INonPublicCourseInstance))
@@ -166,11 +171,10 @@ class TestCatalogParser(CourseLayerTest):
         fill_entry_from_legacy_json(entry, json)
         assert_that(entry, verifiably_provides(INonPublicCourseInstance))
 
-        # Now simply missing
+        # Now simply missing, nothing changes
         del json['is_non_public']
         fill_entry_from_legacy_json(entry, json)
-        assert_that(entry,
-                    does_not(verifiably_provides(INonPublicCourseInstance)))
+        assert_that(entry, verifiably_provides(INonPublicCourseInstance))
 
     def test_toggle_anonymously_accessible(self):
         key = self.key
@@ -179,6 +183,11 @@ class TestCatalogParser(CourseLayerTest):
         fill_entry_from_legacy_key(entry, key)
 
         json = key.readContentsAsJson()
+
+        json['is_anonymously_but_not_publicly_accessible'] = False
+        fill_entry_from_legacy_json(entry, json)
+        assert_that(entry,
+                    does_not(verifiably_provides(IAnonymouslyAccessibleCourseInstance)))
 
         json['is_anonymously_but_not_publicly_accessible'] = True
         fill_entry_from_legacy_json(entry, json)
@@ -196,8 +205,7 @@ class TestCatalogParser(CourseLayerTest):
         assert_that(entry,
                     verifiably_provides(IAnonymouslyAccessibleCourseInstance))
 
-        # Now simply missing
+        # Now simply missing and nothing changes
         del json['is_anonymously_but_not_publicly_accessible']
         fill_entry_from_legacy_json(entry, json)
-        assert_that(entry,
-                    does_not(verifiably_provides(IAnonymouslyAccessibleCourseInstance)))
+        assert_that(entry, verifiably_provides(IAnonymouslyAccessibleCourseInstance))
