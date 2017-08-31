@@ -36,7 +36,9 @@ from nti.namedfile.file import safe_filename
 
 from nti.traversal.traversal import find_interface
 
+ID = StandardExternalFields.ID
 CLASS = StandardExternalFields.CLASS
+CREATOR = StandardExternalFields.CREATOR
 MIMETYPE = StandardExternalFields.MIMETYPE
 
 
@@ -67,7 +69,7 @@ def export_user_topic_as_discussion(topic):
         MIMETYPE: "application/vnd.nextthought.courses.discussion",
     }
     if creator:
-        result['creator'] = creator
+        result[CREATOR] = creator
     # title and content
     headline = topic.headline
     result['body'] = [
@@ -82,10 +84,11 @@ def export_user_topic_as_discussion(topic):
             record = get_enrollment_in_hierarchy(course, user)
             if record is not None:  # user dropped
                 term = ENROLLMENT_SCOPE_MAP.get(record.Scope)
-                scopes = [record.Scope] + list(getattr(term, 'implies', ()))
-    if scopes != [ES_PUBLIC]:
-        result["scopes"] = scopes
+                computed = [record.Scope] + list(getattr(term, 'implies', ()))
+                if computed != [ES_PUBLIC]:
+                    scopes = computed
+    result["scopes"] = scopes
     # give a proper id
     dicussion_id = user_topic_dicussion_id(topic)
-    result['id'] = dicussion_id
+    result[ID] = dicussion_id
     return result
