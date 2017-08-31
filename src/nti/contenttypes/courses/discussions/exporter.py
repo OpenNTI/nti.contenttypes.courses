@@ -17,6 +17,8 @@ from nti.contenttypes.courses.discussions.interfaces import NTI_COURSE_BUNDLE
 
 from nti.contenttypes.courses.discussions.parser import path_to_discussions
 
+from nti.contenttypes.courses.interfaces import ES_ALL
+from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_MAP
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -73,15 +75,16 @@ def export_user_topic_as_discussion(topic):
     ]
     result['title'] = headline.title
     # scope
-    scopes = ["All"]
-    if not is_course_instructor_or_editor(creator):
+    scopes = [ES_ALL]
+    if not is_course_instructor_or_editor(course, creator):
         user = User.get_user(creator)
         if user is not None:
             record = get_enrollment_in_hierarchy(course, user)
             if record is not None:  # user dropped
                 term = ENROLLMENT_SCOPE_MAP.get(record.Scope)
                 scopes = [record.Scope] + list(getattr(term, 'implies', ()))
-    result["scopes"] = scopes
+    if scopes != [ES_PUBLIC]:
+        result["scopes"] = scopes
     # give a proper id
     dicussion_id = user_topic_dicussion_id(topic)
     result['id'] = dicussion_id
