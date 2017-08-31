@@ -38,18 +38,22 @@ CLASS = StandardExternalFields.CLASS
 MIMETYPE = StandardExternalFields.MIMETYPE
 
 
-def user_topic_dicussion_id(topic):
+def user_topic_file_name(topic):
     headline = topic.headline
     intids = component.queryUtility(IIntIds)
-    course = find_interface(topic, ICourseInstance, strict=False)
-    path = path_to_discussions(course)
     if intids is not None:
         doc_id = intids.queryId(topic)
         doc_id = str(doc_id) if doc_id is not None else None
     else:
         doc_id = headline.title
-    doc_id = safe_filename(doc_id or headline.title)
-    return "%s://%s/%s" % (NTI_COURSE_BUNDLE, path, doc_id)
+    return safe_filename(doc_id or headline.title) + '.json'
+
+
+def user_topic_dicussion_id(topic):
+    name = user_topic_file_name(topic)
+    course = find_interface(topic, ICourseInstance, strict=False)
+    path = path_to_discussions(course)
+    return "%s://%s/%s" % (NTI_COURSE_BUNDLE, path, name)
 
 
 def export_user_topic_as_discussion(topic):
