@@ -38,8 +38,21 @@ CLASS = StandardExternalFields.CLASS
 MIMETYPE = StandardExternalFields.MIMETYPE
 
 
-def export_user_topic_as_discussion(topic):
+def user_topic_dicussion_id(topic):
+    headline = topic.headline
     intids = component.queryUtility(IIntIds)
+    course = find_interface(topic, ICourseInstance, strict=False)
+    path = path_to_discussions(course)
+    if intids is not None:
+        doc_id = intids.queryId(topic)
+        doc_id = str(doc_id) if doc_id is not None else None
+    else:
+        doc_id = headline.title
+    doc_id = safe_filename(doc_id or headline.title)
+    return "%s://%s/%s" % (NTI_COURSE_BUNDLE, path, doc_id)
+
+
+def export_user_topic_as_discussion(topic):
     course = find_interface(topic, ICourseInstance, strict=False)
     creator = getattr(topic.creator, 'username', topic.creator) or ''
     result = {
@@ -52,7 +65,7 @@ def export_user_topic_as_discussion(topic):
     # title and content
     headline = topic.headline
     result['body'] = [
-        to_external_object(x) for x in headline.body or () 
+        to_external_object(x) for x in headline.body or ()
     ]
     result['title'] = headline.title
     # scope
@@ -65,13 +78,7 @@ def export_user_topic_as_discussion(topic):
                 term = ENROLLMENT_SCOPE_MAP.get(record.Scope)
                 scopes = [record.Scope] + list(getattr(term, 'implies', ()))
     result["scopes"] = scopes
-    path = path_to_discussions(course)
-    if intids is not None:
-        doc_id = intids.queryId(topic)
-        doc_id = str(doc_id) if doc_id is not None else None
-    else:
-        doc_id = headline.title
     # give a proper id
-    doc_id = safe_filename(doc_id or headline.title)
-    result['id'] = "%s://%s/%s" % (NTI_COURSE_BUNDLE, path, doc_id)
+    dicussion_id = user_topic_dicussion_id(topic)
+    result['id'] = dicussion_id
     return result
