@@ -192,9 +192,14 @@ class CourseOutlineImporter(BaseSectionImporter):
         _recur(course.Outline)
 
     def _delete_outline(self, course):
-        clear_course_outline(course)
         if ICourseSubInstance.providedBy(course):
+            parent_course = get_parent_course(course)
+            # Only clear our outline if we're not shared currently.
+            if course.Outline is not parent_course.Outline:
+                clear_course_outline(course)
             course.prepare_own_outline()
+        else:
+            clear_course_outline(course)
 
     def process(self, context, filer, writeout=True):
         course = ICourseInstance(context)
@@ -248,7 +253,7 @@ class VendorInfoImporter(BaseSectionImporter):
             if writeout and IFilesystemBucket.providedBy(course.root):
                 source = self.safe_get(filer, path)  # reload
                 self.makedirs(course.root.absolute_path)
-                new_path = os.path.join(course.root.absolute_path, 
+                new_path = os.path.join(course.root.absolute_path,
                                         VENDOR_INFO_NAME)
                 transfer_to_native_file(source, new_path)
 
@@ -440,7 +445,7 @@ class BundleMetaInfoImporter(BaseSectionImporter):
                 # create a tmp directory root for bundle files
                 tmp_dir = tempfile.mkdtemp()
                 # XXX copy bundle files to new temp root
-                bundle_json_key = self._to_fs_key(name_source, 
+                bundle_json_key = self._to_fs_key(name_source,
                                                   tmp_dir,
                                                   BUNDLE_META_NAME)
                 if dc_meta_json_key is None:
@@ -495,6 +500,6 @@ class CourseImporter(object):
             self._mark_sync(subinstance)
             notify(CourseInstanceImportedEvent(subinstance))
         result = time.time() - now
-        logger.info("Course %s imported in %s(s)", 
+        logger.info("Course %s imported in %s(s)",
                     ICourseCatalogEntry(course).ntiid, result)
         return result
