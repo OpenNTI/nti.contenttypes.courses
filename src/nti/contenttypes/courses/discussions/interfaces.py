@@ -31,6 +31,9 @@ from nti.contenttypes.courses.discussions.schema import DiscussionModeledContent
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
 
+from nti.contenttypes.courses.interfaces import ICourseSectionExporter
+from nti.contenttypes.courses.interfaces import ICourseSectionImporter
+
 from nti.coremetadata.interfaces import ITaggedContent
 
 from nti.namedfile.interfaces import IFileConstrained
@@ -98,3 +101,11 @@ class ICourseDiscussionTopic(interface.Interface):
     """
     A marker interface for a created topics
     """
+
+
+class ICourseDiscussionsSectionExporter(ICourseSectionExporter):
+    pass
+
+
+class ICourseDiscussionsSectionImporter(ICourseSectionImporter):
+    pass
