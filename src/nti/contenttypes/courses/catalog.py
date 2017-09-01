@@ -476,24 +476,21 @@ def _clear_catalog_cache_when_course_updated(course, event):
     # there (still invalidate locally, though, so it takes effect for
     # the rest of the transaction). Fortunately these objects are tiny and
     # have almost no state, so this doesn't bloat the transaction much
-    catalogs = []
-
+    catalogs = set()
     # Include the parent, if we have one
     catalog = find_interface(course, IPersistentCourseCatalog, strict=False)
-    catalogs.append(catalog)
+    catalogs.add(catalog)
 
     # If the event has oldParent and/or newParent, include them
     for n in 'oldParent', 'newParent':
         context = getattr(event, n, None)
         catalog = find_interface(context, IPersistentCourseCatalog, strict=False)
-        catalogs.append(catalog)
+        catalogs.add(catalog)
 
     # finally, anything else we can find
-    catalogs.extend(component.getAllUtilitiesRegisteredFor(ICourseCatalog))
-
+    catalogs.update(component.getAllUtilitiesRegisteredFor(ICourseCatalog))
+    catalogs.discard(None)
     for catalog in catalogs:
-        if catalog is None:
-            continue
         try:
             catalog._get_all_my_entries.invalidate(catalog)
         except AttributeError:  # pragma: no cover
