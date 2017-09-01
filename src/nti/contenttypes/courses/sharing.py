@@ -240,7 +240,7 @@ def on_enroll_record_scope_membership(record, event, course=None):
 # so we need to catch them on the IntIdRemoved event
 # for dependable ordering
 @component.adapter(ICourseInstanceEnrollmentRecord, IIntIdRemovedEvent)
-def on_drop_exit_scope_membership(record, event, course=None):
+def on_drop_exit_scope_membership(record, unused_event, course=None):
     """
     When you drop a course, leave the scopes you were in, including
     content access.
@@ -250,7 +250,7 @@ def on_drop_exit_scope_membership(record, event, course=None):
 
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectModifiedEvent)
-def on_modified_update_scope_membership(record, event):
+def on_modified_update_scope_membership(record, unused_event):
     """
     When your enrollment record is modified, update the scopes
     you should be in.
@@ -354,12 +354,12 @@ def update_package_permissions(course, added=None, removed=None):
 
 @component.adapter(ICourseInstance, ICourseBundleUpdatedEvent)
 def _course_bundle_updated(course, event):
-    update_package_permissions(
-        course, event.added_packages, event.removed_packages)
+    update_package_permissions(course, event.added_packages,
+                               event.removed_packages)
 
 
 @component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
-def on_course_instance_imported(course, event):
+def on_course_instance_imported(course, unused_event):
     enrollments = ICourseEnrollments(course)
     for principal in chain(enrollments.iter_principals(),
                            get_course_instructors(course),
