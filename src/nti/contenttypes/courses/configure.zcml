@@ -207,6 +207,10 @@
 
 	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
 				for=".interfaces.ICourseInstance
+					 zope.lifecycleevent.IObjectAddedEvent" />
+
+	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
+				for=".interfaces.ICourseInstance
 					 .interfaces.ICourseInstanceAvailableEvent" />
 
 	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"

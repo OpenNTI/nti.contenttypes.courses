@@ -16,6 +16,7 @@ import shutil
 
 from zope import component
 from zope import interface
+from zope import lifecycleevent
 
 from zope.annotation.interfaces import IAnnotations
 
@@ -164,6 +165,7 @@ def create_course(admin, key, catalog=None, writeout=False,
     creator = creator or current_principal().id
     interface.alsoProvides(course, ICreatedCourse)
     course.creator = creator
+    lifecycleevent.created(course)
     return course
 
 
@@ -213,4 +215,5 @@ def create_course_subinstance(course, name, writeout=False, creator=None,
     subinstance.creator = creator
     # make sure annotations are created to get a connection
     create_annotations(subinstance)
+    lifecycleevent.created(course)
     return subinstance
