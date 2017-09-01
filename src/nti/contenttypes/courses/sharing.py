@@ -87,7 +87,7 @@ class CourseInstanceSharingScope(Community):
     __external_class_name__ = 'Community'
     __external_can_create__ = False
 
-    mime_type = mimeType = 'application/vnd.nextthought.community'
+    mime_type = mimeType = 'application/vnd.nextthought.courseinstancesharingscope'
 
     # Override things related to ntiids.
     # These don't have global names, so they must be referenced
@@ -101,7 +101,6 @@ class CourseInstanceSharingScope(Community):
         ntiid = self.NTIID
         if ntiid is not None:
             return ntiid
-
         del self._v_ntiid
         # Sigh, probably in testing, we don't have an OID
         # or intid yet.
@@ -227,7 +226,7 @@ class CourseSubInstanceSharingScopes(CourseInstanceSharingScopes):
 
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IIntIdAddedEvent)
-def on_enroll_record_scope_membership(record, event, course=None):
+def on_enroll_record_scope_membership(record, unused_event, course=None):
     """
     When you enroll in a course, record your membership in the
     proper scopes, including content access.

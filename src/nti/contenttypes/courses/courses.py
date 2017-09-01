@@ -40,9 +40,7 @@ from nti.schema.fieldproperty import createDirectFieldProperties
 
 
 @interface.implementer(ICourseAdministrativeLevel)
-class CourseAdministrativeLevel(
-        CaseInsensitiveCheckingLastModifiedBTreeFolder):
-
+class CourseAdministrativeLevel(CaseInsensitiveCheckingLastModifiedBTreeFolder):
     mime_type = mimeType = 'application/vnd.nextthought.courses.coursedaministrativelevel'
 
 
