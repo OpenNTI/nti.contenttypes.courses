@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 from zope import component
+from zope import lifecycleevent
 
 from zope.component.hooks import site
 
@@ -317,7 +318,7 @@ def on_before_course_instance_removed(course, _):
     intids = component.getUtility(IIntIds)
     entry = ICourseCatalogEntry(course, None)
     if entry is not None and intids.queryId(entry) is not None:
-        intids.unregister(entry)
+        lifecycleevent.removed(entry)
 
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
