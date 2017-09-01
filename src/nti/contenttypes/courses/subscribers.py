@@ -10,7 +10,6 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 from zope import component
-from zope import lifecycleevent
 
 from zope.component.hooks import site
 
@@ -102,6 +101,8 @@ from nti.contenttypes.courses.utils import get_courses_for_packages
 
 from nti.dataserver.interfaces import IUser
 from nti.dataserver.users.interfaces import IWillDeleteEntityEvent
+
+from nti.intid.common import removeIntId
 
 from nti.ntiids.interfaces import IUpdatedNTIIDEvent
 
@@ -318,7 +319,7 @@ def on_before_course_instance_removed(course, _):
     intids = component.getUtility(IIntIds)
     entry = ICourseCatalogEntry(course, None)
     if entry is not None and intids.queryId(entry) is not None:
-        lifecycleevent.removed(entry)
+        removeIntId(entry)
 
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
