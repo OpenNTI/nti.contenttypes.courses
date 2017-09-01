@@ -25,6 +25,8 @@ from zope.interface.interfaces import IUnregistered
 
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
 
+from zc.intid.interfaces import IBeforeIdRemovedEvent
+
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IUnlockQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentPoliciesModified
@@ -308,6 +310,14 @@ def unindex_enrollment_records(course):
         }
         for uid in catalog.apply(query) or ():
             catalog.unindex_doc(uid)
+
+
+@component.adapter(ICourseInstance, IBeforeIdRemovedEvent)
+def on_before_course_instance_removed(course, _):
+    intids = component.getUtility(IIntIds)
+    entry = ICourseCatalogEntry(course, None)
+    if entry is not None and intids.queryId(entry) is not None:
+        intids.unregister(entry)
 
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
