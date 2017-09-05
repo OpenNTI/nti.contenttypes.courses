@@ -73,7 +73,7 @@ def export_user_topic_as_discussion(topic):
     # title and content
     headline = topic.headline
     result['body'] = [
-        to_external_object(x) for x in headline.body or ()
+        to_external_object(x, name='exporter') for x in headline.body or ()
     ]
     result['title'] = headline.title
     # scope
