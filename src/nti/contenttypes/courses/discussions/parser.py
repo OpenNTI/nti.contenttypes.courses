@@ -15,8 +15,6 @@ import simplejson
 
 from zope import lifecycleevent
 
-from nti.base.interfaces import IFile
-
 from nti.cabinet.filer import read_source
 
 from nti.contentlibrary.interfaces import IDelimitedHierarchyKey
@@ -61,9 +59,10 @@ def load_discussion(name, source, discussions, path, discussion=None):
         raise InvalidDiscussionException(msg)
     new_discussion = factory() if discussion is None else discussion
     update_from_external_object(new_discussion, json, notify=False)
+    # set ownership
     for item in new_discussion.body or ():
-        if IFile.providedBy(item):
-            item.__parent__ = new_discussion  # set ownership
+        if hasattr(item, '__parent__'):
+            item.__parent__ = new_discussion
     # set creator if available
     creator = json.get('creator')
     if creator:  # save creator
