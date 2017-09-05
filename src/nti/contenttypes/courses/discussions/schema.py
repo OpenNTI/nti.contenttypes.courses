@@ -9,8 +9,8 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from nti.coremetadata.schema import CompoundModeledContentBody
 from nti.coremetadata.schema import legacyModeledContentBodyTypes
+from nti.coremetadata.schema import ExtendedCompoundModeledContentBody
 
 from nti.schema.field import ValidText
 
@@ -23,5 +23,5 @@ def discussionModeledContentBodyTypes():
 
 
 def DiscussionModeledContentBody(required=False):
-    return CompoundModeledContentBody(required=required,
-                                      fields=discussionModeledContentBodyTypes())
+    return ExtendedCompoundModeledContentBody(required=required,
+                                              fields=discussionModeledContentBodyTypes())
