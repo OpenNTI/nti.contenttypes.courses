@@ -28,7 +28,7 @@ from nti.contenttypes.courses.utils import is_course_instructor_or_editor
 
 from nti.dataserver.users.users import User
 
-from nti.externalization.externalization import to_external_object
+from nti.externalization.externalization import toExternalObject
 
 from nti.externalization.interfaces import StandardExternalFields
 
@@ -73,7 +73,7 @@ def export_user_topic_as_discussion(topic):
     # title and content
     headline = topic.headline
     result['body'] = [
-        to_external_object(x, name='exporter') for x in headline.body or ()
+        toExternalObject(x, name='exporter', decorate=False) for x in headline.body or ()
     ]
     result['title'] = headline.title
     # scope
