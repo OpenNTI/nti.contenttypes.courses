@@ -26,6 +26,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.utils import get_enrollment_in_hierarchy
 from nti.contenttypes.courses.utils import is_course_instructor_or_editor
 
+from nti.coremetadata.interfaces import SYSTEM_USER_ID
+
 from nti.dataserver.users.users import User
 
 from nti.externalization.externalization import toExternalObject
@@ -64,12 +66,13 @@ def export_user_topic_as_discussion(topic):
     course = find_interface(topic, ICourseInstance, strict=False)
     creator = getattr(topic.creator, 'username', topic.creator) or ''
     result = {
+        "icon": None,
+        "label": "",
         'tags': topic.tags,
         CLASS: "Discussion",
         MIMETYPE: "application/vnd.nextthought.courses.discussion",
     }
-    if creator:
-        result[CREATOR] = creator
+    result[CREATOR] = SYSTEM_USER_ID
     # title and content
     headline = topic.headline
     result['body'] = [
