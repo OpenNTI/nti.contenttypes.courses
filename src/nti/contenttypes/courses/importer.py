@@ -486,10 +486,12 @@ class CourseImporter(object):
         now = time.time()
         course = ICourseInstance(context)
         for name, importer in sorted(component.getUtilitiesFor(ICourseSectionImporter)):
+            current = time.time()
             logger.info("Processing %s", name)
             try:
                 importer.process(course, filer, writeout)
                 notify(CourseSectionImporterExecutedEvent(course, importer, filer, writeout))
+                logger.info("%s processed in %s(s)", name, time.time() - current)
             except Exception as e:
                 logger.exception("Error while processing %s", name)
                 raise e

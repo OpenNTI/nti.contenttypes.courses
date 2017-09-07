@@ -527,10 +527,12 @@ class CourseExporter(object):
             # Default a salt for course copies.
             salt = str(time.time())
         for name, exporter in sorted(component.getUtilitiesFor(ICourseSectionExporter)):
+            current = time.time()
             logger.info("Processing %s", name)
             try:
                 exporter.export(course, filer, backup, salt)
                 notify(CourseSectionExporterExecutedEvent(course, exporter, filer, backup, salt))
+                logger.info("%s processed in %s(s)", name, time.time() - current)
             except Exception as e:
                 logger.exception("Error while processing %s", name)
                 raise e
