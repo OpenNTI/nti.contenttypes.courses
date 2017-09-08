@@ -846,14 +846,15 @@ def add_principal_to_course_content_roles(principal, course, packages=None):
         membership.setGroups(final_groups)
 
 
-def _get_principal_enrollment_packages(principal, courses_to_exclude=()):
+def _get_principal_visible_packages(principal, courses_to_exclude=()):
     """
-    Gather the set of course packages for the principal's enrollments,
-    excluding any courses given.
+    Gather the set of packages the principal has access to, excluding any
+    courses given.
     """
     result = set()
     enrollments = get_enrollments(principal.username)
-    for record in enrollments:
+    admin_courses = get_instructed_and_edited_courses(principal) or ()
+    for record in chain(enrollments, admin_courses):
         course = ICourseInstance(record, None)  # dup enrollment
         if      course is not None \
             and course not in courses_to_exclude:
@@ -877,10 +878,9 @@ def remove_principal_from_course_content_roles(principal, course, packages=None,
     courses_to_exclude = (course,) if unenroll else ()
 
     # Get the minimal set of packages to remove roles for.
-    enrollment_packages = \
-        _get_principal_enrollment_packages(principal,
-                                           courses_to_exclude=courses_to_exclude)
-    to_remove = set(packages) - enrollment_packages
+    allowed_packages = _get_principal_visible_packages(principal,
+                                                       courses_to_exclude=courses_to_exclude)
+    to_remove = set(packages) - allowed_packages
 
     roles_to_remove = _content_roles_for_course_instance(course, to_remove)
     membership = component.getAdapter(principal, IMutableGroupMember,
@@ -989,7 +989,7 @@ def deny_instructor_access_to_course(user, course):
 
     # by definition here we have an IPrincipal that *came* from an IUser
     # and has a hard reference to it, and so can become an IUser again
-    remove_principal_from_course_content_roles(user, course)
+    remove_principal_from_course_content_roles(user, course, unenroll=True)
     for scope in course.SharingScopes.values():
         user.record_no_longer_dynamic_member(scope)
         user.stop_following(scope)
