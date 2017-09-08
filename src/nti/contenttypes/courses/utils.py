@@ -989,7 +989,8 @@ def deny_instructor_access_to_course(user, course):
 
     # by definition here we have an IPrincipal that *came* from an IUser
     # and has a hard reference to it, and so can become an IUser again
-    remove_principal_from_course_content_roles(user, course, unenroll=True)
+    if not is_course_editor(course, user):
+        remove_principal_from_course_content_roles(user, course, unenroll=True)
     for scope in course.SharingScopes.values():
         user.record_no_longer_dynamic_member(scope)
         user.stop_following(scope)
