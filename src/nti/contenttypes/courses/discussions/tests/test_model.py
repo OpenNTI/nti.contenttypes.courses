@@ -28,9 +28,9 @@ from nti.contenttypes.courses.discussions.model import DefaultCourseDiscussions
 from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
 
-from nti.externalization.tests import externalizes
-
 from nti.contenttypes.courses.tests import CourseLayerTest
+
+from nti.externalization.tests import externalizes
 
 
 class TestModel(CourseLayerTest):

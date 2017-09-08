@@ -36,6 +36,8 @@ from nti.externalization.interfaces import StandardExternalFields
 
 from nti.namedfile.file import safe_filename
 
+from nti.ntiids.ntiids import hexdigest
+
 from nti.traversal.traversal import find_interface
 
 ID = StandardExternalFields.ID
@@ -44,7 +46,7 @@ CREATOR = StandardExternalFields.CREATOR
 MIMETYPE = StandardExternalFields.MIMETYPE
 
 
-def user_topic_file_name(topic):
+def user_topic_file_name(topic, salt=None):
     headline = topic.headline
     intids = component.queryUtility(IIntIds)
     if intids is not None:
@@ -52,17 +54,21 @@ def user_topic_file_name(topic):
         doc_id = str(doc_id) if doc_id is not None else None
     else:
         doc_id = headline.title
-    return safe_filename(doc_id or headline.title) + '.json'
+    result = safe_filename(doc_id or headline.title[:20])
+    if salt:
+        result = hexdigest(result, salt)
+    result = result + '.json'
+    return result
 
 
-def user_topic_dicussion_id(topic):
-    name = user_topic_file_name(topic)
+def user_topic_dicussion_id(topic, salt=None):
+    name = user_topic_file_name(topic, salt)
     course = find_interface(topic, ICourseInstance, strict=False)
     path = path_to_discussions(course)
     return "%s://%s/%s" % (NTI_COURSE_BUNDLE, path, name)
 
 
-def export_user_topic_as_discussion(topic):
+def export_user_topic_as_discussion(topic, salt=None):
     course = find_interface(topic, ICourseInstance, strict=False)
     creator = getattr(topic.creator, 'username', topic.creator) or ''
     result = {
@@ -92,6 +98,6 @@ def export_user_topic_as_discussion(topic):
                     scopes = computed
     result["scopes"] = scopes
     # give a proper id
-    dicussion_id = user_topic_dicussion_id(topic)
+    dicussion_id = user_topic_dicussion_id(topic, salt)
     result[ID] = dicussion_id
     return result
