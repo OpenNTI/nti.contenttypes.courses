@@ -87,7 +87,7 @@ class CourseInstanceSharingScope(Community):
     __external_class_name__ = 'Community'
     __external_can_create__ = False
 
-    mime_type = mimeType = 'application/vnd.nextthought.courseinstancesharingscope'
+    mime_type = mimeType = 'application/vnd.nextthought.courses.courseinstancesharingscope'
 
     # Override things related to ntiids.
     # These don't have global names, so they must be referenced
@@ -159,7 +159,7 @@ class CourseInstanceSharingScopes(CheckingLastModifiedBTreeContainer):
 
     __external_can_create__ = False
 
-    mime_type = mimeType = 'application/vnd.nextthought.courseinstancesharingscopes'
+    mime_type = mimeType = 'application/vnd.nextthought.courses.courseinstancesharingscopes'
 
     def _vocabulary(self):
         # Could/should also use the vocabulary registry
