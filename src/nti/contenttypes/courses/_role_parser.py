@@ -22,19 +22,13 @@ from zope.securitypolicy.role import checkRole
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
-from zope.securitypolicy.securitymap import PersistentSecurityMap
-
 from ZODB.interfaces import IConnection
 
 from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
 
-from nti.contenttypes.courses.sharing import add_principal_to_course_content_roles
-
 from nti.contenttypes.courses.utils import grant_instructor_access_to_course
-
-from nti.dataserver.interfaces import IUser
 
 from nti.dataserver.users import User
 
@@ -60,16 +54,6 @@ def _populate_roles_from_json(course, manager, json):
         denies = role_values.get('deny', None)
         for principal_id in denies or ():
             manager.removeRoleFromPrincipal(role_id, principal_id)
-
-
-def reset_roles_missing_key(course):
-    role_manager = IPrincipalRoleManager(course)
-    # We totally cheat here and clear the role manager.
-    # this is much easier than trying to actually sync it
-    if isinstance(role_manager.map, PersistentSecurityMap):
-        role_manager.map._byrow.clear()
-        role_manager.map._bycol.clear()
-        role_manager.map._p_changed = True
 
 
 def _check_scopes(course):
@@ -103,10 +87,7 @@ def fill_roles_from_json(course, json):
     the API.
     """
     _check_scopes(course)
-
     role_manager = IPrincipalRoleManager(course)
-    reset_roles_missing_key(role_manager)
-
     _populate_roles_from_json(course, role_manager, json)
     # We must update the instructor list too, it's still used internally
     # in a few places...plus it's how we know who to remove from the scopes
@@ -135,15 +116,6 @@ def fill_roles_from_key(course, key):
     __traceback_info__ = key, course
     role_last_mod = getattr(course, '__principalRoleslastModified__', 0)
     if key.lastModified <= role_last_mod:
-        # JAM: XXX: We had some environments that got set up
-        # before instructors were properly added to content roles;
-        # rather than force environments to remove the role files and
-        # sync, then put them back and sync again, I'm temporarily
-        # setting roles each time we get here. It's an idempotent process,
-        # though, so we won't be churning the database.
-        for instructor in course.instructors or ():
-            user = IUser(instructor)
-            add_principal_to_course_content_roles(user, course)
         return False
 
     logger.info('Syncing course roles for key (%s)', key)

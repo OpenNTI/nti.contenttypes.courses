@@ -49,7 +49,6 @@ from nti.contenttypes.courses._evaluation_parser import fill_evaluations_from_ke
 from nti.contenttypes.courses._outline_parser import fill_outline_from_key
 
 from nti.contenttypes.courses._role_parser import fill_roles_from_key
-from nti.contenttypes.courses._role_parser import reset_roles_missing_key
 
 from nti.contenttypes.courses._sharing_scopes import update_sharing_scopes_friendly_names
 
@@ -324,12 +323,12 @@ class _ContentCourseSynchronizer(object):
         cls.update_vendor_info(course, bucket, sync_results)
 
         cls.update_instructor_roles(course, bucket, sync_results=sync_results)
-        cls.update_assignment_policies(course, bucket, 
+        cls.update_assignment_policies(course, bucket,
                                        sync_results=sync_results)
 
         # make sure Discussions are initialized
         getattr(course, 'Discussions')
-        cls.update_sharing_scopes_friendly_names(course, 
+        cls.update_sharing_scopes_friendly_names(course,
                                                  sync_results=sync_results)
 
         # validate assigment policies
@@ -447,10 +446,6 @@ class _ContentCourseSynchronizer(object):
             if fill_roles_from_key(course, role_json_key):
                 notify(CourseRolesSynchronized(course))
                 sync_results.InstructorRolesUpdated = True
-        else:
-            reset_roles_missing_key(course)
-            notify(CourseRolesSynchronized(course))
-            sync_results.InstructorRolesReseted = True
 
     @classmethod
     def update_assignment_policies(cls, course, bucket, sync_results=None):
