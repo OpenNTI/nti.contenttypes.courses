@@ -112,10 +112,10 @@ def fill_roles_from_json(course, json):
     return True
 
 
-def fill_roles_from_key(course, key):
+def fill_roles_from_key(course, key, force=False):
     __traceback_info__ = key, course
     role_last_mod = getattr(course, '__principalRoleslastModified__', 0)
-    if key.lastModified <= role_last_mod:
+    if not force and key.lastModified <= role_last_mod:
         return False
 
     logger.info('Syncing course roles for key (%s)', key)
