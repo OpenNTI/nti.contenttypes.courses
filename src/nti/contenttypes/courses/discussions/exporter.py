@@ -81,6 +81,7 @@ def export_user_topic_as_discussion(topic, salt=None):
     result[CREATOR] = SYSTEM_USER_ID
     # title and content
     headline = topic.headline
+    __traceback_info__ = headline.body
     result['body'] = [
         toExternalObject(x, name='exporter', decorate=False) for x in headline.body or ()
     ]
