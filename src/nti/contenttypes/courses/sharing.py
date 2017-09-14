@@ -63,16 +63,17 @@ from nti.dataserver.authorization import _CommunityGroup
 from nti.dataserver.interfaces import IUser
 from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
 
-from nti.dataserver.users import User
-from nti.dataserver.users import Community
+from nti.dataserver.users.communities import Community
 
-from nti.externalization.oids import to_external_ntiid_oid
+from nti.dataserver.users.users import User
 
 from nti.intid.wref import ArbitraryOrderableWeakRef
 
 from nti.ntiids.ntiids import TYPE_OID
 from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+from nti.ntiids.oids import to_external_ntiid_oid
 
 from nti.traversal.traversal import find_interface
 

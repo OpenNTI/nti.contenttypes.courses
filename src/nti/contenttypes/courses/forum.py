@@ -22,9 +22,9 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceBoard
 from nti.dataserver.contenttypes.forums.board import CommunityBoard
 from nti.dataserver.contenttypes.forums.forum import CommunityForum
 
-from nti.externalization.oids import to_external_ntiid_oid
-
 from nti.ntiids.ntiids import TYPE_OID
+
+from nti.ntiids.oids import to_external_ntiid_oid
 
 
 @interface.implementer(ICourseInstanceBoard)
