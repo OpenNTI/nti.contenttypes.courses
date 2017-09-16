@@ -1888,6 +1888,30 @@ class CourseSectionImporterExecutedEvent(ObjectEvent):
         self.importer = importer
         self.writeout = writeout
 
+# removal
+
+
+class ICourseRemovedEvent(IObjectEvent):
+    """
+    An event that is sent after a course has been removed
+    """
+    site = interface.Attribute("Course site")
+    course = interface.Attribute("Course removed")
+    entry = interface.Attribute("Course catalog entry")
+
+
+@interface.implementer(ICourseRemovedEvent)
+class CourseRemovedEvent(ObjectEvent):
+
+    def __init__(self, obj, entry, site):
+        super(CourseRemovedEvent, self).__init__(obj)
+        self.site = site
+        self.entry = entry
+        
+    @property
+    def course(self):
+        return self.object
+
 
 # index
 
