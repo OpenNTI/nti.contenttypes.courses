@@ -1891,7 +1891,7 @@ class CourseSectionImporterExecutedEvent(ObjectEvent):
 # removal
 
 
-class ICourseRemovedEvent(IObjectEvent):
+class ICourseInstanceRemovedEvent(IObjectEvent):
     """
     An event that is sent after a course has been removed
     """
@@ -1900,11 +1900,11 @@ class ICourseRemovedEvent(IObjectEvent):
     entry = interface.Attribute("Course catalog entry")
 
 
-@interface.implementer(ICourseRemovedEvent)
-class CourseRemovedEvent(ObjectEvent):
+@interface.implementer(ICourseInstanceRemovedEvent)
+class CourseInstanceRemovedEvent(ObjectEvent):
 
     def __init__(self, obj, entry, site):
-        super(CourseRemovedEvent, self).__init__(obj)
+        super(CourseInstanceRemovedEvent, self).__init__(obj)
         self.site = site
         self.entry = entry
         
