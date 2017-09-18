@@ -100,6 +100,8 @@ NTIID = StandardExternalFields.NTIID
 
 INTERNAL_NTIID = StandardInternalFields.NTIID
 
+_primitives = six.string_types + (Number, bool)
+
 
 class ExportObjectProxy(ProxyBase):
 
@@ -126,8 +128,7 @@ class ExportObjectProxy(ProxyBase):
 
 
 def export_proxy(obj, filer=None, backup=False, salt=None):
-    if      not isinstance(obj, six.string_types) \
-        and not isinstance(obj, Number):
+    if not isinstance(obj,_primitives):
         return ExportObjectProxy(obj, filer, backup, salt)
     return obj
 
