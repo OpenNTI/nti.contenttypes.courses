@@ -32,6 +32,9 @@ from zope.dublincore.interfaces import IWriteZopeDublinCore
 
 from zope.interface.interfaces import IMethod
 
+from zope.proxy import isProxy
+from zope.proxy import ProxyBase
+
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
@@ -94,6 +97,45 @@ OID = StandardExternalFields.OID
 NTIID = StandardExternalFields.NTIID
 
 INTERNAL_NTIID = StandardInternalFields.NTIID
+
+
+class ExportObjectProxy(ProxyBase):
+
+    filer = property(
+        lambda s: s.__dict__.get('_v_filer'),
+        lambda s, v: s.__dict__.__setitem__('_v_filer', v))
+
+    backup = property(
+        lambda s: s.__dict__.get('_v_backup'),
+        lambda s, v: s.__dict__.__setitem__('_v_backup', v))
+
+    salt = property(
+        lambda s: s.__dict__.get('_v_salt'),
+        lambda s, v: s.__dict__.__setitem__('_v_salt', v))
+
+    def __new__(cls, base, *unused_args, **unused_kwargs):
+        return ProxyBase.__new__(cls, base)
+
+    def __init__(self, base, filer=None, backup=True, salt=None):
+        ProxyBase.__init__(self, base)
+        self.salt = salt
+        self.filer = filer
+        self.backup = backup
+
+
+def export_proxy(obj, filer=None, backup=True, salt=None):
+    return ExportObjectProxy(obj, filer, backup, salt)
+
+
+def proxy_params(obj):
+    result = None
+    if isProxy(obj, ExportObjectProxy):
+        result = {
+            'salt': obj.salt,
+            'filer': obj.filer,      
+            'backup': obj.backup
+        }
+    return result or {}
 
 
 @interface.implementer(ICourseSectionExporter)
@@ -210,8 +252,7 @@ class CourseOutlineExporter(BaseSectionExporter):
 
     def _export_remover(self, ext_obj, salt):
         if isinstance(ext_obj, Mapping):
-            for key in (ID, OID, NTIID, INTERNAL_NTIID):
-                ext_obj.pop(key, None)
+            [ext_obj.pop(x, None) for x in (ID, OID, NTIID, INTERNAL_NTIID)]
             ContentNTIID = ext_obj.get('ContentNTIID', None)
             LessonOverviewNTIID = ext_obj.get('LessonOverviewNTIID', None)
             if ContentNTIID and ContentNTIID == LessonOverviewNTIID:
@@ -230,21 +271,19 @@ class CourseOutlineExporter(BaseSectionExporter):
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
         filer.default_bucket = bucket = self.course_bucket(course)
-
         # as json
-        ext_obj = to_external_object(course.Outline,
+        ext_obj = to_external_object(export_proxy(course.Outline, filer, backup, salt),
                                      name='exporter',
                                      decorate=False)
         if not backup:
             self._export_remover(ext_obj, salt)
-
+        # save
         source = self.dump(ext_obj)
         filer.save(COURSE_OUTLINE_NAME,
                    source,
                    contentType="application/json",
                    bucket=bucket,
                    overwrite=True)
-
         # as xml
         source = self.asXML(course.Outline,
                             course,
@@ -255,7 +294,7 @@ class CourseOutlineExporter(BaseSectionExporter):
                    contentType="application/xml",
                    bucket=bucket,
                    overwrite=True)
-
+        # process subinstances
         for sub_instance in get_course_subinstances(course):
             if sub_instance.Outline is not course.Outline:
                 self.export(sub_instance, filer, backup, salt)
@@ -269,7 +308,7 @@ class VendorInfoExporter(BaseSectionExporter):
         filer.default_bucket = bucket = self.course_bucket(course)
         verdor_info = get_course_vendor_info(course, False)
         if verdor_info:
-            ext_obj = to_external_object(verdor_info,
+            ext_obj = to_external_object(export_proxy(verdor_info, filer, backup, salt),
                                          name="exporter",
                                          decorate=False,
                                          backup=backup, salt=salt)
@@ -307,7 +346,8 @@ class BundleMetaInfoExporter(BaseSectionExporter):
             'title': entry.Title,
             "ContentPackages": package_ntiids
         }
-        ext_obj = to_external_object(data, decorate=False, 
+        ext_obj = to_external_object(export_proxy(data, filer, backup, salt),
+                                     decorate=False,
                                      backup=backup, salt=salt)
         source = self.dump(ext_obj)
         filer.save(BUNDLE_META_NAME, source,
@@ -457,12 +497,14 @@ class RoleInfoExporter(BaseSectionExporter):
 @interface.implementer(ICourseSectionExporter)
 class AssignmentPoliciesExporter(BaseSectionExporter):
 
-    def _process(self, course, backup=True, salt=None):
+    def _process(self, course, filer=None, backup=True, salt=None):
         result = {}
         policies = IQAssessmentPolicies(course)
         date_context = IQAssessmentDateContext(course)
-        assignments = to_external_object(policies, decorate=False)
-        date_context = to_external_object(date_context, decorate=False)
+        assignments = to_external_object(export_proxy(policies, filer, backup, salt),
+                                         decorate=False)
+        date_context = to_external_object(export_proxy(date_context, filer, backup, salt),
+                                          decorate=False)
 
         # Merge the date context externalized dict into the
         # dict of assignments.
@@ -488,7 +530,7 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
 
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
-        result = self._process(course, backup, salt)
+        result = self._process(course, filer, backup, salt)
         if result:
             source = self.dump(result)
             filer.default_bucket = bucket = self.course_bucket(course)
@@ -507,7 +549,9 @@ class CourseInfoExporter(BaseSectionExporter):
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
         entry = ICourseCatalogEntry(course)
-        ext_obj = to_external_object(entry, name="exporter", decorate=False)
+        ext_obj = to_external_object(export_proxy(entry, filer, backup, salt),
+                                     name="exporter",
+                                     decorate=False)
         source = self.dump(ext_obj)
         filer.default_bucket = bucket = self.course_bucket(course)
         filer.save(CATALOG_INFO_NAME, source, bucket=bucket,
@@ -532,7 +576,8 @@ class CourseExporter(object):
             try:
                 exporter.export(course, filer, backup, salt)
                 notify(CourseSectionExporterExecutedEvent(course, exporter, filer, backup, salt))
-                logger.info("%s processed in %s(s)", name, time.time() - current)
+                logger.info("%s processed in %s(s)",
+                            name, time.time() - current)
             except Exception as e:
                 logger.exception("Error while processing %s", name)
                 raise e
