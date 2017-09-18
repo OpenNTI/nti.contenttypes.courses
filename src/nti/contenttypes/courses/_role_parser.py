@@ -30,7 +30,7 @@ from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
 
 from nti.contenttypes.courses.utils import grant_instructor_access_to_course
 
-from nti.dataserver.users import User
+from nti.dataserver.users.users import User
 
 
 def _populate_roles_from_json(course, manager, json):

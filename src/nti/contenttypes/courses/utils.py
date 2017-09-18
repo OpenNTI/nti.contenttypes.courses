@@ -90,7 +90,7 @@ from nti.dataserver.authorization_acl import has_permission
 from nti.dataserver.interfaces import IUser
 from nti.dataserver.interfaces import IMutableGroupMember
 
-from nti.dataserver.users import User
+from nti.dataserver.users.users import User
 
 from nti.ntiids.ntiids import get_parts
 

@@ -77,7 +77,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecordC
 
 from nti.contenttypes.courses.utils import is_instructor_in_hierarchy
 
-from nti.dataserver.users import User
+from nti.dataserver.users.users import User
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 

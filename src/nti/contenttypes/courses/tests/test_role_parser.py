@@ -32,7 +32,7 @@ from nti.contenttypes.courses.interfaces import ICourseSubInstance
 
 from nti.contenttypes.courses._role_parser import fill_roles_from_key
 
-from nti.dataserver.users import User
+from nti.dataserver.users.users import User
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 

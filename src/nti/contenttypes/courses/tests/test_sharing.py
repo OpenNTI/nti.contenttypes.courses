@@ -86,7 +86,7 @@ from nti.dataserver.interfaces import IMutableGroupMember
 
 from nti.dataserver.sharing import SharingSourceMixin
 
-from nti.dataserver.users import User
+from nti.dataserver.users.users import User
 
 from nti.ntiids import ntiids
 

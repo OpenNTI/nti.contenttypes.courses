@@ -21,7 +21,7 @@ from nti.contenttypes.courses.internalization import legacy_to_schema_transform
 
 from nti.externalization.internalization import update_from_external_object
 
-from nti.dataserver.users import Entity
+from nti.dataserver.users.entity import Entity
 
 
 def prepare_json_text(s):
