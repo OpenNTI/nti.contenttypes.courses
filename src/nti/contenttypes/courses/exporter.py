@@ -565,11 +565,9 @@ class CourseExporter(object):
 
     def export(self, context, filer, backup=True, salt=None):
         now = time.time()
+        salt = salt or str(time.time())
         course = ICourseInstance(context)
         entry = ICourseCatalogEntry(course)
-        if not backup and not salt:
-            # Default a salt for course copies.
-            salt = str(time.time())
         for name, exporter in sorted(component.getUtilitiesFor(ICourseSectionExporter)):
             current = time.time()
             logger.info("Processing %s", name)
