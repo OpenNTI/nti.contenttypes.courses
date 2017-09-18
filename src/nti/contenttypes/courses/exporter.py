@@ -123,7 +123,7 @@ class ExportObjectProxy(ProxyBase):
         self.backup = backup
 
 
-def export_proxy(obj, filer=None, backup=True, salt=None):
+def export_proxy(obj, filer=None, backup=False, salt=None):
     return ExportObjectProxy(obj, filer, backup, salt)
 
 
