@@ -88,6 +88,8 @@ from nti.externalization.externalization import to_external_object
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import StandardInternalFields
 
+from nti.externalization.proxy import removeAllProxies
+
 from nti.ntiids.ntiids import hexdigest
 from nti.ntiids.ntiids import hash_ntiid
 from nti.ntiids.ntiids import make_ntiid
@@ -124,7 +126,10 @@ class ExportObjectProxy(ProxyBase):
 
 
 def export_proxy(obj, filer=None, backup=False, salt=None):
-    return ExportObjectProxy(obj, filer, backup, salt)
+    if      not isinstance(obj, six.string_types) \
+        and not isinstance(obj, Number):
+        return ExportObjectProxy(obj, filer, backup, salt)
+    return obj
 
 
 def proxy_params(obj):
@@ -169,7 +174,10 @@ class BaseSectionExporter(object):
 
     def dump(self, ext_obj):
         source = StringIO()
-        simplejson.dump(ext_obj, source, indent='\t', sort_keys=True)
+        simplejson.dump(removeAllProxies(ext_obj), 
+                        source, 
+                        indent='\t', 
+                        sort_keys=True)
         source.seek(0)
         return source
 
