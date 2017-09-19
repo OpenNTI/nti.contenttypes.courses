@@ -17,8 +17,6 @@ from nti.contenttypes.courses.discussions.interfaces import NTI_COURSE_BUNDLE
 
 from nti.contenttypes.courses.discussions.parser import path_to_discussions
 
-from nti.contenttypes.courses.exporter import export_proxy
-
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_MAP
@@ -85,7 +83,7 @@ def export_user_topic_as_discussion(topic, salt=None):
     headline = topic.headline
     __traceback_info__ = headline.body
     result['body'] = [
-        toExternalObject(export_proxy(x, salt=salt), name='exporter', decorate=False)
+        toExternalObject(x, name='exporter', decorate=False) 
         for x in headline.body or ()
     ]
     result['title'] = headline.title
