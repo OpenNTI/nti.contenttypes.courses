@@ -283,7 +283,7 @@ class CourseOutlineExporter(BaseSectionExporter):
         course = ICourseInstance(context)
         filer.default_bucket = bucket = self.course_bucket(course)
         # as json
-        ext_obj = to_external_object(self.proxy(course.Outline, filer, backup, salt),
+        ext_obj = to_external_object(course.Outline,
                                      name='exporter',
                                      decorate=False)
         if not backup:
@@ -319,10 +319,9 @@ class VendorInfoExporter(BaseSectionExporter):
         filer.default_bucket = bucket = self.course_bucket(course)
         verdor_info = get_course_vendor_info(course, False)
         if verdor_info:
-            ext_obj = to_external_object(self.proxy(verdor_info, filer, backup, salt),
+            ext_obj = to_external_object(verdor_info,
                                          name="exporter",
-                                         decorate=False,
-                                         backup=backup, salt=salt)
+                                         decorate=False)
             source = self.dump(ext_obj)
             filer.save(VENDOR_INFO_NAME,
                        source,
@@ -357,9 +356,7 @@ class BundleMetaInfoExporter(BaseSectionExporter):
             'title': entry.Title,
             "ContentPackages": package_ntiids
         }
-        ext_obj = to_external_object(self.proxy(data, filer, backup, salt),
-                                     decorate=False,
-                                     backup=backup, salt=salt)
+        ext_obj = to_external_object(data, decorate=False)
         source = self.dump(ext_obj)
         filer.save(BUNDLE_META_NAME, source,
                    contentType="application/json",
@@ -508,14 +505,12 @@ class RoleInfoExporter(BaseSectionExporter):
 @interface.implementer(ICourseSectionExporter)
 class AssignmentPoliciesExporter(BaseSectionExporter):
 
-    def _process(self, course, filer=None, backup=True, salt=None):
+    def _process(self, course, backup=True, salt=None):
         result = {}
         policies = IQAssessmentPolicies(course)
         date_context = IQAssessmentDateContext(course)
-        assignments = to_external_object(self.proxy(policies, filer, backup, salt),
-                                         decorate=False)
-        date_context = to_external_object(self.proxy(date_context, filer, backup, salt),
-                                          decorate=False)
+        assignments = to_external_object(policies, decorate=False)
+        date_context = to_external_object(date_context, decorate=False)
 
         # Merge the date context externalized dict into the
         # dict of assignments.
@@ -541,7 +536,7 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
 
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
-        result = self._process(course, filer, backup, salt)
+        result = self._process(course, backup, salt)
         if result:
             source = self.dump(result)
             filer.default_bucket = bucket = self.course_bucket(course)
@@ -560,7 +555,7 @@ class CourseInfoExporter(BaseSectionExporter):
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
         entry = ICourseCatalogEntry(course)
-        ext_obj = to_external_object(self.proxy(entry, filer, backup, salt),
+        ext_obj = to_external_object(entry,
                                      name="exporter",
                                      decorate=False)
         source = self.dump(ext_obj)
