@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-.. $Id: creator.py 120978 2017-09-01 02:40:47Z carlos.sanchez $
+.. $Id$
 
  TODO: Add support for AWS
 """
 
 from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
 
 import os
 import time
@@ -54,6 +52,8 @@ from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import make_specific_safe
 
 from nti.zodb.containers import time_to_64bit_int
+
+logger = __import__('logging').getLogger(__name__)
 
 
 def create_annotations(course):
@@ -170,7 +170,12 @@ def create_course(admin, key, catalog=None, writeout=False,
         raise IOError("Administrative level does not have a root bucket")
 
     writeout = writeout and IFilesystemBucket.providedBy(root)
-    course_path = os.path.join(root.absolute_path, key)
+    if getattr(root, 'absolute_path', None):
+        course_path = os.path.join(root.absolute_path, key)
+    else:
+        course_path = None
+        writeout = False # there is not absolute_path
+
     if writeout and IFilesystemBucket.providedBy(root):
         create_directory(course_path)
 
@@ -201,6 +206,7 @@ def create_course(admin, key, catalog=None, writeout=False,
         interface.alsoProvides(course, ICreatedCourse)
         course.creator = creator
         lifecycleevent.created(course)
+        # create a bundle
         if IContentCourseInstance.providedBy(course):
             created_content_package_bundle(course, root,
                                            ntiid_factory=_create_bundle_ntiid)
@@ -245,13 +251,13 @@ def create_course_subinstance(course, name, writeout=False, creator=None,
         subinstance = factory()
         subinstance.root = sub_section_root
         course.SubInstances[name] = subinstance
+        # mark & set creator
+        creator = creator or current_principal().id
+        interface.alsoProvides(subinstance, ICreatedCourse)
+        subinstance.creator = creator
+        # make sure annotations are created to get a connection
+        create_annotations(subinstance)
+        lifecycleevent.created(course)
     else:
         subinstance = course.SubInstances[name]
-    # mark & set creator
-    creator = creator or current_principal().id
-    interface.alsoProvides(subinstance, ICreatedCourse)
-    subinstance.creator = creator
-    # make sure annotations are created to get a connection
-    create_annotations(subinstance)
-    lifecycleevent.created(course)
     return subinstance
