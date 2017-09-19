@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-.. $Id$
+.. $Id: _bundle.py 116253 2017-06-29 13:32:06Z carlos.sanchez $
 """
 
 from __future__ import print_function, absolute_import, division
@@ -56,14 +56,15 @@ class CoursePersistentContentPackageBundle(PersistentContentPackageBundle):
         return PersistentContentPackageBundle.remove(self, context)
 
 
-def created_content_package_bundle(course, bucket=None):
+def created_content_package_bundle(course, bucket=None,
+                                   ntiid_factory=_ntiid_from_entry):
     created_bundle = False
     if course.ContentPackageBundle is None:
         bundle = CoursePersistentContentPackageBundle()
-        bundle.root = bucket
+        bundle.root = bucket or course.root
         bundle.__parent__ = course
         bundle.createdTime = bundle.lastModified = 0
-        bundle.ntiid = _ntiid_from_entry(bundle, 'Bundle:CourseBundle')
+        bundle.ntiid = ntiid_factory(bundle, 'Bundle:CourseBundle')
         # register w/ course and notify
         course.ContentPackageBundle = bundle
         lifecycleevent.created(bundle)
@@ -79,5 +80,5 @@ class _CourseContentBundleIO(ContentBundleIO):
     _excluded_in_ivars_ = getattr(ContentBundleIO, '_excluded_in_ivars_').union(
         {'ntiid'}
     )
-    
+
     validate_packages = True

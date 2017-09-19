@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-.. $Id$
+.. $Id: creator.py 120978 2017-09-01 02:40:47Z carlos.sanchez $
 
  TODO: Add support for AWS
 """
@@ -12,6 +12,7 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 import os
+import time
 import shutil
 
 from zope import component
@@ -21,6 +22,8 @@ from zope import lifecycleevent
 from zope.annotation.interfaces import IAnnotations
 
 from zope.component.hooks import getSite
+
+from zope.intid.interfaces import IIntIds
 
 from nti.coremetadata.utils import current_principal
 
@@ -32,14 +35,25 @@ from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnume
 
 from nti.contenttypes.courses import EVALUATION_INDEX_LAST_MODIFIED
 
+from nti.contenttypes.courses._bundle import created_content_package_bundle
+
 from nti.contenttypes.courses.courses import ContentCourseInstance
 from nti.contenttypes.courses.courses import ContentCourseSubInstance
 from nti.contenttypes.courses.courses import CourseAdministrativeLevel
 
 from nti.contenttypes.courses.interfaces import SECTIONS
+
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICreatedCourse
+from nti.contenttypes.courses.interfaces import IContentCourseInstance
 from nti.contenttypes.courses.interfaces import CourseAlreadyExistsException
+
+from nti.intid.common import addIntId
+
+from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import make_specific_safe
+
+from nti.zodb.containers import time_to_64bit_int
 
 
 def create_annotations(course):
@@ -115,7 +129,28 @@ def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
 create_admin_level = install_admin_level
 
 
-def create_course(admin, key, catalog=None, writeout=False, 
+def _create_bundle_ntiid(bundle, ntiid_type):
+    """
+    Create a bundle ntiid without us relying on our hierarchical path.
+    """
+    intids = component.queryUtility(IIntIds)
+    current_time = time_to_64bit_int(time.time())
+    bundle_id = None
+    if intids is not None:
+        addIntId(bundle)
+        bundle_id = intids.getId(bundle)
+
+    if bundle_id:
+        specific_base = '%s.%s' % (bundle_id, current_time)
+    else:
+        specific_base = current_time
+    specific = make_specific_safe(specific_base)
+    ntiid = make_ntiid(nttype=ntiid_type,
+                       specific=specific)
+    bundle.ntiid = ntiid
+
+
+def create_course(admin, key, catalog=None, writeout=False,
                   strict=False, creator=None, factory=ContentCourseInstance):
     """
     Creates a course
@@ -159,13 +194,16 @@ def create_course(admin, key, catalog=None, writeout=False,
         course = factory()
         course.root = course_root
         administrative_level[key] = course  # gain intid
-    # make sure annotations are created to get a connection
-    create_annotations(course)
-    # mark & set creator
-    creator = creator or current_principal().id
-    interface.alsoProvides(course, ICreatedCourse)
-    course.creator = creator
-    lifecycleevent.created(course)
+        # make sure annotations are created to get a connection
+        create_annotations(course)
+        # mark & set creator
+        creator = creator or current_principal().id
+        interface.alsoProvides(course, ICreatedCourse)
+        course.creator = creator
+        lifecycleevent.created(course)
+        if IContentCourseInstance.providedBy(course):
+            created_content_package_bundle(course, root,
+                                           ntiid_factory=_create_bundle_ntiid)
     return course
 
 
