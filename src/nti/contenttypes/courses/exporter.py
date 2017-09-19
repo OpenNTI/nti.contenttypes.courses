@@ -187,6 +187,10 @@ class BaseSectionExporter(object):
             bucket = None
         return bucket
 
+    @classmethod
+    def proxy(cls, obj, filer=None, backup=False, salt=None):
+        return export_proxy(obj, filer, backup, salt)
+
 
 @interface.implementer(ICourseSectionExporter)
 class CourseOutlineExporter(BaseSectionExporter):
@@ -279,7 +283,7 @@ class CourseOutlineExporter(BaseSectionExporter):
         course = ICourseInstance(context)
         filer.default_bucket = bucket = self.course_bucket(course)
         # as json
-        ext_obj = to_external_object(export_proxy(course.Outline, filer, backup, salt),
+        ext_obj = to_external_object(self.proxy(course.Outline, filer, backup, salt),
                                      name='exporter',
                                      decorate=False)
         if not backup:
@@ -315,7 +319,7 @@ class VendorInfoExporter(BaseSectionExporter):
         filer.default_bucket = bucket = self.course_bucket(course)
         verdor_info = get_course_vendor_info(course, False)
         if verdor_info:
-            ext_obj = to_external_object(export_proxy(verdor_info, filer, backup, salt),
+            ext_obj = to_external_object(self.proxy(verdor_info, filer, backup, salt),
                                          name="exporter",
                                          decorate=False,
                                          backup=backup, salt=salt)
@@ -353,7 +357,7 @@ class BundleMetaInfoExporter(BaseSectionExporter):
             'title': entry.Title,
             "ContentPackages": package_ntiids
         }
-        ext_obj = to_external_object(export_proxy(data, filer, backup, salt),
+        ext_obj = to_external_object(self.proxy(data, filer, backup, salt),
                                      decorate=False,
                                      backup=backup, salt=salt)
         source = self.dump(ext_obj)
@@ -508,9 +512,9 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
         result = {}
         policies = IQAssessmentPolicies(course)
         date_context = IQAssessmentDateContext(course)
-        assignments = to_external_object(export_proxy(policies, filer, backup, salt),
+        assignments = to_external_object(self.proxy(policies, filer, backup, salt),
                                          decorate=False)
-        date_context = to_external_object(export_proxy(date_context, filer, backup, salt),
+        date_context = to_external_object(self.proxy(date_context, filer, backup, salt),
                                           decorate=False)
 
         # Merge the date context externalized dict into the
@@ -556,7 +560,7 @@ class CourseInfoExporter(BaseSectionExporter):
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
         entry = ICourseCatalogEntry(course)
-        ext_obj = to_external_object(export_proxy(entry, filer, backup, salt),
+        ext_obj = to_external_object(self.proxy(entry, filer, backup, salt),
                                      name="exporter",
                                      decorate=False)
         source = self.dump(ext_obj)
