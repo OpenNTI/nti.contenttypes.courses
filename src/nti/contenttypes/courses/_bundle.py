@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-.. $Id: _bundle.py 116253 2017-06-29 13:32:06Z carlos.sanchez $
+.. $Id$
 """
 
 from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
 
 from six import string_types
 
@@ -32,6 +30,8 @@ from nti.ntiids.ntiids import find_object_with_ntiid
 from nti.wref.interfaces import IWeakRef
 
 ITEMS = StandardExternalFields.ITEMS
+
+logger = __import__('logging').getLogger(__name__)
 
 
 @interface.implementer(ICourseContentPackageBundle)
