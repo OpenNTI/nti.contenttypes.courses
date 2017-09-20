@@ -135,19 +135,16 @@ def _create_bundle_ntiid(bundle, ntiid_type):
     """
     intids = component.queryUtility(IIntIds)
     current_time = time_to_64bit_int(time.time())
-    bundle_id = None
     if intids is not None:
         addIntId(bundle)
         bundle_id = intids.getId(bundle)
-
-    if bundle_id:
         specific_base = '%s.%s' % (bundle_id, current_time)
     else:
         specific_base = current_time
     specific = make_specific_safe(specific_base)
     ntiid = make_ntiid(nttype=ntiid_type,
                        specific=specific)
-    bundle.ntiid = ntiid
+    return ntiid
 
 
 def create_course(admin, key, catalog=None, writeout=False,

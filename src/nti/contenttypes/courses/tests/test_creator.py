@@ -91,6 +91,7 @@ class TestCreator(CourseLayerTest):
             course = create_course(u"Bleach", u"Shikai", catalog, writeout=True)
             assert_that(course, is_not(none()))
             assert_that(course.ContentPackageBundle, is_not(none()))
+            assert_that(course.ContentPackageBundle.ntiid, is_not(none()))
             output = os.path.join(courses_path, 'Bleach/Shikai')
             assert_that(course,
                         has_property('root', has_property('absolute_path', is_(output))))
@@ -102,6 +103,7 @@ class TestCreator(CourseLayerTest):
             course = create_course(u"Bleach", u"Bankai", catalog, writeout=False)
             assert_that(course, is_not(none()))
             assert_that(course.ContentPackageBundle, is_not(none()))
+            assert_that(course.ContentPackageBundle.ntiid, is_not(none()))
             assert_that(course,
                         has_property('root', has_property('absolute_path', is_(output))))
         finally:
