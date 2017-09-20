@@ -29,6 +29,7 @@ from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
 
 from nti.contenttypes.courses.utils import grant_instructor_access_to_course
+from nti.contenttypes.courses.utils import add_principal_to_course_content_roles
 
 from nti.dataserver.users.users import User
 
@@ -108,7 +109,11 @@ def fill_roles_from_json(course, json):
             # and the adaptation failed
             pass
         else:
-            grant_instructor_access_to_course(user, course)
+            if is_instructor:
+                grant_instructor_access_to_course(user, course)
+            else:
+                # Editors need access to content
+                add_principal_to_course_content_roles(user, course)
     return True
 
 
