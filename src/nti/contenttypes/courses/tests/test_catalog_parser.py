@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
@@ -124,7 +125,15 @@ class TestCatalogParser(CourseLayerTest):
         assert_that(entry.StartDate, none())
         assert_that(entry.Duration, is_not(none()))
         assert_that(entry.EndDate, none())
-
+        
+        # don't allow the change the provider unique id 
+        assert_that(entry,
+                    has_properties('ProviderUniqueID', 'CLC 3403'))
+        json['id'] = json['ProviderUniqueID'] = 'CXXXX'
+        fill_entry_from_legacy_json(entry, json)
+        assert_that(entry,
+                    has_properties('ProviderUniqueID', 'CLC 3403'))
+    
     def test_start_and_end_date_parse(self):
         key = self.key
 
