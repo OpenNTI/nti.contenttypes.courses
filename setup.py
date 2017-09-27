@@ -1,7 +1,5 @@
-from setuptools import setup, find_packages
 import codecs
-
-VERSION = '0.0.0'
+from setuptools import setup, find_packages
 
 entry_points = {
     "z3c.autoinclude.plugin": [
@@ -9,15 +7,27 @@ entry_points = {
     ],
 }
 
+
+TESTS_REQUIRE = [
+    'nti.testing',
+    'zope.testrunner',
+]
+
+
+def _read(fname):
+    with codecs.open(fname, encoding='utf-8') as f:
+        return f.read()
+
+
 setup(
     name='nti.contenttypes.courses',
-    version=VERSION,
+    version=_read('version.txt').strip(),
     author='Jason Madden',
     author_email='jason@nextthought.com',
     description="Support for storing course information",
-    long_description=codecs.open('README.rst', encoding='utf-8').read(),
-    license='Proprietary',
-    keywords='pyramid preference',
+    long_description=(_read('README.rst') + '\n\n' + _read("CHANGES.rst")),
+    license='Apache',
+    keywords='courses',
     classifiers=[
         'Intended Audience :: Developers',
         'Natural Language :: English',
@@ -26,8 +36,11 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: Implementation :: CPython'
     ],
+    url="https://github.com/NextThought/nti.contenttypes.courses",
+    zip_safe=True,
     packages=find_packages('src'),
     package_dir={'': 'src'},
+    include_package_data=True,
     namespace_packages=['nti', 'nti.contenttypes'],
     install_requires=[
         'setuptools',
@@ -54,5 +67,13 @@ setup(
         'nti.traversal',
         'nti.zope_catalog',
     ],
-    entry_points=entry_points
+    extras_require={
+        'test': TESTS_REQUIRE,
+        'docs': [
+            'Sphinx',
+            'repoze.sphinx.autointerface',
+            'sphinx_rtd_theme',
+        ],
+    },
+    entry_points=entry_points,
 )
