@@ -6,10 +6,9 @@ A parser for the on-disk representation of catalog information.
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from urlparse import urljoin
 from datetime import datetime
@@ -22,6 +21,8 @@ from nti.contenttypes.courses.internalization import legacy_to_schema_transform
 from nti.externalization.internalization import update_from_external_object
 
 from nti.dataserver.users.entity import Entity
+
+logger = __import__('logging').getLogger(__name__)
 
 
 def prepare_json_text(s):

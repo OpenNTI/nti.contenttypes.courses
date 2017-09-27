@@ -4,10 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from datetime import timedelta
 from collections import Mapping
@@ -44,6 +43,8 @@ from nti.externalization.internalization import update_from_external_object
 ITEMS = StandardExternalFields.ITEMS
 NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
+
+logger = __import__('logging').getLogger(__name__)
 
 
 @component.adapter(ICourseOutlineNode)
@@ -118,10 +119,16 @@ def parse_duration(duration):
 
 
 def legacy_to_schema_transform(parsed, context=None, delete=False):
+    # handle provider unique id
+    if 'id' in parsed or 'ProviderUniqueID' in parsed:
+        if getattr(context, 'ProviderUniqueID', None):
+            [parsed.pop(x, None) for x in ('id', 'ProviderUniqueID')]
+        else:
+            parsed['ProviderUniqueID'] = parsed.get('ProviderUniqueID') or parsed.get('id')
+
     for field, key in (('Term', 'term'),  # XXX: non-interface
                        ('ntiid', 'ntiid'),
                        ('Title', 'title'),
-                       ('ProviderUniqueID', 'id'),
                        ('Description', 'description'),
                        ('RichDescription', 'richDescription'),
                        ('ProviderDepartmentTitle', 'school'),
