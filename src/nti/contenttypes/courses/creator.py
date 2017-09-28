@@ -141,7 +141,7 @@ def _create_bundle_ntiid(bundle, ntiid_type):
         bundle_id = intids.getId(bundle)
         specific_base = '%s.%s' % (bundle_id, current_time)
     else:
-        specific_base = current_time
+        specific_base = str(current_time)
     specific = make_specific_safe(specific_base)
     ntiid = make_ntiid(nttype=ntiid_type,
                        specific=specific)
