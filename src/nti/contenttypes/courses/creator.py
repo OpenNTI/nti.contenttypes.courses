@@ -6,8 +6,9 @@
  TODO: Add support for AWS
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 import os
 import time
@@ -100,7 +101,7 @@ def _get_course_bucket(catalog, site):
     return courses_bucket
 
 
-def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
+def install_admin_level(admin_name, catalog=None, site=None, writeout=True, parents=True):
     site = getSite() if site is None else site
     catalog = course_catalog(catalog)
     courses_bucket = _get_course_bucket(catalog, site)
@@ -119,7 +120,7 @@ def install_admin_level(admin_name, catalog=None, site=None, writeout=True):
             admin_root.bucket = courses_bucket
             admin_root.absolute_path = path
     # Create admin level; do not want to overwrite parent catalog levels.
-    if admin_name not in catalog.get_admin_levels():
+    if admin_name not in catalog.get_admin_levels(parents):
         result = CourseAdministrativeLevel()
         result.root = admin_root
         catalog[admin_name] = result

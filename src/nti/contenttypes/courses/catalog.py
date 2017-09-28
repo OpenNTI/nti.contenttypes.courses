@@ -6,10 +6,9 @@ Implementations of course catalogs.
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from datetime import datetime
 from functools import total_ordering
@@ -67,6 +66,8 @@ from nti.schema.schema import PermissiveSchemaConfigured as SchemaConfigured
 from nti.site.localutility import queryNextUtility
 
 from nti.traversal.traversal import find_interface
+
+logger = __import__('logging').getLogger(__name__)
 
 
 def _queryNextCatalog(context):
@@ -147,17 +148,18 @@ class _AbstractCourseCatalogMixin(object):
             raise KeyError(name)
         return parent.getCatalogEntry(name)
 
-    def get_admin_levels(self):
+    def get_admin_levels(self, parents=True):
         # XXX: Check recursively?
         result = dict()
         for key, val in self.items():
             if ICourseAdministrativeLevel.providedBy(val):
                 result[key] = val
-        parent = self._next_catalog
-        if parent is not None:
-            for key, val in parent.get_admin_levels().items():
-                if key not in result:
-                    result[key] = val
+        if parents:
+            parent = self._next_catalog
+            if parent is not None:
+                for key, val in parent.get_admin_levels().items():
+                    if key not in result:
+                        result[key] = val
         return result
     getAdminLevels = get_admin_levels
 
