@@ -136,7 +136,7 @@ def proxy_params(obj):
     if isProxy(obj, ExportObjectProxy):
         result = {
             'salt': obj.salt,
-            'filer': obj.filer,      
+            'filer': obj.filer,
             'backup': obj.backup
         }
     return result or {}
@@ -173,9 +173,9 @@ class BaseSectionExporter(object):
 
     def dump(self, ext_obj):
         source = StringIO()
-        simplejson.dump(ext_obj, 
-                        source, 
-                        indent='\t', 
+        simplejson.dump(ext_obj,
+                        source,
+                        indent='\t',
                         sort_keys=True)
         source.seek(0)
         return source
@@ -335,13 +335,15 @@ class VendorInfoExporter(BaseSectionExporter):
 @interface.implementer(ICourseSectionExporter)
 class BundleMetaInfoExporter(BaseSectionExporter):
 
-    def _get_package_ntiids(self, course, backup, salt):
+    def _get_package_ntiids(self, course, backup):
+        """
+        Get the bundle packages for export; we only need the content-backed
+        packages if not backing up.
+        """
         for package in get_course_packages(course):
             if backup:
                 yield package.ntiid
-            elif IEditableContentPackage.providedBy(package):
-                yield self.hash_ntiid(package.ntiid, salt)
-            else:
+            elif not IEditableContentPackage.providedBy(package):
                 yield package.ntiid
 
     def export(self, context, filer, backup=True, salt=None):
@@ -350,7 +352,7 @@ class BundleMetaInfoExporter(BaseSectionExporter):
         if ICourseSubInstance.providedBy(course):
             return
         entry = ICourseCatalogEntry(course)
-        package_ntiids = list(self._get_package_ntiids(course, backup, salt))
+        package_ntiids = list(self._get_package_ntiids(course, backup))
         data = {
             'ntiid': u'',
             'title': entry.Title,
