@@ -4,10 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from zope import component
 
@@ -39,8 +38,6 @@ from nti.contentlibrary.interfaces import IContentPackageRemovedEvent
 from nti.contentlibrary.interfaces import IPersistentContentPackageLibrary
 from nti.contentlibrary.interfaces import IContentPackageLibraryDidSyncEvent
 from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnumeration
-
-from nti.contentlibrary.wref import contentunit_wref_to_missing_ntiid
 
 from nti.contenttypes.courses import get_enrollment_catalog
 
@@ -97,14 +94,11 @@ from nti.contenttypes.courses.utils import unindex_course_roles
 from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.courses.utils import index_course_instructor
 from nti.contenttypes.courses.utils import get_content_unit_courses
-from nti.contenttypes.courses.utils import get_courses_for_packages
 
 from nti.dataserver.interfaces import IUser
 from nti.dataserver.users.interfaces import IWillDeleteEntityEvent
 
 from nti.intid.common import removeIntId
-
-from nti.ntiids.interfaces import IUpdatedNTIIDEvent
 
 from nti.recorder.utils import record_transaction
 
@@ -112,6 +106,9 @@ from nti.site.localutility import install_utility
 from nti.site.localutility import uninstall_utility_on_unregistration
 
 from nti.site.utils import registerUtility
+
+logger = __import__('logging').getLogger(__name__)
+
 
 # XXX: This is very similar to nti.contentlibrary.subscribers
 
@@ -477,26 +474,6 @@ def _update_course_bundle_on_package_removal(package, _):
                     package.ntiid, entry.ntiid)
         course.ContentPackageBundle.remove(package)
         notify(CourseBundleWillUpdateEvent(course, removed_packages=(package,)))
-
-
-@component.adapter(IContentPackage, IUpdatedNTIIDEvent)
-def _package_ntiid_updated(package, event):
-    """
-    When a content package changes ntiids, change our bundle
-    ref appropriately.
-    """
-    courses = get_courses_for_packages(event.old_ntiid)
-    for course in courses or ():
-        entry = ICourseCatalogEntry(course)
-        logger.info('Changing package ref in course (%s) (old_ntiid=%s) (%s)',
-                    package.ntiid, event.old_ntiid, entry.ntiid)
-        course.ContentPackageBundle.add(package)
-        # XXX: a lot of underlying knowledge here
-        old_ref = contentunit_wref_to_missing_ntiid( event.old_ntiid )
-        course.ContentPackageBundle.remove(old_ref)
-        # XXX: Removed packages?
-        notify(CourseBundleWillUpdateEvent(course,
-                                           added_packages=(package,)))
 
 
 @component.adapter(IUser, ICourseInstructorAddedEvent)
