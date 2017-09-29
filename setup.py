@@ -66,6 +66,11 @@ setup(
         'nti.site',
         'nti.traversal',
         'nti.zope_catalog',
+        'zope.component',
+        'zope.annotation',
+        'zope.generations',
+        'zope.security',
+        'zope.securitypolicy',
     ],
     extras_require={
         'test': TESTS_REQUIRE,
