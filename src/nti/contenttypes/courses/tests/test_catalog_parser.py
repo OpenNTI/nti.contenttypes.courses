@@ -125,15 +125,7 @@ class TestCatalogParser(CourseLayerTest):
         assert_that(entry.StartDate, none())
         assert_that(entry.Duration, is_not(none()))
         assert_that(entry.EndDate, none())
-        
-        # don't allow the change the provider unique id 
-        assert_that(entry,
-                    has_properties('ProviderUniqueID', 'CLC 3403'))
-        json['id'] = json['ProviderUniqueID'] = 'CXXXX'
-        fill_entry_from_legacy_json(entry, json)
-        assert_that(entry,
-                    has_properties('ProviderUniqueID', 'CLC 3403'))
-    
+
     def test_start_and_end_date_parse(self):
         key = self.key
 
