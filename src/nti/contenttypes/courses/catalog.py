@@ -260,7 +260,6 @@ class CourseCatalogInstructorInfo(SchemaConfigured):
 
 
 @WithRepr
-@EqHash('ProviderUniqueID')
 @interface.implementer(ICatalogFamily)
 class CatalogFamily(SchemaConfigured,
                     DisplayableContentMixin):
