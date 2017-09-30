@@ -1,0 +1,12 @@
+{
+	"NTI": {
+		"DefaultSharingScope" : "Parent/Public",
+		"SharingScopesDisplayInfo": {
+			"Public": {
+				"alias": "From Vendor Info",
+				"realname": "",
+				"avatarURL": "/foo/bar.jpg"
+			}
+		}
+	}
+}

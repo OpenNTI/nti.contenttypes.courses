@@ -31,6 +31,7 @@ from nti.contentlibrary.interfaces import IContentUnitAnnotationUtility
 from nti.contentlibrary.subscribers import install_site_content_library
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 
 from nti.contenttypes.courses.tests import CourseLayerTest
@@ -51,7 +52,7 @@ class TestFunctionalSubscribers(CourseLayerTest):
         component.getGlobalSiteManager().unregisterUtility(self.global_library,
                                                            provided=IContentPackageLibrary)
 
-    def test_install_site_library_instals_catalog(self):
+    def test_install_site_library_installs_catalog(self):
 
         site = Folder()
         site.__name__ = u'localsite'
@@ -82,3 +83,12 @@ class TestFunctionalSubscribers(CourseLayerTest):
 
         assert_that(sec1.ContentPackageBundle,
                     is_(gateway.ContentPackageBundle))
+
+        assert_that(ICourseCatalogEntry(gateway).ProviderUniqueID,
+                    is_('CLC 3403'))
+        assert_that(ICourseCatalogEntry(sec1).ProviderUniqueID,
+                    is_('CLC 3403-01'))
+        # Inherits from the parent
+        sec2 = gateway.SubInstances['02']
+        assert_that(ICourseCatalogEntry(sec2).ProviderUniqueID,
+                    is_('CLC 3403'))

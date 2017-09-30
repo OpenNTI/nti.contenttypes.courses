@@ -119,17 +119,11 @@ def parse_duration(duration):
 
 
 def legacy_to_schema_transform(parsed, context=None, delete=False):
-    # handle provider unique id
-    if 'id' in parsed or 'ProviderUniqueID' in parsed:
-        if getattr(context, 'ProviderUniqueID', None):
-            [parsed.pop(x, None) for x in ('id', 'ProviderUniqueID')]
-        else:
-            parsed['ProviderUniqueID'] = parsed.get('ProviderUniqueID') or parsed.get('id')
-
     for field, key in (('Term', 'term'),  # XXX: non-interface
                        ('ntiid', 'ntiid'),
                        ('Title', 'title'),
                        ('Description', 'description'),
+                       ('ProviderUniqueID', 'id'),
                        ('RichDescription', 'richDescription'),
                        ('ProviderDepartmentTitle', 'school'),
                        ('InstructorsSignature', 'InstructorsSignature')):

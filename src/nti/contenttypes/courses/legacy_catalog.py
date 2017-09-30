@@ -267,9 +267,8 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
                                            DisplayableContentMixin,
                                            PersistentCreatedAndModifiedTimeObject):
     """
-    The entry for a sub-instance is writable, but
-    any value it does not have it inherits from
-    the closest parent.
+    The entry for a sub-instance is writable, but any value it does not have
+    it inherits from the closest parent.
 
     We always maintain our own created and modification dates, though.
     """
