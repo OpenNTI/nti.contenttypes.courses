@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-NTIID support for course-related objects.
-
 .. $Id$
 """
 
@@ -14,10 +12,16 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
+from nti.contenttypes.courses.interfaces import NTIID_ENTRY_TYPE
+
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
+from nti.contenttypes.courses.interfaces import IContentCourseInstance
 
 from nti.ntiids.interfaces import INTIIDResolver
+
+from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 
 @interface.implementer(INTIIDResolver)
@@ -44,3 +48,17 @@ class _CourseOutlineNodeNTIIDResolver(object):
     def resolve(self, ntiid):
         result = component.queryUtility(ICourseOutlineNode, name=ntiid)
         return result
+
+
+@interface.implementer(INTIIDResolver)
+class _CourseBundleNTIIDResolver(object):
+    """
+    Resolves course bundles
+    """
+
+    def resolve(self, ntiid):
+        ntiid = make_ntiid(nttype=NTIID_ENTRY_TYPE, base=ntiid)
+        course = IContentCourseInstance(find_object_with_ntiid(ntiid), None)
+        if course is not None:
+            return course.ContentPackageBundle
+        return None

@@ -232,6 +232,9 @@
 	<!-- outline nodes can be resolved by ntiid -->
 	<utility factory=".ntiids._CourseOutlineNodeNTIIDResolver" name="NTICourseOutlineNode" />
 
+	<!-- course bundles can be resolved by ntiid -->
+	<utility factory=".ntiids._CourseBundleNTIIDResolver" name="Bundle:CourseBundle" />
+	
 	<!-- Enrollment -->
 	<adapter factory=".enrollment.DefaultCourseEnrollmentManager" />
 
