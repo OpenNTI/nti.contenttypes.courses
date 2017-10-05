@@ -6,10 +6,9 @@ Support for assessments/assignment.
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from collections import Mapping
 
@@ -42,6 +41,8 @@ from nti.externalization.persistence import NoPickle
 
 MappingClass = OOBTree
 
+logger = __import__('logging').getLogger(__name__)
+
 
 @interface.implementer(IQAssessmentDateContext)
 class EmptyAssessmentDateContext(object):
@@ -51,7 +52,7 @@ class EmptyAssessmentDateContext(object):
     Not registered, but useful for testing.
     """
 
-    def __init__(self, context):
+    def __init__(self, context=None):
         pass
 
     def assessments(self):
@@ -64,7 +65,7 @@ class EmptyAssessmentDateContext(object):
     def clear(self):
         pass
 
-    def get(self, assessment, key, default=None):
+    def get(self, default=None, *unused_args, **unused_kwargs):
         return default
 
     def set(self, assessment, name, value):
