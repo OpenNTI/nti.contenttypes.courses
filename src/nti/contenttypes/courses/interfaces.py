@@ -83,7 +83,7 @@ from nti.dataserver.contenttypes.forums.interfaces import IBoard
 
 from nti.dataserver.users.interfaces import IDisallowMembershipOperations
 
-from nti.invitations.interfaces import IInvitation
+from nti.invitations.interfaces import IUserInvitation
 from nti.invitations.interfaces import IInvitationActor
 
 from nti.ntiids.schema import ValidNTIID
@@ -1720,7 +1720,7 @@ class CourseNotFoundException(CourseInvitationException):
     i18n_message = __doc__
 
 
-class IJoinCourseInvitation(IInvitation):
+class IJoinCourseInvitation(IUserInvitation):
     """
     Marker interface for a invitation to join a course
     """
@@ -1864,7 +1864,7 @@ class ICourseSectionExporterExecutedEvent(IObjectEvent):
 
 @interface.implementer(ICourseSectionExporterExecutedEvent)
 class CourseSectionExporterExecutedEvent(ObjectEvent):
-    
+
     def __init__(self, course, exporter, filer=None, backup=True, salt=None):
         ObjectEvent.__init__(self, course)
         self.salt = salt
@@ -1881,7 +1881,7 @@ class ICourseSectionImporterExecutedEvent(IObjectEvent):
 
 @interface.implementer(ICourseSectionImporterExecutedEvent)
 class CourseSectionImporterExecutedEvent(ObjectEvent):
-    
+
     def __init__(self, course, importer, filer=None, writeout=False):
         ObjectEvent.__init__(self, course)
         self.filer = filer
@@ -1907,7 +1907,7 @@ class CourseInstanceRemovedEvent(ObjectEvent):
         super(CourseInstanceRemovedEvent, self).__init__(obj)
         self.site = site
         self.entry = entry
-        
+
     @property
     def course(self):
         return self.object
