@@ -485,6 +485,9 @@ class CourseImporter(object):
     def process(self, context, filer, writeout=True):
         now = time.time()
         course = ICourseInstance(context)
+        if     ICourseSubInstance.providedBy(course) \
+            or not IFilesystemBucket.providedBy(course.root):
+            self.makedirs(course.root.absolute_path)
         for name, importer in sorted(component.getUtilitiesFor(ICourseSectionImporter)):
             current = time.time()
             logger.info("Processing %s", name)
