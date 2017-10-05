@@ -4,20 +4,20 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 import os
 import six
 import time
 import mimetypes
-from six import StringIO
 from numbers import Number
 from datetime import datetime
 from collections import Mapping
 from collections import Iterable
+
+from six.moves import cStringIO
 
 from xml.dom import minidom
 
@@ -100,6 +100,8 @@ INTERNAL_NTIID = StandardInternalFields.NTIID
 
 _primitives = six.string_types + (Number, bool)
 
+logger = __import__('logging').getLogger(__name__)
+
 
 class ExportObjectProxy(ProxyBase):
 
@@ -172,7 +174,7 @@ class BaseSectionExporter(object):
         return root + ext
 
     def dump(self, ext_obj):
-        source = StringIO()
+        source = cStringIO()
         simplejson.dump(ext_obj,
                         source,
                         indent='\t',
@@ -347,6 +349,7 @@ class BundleMetaInfoExporter(BaseSectionExporter):
                 yield package.ntiid
 
     def export(self, context, filer, backup=True, salt=None):
+        __traceback_info__ = context, backup, salt
         filer.default_bucket = None
         course = ICourseInstance(context)
         if ICourseSubInstance.providedBy(course):
