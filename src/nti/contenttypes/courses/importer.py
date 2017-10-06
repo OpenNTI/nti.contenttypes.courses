@@ -4,10 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 import os
 import time
@@ -95,6 +94,13 @@ from nti.traversal.traversal import find_interface
 
 BUNDLE_DC_METADATA = "bundle_dc_metadata.xml"
 
+logger = __import__('logging').getLogger(__name__)
+
+
+def makedirs(path):
+    if path and not os.path.exists(path):
+        os.makedirs(path)
+
 
 @interface.implementer(ICourseSectionImporter)
 class BaseSectionImporter(object):
@@ -132,8 +138,7 @@ class BaseSectionImporter(object):
         return result
 
     def makedirs(self, path):
-        if path and not os.path.exists(path):
-            os.makedirs(path)
+        makedirs(path)
 
 
 @interface.implementer(ICourseSectionImporter)
@@ -473,6 +478,9 @@ class BundleMetaInfoImporter(BaseSectionImporter):
 
 @interface.implementer(ICourseImporter)
 class CourseImporter(object):
+
+    def makedirs(self, path):
+        makedirs(path)
 
     def _mark_sync(self, context):
         now = time.time()
