@@ -427,6 +427,7 @@ class CourseCatalogFolder(_AbstractCourseCatalogMixin,
 
     @cachedIn('_v_all_my_entries')
     def _get_all_my_entries(self):
+        logger.info("Building catalog entry cache (%s)", self)
         entries = dict()
 
         def _recur(folder):
@@ -494,6 +495,7 @@ def _clear_catalog_cache_when_course_updated(course, event):
     for catalog in catalogs:
         try:
             catalog._get_all_my_entries.invalidate(catalog)
+            logger.info("Invalidated catalog entry cache (%s)", catalog)
         except AttributeError:  # pragma: no cover
             pass
         if hasattr(catalog, '_p_changed') and catalog._p_jar:
