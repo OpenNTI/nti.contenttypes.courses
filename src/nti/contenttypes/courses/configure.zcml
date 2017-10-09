@@ -118,11 +118,11 @@
 	<subscriber factory=".decorators._CourseInstanceSharingScopeDecorator"
 				for=".interfaces.ICourseInstanceSharingScope"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
-				
+
 	<subscriber factory=".decorators._CourseNonPublicStatusDecorator"
 				for=".interfaces.ICourseCatalogEntry"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
-	
+
 	<subscriber factory=".decorators._CourseNonPublicStatusDecorator"
                 for=".interfaces.ICourseInstance"
                 provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
@@ -219,6 +219,10 @@
 					 zope.lifecycleevent.IObjectRemovedEvent" />
 
 	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
+                for=".interfaces.ICourseInstance
+                     .interfaces.ICourseInstanceRemovedEvent" />
+
+	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
 				for=".interfaces.ICourseInstance
 					 .interfaces.ICourseInstanceImportedEvent" />
 
@@ -234,7 +238,7 @@
 
 	<!-- course bundles can be resolved by ntiid -->
 	<utility factory=".ntiids._CourseBundleNTIIDResolver" name="Bundle:CourseBundle" />
-	
+
 	<!-- Enrollment -->
 	<adapter factory=".enrollment.DefaultCourseEnrollmentManager" />
 
@@ -389,7 +393,7 @@
 	<!-- Site -->
 	<adapter factory=".adapters._entry_to_site" />
 	<adapter factory=".adapters._course_to_site" />
-	
+
 	<!-- Outline nodes -->
 	<adapter factory=".adapters._outlinenode_to_course" />
 
