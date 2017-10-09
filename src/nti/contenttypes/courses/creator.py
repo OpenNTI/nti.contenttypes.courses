@@ -203,6 +203,8 @@ def create_course(admin, key, catalog=None, writeout=False,
         creator = creator or current_principal().id
         interface.alsoProvides(course, ICreatedCourse)
         course.creator = creator
+        getattr(course, 'Discussions')
+        getattr(course, 'SharingScopes')
         lifecycleevent.created(course)
         # create a bundle
         if IContentCourseInstance.providedBy(course):
@@ -255,6 +257,8 @@ def create_course_subinstance(course, name, writeout=False, creator=None,
         subinstance.creator = creator
         # make sure annotations are created to get a connection
         create_annotations(subinstance)
+        getattr(course, 'Discussions')
+        getattr(course, 'SharingScopes')
         lifecycleevent.created(course)
     else:
         subinstance = course.SubInstances[name]
