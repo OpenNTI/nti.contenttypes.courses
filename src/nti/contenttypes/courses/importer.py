@@ -493,7 +493,8 @@ class CourseImporter(object):
     def process(self, context, filer, writeout=True):
         now = time.time()
         course = ICourseInstance(context)
-        if     not ICourseSubInstance.providedBy(course) \
+        if      writeout \
+            and not ICourseSubInstance.providedBy(course) \
             and IFilesystemBucket.providedBy(course.root):
             self.makedirs(course.root.absolute_path)
         for name, importer in sorted(component.getUtilitiesFor(ICourseSectionImporter)):
