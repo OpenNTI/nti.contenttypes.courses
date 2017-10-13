@@ -427,7 +427,7 @@ class CourseCatalogFolder(_AbstractCourseCatalogMixin,
 
     @cachedIn('_v_all_my_entries')
     def _get_all_my_entries(self):
-        logger.info("Building catalog entry cache (%s)", self)
+        logger.debug("Building catalog entry cache (%s)", self)
         entries = dict()
 
         def _recur(folder):
