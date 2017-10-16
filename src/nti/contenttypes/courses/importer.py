@@ -38,6 +38,8 @@ from nti.contentlibrary.filesystem import FilesystemBucket
 
 from nti.contentlibrary.interfaces import IFilesystemBucket
 
+from nti.contentlibrary.presentationresource import get_platform_presentation_resources
+
 from nti.contenttypes.courses._assessment_override_parser import fill_asg_from_json
 
 from nti.contenttypes.courses._bundle import created_content_package_bundle
@@ -330,16 +332,22 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
                 source = filer.get(path)
                 transfer_to_native_file(source, new_path)
 
-    def process(self, context, filer, writeout=True):
-        course = ICourseInstance(context)
-        root = course.root  # must exists
-        if not IFilesystemBucket.providedBy(root) or not writeout:
-            return
+    def _do_import(self, course, filer):
         path = self.course_bucket_path(course) + self.__PA__
         if filer.is_bucket(path):
+            root = course.root
             root_path = os.path.join(root.absolute_path, self.__PA__)
             shutil.rmtree(root_path, True)  # not merging
             self._transfer(filer, path, root_path)
+            if not course.PlatformPresentationResources:
+                resources = get_platform_presentation_resources(root)
+                course.PlatformPresentationResources = resources
+
+    def process(self, context, filer, writeout=True):
+        course = ICourseInstance(context)
+        if not IFilesystemBucket.providedBy(course.root) or not writeout:
+            return
+        self._do_import(course, filer)
         for sub_instance in get_course_subinstances(course):
             self.process(sub_instance, filer, writeout=writeout)
 
