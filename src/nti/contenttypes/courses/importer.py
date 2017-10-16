@@ -339,9 +339,8 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
             root_path = os.path.join(root.absolute_path, self.__PA__)
             shutil.rmtree(root_path, True)  # not merging
             self._transfer(filer, path, root_path)
-            if not course.PlatformPresentationResources:
-                resources = get_platform_presentation_resources(root)
-                course.PlatformPresentationResources = resources
+            resources = get_platform_presentation_resources(root)
+            course.PlatformPresentationResources = resources
 
     def process(self, context, filer, writeout=True):
         course = ICourseInstance(context)
