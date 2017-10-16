@@ -38,8 +38,6 @@ from nti.contentlibrary.filesystem import FilesystemBucket
 
 from nti.contentlibrary.interfaces import IFilesystemBucket
 
-from nti.contentlibrary.presentationresource import get_platform_presentation_resources
-
 from nti.contenttypes.courses._assessment_override_parser import fill_asg_from_json
 
 from nti.contenttypes.courses._bundle import created_content_package_bundle
@@ -285,8 +283,7 @@ class RoleInfoImporter(BaseSectionImporter):
             if writeout and IFilesystemBucket.providedBy(course.root):
                 source = self.safe_get(filer, path)  # reload
                 self.makedirs(course.root.absolute_path)
-                new_path = os.path.join(
-                    course.root.absolute_path, ROLE_INFO_NAME)
+                new_path = os.path.join(course.root.absolute_path, ROLE_INFO_NAME)
                 transfer_to_native_file(source, new_path)
         # process subinstances
         for sub_instance in get_course_subinstances(course):
@@ -339,8 +336,13 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
             root_path = os.path.join(root.absolute_path, self.__PA__)
             shutil.rmtree(root_path, True)  # not merging
             self._transfer(filer, path, root_path)
-            resources = get_platform_presentation_resources(root)
-            course.PlatformPresentationResources = resources
+            # create bundle if required
+            if course.PlatformPresentationResources is None:
+                created_bundle = created_content_package_bundle(course, root)
+                if created_bundle:
+                    lifecycleevent.created(course.ContentPackageBundle)
+            else: # reset root
+                course.ContentPackageBundle.root = root
 
     def process(self, context, filer, writeout=True):
         course = ICourseInstance(context)
