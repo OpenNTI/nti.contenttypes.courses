@@ -4,16 +4,13 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 import os
 import six
-
-from urllib import unquote
-from urlparse import urlparse
+from six.moves import urllib_parse
 
 from zope.security.interfaces import IPrincipal
 
@@ -45,6 +42,8 @@ from nti.traversal.traversal import find_interface
 ENROLLED_COURSE_ROOT = u':EnrolledCourseRoot'
 ENROLLED_COURSE_SECTION = u':EnrolledCourseSection'
 
+logger = __import__('logging').getLogger(__name__)
+
 
 def get_discussion_id(discussion):
     result = getattr(discussion, 'id', discussion)
@@ -53,7 +52,7 @@ def get_discussion_id(discussion):
 
 def is_nti_course_bundle(discussion):
     iden = get_discussion_id(discussion)
-    parts = urlparse(iden) if iden else None
+    parts = urllib_parse.urlparse(iden) if iden else None
     result = NTI_COURSE_BUNDLE == parts.scheme if parts else False
     return result
 
@@ -69,8 +68,8 @@ def get_discussion_path(discussion):
 def get_discussion_key(discussion):
     iden = get_discussion_id(discussion)
     if is_nti_course_bundle(iden):
-        parts = urlparse(iden)
-        result = os.path.split(unquote(parts.path))
+        parts = urllib_parse.urlparse(iden)
+        result = os.path.split(urllib_parse.unquote(parts.path))
         return result[1]
     return None
 
