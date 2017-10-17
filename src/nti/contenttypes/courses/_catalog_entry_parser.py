@@ -10,9 +10,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-from urlparse import urljoin
 from datetime import datetime
 from collections import Mapping
+from six.moves.urllib_parse import urljoin
 
 from nti.contentlibrary.dublincore import read_dublincore_from_named_key
 
