@@ -6,10 +6,9 @@ Reads the instructor role grants and synchronizes them.
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from zope import component
 
@@ -32,6 +31,8 @@ from nti.contenttypes.courses.utils import grant_instructor_access_to_course
 from nti.contenttypes.courses.utils import add_principal_to_course_content_roles
 
 from nti.dataserver.users.users import User
+
+logger = __import__('logging').getLogger(__name__)
 
 
 def _populate_roles_from_json(course, manager, json):

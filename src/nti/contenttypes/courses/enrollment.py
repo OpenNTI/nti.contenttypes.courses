@@ -6,10 +6,9 @@ Implementations of enrollment related structures and utilities.
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 import six
 import sys
@@ -93,6 +92,8 @@ from nti.schema.fieldproperty import FieldProperty
 from nti.schema.schema import SchemaConfigured
 
 from nti.wref.interfaces import IWeakRef
+
+logger = __import__('logging').getLogger(__name__)
 
 # BWC definition
 ICourseInstanceEnrollmentRecordContainer = ICourseInstanceEnrollmentRecordContainer

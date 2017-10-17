@@ -4,11 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from zope import interface
 from zope import lifecycleevent
@@ -21,6 +19,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.dataserver.users.interfaces import IAvatarURL
 from nti.dataserver.users.interfaces import IBackgroundURL
 from nti.dataserver.users.interfaces import IFriendlyNamed
+
+logger = __import__('logging').getLogger(__name__)
 
 
 def update_sharing_scopes_friendly_names(course):

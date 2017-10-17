@@ -4,10 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from collections import Mapping
 
@@ -61,6 +60,8 @@ INTERNAL_NTIID = StandardInternalFields.NTIID
 
 CONTENT_NTIID = u'ContentNTIID'
 LESSON_OVERVIEW_NTIID = u'LessonOverviewNTIID'
+
+logger = __import__('logging').getLogger(__name__)
 
 
 @component.adapter(ICourseInstanceEnrollmentRecord)

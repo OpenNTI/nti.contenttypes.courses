@@ -4,10 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from zope import component
 from zope import interface
@@ -22,6 +21,8 @@ from nti.ntiids.interfaces import INTIIDResolver
 
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import find_object_with_ntiid
+
+logger = __import__('logging').getLogger(__name__)
 
 
 @interface.implementer(INTIIDResolver)
