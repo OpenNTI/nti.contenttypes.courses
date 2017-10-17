@@ -6,10 +6,9 @@ Implementation of the course outline structure.
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 import time
 from functools import total_ordering
@@ -57,6 +56,8 @@ from nti.schema.fieldproperty import createDirectFieldProperties
 # does not load the state of our object.
 # See:
 # http://www.zodb.org/en/latest/guide/writing-persistent-objects.html#things-you-can-do-but-need-to-carefully-consider-advanced
+
+logger = __import__('logging').getLogger(__name__)
 
 
 @total_ordering

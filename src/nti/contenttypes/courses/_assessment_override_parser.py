@@ -6,10 +6,9 @@ Reads the assignment overrides and policies and synchronizes them.
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from collections import Mapping
 
@@ -22,6 +21,8 @@ from nti.contenttypes.courses.interfaces import SUPPORTED_PVE_INT_KEYS
 from nti.externalization.datetime import datetime_from_string
 
 from nti.ntiids.ntiids import validate_ntiid_string
+
+logger = __import__('logging').getLogger(__name__)
 
 
 def reset_asg_missing_key(course, force=False):
