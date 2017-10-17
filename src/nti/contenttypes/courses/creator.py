@@ -158,6 +158,11 @@ def create_course(admin, key, catalog=None, writeout=False,
     :param strict If True, raises an error when the key already exists,
     otherwise returns the existing course by default.
     """
+    if not key:
+        raise ValueError("Must specify a course name")
+    if not admin:
+        raise ValueError("Must specify an administrative level key")
+
     catalog = course_catalog(catalog)
     if admin not in catalog:
         install_admin_level(admin, catalog, writeout=writeout)
