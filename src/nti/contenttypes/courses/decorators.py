@@ -76,7 +76,8 @@ class _CourseNonPublicStatusDecorator(Singleton):
 
     def decorateExternalObject(self, original, external):
         if 'is_non_public' not in external:
-            external['is_non_public'] = INonPublicCourseInstance.providedBy(original)
+            is_non_public = INonPublicCourseInstance.providedBy(original)
+            external['is_non_public'] = is_non_public
 
 
 @component.adapter(ICourseInstance)
@@ -87,9 +88,11 @@ class _CourseAdminLevelDecorator(Singleton):
     def decorateExternalObject(self, original, external):
         course = ICourseInstance(original, None)
         if course is not None:
-            admin = find_interface(course, ICourseAdministrativeLevel, strict=False)
+            admin = find_interface(course, ICourseAdministrativeLevel, 
+                                   strict=False)
             if admin is not None:
                 external['AdminLevel'] = admin.__name__
+
 
 @component.adapter(ICourseInstance)
 @component.adapter(ICourseCatalogEntry)

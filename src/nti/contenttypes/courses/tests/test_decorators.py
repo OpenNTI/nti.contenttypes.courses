@@ -13,11 +13,15 @@ from hamcrest import has_entries
 
 import fudge
 
+from zope import interface
+
 from nti.contentlibrary.filesystem import FilesystemBucket
 
 from nti.contenttypes.courses.catalog import CourseCatalogFolder
 
 from nti.contenttypes.courses.creator import create_course
+
+from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 
@@ -40,7 +44,10 @@ class TestDecorators(CourseLayerTest):
         catalog.__name__ = u'Courses'
         catalog.__parent__ = folder
         course = create_course(u"Bleach", u"Shikai", catalog, writeout=True)
+        interface.alsoProvides(course, INonPublicCourseInstance)
+        
         ext_obj = to_external_object(course)
         assert_that(ext_obj, 
                     has_entries('AdminLevel', 'Bleach',
-                                'Site', 'bleach.org'))
+                                'Site', 'bleach.org',
+                                'is_non_public', True))
