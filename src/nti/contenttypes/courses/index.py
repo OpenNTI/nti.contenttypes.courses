@@ -276,6 +276,7 @@ def install_enrollment_catalog(site_manager_container, intids=None):
 
 
 IX_NAME = 'name'
+IX_TAGS = 'tags'
 IX_KEYWORDS = 'keywords'
 IX_PACKAGES = 'packages'
 COURSES_CATALOG_NAME = 'nti.dataserver.++etc++courses-catalog'
@@ -354,6 +355,25 @@ class CoursePackagesIndex(AttributeSetIndex):
     default_interface = ValidatingCoursePackages
 
 
+class ValidatingCourseTags(object):
+
+    __slots__ = ('tags',)
+
+    def __init__(self, obj, unused_default=None):
+        if     ICourseInstance.providedBy(obj) \
+            or ICourseCatalogEntry.providedBy(obj):
+            entry = ICourseCatalogEntry(obj, None)
+            self.tags = getattr(entry, 'tags', None)
+
+    def __reduce__(self):
+        raise TypeError()
+
+
+class CourseTagsIndex(AttributeKeywordIndex):
+    default_field_name = 'tags'
+    default_interface = ValidatingCourseTags
+
+
 class CourseKeywordsIndex(AttributeKeywordIndex):
     default_field_name = 'keywords'
     default_interface = ICourseKeywords
@@ -373,6 +393,7 @@ def create_courses_catalog(catalog=None, family=BTrees.family64):
         catalog = CoursesCatalog(family=family)
     for name, clazz in ((IX_NAME, CourseNameIndex),
                         (IX_SITE, CourseSiteIndex),
+                        (IX_TAGS, CourseTagsIndex),
                         (IX_PACKAGES, CoursePackagesIndex),
                         (IX_KEYWORDS, CourseKeywordsIndex),
                         (IX_ENTRY, CourseCatalogEntryIndex)):
