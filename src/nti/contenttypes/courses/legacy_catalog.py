@@ -240,6 +240,8 @@ class _CourseInstanceCatalogLegacyEntry(PersistentCourseCatalogLegacyEntry):
     # value from the annotation factory is always proxied to have
     # a name equal to the key
     __name__ = None
+    
+    tags = ()
 
     def __conform__(self, iface):
         return find_interface(self, iface, strict=False)
