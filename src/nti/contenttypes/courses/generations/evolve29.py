@@ -4,12 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
-
-generation = 29
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from zope import component
 from zope import interface
@@ -33,6 +30,10 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
+
+generation = 29
+
+logger = __import__('logging').getLogger(__name__)
 
 
 @interface.implementer(IDataserver)
@@ -67,7 +68,7 @@ def do_evolve(context, generation=generation):
         library = component.queryUtility(IContentPackageLibrary)
         if library is not None:
             library.syncContentPackages()
-        
+
         catalog = install_enrollment_catalog(ds_folder, intids)
         for name, clazz in ((IX_CREATEDTIME, RecordCreatedTimeIndex),
                             (IX_LASTMODIFIED, RecordLastModifiedIndex)):
@@ -77,7 +78,7 @@ def do_evolve(context, generation=generation):
                 locate(index, catalog, name)
                 catalog[name] = index
         index = catalog[IX_ENTRY]
-        for doc_id in list(index.ids()): # mutating
+        for doc_id in list(index.ids()):  # mutating
             obj = intids.queryObject(doc_id)
             if ICourseInstanceEnrollmentRecord.providedBy(obj):
                 catalog.index_doc(doc_id, obj)

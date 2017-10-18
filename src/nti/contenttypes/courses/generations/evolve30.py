@@ -4,12 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
-
-generation = 30
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from zope import component
 from zope import interface
@@ -32,6 +29,10 @@ from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
 
 from nti.site.hostpolicy import get_all_host_sites
+
+generation = 30
+
+logger = __import__('logging').getLogger(__name__)
 
 
 @interface.implementer(IDataserver)
@@ -94,7 +95,7 @@ def do_evolve(context, generation=generation):
 
     with current_site(ds_folder):
         assert component.getSiteManager() == ds_folder.getSiteManager(), \
-            "Hooks not installed?"
+               "Hooks not installed?"
 
         lsm = ds_folder.getSiteManager()
         intids = lsm.getUtility(IIntIds)

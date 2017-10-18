@@ -6,12 +6,9 @@ Generations for managing courses.
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
-
-generation = 32
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from zope.intid.interfaces import IIntIds
 
@@ -20,6 +17,10 @@ from zope.generations.generations import SchemaManager
 from nti.contenttypes.courses.index import install_courses_catalog
 from nti.contenttypes.courses.index import install_enrollment_catalog
 from nti.contenttypes.courses.index import install_course_outline_catalog
+
+generation = 32
+
+logger = __import__('logging').getLogger(__name__)
 
 
 class _CoursesSchemaManager(SchemaManager):

@@ -4,12 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
-
-generation = 25
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from zope import component
 from zope import interface
@@ -33,6 +30,10 @@ from nti.dataserver.interfaces import IOIDResolver
 
 from nti.site.hostpolicy import get_all_host_sites
 
+generation = 25
+
+logger = __import__('logging').getLogger(__name__)
+
 
 @interface.implementer(IDataserver)
 class MockDataserver(object):
@@ -49,7 +50,8 @@ class MockDataserver(object):
 
 
 def remove_from_container(container, key, event=False):
-    # XXX. Avoid throwing intIdRemovedEvent (analytics tries to store in redis).
+    # XXX. Avoid throwing intIdRemovedEvent (analytics tries to store in
+    # redis).
     container._delitemf(key, event=event)
     try:
         container.updateLastMod()
@@ -62,7 +64,7 @@ def unenroll(record, principal_id):
     try:
         course = record.CourseInstance
         enrollment_manager = ICourseEnrollmentManager(course)
-        remove_from_container(enrollment_manager._cat_enrollment_storage, 
+        remove_from_container(enrollment_manager._cat_enrollment_storage,
                               principal_id)
         remove_from_container(enrollment_manager._inst_enrollment_storage,
                               principal_id)
@@ -102,8 +104,8 @@ def do_evolve(context, generation=generation):
     component.provideUtility(mock_ds, IDataserver)
 
     with current_site(ds_folder):
-        assert  component.getSiteManager() == ds_folder.getSiteManager(), \
-                "Hooks not installed?"
+        assert component.getSiteManager() == ds_folder.getSiteManager(), \
+               "Hooks not installed?"
         lsm = ds_folder.getSiteManager()
         intids = lsm.getUtility(IIntIds)
         enroll_catalog = install_enrollment_catalog(ds_folder, intids)
