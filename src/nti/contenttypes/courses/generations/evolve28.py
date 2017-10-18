@@ -4,12 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
-
-generation = 28
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from zope import component
 from zope import interface
@@ -38,10 +35,16 @@ from nti.intid.common import removeIntId
 
 from nti.site.hostpolicy import get_all_host_sites
 
+generation = 28
+
+logger = __import__('logging').getLogger(__name__)
+
+
 def _load_library():
     library = component.queryUtility(IContentPackageLibrary)
     if library is not None:
         library.syncContentPackages()
+
 
 @interface.implementer(IDataserver)
 class MockDataserver(object):
@@ -67,8 +70,8 @@ def _update_bundle(seen, catalog, intids):
             and not ICourseSubInstance.providedBy(course) \
             and not ILegacyCourseInstance.providedBy(course):
             bundle = course.ContentPackageBundle
-            if      bundle is not None and \
-                not isinstance(bundle, CoursePersistentContentPackageBundle):
+            if bundle is not None and \
+                    not isinstance(bundle, CoursePersistentContentPackageBundle):
                 new_bundle = CoursePersistentContentPackageBundle()
                 new_bundle.root = bundle.root
                 new_bundle.__parent__ = course
@@ -96,18 +99,20 @@ def do_evolve(context, generation=generation):
     component.provideUtility(mock_ds, IDataserver)
 
     with current_site(ds_folder):
-        assert   component.getSiteManager() == ds_folder.getSiteManager(), \
-                 "Hooks not installed?"
+        assert component.getSiteManager() == ds_folder.getSiteManager(), \
+               "Hooks not installed?"
 
         lsm = ds_folder.getSiteManager()
         intids = lsm.getUtility(IIntIds)
 
         seen = set()
         _load_library()
+
         # global library
         catalog = component.queryUtility(ICourseCatalog)
         if catalog is not None:
             _update_bundle(seen, catalog, intids)
+
         for site in get_all_host_sites():
             with current_site(site):
                 catalog = component.queryUtility(ICourseCatalog)
