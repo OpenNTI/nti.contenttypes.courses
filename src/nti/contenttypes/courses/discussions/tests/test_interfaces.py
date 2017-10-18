@@ -7,3 +7,13 @@ from __future__ import absolute_import
 
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
+
+import unittest
+
+from zope.dottedname import resolve as dottedname
+
+
+class TestImport(unittest.TestCase):
+
+    def test_import_interfaces(self):
+        dottedname.resolve('nti.contenttypes.courses.discussions.interfaces')

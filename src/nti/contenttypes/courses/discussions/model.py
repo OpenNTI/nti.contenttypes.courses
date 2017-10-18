@@ -4,21 +4,22 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from functools import total_ordering
 
 from zope import component
 from zope import interface
 
-from zope.annotation.factory import factory as an_factory
+from zope.annotation.interfaces import IAnnotations
 
 from zope.container.contained import Contained
 
 from zope.mimetype.interfaces import IContentTypeAware
+
+from ZODB.interfaces import IConnection
 
 from ZODB.POSException import ConnectionStateError
 
@@ -38,6 +39,8 @@ from nti.schema.eqhash import EqHash
 from nti.schema.field import SchemaConfigured
 
 from nti.schema.fieldproperty import createDirectFieldProperties
+
+logger = __import__('logging').getLogger(__name__)
 
 
 @EqHash('id')
@@ -74,17 +77,16 @@ class CourseDiscussion(SchemaConfigured,
     def __lt__(self, other):
         try:
             return (self.mimeType, self.title) < (other.mimeType, other.title)
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             return NotImplemented
 
     def __gt__(self, other):
         try:
             return (self.mimeType, self.title) > (other.mimeType, other.title)
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             return NotImplemented
 
 
-@component.adapter(ICourseInstance)
 @interface.implementer(ICourseDiscussions)
 class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer):
     """
@@ -100,5 +102,23 @@ class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer
     def __init__(self):
         super(DefaultCourseDiscussions, self).__init__()
 
-CourseDiscussions = an_factory(DefaultCourseDiscussions, 
-                               u'CourseDiscussions')
+
+@component.adapter(ICourseInstance)
+@interface.implementer(ICourseDiscussions)
+def _discussions_for_course(course, create=True):
+    result = None
+    KEY = u'CourseDiscussions'
+    annotations = IAnnotations(course)
+    try:
+        result = annotations[KEY]
+    except KeyError:
+        if create:
+            result = DefaultCourseDiscussions()
+            annotations[KEY] = result
+            result.__name__ = KEY
+            result.__parent__ = course
+            # Deterministically add to our course db.
+            # Sectioned courses would give us multiple
+            # db error for some reason.
+            IConnection(course).add(result)
+    return result
