@@ -126,6 +126,14 @@
 	<subscriber factory=".decorators._CourseNonPublicStatusDecorator"
                 for=".interfaces.ICourseInstance"
                 provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
+                
+ 	<subscriber factory=".decorators._CourseAdminLevelDecorator"
+				for=".interfaces.ICourseCatalogEntry"
+				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
+
+	<subscriber factory=".decorators._CourseAdminLevelDecorator"
+                for=".interfaces.ICourseInstance"
+                provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
 
 	<!-- Events -->
 	<subscriber handler=".subscribers.install_site_course_catalog" />
