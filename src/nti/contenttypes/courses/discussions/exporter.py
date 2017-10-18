@@ -4,10 +4,9 @@
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from zope import component
 
@@ -44,6 +43,8 @@ ID = StandardExternalFields.ID
 CLASS = StandardExternalFields.CLASS
 CREATOR = StandardExternalFields.CREATOR
 MIMETYPE = StandardExternalFields.MIMETYPE
+
+logger = __import__('logging').getLogger(__name__)
 
 
 def user_topic_file_name(topic, salt=None):

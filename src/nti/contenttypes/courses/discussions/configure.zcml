@@ -9,7 +9,8 @@
 	<include package="zope.component" />
 
 	<!-- Adapters -->
-	<adapter factory=".model.CourseDiscussions" />	
+	<adapter factory=".model._discussions_for_course" />	
+
 	<adapter factory=".adapters._course_discussion_to_course" />
 	<adapter factory=".adapters._course_discussions_to_course" />
 			 
