@@ -8,8 +8,8 @@ from __future__ import absolute_import
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
-from hamcrest import has_entry
 from hamcrest import assert_that
+from hamcrest import has_entries
 
 import fudge
 
@@ -23,17 +23,24 @@ from nti.contenttypes.courses.tests import CourseLayerTest
 
 from nti.externalization.externalization import to_external_object
 
+from nti.site.folder import HostPolicyFolder
+
 
 class TestDecorators(CourseLayerTest):
 
     @fudge.patch('nti.contenttypes.courses.creator.library_root')
-    def test_create_course(self, mock_lr):
+    def test_decorators(self, mock_lr):
         root = FilesystemBucket(name=u"root")
         root.absolute_path = '/tmp'
         mock_lr.is_callable().returns(root)
 
+        folder = HostPolicyFolder()
+        folder.__name__ = u'bleach.org'
         catalog = CourseCatalogFolder()
         catalog.__name__ = u'Courses'
+        catalog.__parent__ = folder
         course = create_course(u"Bleach", u"Shikai", catalog, writeout=True)
         ext_obj = to_external_object(course)
-        assert_that(ext_obj, has_entry('AdminLevel', 'Bleach'))
+        assert_that(ext_obj, 
+                    has_entries('AdminLevel', 'Bleach',
+                                'Site', 'bleach.org'))

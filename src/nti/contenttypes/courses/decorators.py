@@ -26,6 +26,8 @@ from nti.externalization.interfaces import IExternalObjectDecorator
 
 from nti.externalization.singleton import Singleton
 
+from nti.site.interfaces import IHostPolicyFolder
+
 from nti.traversal.traversal import find_interface
 
 MIMETYPE = StandardExternalFields.MIMETYPE
@@ -88,3 +90,15 @@ class _CourseAdminLevelDecorator(Singleton):
             admin = find_interface(course, ICourseAdministrativeLevel, strict=False)
             if admin is not None:
                 external['AdminLevel'] = admin.__name__
+
+@component.adapter(ICourseInstance)
+@component.adapter(ICourseCatalogEntry)
+@interface.implementer(IExternalObjectDecorator)
+class _CourseSiteDecorator(Singleton):
+
+    def decorateExternalObject(self, original, external):
+        course = ICourseInstance(original, None)
+        if course is not None:
+            site = find_interface(course, IHostPolicyFolder, strict=False)
+            if site is not None:
+                external['Site'] = site.__name__
