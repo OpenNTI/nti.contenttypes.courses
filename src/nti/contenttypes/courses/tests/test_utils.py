@@ -9,6 +9,7 @@ from __future__ import absolute_import
 # pylint: disable=W0212,R0904
 
 from hamcrest import contains
+from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import contains_inanyorder
@@ -35,6 +36,8 @@ from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 from nti.dataserver.tests.mock_dataserver import DataserverLayerTest
 
 from nti.contenttypes.courses.tests import CourseLayerTest
+
+from nti.externalization.externalization import to_external_object
 
 from nti.intid.common import addIntId
 
@@ -158,3 +161,9 @@ class TestTags(CourseLayerTest):
 
         courses = get_courses_for_tag('duplicate_tag')
         assert_that(courses, has_length(0))
+
+        # External tags
+        ext_obj = to_external_object(entry3)
+        assert_that(ext_obj, has_entry('tags',
+                                       contains_inanyorder('entry3_tag',
+                                                           'DUPLICATE_TAG')))
