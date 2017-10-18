@@ -44,6 +44,7 @@ from nti.contentlibrary.interfaces import IEditableContentPackage
 from nti.contenttypes.courses.common import get_course_site
 from nti.contenttypes.courses.common import get_course_packages
 
+from nti.contenttypes.courses.index import IX_TAGS
 from nti.contenttypes.courses.index import IX_SITE
 from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_COURSE
@@ -1020,6 +1021,39 @@ def path_for_entry(context):
         return None
     result = u'/'.join(parents) if parents else None
     return result
+
+
+def get_courses_for_tag(tag, sites=(), intids=None):
+    """
+    Given a tag, get all courses with that tag.
+    """
+    result = set()
+    catalog = get_courses_catalog()
+    query = {IX_TAGS: {'any_of': (tag,)}}
+    sites = get_sites_4_index(sites)
+    if sites:
+        query[IX_SITE] = {'any_of': sites}
+    intids = component.getUtility(IIntIds) if intids is None else intids
+    for uid in catalog.apply(query) or ():
+        course = ICourseInstance(intids.queryObject(uid), None)
+        result.add(course)
+    result.discard(None)
+    return tuple(result)
+
+
+def get_course_tags(filter_str=None):
+    """
+    Get all course tags.
+    """
+    # XXX: do we want cardinality or any sort order here?
+    catalog = get_courses_catalog()
+    tag_index = catalog[IX_TAGS]
+    # These will be all in lower case
+    tags = set(tag_index.words() or ())
+    if filter_str:
+        filter_str = filter_str.lower()
+        tags = filter(lambda x: filter_str in x, tags)
+    return tags
 
 
 import zope.deferredimport

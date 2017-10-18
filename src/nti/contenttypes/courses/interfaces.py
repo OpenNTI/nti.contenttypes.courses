@@ -71,6 +71,8 @@ from nti.contenttypes.courses import MessageFactory as _
 
 from nti.contenttypes.reports.interfaces import IReportContext
 
+from nti.coremetadata.interfaces import ITaggedContent
+
 from nti.dataserver.interfaces import ICommunity
 from nti.dataserver.interfaces import ILastModified
 from nti.dataserver.interfaces import IGrantAccessException
@@ -850,6 +852,7 @@ class ICourseCatalogEntry(ICatalogFamily,
                           IShouldHaveTraversablePath,
                           IContained,
                           ISynchronizable,
+                          ITaggedContent,
                           IRecordable):
     """
     An entry in the course catalog containing metadata
