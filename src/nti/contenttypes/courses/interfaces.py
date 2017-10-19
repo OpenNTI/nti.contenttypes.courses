@@ -488,6 +488,7 @@ class ICourseInstance(IFolder,
                       IShouldHaveTraversablePath,
                       _ICourseOutlineNodeContainer,
                       ISynchronizable,
+                      ITaggedContent,
                       IReportContext):
     """
     A concrete instance of a course (typically
@@ -853,7 +854,6 @@ class ICourseCatalogEntry(ICatalogFamily,
                           IShouldHaveTraversablePath,
                           IContained,
                           ISynchronizable,
-                          ITaggedContent,
                           IRecordable):
     """
     An entry in the course catalog containing metadata

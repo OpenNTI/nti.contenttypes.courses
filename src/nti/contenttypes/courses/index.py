@@ -362,8 +362,8 @@ class ValidatingCourseTags(object):
     def __init__(self, obj, unused_default=None):
         if     ICourseInstance.providedBy(obj) \
             or ICourseCatalogEntry.providedBy(obj):
-            entry = ICourseCatalogEntry(obj, None)
-            self.tags = getattr(entry, 'tags', None)
+            course = ICourseInstance(obj, None)
+            self.tags = getattr(course, 'tags', None)
 
     def __reduce__(self):
         raise TypeError()
