@@ -214,10 +214,12 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
                 if isinstance(value, six.string_types):
                     value = value.split()
                 value = tuple(text_(x) for x in value)
+                parsed[name] = value
                 setattr(context, name, value)
-            elif not getattr(context, name, None) or delete:
+            elif getattr(context, name, None) is None or delete:
                 # Some courses do not have creators, we'll want to set this
                 # field to a non-None value so this can be updated.
+                parsed[name] = ()
                 setattr(context, name, ())
     return parsed
 
