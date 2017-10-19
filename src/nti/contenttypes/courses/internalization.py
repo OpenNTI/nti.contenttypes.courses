@@ -3,8 +3,6 @@
 """
 .. $Id$
 """
-
-# pylint: disable=W0212,R0904
  
 from __future__ import division
 from __future__ import print_function
@@ -94,6 +92,8 @@ class _CourseOutlineNodeUpdater(InterfaceObjectIO):
             self.node.publish(event=False)
         return result
 
+
+# pylint: disable=W0212
 
 def _quiet_delattr(o, k):
     try:
