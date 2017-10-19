@@ -4,10 +4,13 @@
 .. $Id$
 """
 
+# pylint: disable=W0212,R0904
+ 
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+import six
 from datetime import timedelta
 from collections import Mapping
 
@@ -119,7 +122,7 @@ def parse_duration(duration):
 
 
 def legacy_to_schema_transform(parsed, context=None, delete=False):
-    for field, key in (('Term', 'term'),  # XXX: non-interface
+    for field, key in (('Term', 'term'),
                        ('ntiid', 'ntiid'),
                        ('Title', 'title'),
                        ('Description', 'description'),
@@ -136,7 +139,7 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
     if 'ntiid' in parsed and not parsed['ntiid']:
         parsed.pop('ntiid')
 
-    for field, key in (('EndDate', 'endDate'),  # XXX: non-interface
+    for field, key in (('EndDate', 'endDate'),
                        ('StartDate', 'startDate')):
         value = parsed.get(key)
         if value:
@@ -165,7 +168,7 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
     elif delete:
         _quiet_delattr(context, 'Video')
 
-    for field, key, default in (('Schedule', 'schedule', {}),  # XXX: non-interface
+    for field, key, default in (('Schedule', 'schedule', {}),
                                 ('Prerequisites', 'prerequisites', []),
                                 ('AdditionalProperties', 'additionalProperties', None)):
         value = parsed.get(key, None)
@@ -203,6 +206,18 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
     elif delete:
         _quiet_delattr(context, 'Credit')
 
+    # dc extended
+    for name in ('creators', 'subjects', 'contributors'):
+        if name not in parsed:
+            continue
+        value = parsed.get(name, None)
+        if value:
+            if isinstance(value, six.string_types):
+                value = value.split()
+            value = tuple(text_(x) for x in value)
+            setattr(context, name, value)
+        elif delete:
+            setattr(context, name, ())
     return parsed
 
 
