@@ -160,10 +160,11 @@ def _derive_preview(self):
 
 @interface.implementer(ICourseCatalogLegacyEntry)
 class CourseCatalogLegacyEntry(CourseCatalogEntry):
-    DisableOverviewCalendar = False
-    creators = ()
     createDirectFieldProperties(ICourseCatalogLegacyEntry)
 
+    creators = ()
+    DisableOverviewCalendar = False
+    
     # For legacy catalog entries created from a content package,
     # this will be that package (an implementation of
     # :class:`.ILegacyCourseConflatedContentPackage`)
@@ -232,16 +233,14 @@ from nti.traversal.traversal import find_interface
 
 @component.adapter(ICourseInstance)
 class _CourseInstanceCatalogLegacyEntry(PersistentCourseCatalogLegacyEntry):
-    __external_class_name__ = 'CourseCatalogLegacyEntry'
     __external_can_create__ = False
+    __external_class_name__ = 'CourseCatalogLegacyEntry'
 
     # Because we're used in an annotation, the parent's attempt
     # to alias ntiid to __name__ gets basically ignored: the return
     # value from the annotation factory is always proxied to have
     # a name equal to the key
     __name__ = None
-    
-    tags = ()
 
     def __conform__(self, iface):
         return find_interface(self, iface, strict=False)
