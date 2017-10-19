@@ -77,7 +77,7 @@ class TestTags(CourseLayerTest):
         inst2 = ContentCourseInstance()
         entry2 = ICourseCatalogEntry(inst2)
         entry2.title = u'course2'
-        entry2.tags = ('duplicate_tag',)
+        inst2.tags = ('duplicate_tag',)
         ds_folder._p_jar.add(inst2)
         addIntId(inst2)
         catalog.index_doc(intids.getId(inst2), inst2)
@@ -85,7 +85,7 @@ class TestTags(CourseLayerTest):
         inst3 = ContentCourseInstance()
         entry3 = ICourseCatalogEntry(inst3)
         entry3.title = u'course3'
-        entry3.tags = ('entry3_tag', 'DUPLICATE_TAG')
+        inst3.tags = ('entry3_tag', 'DUPLICATE_TAG')
         ds_folder._p_jar.add(inst3)
         addIntId(inst3)
         catalog.index_doc(intids.getId(inst3), inst3)
@@ -163,7 +163,7 @@ class TestTags(CourseLayerTest):
         assert_that(courses, has_length(0))
 
         # External tags
-        ext_obj = to_external_object(entry3)
+        ext_obj = to_external_object(inst3)
         assert_that(ext_obj, has_entry('tags',
                                        contains_inanyorder('entry3_tag',
                                                            'DUPLICATE_TAG')))

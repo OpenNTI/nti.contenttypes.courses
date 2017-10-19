@@ -290,9 +290,8 @@ class CourseCatalogEntry(CatalogFamily,
     createDirectFieldProperties(ICourseCatalogEntry)
 
     _SET_CREATED_MODTIME_ON_INIT = False
-       
+
     # shut up pylint
-    tags = ()
     ntiid = None
     Duration = None
     lastSynchronized = 0
