@@ -360,10 +360,8 @@ class ValidatingCourseTags(object):
     __slots__ = ('tags',)
 
     def __init__(self, obj, unused_default=None):
-        if     ICourseInstance.providedBy(obj) \
-            or ICourseCatalogEntry.providedBy(obj):
-            course = ICourseInstance(obj, None)
-            self.tags = getattr(course, 'tags', None)
+        if ICourseInstance.providedBy(obj):
+            self.tags = getattr(obj, 'tags', None)
 
     def __reduce__(self):
         raise TypeError()
