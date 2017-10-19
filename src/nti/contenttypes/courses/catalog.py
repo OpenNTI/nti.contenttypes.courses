@@ -287,15 +287,15 @@ class CatalogFamily(SchemaConfigured,
 class CourseCatalogEntry(CatalogFamily,
                          CreatedAndModifiedTimeMixin,
                          RecordableMixin):
-    # shut up pylint
-    ntiid = None
-    Duration = None
-
-    lastSynchronized = 0
+    createDirectFieldProperties(ICourseCatalogEntry)
 
     _SET_CREATED_MODTIME_ON_INIT = False
-
-    createDirectFieldProperties(ICourseCatalogEntry)
+       
+    # shut up pylint
+    tags = ()
+    ntiid = None
+    Duration = None
+    lastSynchronized = 0
 
     RichDescription = AdaptingFieldProperty(ICourseCatalogEntry['RichDescription'])
 
