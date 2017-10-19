@@ -21,6 +21,8 @@ from zope.container.contained import Contained
 
 from zope.event import notify
 
+from zope.intid.interfaces import IIntIds
+
 from zope.site.interfaces import ILocalSiteManager
 
 from nti.base._compat import text_
@@ -89,6 +91,8 @@ from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
 from nti.dataserver.interfaces import ISharingTargetEntityIterable
 
 from nti.externalization.representation import WithRepr
+
+from nti.intid.common import addIntId
 
 from nti.schema.eqhash import EqHash
 
@@ -431,6 +435,9 @@ class _ContentCourseSynchronizer(object):
 
         modified = False
         catalog_entry = ICourseCatalogEntry(course)
+        intids = component.queryUtility(IIntIds)
+        if intids is not None and intid.queryId(catalog_entry) is None:
+            addIntId(catalog_entry)
         if catalog_json_key:
             modified = update_entry_from_legacy_key(catalog_entry,
                                                     catalog_json_key,
