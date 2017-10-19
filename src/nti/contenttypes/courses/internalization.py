@@ -3,7 +3,7 @@
 """
 .. $Id$
 """
- 
+
 from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
@@ -207,17 +207,18 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
         _quiet_delattr(context, 'Credit')
 
     # dc extended
-    for name in ('creators', 'subjects', 'contributors'):
-        if name not in parsed:
-            continue
-        value = parsed.get(name, None)
-        if value:
-            if isinstance(value, six.string_types):
-                value = value.split()
-            value = tuple(text_(x) for x in value)
-            setattr(context, name, value)
-        elif delete:
-            setattr(context, name, ())
+    if context is not None:
+        for name in ('creators', 'subjects', 'contributors'):
+            value = parsed.get(name, None)
+            if value:
+                if isinstance(value, six.string_types):
+                    value = value.split()
+                value = tuple(text_(x) for x in value)
+                setattr(context, name, value)
+            elif not getattr(context, name, None) or delete:
+                # Some courses do not have creators, we'll want to set this
+                # field to a non-None value so this can be updated.
+                setattr(context, name, ())
     return parsed
 
 

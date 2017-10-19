@@ -553,7 +553,7 @@ class ICourseInstance(IFolder,
     # and we are in fact using a structured role model. The use of
     # this attribute is deprecated. It in fact holds everyone, both
     # instructors and TAs and others.
-    instructors = UniqueIterable(title=u"The principals that are the intsructors of the course.",
+    instructors = UniqueIterable(title=u"The principals that are the instructors of the course.",
                                  description=u"They get special access rights.",
                                  value_type=Object(IPrincipal))
     instructors.setTaggedValue('_ext_excluded_out', True)
@@ -823,16 +823,17 @@ class ICatalogFamily(IDisplayableContent):
                             required=False)
 
     # don't required dublin core IDCExtended
-    creators = Tuple(title=u'Creators',
-                     description=u"The unqualified Dublin Core 'Creator' element values",
-                     value_type=ValidTextLine(),
-                     required=False)
+    creators = ListOrTuple(title=u'Creators',
+                           description=u"The unqualified Dublin Core 'Creator' element values",
+                           value_type=ValidTextLine(),
+                           default=(),
+                           required=False)
     creators.setTaggedValue('_ext_excluded_out', True)
 
-    subjects = Tuple(title=u'Subjects',
-                     description=u"The unqualified Dublin Core 'Subject' element values",
-                     value_type=ValidTextLine(),
-                     required=False)
+    subjects = ListOrTuple(title=u'Subjects',
+                           description=u"The unqualified Dublin Core 'Subject' element values",
+                           value_type=ValidTextLine(),
+                           required=False)
     subjects.setTaggedValue('_ext_excluded_out', True)
 
     publisher = Text(title=u'Publisher',
@@ -840,10 +841,10 @@ class ICatalogFamily(IDisplayableContent):
                      required=False)
     publisher.setTaggedValue('_ext_excluded_out', True)
 
-    contributors = Tuple(title=u'Contributors',
-                         description=u"The unqualified Dublin Core 'Contributor' element values",
-                         value_type=ValidTextLine(),
-                         required=False)
+    contributors = ListOrTuple(title=u'Contributors',
+                               description=u"The unqualified Dublin Core 'Contributor' element values",
+                               value_type=ValidTextLine(),
+                               required=False)
     contributors.setTaggedValue('_ext_excluded_out', True)
 
 
