@@ -151,6 +151,7 @@
 	<subscriber handler=".subscribers.on_course_instance_available" />
 
 	<subscriber handler=".subscribers.on_user_removed" />
+	<subscriber handler=".subscribers.on_course_instance_created" />
 	<subscriber handler=".subscribers.on_course_instance_removed" />
 	<subscriber handler=".subscribers.on_before_course_instance_removed" />
 
