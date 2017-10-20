@@ -436,7 +436,7 @@ class _ContentCourseSynchronizer(object):
         modified = False
         catalog_entry = ICourseCatalogEntry(course)
         intids = component.queryUtility(IIntIds)
-        if intids is not None and intid.queryId(catalog_entry) is None:
+        if intids is not None and intids.queryId(catalog_entry) is None:
             addIntId(catalog_entry)
         if catalog_json_key:
             modified = update_entry_from_legacy_key(catalog_entry,
