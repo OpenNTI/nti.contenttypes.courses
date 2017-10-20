@@ -22,6 +22,7 @@ from zope.intid.interfaces import IIntIdAddedEvent
 from zope.interface.interfaces import IRegistered
 from zope.interface.interfaces import IUnregistered
 
+from zope.lifecycleevent.interfaces import IObjectCreatedEvent
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
 
 from zc.intid.interfaces import IBeforeIdRemovedEvent
@@ -96,9 +97,11 @@ from nti.contenttypes.courses.utils import index_course_instructor
 from nti.contenttypes.courses.utils import get_content_unit_courses
 
 from nti.dataserver.interfaces import IUser
+
 from nti.dataserver.users.interfaces import IWillDeleteEntityEvent
 
-from nti.intid.common import removeIntId
+from nti.intid.common import addIntId
+from nti.intid.common import removeIntId 
 
 from nti.recorder.utils import record_transaction
 
@@ -317,6 +320,16 @@ def on_before_course_instance_removed(course, _):
     entry = ICourseCatalogEntry(course, None)
     if entry is not None and intids.queryId(entry) is not None:
         removeIntId(entry)
+
+
+@component.adapter(ICourseInstance, IObjectCreatedEvent)
+def on_course_instance_created(course, _):
+    intids = component.queryUtility(IIntIds)
+    entry = ICourseCatalogEntry(course, None)
+    if      entry is not None \
+        and intids is not None \
+        and intids.queryId(entry) is None:
+        addIntId(entry)
 
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
