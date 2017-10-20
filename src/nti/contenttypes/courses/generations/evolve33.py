@@ -15,8 +15,8 @@ from zope.component.hooks import site as current_site
 
 from zope.intid.interfaces import IIntIds
 
-from nti.contenttypes.courses.interfaces import ICourseCatalog,\
-    IGlobalCourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import IGlobalCourseCatalog
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
