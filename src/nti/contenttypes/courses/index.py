@@ -287,7 +287,8 @@ class ValidatingCourseSiteName(object):
     __slots__ = ('site',)
 
     def __init__(self, obj, unused_default=None):
-        if ICourseInstance.providedBy(obj):
+        if     ICourseInstance.providedBy(obj) \
+            or ICourseCatalogEntry.providedBy(obj):
             self.site = text_(get_course_site(obj) or '')
 
     def __reduce__(self):
