@@ -8,6 +8,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+# pylint: disable=E0611,E1101,E1121,W0621
+
 from six import string_types
 
 from itertools import chain
@@ -486,8 +488,11 @@ class ProxyEnrollmentRecord(CreatedAndModifiedTimeMixin, Contained):
     Scope = None
     Principal = None
     CourseInstance = None
+    
+    _SET_CREATED_MODTIME_ON_INIT = False
 
     def __init__(self, course=None, principal=None, scope=None):
+        CreatedAndModifiedTimeMixin.__init__(self)
         self.Scope = scope
         self.Principal = principal
         self.CourseInstance = course
@@ -964,7 +969,7 @@ def grant_instructor_access_to_course(user, course):
     """
     unenroll_instructor(user, course)
 
-    # XXX: Can we re-use some of the access grant that occurs with students?
+    # NOTE: Can we re-use some of the access grant that occurs with students?
     add_principal_to_course_content_roles(user, course)
     for scope in course.SharingScopes.values():
         # They're a member...
@@ -1045,14 +1050,14 @@ def get_course_tags(filter_str=None):
     """
     Get all course tags.
     """
-    # XXX: do we want cardinality or any sort order here?
+    # NOTE: do we want cardinality or any sort order here?
     catalog = get_courses_catalog()
     tag_index = catalog[IX_TAGS]
     # These will be all in lower case
     tags = set(tag_index.words() or ())
     if filter_str:
         filter_str = filter_str.lower()
-        tags = filter(lambda x: filter_str in x, tags)
+        tags = [x for x in tags if filter_str in x]
     return tags
 
 
