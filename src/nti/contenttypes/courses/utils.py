@@ -1041,15 +1041,26 @@ def get_courses_for_tag(tag, sites=(), intids=None):
     return tuple(result)
 
 
-def get_course_tags(filter_str=None):
+def filter_hidden_tags(tags):
     """
-    Get all course tags.
+    Filter any hidden tags from the given set of tags. Hidden tags are defined
+    as starting with a '.'.
+    """
+    return [x for x in tags if not x.startswith('.')]
+
+
+def get_course_tags(filter_str=None, filter_hidden=True):
+    """
+    Get all course tags. Optionally filtering by the given `filter_str` param
+    and by default, removing all hidden tags.
     """
     # XXX: do we want cardinality or any sort order here?
     catalog = get_courses_catalog()
     tag_index = catalog[IX_TAGS]
     # These will be all in lower case
     tags = set(tag_index.words() or ())
+    if filter_hidden:
+        tags = filter_hidden_tags(tags)
     if filter_str:
         filter_str = filter_str.lower()
         tags = filter(lambda x: filter_str in x, tags)
