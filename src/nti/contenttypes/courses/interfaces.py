@@ -34,6 +34,7 @@ from zope.container.interfaces import IOrderedContainer
 from zope.container.interfaces import IContainerNamesContainer
 
 from zope.interface.common.mapping import IEnumerableMapping
+from zope.interface.common.mapping import IExtendedWriteMapping
 
 from zope.interface.common.sequence import ISequence
 
@@ -629,6 +630,7 @@ IEnrollmentMappedCourseInstance.setTaggedValue('_ext_is_marker_interface',
 
 
 class ICourseInstanceVendorInfo(IEnumerableMapping,
+                                IExtendedWriteMapping,
                                 ILastModified,
                                 IContained):
     """

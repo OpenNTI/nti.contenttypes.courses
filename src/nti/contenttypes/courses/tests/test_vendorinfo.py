@@ -13,24 +13,28 @@ from hamcrest import assert_that
 from hamcrest import has_property
 
 from nti.testing.matchers import validly_provides
+from nti.testing.matchers import verifiably_provides
 
 import unittest
 
-from nti.contenttypes.courses import courses
-from nti.contenttypes.courses import vendorinfo
-from nti.contenttypes.courses import interfaces
+from nti.contenttypes.courses.courses import CourseInstance
+
+from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 
 from nti.contenttypes.courses.tests import CourseLayerTest
+
+from nti.contenttypes.courses.vendorinfo import DefaultCourseInstanceVendorInfo
 
 
 class TestVendorInfo(unittest.TestCase):
 
     def test_provides(self):
-        assert_that(vendorinfo.DefaultCourseInstanceVendorInfo(),
-                    validly_provides(interfaces.ICourseInstanceVenderInfo))
+        vendor = DefaultCourseInstanceVendorInfo()
+        assert_that(vendor, validly_provides(ICourseInstanceVendorInfo))
+        assert_that(vendor, verifiably_provides(ICourseInstanceVendorInfo))
 
     def test_fresh_time(self):
-        vi = vendorinfo.DefaultCourseInstanceVendorInfo()
+        vi = DefaultCourseInstanceVendorInfo()
         assert_that(vi, has_property('createdTime', 0))
         assert_that(vi, has_property('lastModified', 0))
 
@@ -38,8 +42,7 @@ class TestVendorInfo(unittest.TestCase):
 class TestFunctionalVendorInfo(CourseLayerTest):
 
     def test_annotation(self):
-        course = courses.CourseInstance()
-
-        vi = interfaces.ICourseInstanceVenderInfo(course)
-        assert_that(vi, is_(vendorinfo.DefaultCourseInstanceVendorInfo))
+        course = CourseInstance()
+        vi = ICourseInstanceVendorInfo(course)
+        assert_that(vi, is_(DefaultCourseInstanceVendorInfo))
         assert_that(vi, has_property('__parent__', course))
