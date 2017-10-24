@@ -104,8 +104,11 @@ DefaultAssignmentPolicyValidator = DefaultAssessmentPolicyValidator  # BWC
 
 
 def validate_assigment_policies(context, check_exists=False):
-    course = ICourseInstance(context)
-    course_policies = IQAssessmentPolicies(course, None)
+    if not IQAssessmentPolicies.providedBy(context):
+        course = ICourseInstance(context, None)
+        course_policies = IQAssessmentPolicies(course, None)
+    else:
+        course_policies = context
     if not course_policies:
         return
     assessments = course_policies.assignments()
