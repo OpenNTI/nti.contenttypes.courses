@@ -20,9 +20,8 @@ from nti.assessment.interfaces import IQAssessmentPolicyValidator
 from nti.common.string import is_true
 from nti.common.string import is_false
 
-from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-
 from nti.ntiids.ntiids import is_valid_ntiid_string
+from nti.contenttypes.courses.interfaces import ICourseInstance
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -104,38 +103,23 @@ class DefaultAssessmentPolicyValidator(object):
 DefaultAssignmentPolicyValidator = DefaultAssessmentPolicyValidator  # BWC
 
 
-def validate_assigment_policies(course):
+def validate_assigment_policies(context, check_exists=False):
+    course = ICourseInstance(context)
     course_policies = IQAssessmentPolicies(course, None)
     if not course_policies:
         return
     assessments = course_policies.assignments()
     policies = {
-        a: course_policies.getPolicyForAssessment(a) for a in assessments
+        a: course_policies.getPolicyForAssessment(a) for a in assessments or ()
     }
-    # let's try the course
-    registry = component
     validator = IQAssessmentPolicyValidator(course, None)
-    if validator is None:
-        # Courses may be ISites
-        try:
-            names = ('',)
-            registry = course.getSiteManager()
-        except LookupError:
-            entry = ICourseCatalogEntry(course, None)
-            if entry:
-                names = (entry.ntiid,)
-
-        for name in names:
-            try:
-                validator = registry.getUtility(IQAssessmentPolicyValidator,
-                                                name=name)
-                break
-            except LookupError:
-                validator = None
-
     if validator is None:
         # let's try default validator
         validator = DefaultAssessmentPolicyValidator()
     # go through policies
-    for k, v in policies.items():
-        validator.validate(k, v)
+    for ntiid, v in policies.items():
+        if check_exists:
+            assignment = component.queryUtility(IQAssignment, name=ntiid)
+            if not IQAssignment.providedBy(assignment):
+                raise AssertionError("Cannot find assignment with ntiid %s", ntiid)
+        validator.validate(ntiid, v)
