@@ -20,8 +20,11 @@ from nti.assessment.interfaces import IQAssessmentPolicyValidator
 from nti.common.string import is_true
 from nti.common.string import is_false
 
-from nti.ntiids.ntiids import is_valid_ntiid_string
 from nti.contenttypes.courses.interfaces import ICourseInstance
+
+from nti.ntiids.ntiids import is_valid_ntiid_string
+
+from nti.traversal.traversal import find_interface
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -63,7 +66,7 @@ class DefaultAssessmentPolicyValidator(object):
             # combinations; so we'll warn for now.
             # If auto-gradable, make sure we can
             if not can_be_auto_graded(assignment):
-                logger.warn('Assignment is not auto-gradable (%s)', 
+                logger.warn('Assignment is not auto-gradable (%s)',
                             ntiid)
             # We do allow total_points of zero, even though that
             # doesn't make sense (legacy content).
@@ -109,6 +112,7 @@ def validate_assigment_policies(context, check_exists=False):
         course_policies = IQAssessmentPolicies(course, None)
     else:
         course_policies = context
+        course = find_interface(context, ICourseInstance, strict=False)
     if not course_policies:
         return
     assessments = course_policies.assignments()
@@ -124,5 +128,5 @@ def validate_assigment_policies(context, check_exists=False):
         if check_exists:
             assignment = component.queryUtility(IQAssignment, name=ntiid)
             if not IQAssignment.providedBy(assignment):
-                raise AssertionError("Cannot find assignment with ntiid %s", ntiid)
+                raise AssertionError("Cannot find assignment %s", ntiid)
         validator.validate(ntiid, v)
