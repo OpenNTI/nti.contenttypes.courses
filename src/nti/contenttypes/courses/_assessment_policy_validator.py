@@ -33,7 +33,7 @@ def check_assessment(ntiid, warning=True, provided=IQAssignment):
     result = component.queryUtility(IQAssignment, name=ntiid)
     if not provided.providedBy(result):
         if warning:
-            logger.warn("Could not find %s (%s)", provided.__name__, ntiid)
+            logger.warn("Could not find assessment (%s)", ntiid)
         else:
             raise AssertionError("Cannot find assessment %s", ntiid)
     return result
