@@ -42,7 +42,7 @@ def reset_asg_missing_key(course, force=False):
 def fill_asg_from_json(course, index, lastModified=0, force=False):
     logger.info('Reading in assignment policies for %s', course)
     # remove previous data
-    reset_asg_missing_key(course, force=force)
+    reset_asg_missing_key(course, force)
     # set last mod dates
     dates = IQAssessmentDateContext(course)
     policies = IQAssessmentPolicies(course)
@@ -100,7 +100,7 @@ def fill_asg_from_json(course, index, lastModified=0, force=False):
     return policies
 
 
-def fill_asg_from_key(course, key):
+def fill_asg_from_key(course, key, force=False):
     # Note that regular courses do not track date contexts, so
     # we do the comparison of dates based on the policies
     __traceback_info__ = key, course
@@ -108,5 +108,5 @@ def fill_asg_from_key(course, key):
     if key.lastModified <= policies.lastModified:
         return False
     index = key.readContentsAsYaml()
-    fill_asg_from_json(course, index, key.lastModified)
+    fill_asg_from_json(course, index, key.lastModified, force)
     return True
