@@ -29,6 +29,16 @@ from nti.traversal.traversal import find_interface
 logger = __import__('logging').getLogger(__name__)
 
 
+def check_assessment(ntiid, warning=True, provided=IQAssignment):
+    result = component.queryUtility(IQAssignment, name=ntiid)
+    if not provided.providedBy(result):
+        if warning:
+            logger.warn("Could not find %s (%s)", provided.__name__, ntiid)
+        else:
+            raise AssertionError("Cannot find assessment %s", ntiid)
+    return result
+
+
 @interface.implementer(IQAssessmentPolicyValidator)
 class DefaultAssessmentPolicyValidator(object):
 
@@ -98,9 +108,7 @@ class DefaultAssessmentPolicyValidator(object):
     def validate(self, ntiid, policy):
         if not is_valid_ntiid_string(ntiid):
             return  # pragma no cover
-        assignment = component.queryUtility(IQAssignment, name=ntiid)
-        if assignment is None:
-            logger.info("Could not find assessment (%s)", ntiid)
+        assignment = check_assessment(ntiid)
         auto_grade = self.valid_auto_grade(policy, assignment, ntiid)
         self.validate_pointbased_policy(auto_grade, assignment, ntiid)
 DefaultAssignmentPolicyValidator = DefaultAssessmentPolicyValidator  # BWC
@@ -126,7 +134,5 @@ def validate_assigment_policies(context, check_exists=False):
     # go through policies
     for ntiid, v in policies.items():
         if check_exists:
-            assignment = component.queryUtility(IQAssignment, name=ntiid)
-            if not IQAssignment.providedBy(assignment):
-                raise AssertionError("Cannot find assignment %s", ntiid)
+            check_assessment(ntiid, False)
         validator.validate(ntiid, v)
