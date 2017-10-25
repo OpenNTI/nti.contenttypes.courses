@@ -40,9 +40,9 @@ from nti.contenttypes.courses.internalization import parse_duration
 from nti.contenttypes.courses.legacy_catalog import ICourseCatalogLegacyEntry
 from nti.contenttypes.courses.legacy_catalog import PersistentCourseCatalogLegacyEntry as CourseCatalogLegacyEntry
 
-from nti.externalization.tests import externalizes
-
 from nti.contenttypes.courses.tests import CourseLayerTest
+
+from nti.externalization.tests import externalizes
 
 
 class TestCatalogParser(CourseLayerTest):
@@ -209,4 +209,5 @@ class TestCatalogParser(CourseLayerTest):
         # Now simply missing and nothing changes
         del json['is_anonymously_but_not_publicly_accessible']
         fill_entry_from_legacy_json(entry, json)
-        assert_that(entry, verifiably_provides(IAnonymouslyAccessibleCourseInstance))
+        assert_that(entry, 
+                    verifiably_provides(IAnonymouslyAccessibleCourseInstance))
