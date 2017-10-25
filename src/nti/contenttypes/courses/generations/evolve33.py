@@ -21,8 +21,9 @@ from nti.contenttypes.courses.interfaces import IGlobalCourseCatalog
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
 
-from nti.site.hostpolicy import get_all_host_sites
 from nti.intid.common import addIntId
+
+from nti.site.hostpolicy import get_all_host_sites
 
 generation = 33
 
