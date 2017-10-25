@@ -52,9 +52,10 @@ from nti.wref.interfaces import IWeakRef
 @functools.total_ordering
 @interface.implementer(IPrincipal, IWeakRef, IContained, IAttributeAnnotatable)
 class MockPrincipal(SharingSourceMixin, Persistent):
-    username = id = u'MyPrincipal'
     __name__ = None
     __parent__ = None
+
+    username = id = u'MyPrincipal'
 
     def __call__(self):
         return self
@@ -69,3 +70,9 @@ class MockPrincipal(SharingSourceMixin, Persistent):
         if other is not self:
             return True
         return False
+
+
+try:
+    from unittest import mock
+except ImportError:
+    import mock

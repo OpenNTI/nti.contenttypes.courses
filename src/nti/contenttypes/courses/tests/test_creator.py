@@ -19,8 +19,6 @@ import os
 import shutil
 import tempfile
 
-import fudge
-
 from nti.contentlibrary.filesystem import FilesystemBucket
 
 from nti.contenttypes.courses.catalog import CourseCatalogFolder
@@ -30,12 +28,13 @@ from nti.contenttypes.courses.creator import make_directories
 from nti.contenttypes.courses.creator import install_admin_level
 from nti.contenttypes.courses.creator import create_course_subinstance
 
+from nti.contenttypes.courses.tests import mock
 from nti.contenttypes.courses.tests import CourseLayerTest
 
 
 class TestCreator(CourseLayerTest):
 
-    @fudge.patch('nti.contenttypes.courses.creator.library_root')
+    @mock.patch('nti.contenttypes.courses.creator.library_root')
     def test_install_admin_level(self, mock_lr):
         catalog = CourseCatalogFolder()
         catalog.__name__ = u'Courses'
@@ -44,7 +43,7 @@ class TestCreator(CourseLayerTest):
         try:
             root = FilesystemBucket(name=u"root")
             root.absolute_path = tmp_dir
-            mock_lr.is_callable().with_args().returns(root)
+            mock_lr.return_value = root
             # create courses place
             courses_path = os.path.join(tmp_dir, 'Courses')
             make_directories(courses_path)
@@ -74,7 +73,7 @@ class TestCreator(CourseLayerTest):
         finally:
             shutil.rmtree(tmp_dir)
 
-    @fudge.patch('nti.contenttypes.courses.creator.library_root')
+    @mock.patch('nti.contenttypes.courses.creator.library_root')
     def test_create_course(self, mock_lr):
         catalog = CourseCatalogFolder()
         catalog.__name__ = u'Courses'
@@ -83,7 +82,7 @@ class TestCreator(CourseLayerTest):
         try:
             root = FilesystemBucket(name=u"root")
             root.absolute_path = tmp_dir
-            mock_lr.is_callable().with_args().returns(root)
+            mock_lr.return_value = root
             # create courses place
             courses_path = os.path.join(tmp_dir, u'Courses')
             make_directories(courses_path)
@@ -110,7 +109,7 @@ class TestCreator(CourseLayerTest):
         finally:
             shutil.rmtree(tmp_dir)
 
-    @fudge.patch('nti.contenttypes.courses.creator.library_root')
+    @mock.patch('nti.contenttypes.courses.creator.library_root')
     def test_create_course_subinstance(self, mock_lr):
         catalog = CourseCatalogFolder()
         catalog.__name__ = u'Courses'
@@ -119,7 +118,7 @@ class TestCreator(CourseLayerTest):
         try:
             root = FilesystemBucket(name=u"root")
             root.absolute_path = tmp_dir
-            mock_lr.is_callable().with_args().returns(root)
+            mock_lr.return_value = root
             # create courses place
             courses_path = os.path.join(tmp_dir, 'Courses')
             make_directories(courses_path)
