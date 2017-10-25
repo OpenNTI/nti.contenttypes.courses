@@ -11,8 +11,6 @@ from __future__ import absolute_import
 from hamcrest import assert_that
 from hamcrest import has_entries
 
-import fudge
-
 from zope import interface
 
 from nti.contentlibrary.filesystem import FilesystemBucket
@@ -23,6 +21,7 @@ from nti.contenttypes.courses.creator import create_course
 
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 
+from nti.contenttypes.courses.tests import mock
 from nti.contenttypes.courses.tests import CourseLayerTest
 
 from nti.externalization.externalization import to_external_object
@@ -32,11 +31,11 @@ from nti.site.folder import HostPolicyFolder
 
 class TestDecorators(CourseLayerTest):
 
-    @fudge.patch('nti.contenttypes.courses.creator.library_root')
+    @mock.patch('nti.contenttypes.courses.creator.library_root')
     def test_decorators(self, mock_lr):
         root = FilesystemBucket(name=u"root")
         root.absolute_path = '/tmp'
-        mock_lr.is_callable().returns(root)
+        mock_lr.return_value = root
 
         folder = HostPolicyFolder()
         folder.__name__ = u'bleach.org'
