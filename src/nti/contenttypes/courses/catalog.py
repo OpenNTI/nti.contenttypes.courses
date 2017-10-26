@@ -16,6 +16,8 @@ from functools import total_ordering
 from zope import component
 from zope import interface
 
+from zope.annotation.interfaces import IAttributeAnnotatable
+
 from zope.cachedescriptors.method import cachedIn
 
 from zope.cachedescriptors.property import readproperty
@@ -282,9 +284,9 @@ class CatalogFamily(SchemaConfigured,
         SchemaConfigured.__init__(self, *args, **kwargs)  # not cooperative
 
 
-@interface.implementer(ICourseCatalogEntry)
 @total_ordering
 @EqHash('ntiid')
+@interface.implementer(ICourseCatalogEntry, IAttributeAnnotatable)
 class CourseCatalogEntry(CatalogFamily,
                          CreatedAndModifiedTimeMixin,
                          RecordableMixin):
