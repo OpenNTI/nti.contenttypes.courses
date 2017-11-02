@@ -85,6 +85,7 @@ from nti.contenttypes.courses.vendorinfo import VENDOR_INFO_KEY
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
 
+from nti.dataserver.authorization import is_admin_or_site_admin
 from nti.dataserver.authorization import role_for_providers_content
 
 from nti.dataserver.authorization_acl import has_permission
@@ -452,10 +453,11 @@ def get_courses_for_scope(user, scopes=(), sites=None, intids=None):
     sites = get_sites_4_index(sites)
     username = getattr(user, 'username', user)
     query = {
-        IX_SITE: {'any_of': sites},
         IX_SCOPE: {'any_of': scopes},
         IX_USERNAME: {'any_of': (username,)},
     }
+    if sites:
+        query[IX_SITE] = {'any_of': sites}
     for doc_id in catalog.apply(query) or ():
         obj = intids.queryObject(doc_id)
         if     ICourseInstanceEnrollmentRecord.providedBy(obj) \
@@ -488,7 +490,7 @@ class ProxyEnrollmentRecord(CreatedAndModifiedTimeMixin, Contained):
     Scope = None
     Principal = None
     CourseInstance = None
-    
+
     _SET_CREATED_MODTIME_ON_INIT = False
 
     def __init__(self, course=None, principal=None, scope=None):
@@ -1070,6 +1072,28 @@ def get_course_tags(filter_str=None, filter_hidden=True):
         filter_str = filter_str.lower()
         tags = [x for x in tags if filter_str in x]
     return tags
+
+
+def get_context_enrollment_records(user, requesting_user):
+    """
+    For a requesting_user, fetch all relevant enrollment records.
+    """
+    enrollments = get_enrollments(user)
+    if is_admin_or_site_admin(requesting_user):
+        # Admins get everything
+        result = enrollments
+    else:
+        # Instructors get enrollment records for the courses they teach.
+        result = []
+        enrolled_courses_to_records = {x.CourseInstance:x for x in enrollments}
+        instructed_courses = get_instructed_courses(requesting_user)
+        for course in instructed_courses or ():
+            try:
+                record = enrolled_courses_to_records[course]
+                result.append(record)
+            except KeyError:
+                pass
+    return result
 
 
 import zope.deferredimport

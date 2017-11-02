@@ -14,6 +14,8 @@ from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import contains_inanyorder
 
+import fudge
+
 from zope import component
 
 from zope.intid.interfaces import IIntIds
@@ -23,14 +25,21 @@ from nti.testing.matchers import verifiably_provides
 from nti.contenttypes.courses.courses import ContentCourseInstance
 
 from nti.contenttypes.courses.index import get_courses_catalog
+from nti.contenttypes.courses.index import get_enrollment_catalog
 from nti.contenttypes.courses.index import install_courses_catalog
+from nti.contenttypes.courses.index import install_enrollment_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.utils import get_course_tags
+from nti.contenttypes.courses.utils import index_course_roles
 from nti.contenttypes.courses.utils import get_courses_for_tag
 from nti.contenttypes.courses.utils import ProxyEnrollmentRecord
+from nti.contenttypes.courses.utils import get_context_enrollment_records
+
+from nti.dataserver.users import User
 
 from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 from nti.dataserver.tests.mock_dataserver import DataserverLayerTest
@@ -167,3 +176,73 @@ class TestTags(CourseLayerTest):
         assert_that(ext_obj, has_entry('tags',
                                        contains_inanyorder('entry3_tag',
                                                            'DUPLICATE_TAG')))
+
+
+class TestContextEnrollments(CourseLayerTest):
+
+    @WithMockDSTrans
+    @fudge.patch('nti.contenttypes.courses.utils.is_admin_or_site_admin')
+    def test_context_enrollments(self, fudge_admin):
+        ds_folder = self.ds.dataserver_folder
+        install_enrollment_catalog(ds_folder)
+        install_courses_catalog(ds_folder)
+        intids = component.queryUtility(IIntIds)
+        enrollment_catalog = get_enrollment_catalog()
+
+        # Base/empty cases
+        admin_user = User.create_user(username='sjohnson@nextthought.com')
+        instructor_user = User.create_user(username='instructor_user')
+        student_user = User.create_user(username='student_user')
+        fudge_admin.is_callable().returns(True)
+        records = get_context_enrollment_records(None, None)
+        assert_that(records, has_length(0))
+        records = get_context_enrollment_records(student_user, None)
+        assert_that(records, has_length(0))
+        records = get_context_enrollment_records(student_user, admin_user)
+        assert_that(records, has_length(0))
+        fudge_admin.is_callable().returns(False)
+        records = get_context_enrollment_records(student_user, instructor_user)
+        assert_that(records, has_length(0))
+
+        # Create two courses, one with instructor, one without.
+        inst1 = ContentCourseInstance()
+        entry1 = ICourseCatalogEntry(inst1)
+        entry1.title = u'course1'
+        ds_folder._p_jar.add(inst1)
+        addIntId(inst1)
+        inst1.instructors = (instructor_user,)
+        index_course_roles(inst1, catalog=enrollment_catalog, intids=intids)
+
+        inst2 = ContentCourseInstance()
+        entry2 = ICourseCatalogEntry(inst2)
+        entry2.title = u'course2'
+        ds_folder._p_jar.add(inst2)
+        addIntId(inst2)
+
+        # One course
+        enrollments = ICourseEnrollmentManager(inst1)
+        record = enrollments.enroll(student_user)
+        enrollment_catalog.index_doc(intids.getId(record), record)
+
+        fudge_admin.is_callable().returns(True)
+        records = get_context_enrollment_records(student_user, admin_user)
+        assert_that(records, has_length(1))
+        assert_that(records, contains(record))
+        fudge_admin.is_callable().returns(False)
+        records = get_context_enrollment_records(student_user, instructor_user)
+        assert_that(records, has_length(1))
+        assert_that(records, contains(record))
+
+        # Two courses
+        enrollments = ICourseEnrollmentManager(inst2)
+        record2 = enrollments.enroll(student_user)
+        enrollment_catalog.index_doc(intids.getId(record2), record2)
+
+        fudge_admin.is_callable().returns(True)
+        records = get_context_enrollment_records(student_user, admin_user)
+        assert_that(records, has_length(2))
+        assert_that(records, contains_inanyorder(record, record2))
+        fudge_admin.is_callable().returns(False)
+        records = get_context_enrollment_records(student_user, instructor_user)
+        assert_that(records, has_length(1))
+        assert_that(records, contains(record))
