@@ -177,7 +177,7 @@ class TestFunctionalEnrollment(CourseLayerTest):
         manager = interfaces.ICourseEnrollmentManager(record.CourseInstance)
         eventtesting.clearEvents()
         result = record = manager.drop(principal)
-        assert_that(result, 
+        assert_that(result,
                     is_(enrollment.DefaultCourseInstanceEnrollmentRecord))
 
         evts = eventtesting.getEvents()
@@ -190,7 +190,7 @@ class TestFunctionalEnrollment(CourseLayerTest):
         #    <zc.intid.utility.RemovedEvent object at 0x105813cd0>,
         #   <zope.container.contained.ContainerModifiedEvent object at 0x1052244d0>]
         assert_that(evts[0], validly_provides(IObjectRemovedEvent))
-        assert_that(evts[0], 
+        assert_that(evts[0],
                     has_property('object', is_(enrollment.DefaultCourseInstanceEnrollmentRecord)))
 
         # again does nothing
@@ -271,13 +271,13 @@ class TestFunctionalEnrollment(CourseLayerTest):
             public_scope = self.course.SharingScopes['Public']
             assert_that(public_scope,
                         is_not(same_instance(self.course.SubInstances['section1'].SharingScopes['Public'])))
-     
+
             assert_that(principal, is_in(public_scope))
             assert_that(public_scope, is_in(principal.dynamic_memberships))
 
             assert_that(_dynamic_memberships_that_participate_in_security(principal, as_principals=False),
                         has_item(public_scope))
-    
+
             assert_that(_dynamic_memberships_that_participate_in_security(principal),
                         has_item(has_property('id', public_scope.NTIID)))
 
@@ -294,7 +294,7 @@ class TestFunctionalEnrollment(CourseLayerTest):
         assert_that(cin.count_enrollments(), is_(1))
         assert_that(list(cin.iter_enrollments()), contains(record))
 
-        pins = component.subscribers((principal,), 
+        pins = component.subscribers((principal,),
                                      interfaces.IPrincipalEnrollments)
         assert_that(pins, has_length(1))
         pin = pins[0]
@@ -321,7 +321,7 @@ class TestFunctionalEnrollment(CourseLayerTest):
         assert_that(cin.count_enrollments(), is_(0))
         assert_that(list(cin.iter_enrollments()), is_empty())
 
-        pins = component.subscribers((principal,), 
+        pins = component.subscribers((principal,),
                                      interfaces.IPrincipalEnrollments)
         assert_that(pins, has_length(1))
         pin = pins[0]
@@ -333,11 +333,11 @@ class TestFunctionalEnrollment(CourseLayerTest):
         # ...dropped from scope memberships
         public_scope = course.SharingScopes['Public']
         if expect_not_in_public_scope:
-            assert_that(public_scope, 
+            assert_that(public_scope,
                         is_not(is_in(list(principal.dynamic_memberships))))
             assert_that(principal, is_not(is_in(public_scope)))
         else:
-            assert_that(public_scope, 
+            assert_that(public_scope,
                         is_in(list(principal.dynamic_memberships)))
             assert_that(principal, is_in(public_scope))
 
@@ -512,15 +512,15 @@ class TestFunctionalEnrollment(CourseLayerTest):
 
     def test_es_lineage(self):
         assert_that(ENROLLMENT_LINEAGE_MAP, has_length(6))
-        assert_that(ENROLLMENT_LINEAGE_MAP, 
+        assert_that(ENROLLMENT_LINEAGE_MAP,
                     has_entry(ES_PUBLIC, is_((ES_PUBLIC,))))
-        assert_that(ENROLLMENT_LINEAGE_MAP, 
+        assert_that(ENROLLMENT_LINEAGE_MAP,
                     has_entry(ES_CREDIT, is_((ES_CREDIT,))))
-        assert_that(ENROLLMENT_LINEAGE_MAP, 
+        assert_that(ENROLLMENT_LINEAGE_MAP,
                     has_entry(ES_PURCHASED, is_((ES_CREDIT,))))
-        assert_that(ENROLLMENT_LINEAGE_MAP, 
+        assert_that(ENROLLMENT_LINEAGE_MAP,
                     has_entry(ES_CREDIT_DEGREE, is_((ES_CREDIT,))))
         assert_that(ENROLLMENT_LINEAGE_MAP,
                     has_entry(ES_ALL, is_((ES_PUBLIC, ES_CREDIT,))))
-        assert_that(ENROLLMENT_LINEAGE_MAP, 
+        assert_that(ENROLLMENT_LINEAGE_MAP,
                     has_entry(ES_CREDIT_NONDEGREE, is_((ES_CREDIT,))))
