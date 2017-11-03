@@ -13,6 +13,7 @@ from hamcrest import none
 from hamcrest import all_of
 from hamcrest import is_not
 from hamcrest import equal_to
+from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import has_entries
 from hamcrest import has_properties
@@ -83,9 +84,14 @@ class TestCatalogParser(CourseLayerTest):
         assert_that(richDescription,
                     all_of(contains_string('<strong>'), contains_string('<li>')))
 
+        instructors = entry.Instructors
+        assert_that(instructors, has_length(1))
+        assert_that(instructors[0], 
+                    has_properties('Biography', is_("Senior Vice President and Provost")))
+
         assert_that(entry,
                     externalizes(has_entries(
-                        'MimeType', 'application/vnd.nextthought.courses.persistentcoursecataloglegacyentry',
+                                    'MimeType', 'application/vnd.nextthought.courses.persistentcoursecataloglegacyentry',
                                     'DisableOverviewCalendar', True,
                                     'RichDescription', contains_string('<strong>'))))
 
