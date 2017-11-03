@@ -797,9 +797,9 @@ class ICourseCatalogInstructorInfo(interface.Interface):
     Suffix = ValidTextLine(title=u"The instructor's suffix such as PhD or Jr",
                            required=False)
     
-    Biography = ValidText(title=u"The instructor's biography",
-                          required=False,
-                          default=None)
+    Biography = HTMLContentFragment(title=u"The instructor's biography",
+                                    required=False,
+                                    default=u'')
 
 
 class ICatalogFamily(IDisplayableContent):
