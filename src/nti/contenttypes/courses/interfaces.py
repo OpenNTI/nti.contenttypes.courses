@@ -101,7 +101,6 @@ from nti.recorder.interfaces import IRecordableContainer
 from nti.schema.field import Bool
 from nti.schema.field import Dict
 from nti.schema.field import Text
-from nti.schema.field import Tuple
 from nti.schema.field import Choice
 from nti.schema.field import Object
 from nti.schema.field import Number
