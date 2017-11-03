@@ -87,7 +87,11 @@ class TestCatalogParser(CourseLayerTest):
         instructors = entry.Instructors
         assert_that(instructors, has_length(1))
         assert_that(instructors[0], 
-                    has_properties('Biography', is_("Senior Vice President and Provost")))
+                    has_properties("Name", 'Dr. Kyle Harper',
+                                   "username", "harp4162",
+                                   'JobTitle', 'Associate Professor of Classics',
+                                   'defaultphoto', "images/Harper.png",
+                                   'Biography', "Senior Vice President and Provost",))
 
         assert_that(entry,
                     externalizes(has_entries(
