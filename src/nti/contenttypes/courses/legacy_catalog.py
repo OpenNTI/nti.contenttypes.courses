@@ -31,6 +31,8 @@ from nti.contenttypes.courses.utils import path_for_entry
 
 from nti.externalization.representation import WithRepr
 
+from nti.property.property import alias
+
 from nti.recorder.mixins import RecordableMixin
 
 from nti.schema.field import Int
@@ -147,10 +149,13 @@ class CourseCreditLegacyInfo(SchemaConfigured):
 
 
 @interface.implementer(ICourseCatalogInstructorLegacyInfo)
-class CourseCatalogInstructorLegacyInfo(CourseCatalogInstructorInfo):
-    defaultphoto = None
-
+class CourseCatalogInstructorLegacyInfo(CourseCatalogInstructorInfo): 
     createDirectFieldProperties(ICourseCatalogInstructorLegacyInfo)
+
+    Biography = None
+    defaultphoto = None
+   
+    Bio = alias('Biography')
 
 
 def _derive_preview(self):
