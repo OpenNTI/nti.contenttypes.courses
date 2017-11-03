@@ -182,14 +182,16 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
         for inst in parsed['instructors'] or ():
             username = inst.get('username', u'')
             userid = inst.get('userid', u'')  # legacy
+            name = inst.get('Name') or inst.get('name')
+            job_title = inst.get('JobTitle') or inst.get('title')
             biography = inst.get('Biography') or inst.get('biography') or inst.get('bio')
             instructors.append({
                 MIMETYPE: 'application/vnd.nextthought.courses.coursecataloginstructorlegacyinfo',
-                u'username': username,
+                u'Name': name,
                 u'userid': userid,
+                u'username': username,
+                u'JobTitle': job_title,
                 u'Biography': biography,
-                u'Name': inst.get('name'),
-                u'JobTitle': inst.get('title'),
                 u'defaultphoto': inst.get('defaultphoto'),
             })
         parsed[u'Instructors'] = instructors
