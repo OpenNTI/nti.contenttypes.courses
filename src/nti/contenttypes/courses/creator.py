@@ -213,7 +213,7 @@ def create_course(admin, key, catalog=None, writeout=False,
         lifecycleevent.created(course)
         # create a bundle
         if IContentCourseInstance.providedBy(course):
-            created_content_package_bundle(course, root,
+            created_content_package_bundle(course, course_root,
                                            ntiid_factory=_create_bundle_ntiid)
     return course
 
