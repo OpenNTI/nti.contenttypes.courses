@@ -16,9 +16,10 @@ from zope.component.hooks import site as current_site
 from zope.intid.interfaces import IIntIds
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
-from nti.contenttypes.courses.interfaces import ICreatedCourse
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import IGlobalCourseCatalog
+
+from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
@@ -46,19 +47,18 @@ class MockDataserver(object):
 
 def process_site(intids, seen):
     count = 0
-    course_catalog = component.queryUtility(ICourseCatalog)
-    if      course_catalog \
-        and not course_catalog.isEmpty() \
-        and not IGlobalCourseCatalog.providedBy(course_catalog):
-        for entry in course_catalog.iterCatalogEntries():
+    catalog = component.queryUtility(ICourseCatalog)
+    if      catalog \
+        and not catalog.isEmpty() \
+        and not IGlobalCourseCatalog.providedBy(catalog):
+        for entry in catalog.iterCatalogEntries():
             course = ICourseInstance(entry, None)
             doc_id = intids.queryId(course)
-            if doc_id is None or doc_id in seen:
-                continue
-            if not ICreatedCourse.providedBy(course):
+            if     doc_id is None or doc_id in seen \
+                or ILegacyCourseInstance.providedBy(course):
                 continue
             bundle = course.ContentPackageBundle
-            if getattr(bundle, 'root', None) != course.root:
+            if bundle is not None and getattr(bundle, 'root', None) != course.root:
                 bundle.root = course.root
                 count += 1
     return count
@@ -86,7 +86,7 @@ def do_evolve(context, generation=generation):
                 count += process_site(intids, seen)
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
-    logger.info('Evolution %s done. %s course(s) processed', 
+    logger.info('Evolution %s done. %s course(s) processed',
                 generation, count)
 
 
