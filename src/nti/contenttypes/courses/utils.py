@@ -1034,7 +1034,7 @@ def get_courses_for_tag(tag, sites=(), intids=None):
     """
     Given a tag, get all courses with that tag.
     """
-    result = set()
+    courses = set()
     catalog = get_courses_catalog()
     query = {IX_TAGS: {'any_of': (tag,)}}
     sites = get_sites_4_index(sites)
@@ -1043,9 +1043,27 @@ def get_courses_for_tag(tag, sites=(), intids=None):
     intids = component.getUtility(IIntIds) if intids is None else intids
     for uid in catalog.apply(query) or ():
         course = ICourseInstance(intids.queryObject(uid), None)
+        courses.add(course)
+    courses.discard(None)
+    result = set()
+    # CourseSubinstances will inherit the parent's tags unless they are
+    # explicitly set; therefore, we mimic that behavior here.
+    for course in courses:
+        if not ICourseSubInstance.providedBy(course):
+            children = get_course_subinstances(course)
+            for child in children or ():
+                child_entry = ICourseCatalogEntry(child, None)
+                if tag in getattr(child_entry, 'tags', ()):
+                    result.add(child)
         result.add(course)
-    result.discard(None)
     return tuple(result)
+
+
+def is_hidden_tag(tag):
+    """
+    Hidden tags are defined as starting with a '.'.
+    """
+    return tag.startswith('.')
 
 
 def filter_hidden_tags(tags):
@@ -1053,7 +1071,9 @@ def filter_hidden_tags(tags):
     Filter any hidden tags from the given set of tags. Hidden tags are defined
     as starting with a '.'.
     """
-    return [x for x in tags if not x.startswith('.')]
+    if not tags:
+        return ()
+    return [x for x in tags if not is_hidden_tag(x)]
 
 
 def get_course_tags(filter_str=None, filter_hidden=True):
