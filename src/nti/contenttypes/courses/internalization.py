@@ -183,7 +183,7 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
         instructors = []
         for inst in parsed['instructors'] or ():
             inst = CaseInsensitiveDict(inst)
-            suffix = ins.get('suffix')
+            suffix = inst.get('suffix')
             name = inst.get('name') or u''
             username = inst.get('username') or u''
             userid = inst.get('userid') or u''  # legacy
