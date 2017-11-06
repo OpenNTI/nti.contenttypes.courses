@@ -72,6 +72,7 @@ setup(
         'nti.wref',
         'nti.zope_catalog',
         'persistent',
+        'requests',
         'simplejson',
         'six',
         'zc.intid',
