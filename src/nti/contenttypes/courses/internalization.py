@@ -14,6 +14,8 @@ from collections import Mapping
 
 import isodate
 
+from requests.structures import CaseInsensitiveDict
+
 from zope import component
 from zope import interface
 
@@ -180,14 +182,17 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
     if 'instructors' in parsed:
         instructors = []
         for inst in parsed['instructors'] or ():
-            username = inst.get('username', u'')
-            userid = inst.get('userid', u'')  # legacy
-            name = inst.get('Name') or inst.get('name')
-            job_title = inst.get('JobTitle') or inst.get('title')
-            biography = inst.get('Biography') or inst.get('biography') or inst.get('bio')
+            inst = CaseInsensitiveDict(inst)
+            suffix = ins.get('suffix')
+            name = inst.get('name') or u''
+            username = inst.get('username') or u''
+            userid = inst.get('userid') or u''  # legacy
+            job_title = inst.get('jobTitle') or inst.get('title')
+            biography = inst.get('biography') or inst.get('bio')
             instructors.append({
                 MIMETYPE: 'application/vnd.nextthought.courses.coursecataloginstructorlegacyinfo',
                 u'Name': name,
+                u'Suffix': suffix,
                 u'userid': userid,
                 u'username': username,
                 u'JobTitle': job_title,
