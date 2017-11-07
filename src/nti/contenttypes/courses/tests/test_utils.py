@@ -22,6 +22,8 @@ from zope.intid.interfaces import IIntIds
 
 from nti.testing.matchers import verifiably_provides
 
+from nti.contentfragments.interfaces import IPlainTextContentFragment
+
 from nti.contenttypes.courses.courses import ContentCourseInstance
 
 from nti.contenttypes.courses.index import get_courses_catalog
@@ -72,7 +74,7 @@ class TestTags(CourseLayerTest):
         assert_that(all_tags, has_length(0))
         all_tags = get_course_tags(filter_str='entry3')
         assert_that(all_tags, has_length(0))
-        courses = get_courses_for_tag('entry3_tag')
+        courses = get_courses_for_tag('entry3 tag')
         assert_that(courses, has_length(0))
 
         # Create three courses, some with tags
@@ -86,7 +88,7 @@ class TestTags(CourseLayerTest):
         inst2 = ContentCourseInstance()
         entry2 = ICourseCatalogEntry(inst2)
         entry2.title = u'course2'
-        entry2.tags = ('duplicate_tag',)
+        entry2.tags = (IPlainTextContentFragment(u'duplicate_tag'),)
         ds_folder._p_jar.add(inst2)
         addIntId(inst2)
         catalog.index_doc(intids.getId(inst2), inst2)
@@ -94,7 +96,8 @@ class TestTags(CourseLayerTest):
         inst3 = ContentCourseInstance()
         entry3 = ICourseCatalogEntry(inst3)
         entry3.title = u'course3'
-        entry3.tags = ('entry3_tag', 'DUPLICATE_TAG')
+        entry3.tags = (IPlainTextContentFragment(u'entry3 tag'),
+                       IPlainTextContentFragment(u'DUPLICATE_TAG'))
         ds_folder._p_jar.add(inst3)
         addIntId(inst3)
         catalog.index_doc(intids.getId(inst3), inst3)
@@ -102,39 +105,39 @@ class TestTags(CourseLayerTest):
         # Fetch tags
         all_tags = get_course_tags()
         assert_that(all_tags, has_length(2))
-        assert_that(all_tags, contains_inanyorder('entry3_tag',
-                                                  'duplicate_tag'))
+        assert_that(all_tags, contains_inanyorder(u'entry3 tag',
+                                                  u'duplicate_tag'))
 
-        all_tags = get_course_tags(filter_str='entry3')
+        all_tags = get_course_tags(filter_str=u'entry3')
         assert_that(all_tags, has_length(1))
-        assert_that(all_tags, contains('entry3_tag'))
+        assert_that(all_tags, contains(u'entry3 tag'))
 
-        all_tags = get_course_tags(filter_str='ENTRY')
+        all_tags = get_course_tags(filter_str=u'ENTRY')
         assert_that(all_tags, has_length(1))
-        assert_that(all_tags, contains('entry3_tag'))
+        assert_that(all_tags, contains(u'entry3 tag'))
 
-        all_tags = get_course_tags(filter_str='taG')
+        all_tags = get_course_tags(filter_str=u'taG')
         assert_that(all_tags, has_length(2))
-        assert_that(all_tags, contains_inanyorder('entry3_tag',
-                                                  'duplicate_tag'))
+        assert_that(all_tags, contains_inanyorder(u'entry3 tag',
+                                                  u'duplicate_tag'))
 
-        all_tags = get_course_tags(filter_str='DNE')
+        all_tags = get_course_tags(filter_str=u'DNE')
         assert_that(all_tags, has_length(0))
 
         # Fetch courses
         def _get_titles(courses):
             return [ICourseCatalogEntry(x).title for x in courses]
 
-        courses = get_courses_for_tag('entry3_tag')
+        courses = get_courses_for_tag(u'entry3 tag')
         assert_that(courses, has_length(1))
         assert_that(_get_titles(courses), contains('course3'))
 
-        courses = get_courses_for_tag('duplicate_tag')
+        courses = get_courses_for_tag(u'duplicate_tag')
         assert_that(courses, has_length(2))
         assert_that(_get_titles(courses), contains_inanyorder('course2',
                                                               'course3'))
 
-        courses = get_courses_for_tag('DUPLICATE_TAG')
+        courses = get_courses_for_tag(u'DUPLICATE_TAG')
         assert_that(courses, has_length(2))
         assert_that(_get_titles(courses), contains_inanyorder('course2',
                                                               'course3'))
@@ -144,15 +147,15 @@ class TestTags(CourseLayerTest):
 
         all_tags = get_course_tags()
         assert_that(all_tags, has_length(1))
-        assert_that(all_tags, contains('duplicate_tag'))
+        assert_that(all_tags, contains(u'duplicate_tag'))
 
         all_tags = get_course_tags(filter_str='entry3')
         assert_that(all_tags, has_length(0))
 
-        courses = get_courses_for_tag('entry3_tag')
+        courses = get_courses_for_tag(u'entry3 tag')
         assert_that(courses, has_length(0))
 
-        courses = get_courses_for_tag('duplicate_tag')
+        courses = get_courses_for_tag(u'duplicate_tag')
         assert_that(courses, has_length(1))
         assert_that(_get_titles(courses), contains('course2'))
 
@@ -162,20 +165,20 @@ class TestTags(CourseLayerTest):
         all_tags = get_course_tags()
         assert_that(all_tags, has_length(0))
 
-        all_tags = get_course_tags(filter_str='entry3')
+        all_tags = get_course_tags(filter_str=u'entry3')
         assert_that(all_tags, has_length(0))
 
-        courses = get_courses_for_tag('entry3_tag')
+        courses = get_courses_for_tag(u'entry3 tag')
         assert_that(courses, has_length(0))
 
-        courses = get_courses_for_tag('duplicate_tag')
+        courses = get_courses_for_tag(u'duplicate_tag')
         assert_that(courses, has_length(0))
 
         # External tags
         ext_obj = to_external_object(entry3)
         assert_that(ext_obj, has_entry('tags',
-                                       contains_inanyorder('entry3_tag',
-                                                           'DUPLICATE_TAG')))
+                                       contains_inanyorder(u'entry3 tag',
+                                                           u'DUPLICATE_TAG')))
 
 
 class TestContextEnrollments(CourseLayerTest):

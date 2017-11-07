@@ -266,7 +266,6 @@ class CourseCatalogInstructorInfo(SchemaConfigured):
 class CatalogFamily(SchemaConfigured,
                     DisplayableContentMixin):
     # shut up pylint
-    tags = ()
     title = None
     EndDate = None
     StartDate = None

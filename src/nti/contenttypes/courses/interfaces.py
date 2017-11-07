@@ -56,6 +56,7 @@ from zope.site.interfaces import IFolder
 from nti.cabinet.interfaces import ISourceFiler
 
 from nti.contentfragments.schema import PlainTextLine
+from nti.contentfragments.schema import HTMLContentFragment
 
 from nti.contentlibrary.interfaces import IDisplayableContent
 from nti.contentlibrary.interfaces import IContentPackageBundle
@@ -66,13 +67,9 @@ from nti.contentlibrary.interfaces import IEditableContentPackageBundle
 from nti.contentlibrary.interfaces import IGenericSynchronizationResults
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
-from nti.contentfragments.schema import HTMLContentFragment
-
 from nti.contenttypes.courses import MessageFactory as _
 
 from nti.contenttypes.reports.interfaces import IReportContext
-
-from nti.coremetadata.interfaces import ITaggedContent
 
 from nti.dataserver.interfaces import ICommunity
 from nti.dataserver.interfaces import ILastModified
@@ -111,6 +108,8 @@ from nti.schema.field import ListOrTuple
 from nti.schema.field import ValidDatetime
 from nti.schema.field import ValidTextLine
 from nti.schema.field import UniqueIterable
+from nti.schema.field import TupleFromObject
+
 from nti.schema.jsonschema import TAG_HIDDEN_IN_UI
 from nti.schema.jsonschema import TAG_REQUIRED_IN_UI
 
@@ -796,7 +795,7 @@ class ICourseCatalogInstructorInfo(interface.Interface):
 
     Suffix = ValidTextLine(title=u"The instructor's suffix such as PhD or Jr",
                            required=False)
-    
+
     Biography = HTMLContentFragment(title=u"The instructor's biography",
                                     required=False,
                                     default=u'')
@@ -853,12 +852,20 @@ class ICatalogFamily(IDisplayableContent):
     contributors.setTaggedValue('_ext_excluded_out', True)
 
 
+class MultiWordTag(PlainTextLine):
+    """
+    Tags that may span multiple, lowercase words.
+    """
+
+    def fromUnicode(self, value):
+        return super(MultiWordTag, self).fromUnicode(value.lower())
+
+
 class ICourseCatalogEntry(ICatalogFamily,
                           ILastModified,
                           IShouldHaveTraversablePath,
                           IContained,
                           ISynchronizable,
-                          ITaggedContent,
                           IRecordable):
     """
     An entry in the course catalog containing metadata
@@ -904,6 +911,13 @@ class ICourseCatalogEntry(ICatalogFamily,
                                           for the course.  This provides storage for a description with basic html formatting""",
                                           required=False,
                                           default=u'')
+
+    tags = TupleFromObject(title=u"Applied Tags",
+                           value_type=MultiWordTag(min_length=1,
+                                                   title=u"A single tag",
+                                                   __name__=u'tags'),
+                           unique=True,
+                           default=())
 
     def isCourseCurrentlyActive():
         """
