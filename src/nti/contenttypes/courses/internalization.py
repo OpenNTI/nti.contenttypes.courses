@@ -230,6 +230,10 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
                 # field to a non-None value so this can be updated.
                 parsed[name] = ()
                 setattr(context, name, ())
+
+    tags = parsed.get('tags', ())
+    if tags:
+        parsed['tags'] = tuple(set(tags))
     return parsed
 
 
