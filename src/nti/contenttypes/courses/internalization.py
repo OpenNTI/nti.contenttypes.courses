@@ -183,9 +183,9 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
         instructors = []
         for inst in parsed['instructors'] or ():
             inst = CaseInsensitiveDict(inst)
-            email = inst.get('email')
             suffix = inst.get('suffix')
             name = inst.get('name') or u''
+            email = inst.get('email') or None
             username = inst.get('username') or u''
             userid = inst.get('userid') or u''  # legacy
             job_title = inst.get('jobTitle') or inst.get('title')
