@@ -29,10 +29,11 @@
     }],
     "instructors": [
         {
-            "defaultphoto": "images/He_Ketchum.png",
             "username": "ketc4743",
             "name": "Heather R. Ketchum, Ph.D.",
+            "email": "Heather.R.Ketchum-1@ou.edu",
             "title": "Associate Professor, Biology",
+            "defaultphoto": "images/He_Ketchum.png",
             "biography": "Texas A&M University, Entomology"
         },
         {
