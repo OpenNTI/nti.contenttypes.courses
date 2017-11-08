@@ -185,6 +185,7 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
             inst = CaseInsensitiveDict(inst)
             suffix = inst.get('suffix')
             name = inst.get('name') or u''
+            email = inst.get('email') or None
             username = inst.get('username') or u''
             userid = inst.get('userid') or u''  # legacy
             job_title = inst.get('jobTitle') or inst.get('title')
@@ -192,6 +193,7 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
             instructors.append({
                 MIMETYPE: 'application/vnd.nextthought.courses.coursecataloginstructorlegacyinfo',
                 u'Name': name,
+                u'Email': email,
                 u'Suffix': suffix,
                 u'userid': userid,
                 u'username': username,

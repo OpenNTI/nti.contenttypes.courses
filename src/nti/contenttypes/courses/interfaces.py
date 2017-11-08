@@ -19,6 +19,8 @@ from __future__ import absolute_import
 # disable: too many ancestors, missing 'self''
 # pylint: disable=I0011,R0901,E0213
 
+from z3c.schema.email import isValidMailAddress
+
 from zope import component
 from zope import interface
 
@@ -72,6 +74,7 @@ from nti.contenttypes.courses import MessageFactory as _
 from nti.contenttypes.reports.interfaces import IReportContext
 
 from nti.dataserver.interfaces import ICommunity
+from nti.dataserver.interfaces import InvalidData
 from nti.dataserver.interfaces import ILastModified
 from nti.dataserver.interfaces import IGrantAccessException
 from nti.dataserver.interfaces import ITitledDescribedContent
@@ -110,6 +113,8 @@ from nti.schema.field import ValidTextLine
 from nti.schema.field import UniqueIterable
 from nti.schema.field import TupleFromObject
 
+from nti.schema.jsonschema import TAG_UI_TYPE
+from nti.schema.jsonschema import UI_TYPE_EMAIL
 from nti.schema.jsonschema import TAG_HIDDEN_IN_UI
 from nti.schema.jsonschema import TAG_REQUIRED_IN_UI
 
@@ -776,6 +781,14 @@ class IGlobalCourseCatalog(IWritableCourseCatalog):
     """
 
 
+def checkEmailAddress(value):
+    if value and isValidMailAddress(value):
+        return True
+    ex = InvalidData(value)
+    ex.i18n_message = _(u"The email address you have entered is not valid.")
+    raise ex
+
+
 class ICourseCatalogInstructorInfo(interface.Interface):
     """
     Information about a course instructor.
@@ -795,6 +808,12 @@ class ICourseCatalogInstructorInfo(interface.Interface):
 
     Suffix = ValidTextLine(title=u"The instructor's suffix such as PhD or Jr",
                            required=False)
+    
+    Email = ValidTextLine(title=u"The instructor's email",
+                          required=False,
+                          constraint=checkEmailAddress)
+    Email.setTaggedValue(TAG_REQUIRED_IN_UI, True)
+    Email.setTaggedValue(TAG_UI_TYPE, UI_TYPE_EMAIL)
 
     Biography = HTMLContentFragment(title=u"The instructor's biography",
                                     required=False,

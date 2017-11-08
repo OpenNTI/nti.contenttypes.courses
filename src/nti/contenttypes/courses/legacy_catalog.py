@@ -152,9 +152,11 @@ class CourseCreditLegacyInfo(SchemaConfigured):
 class CourseCatalogInstructorLegacyInfo(CourseCatalogInstructorInfo): 
     createDirectFieldProperties(ICourseCatalogInstructorLegacyInfo)
 
+    Email = None
     Biography = None
     defaultphoto = None
    
+    email = alias('Email')
     Bio = alias('Biography')
 
 

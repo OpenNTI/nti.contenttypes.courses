@@ -89,8 +89,9 @@ class TestCatalogParser(CourseLayerTest):
         assert_that(instructors[0], 
                     has_properties("Name", 'Dr. Kyle Harper',
                                    "username", "harp4162",
-                                   'JobTitle', 'Associate Professor of Classics',
+                                   "Email", "kyleharper@ou.edu",
                                    'defaultphoto', "/images/Harper.png",
+                                   'JobTitle', 'Associate Professor of Classics',
                                    'Biography', "Senior Vice President and Provost",))
 
         assert_that(entry,

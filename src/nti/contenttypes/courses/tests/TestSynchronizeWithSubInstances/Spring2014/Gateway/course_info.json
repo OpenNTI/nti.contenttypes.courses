@@ -8,10 +8,11 @@
 	"prerequisites": [],
 	"instructors": [
 		{
-			"defaultphoto": "images/Harper.png",
-			"name":"Dr. Kyle Harper",
-			"title": "Associate Professor of Classics",
 			"username": "harp4162",
+			"name": "Dr. Kyle Harper",
+			"email": "kyleharper@ou.edu",
+			"defaultphoto": "images/Harper.png",
+			"title": "Associate Professor of Classics",
 			"biography": "Senior Vice President and Provost"
 		}
 	],
