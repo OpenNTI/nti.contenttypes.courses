@@ -33,8 +33,8 @@ from nti.contenttypes.courses.utils import get_course_editors
 from nti.contenttypes.courses.utils import get_instructed_and_edited_courses
 from nti.contenttypes.courses.utils import AbstractInstanceWrapper
 
-from nti.dataserver.authorization import is_admin
 from nti.dataserver.authorization import is_content_admin
+from nti.dataserver.authorization import is_admin_or_site_admin
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
@@ -114,7 +114,8 @@ def get_course_admin_role(course, user, is_admin=False):
 class _DefaultPrincipalAdministrativeRoleCatalog(object):
     """
     This catalog returns all courses the user is in the instructors list,
-    or all courses if the user is a global content admin.
+    or all courses if the user is an admin, site admin, or global content
+    admin.
     """
 
     def __init__(self, user):
@@ -122,7 +123,7 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
 
     @Lazy
     def _is_admin(self):
-        return is_admin(self.user)
+        return is_admin_or_site_admin(self.user)
 
     @Lazy
     def _is_content_admin(self):
@@ -134,7 +135,7 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
         catalog = component.queryUtility(ICourseCatalog)
         for entry in catalog.iterCatalogEntries():
             course = ICourseInstance(entry, None)
-            if course is not None \
+            if      course is not None \
                 and not ILegacyCourseInstance.providedBy(course) \
                 and (   self._is_admin
                      or has_permission(ACT_CONTENT_EDIT, entry, self.user)):
