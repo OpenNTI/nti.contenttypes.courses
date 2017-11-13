@@ -41,6 +41,7 @@ from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ACT_CREATE
 from nti.dataserver.authorization import ROLE_ADMIN
 from nti.dataserver.authorization import ACT_UPDATE
+from nti.dataserver.authorization import ROLE_SITE_ADMIN
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 from nti.dataserver.authorization import ACT_SYNC_LIBRARY
 from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
@@ -72,7 +73,10 @@ def editor_aces_for_course(course, provider):
     aces = [ace_allowing(ROLE_ADMIN, ALL_PERMISSIONS, type(provider)),
             ace_allowing(ROLE_CONTENT_ADMIN, ACT_READ, type(provider)),
             ace_allowing(ROLE_CONTENT_ADMIN, ACT_CONTENT_EDIT, type(provider)),
-            ace_allowing(ROLE_CONTENT_ADMIN, ACT_SYNC_LIBRARY, type(provider))]
+            ace_allowing(ROLE_CONTENT_ADMIN, ACT_SYNC_LIBRARY, type(provider)),
+            ace_allowing(ROLE_SITE_ADMIN, ACT_READ, type(provider)),
+            ace_allowing(ROLE_SITE_ADMIN, ACT_CONTENT_EDIT, type(provider))]
+
     # Now our content editors/admins.
     for editor in get_course_editors(course):
         aces.append(ace_allowing(editor, ACT_READ, type(provider)))
