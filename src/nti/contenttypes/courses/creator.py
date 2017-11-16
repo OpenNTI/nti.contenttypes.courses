@@ -42,6 +42,9 @@ from nti.contenttypes.courses.courses import CourseAdministrativeLevel
 
 from nti.contenttypes.courses.interfaces import SECTIONS
 
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICreatedCourse
 from nti.contenttypes.courses.interfaces import IContentCourseInstance
@@ -50,9 +53,11 @@ from nti.contenttypes.courses.interfaces import CourseAlreadyExistsException
 from nti.intid.common import addIntId
 
 from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 
 from nti.zodb.containers import time_to_64bit_int
+from nti.traversal.traversal import find_interface
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -134,17 +139,25 @@ def _create_bundle_ntiid(bundle, ntiid_type):
     """
     Create a bundle ntiid without us relying on our hierarchical path.
     """
-    intids = component.queryUtility(IIntIds)
-    current_time = time_to_64bit_int(time.time())
-    if intids is not None:
-        addIntId(bundle)
-        bundle_id = intids.getId(bundle)
-        specific_base = '%s.%s' % (bundle_id, current_time)
+    course = find_interface(bundle, ICourseInstance, strict=False)
+    entry = ICourseCatalogEntry(course, None)
+    if not getattr(entry, 'ntiid', None):
+        intids = component.queryUtility(IIntIds)
+        current_time = time_to_64bit_int(time.time())
+        if intids is not None:
+            addIntId(bundle)
+            bundle_id = intids.getId(bundle)
+            specific_base = '%s.%s' % (bundle_id, current_time)
+        else:
+            specific_base = str(current_time)
+        specific = make_specific_safe(specific_base)
+        ntiid = make_ntiid(nttype=ntiid_type,
+                           specific=specific)
     else:
-        specific_base = str(current_time)
-    specific = make_specific_safe(specific_base)
-    ntiid = make_ntiid(nttype=ntiid_type,
-                       specific=specific)
+        specific = get_specific(entry.ntiid)
+        ntiid = make_ntiid(nttype=ntiid_type,
+                           base=entry.ntiid,
+                           specific=specific)
     return ntiid
 
 
@@ -177,7 +190,7 @@ def create_course(admin, key, catalog=None, writeout=False,
         course_path = os.path.join(root.absolute_path, key)
     else:
         course_path = None
-        writeout = False # there is not absolute_path
+        writeout = False  # there is not absolute_path
 
     if writeout and IFilesystemBucket.providedBy(root):
         create_directory(course_path)
