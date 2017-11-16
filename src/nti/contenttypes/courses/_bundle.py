@@ -63,8 +63,9 @@ def created_content_package_bundle(course, bucket=None,
     if course.ContentPackageBundle is None:
         bundle = CoursePersistentContentPackageBundle()
         bundle.root = bucket or course.root
-        bundle.__parent__ = course
         bundle.createdTime = bundle.lastModified = 0
+        # set lineage before ntiid
+        bundle.__parent__ = course
         bundle.ntiid = ntiid_factory(bundle, 'Bundle:CourseBundle')
         # register w/ course and notify
         course.ContentPackageBundle = bundle
