@@ -163,7 +163,7 @@ class _CourseCatalogEntryExporter(object):
         ('Description', 'description'), ('RichDescription', 'richDescription')
     )
 
-    REQUIRED = {x[0] for x in REPLACE}
+    REQUIRED = {x[0] for x in REPLACE} | {'tags'}
 
     def __init__(self, obj):
         self.entry = obj
