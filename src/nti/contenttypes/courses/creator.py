@@ -40,8 +40,10 @@ from nti.contenttypes.courses.courses import ContentCourseInstance
 from nti.contenttypes.courses.courses import ContentCourseSubInstance
 from nti.contenttypes.courses.courses import CourseAdministrativeLevel
 
-from nti.contenttypes.courses.interfaces import SECTIONS, ICourseInstance,\
-    ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import SECTIONS
+
+from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICreatedCourse
@@ -50,7 +52,7 @@ from nti.contenttypes.courses.interfaces import CourseAlreadyExistsException
 
 from nti.intid.common import addIntId
 
-from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import make_ntiid, get_specific
 from nti.ntiids.ntiids import make_specific_safe
 
 from nti.zodb.containers import time_to_64bit_int
@@ -151,8 +153,10 @@ def _create_bundle_ntiid(bundle, ntiid_type):
         ntiid = make_ntiid(nttype=ntiid_type,
                            specific=specific)
     else:
+        specific = get_specific(entry.ntiid)
         ntiid = make_ntiid(nttype=ntiid_type,
-                           base=entry.ntiid)
+                           base=entry.ntiid,
+                           specific=specific)
     return ntiid
 
 
@@ -185,7 +189,7 @@ def create_course(admin, key, catalog=None, writeout=False,
         course_path = os.path.join(root.absolute_path, key)
     else:
         course_path = None
-        writeout = False # there is not absolute_path
+        writeout = False  # there is not absolute_path
 
     if writeout and IFilesystemBucket.providedBy(root):
         create_directory(course_path)
