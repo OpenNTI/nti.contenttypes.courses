@@ -20,6 +20,8 @@ from nti.contentlibrary.externalization import ContentBundleIO
 
 from nti.contentlibrary.interfaces import IContentPackage
 
+from nti.contenttypes.courses import COURSE_BUNDLE_TYPE
+
 from nti.contenttypes.courses.legacy_catalog import _ntiid_from_entry
 
 from nti.contenttypes.courses.interfaces import ICourseContentPackageBundle
@@ -66,7 +68,7 @@ def created_content_package_bundle(course, bucket=None,
         bundle.createdTime = bundle.lastModified = 0
         # set lineage before ntiid
         bundle.__parent__ = course
-        bundle.ntiid = ntiid_factory(bundle, 'Bundle:CourseBundle')
+        bundle.ntiid = ntiid_factory(bundle, COURSE_BUNDLE_TYPE)
         # register w/ course and notify
         course.ContentPackageBundle = bundle
         lifecycleevent.created(bundle)

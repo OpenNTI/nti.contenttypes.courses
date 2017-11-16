@@ -18,6 +18,9 @@ from nti.contenttypes.courses.utils import get_course_vendor_info
 
 from nti.contenttypes.courses.vendorinfo import VENDOR_INFO_KEY
 
+#: Course bundle NTIID type
+COURSE_BUNDLE_TYPE = 'Bundle:CourseBundle'
+
 #: Course role info file name
 ROLE_INFO_NAME = 'role_info.json'
 
