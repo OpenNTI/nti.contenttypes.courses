@@ -52,7 +52,8 @@ from nti.contenttypes.courses.interfaces import CourseAlreadyExistsException
 
 from nti.intid.common import addIntId
 
-from nti.ntiids.ntiids import make_ntiid, get_specific
+from nti.ntiids.ntiids import make_ntiid
+from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
 
 from nti.zodb.containers import time_to_64bit_int
