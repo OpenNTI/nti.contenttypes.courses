@@ -21,6 +21,8 @@ from zope import lifecycleevent
 
 from zope.event import notify
 
+from zope.intid.interfaces import IIntIds
+
 from ZODB.interfaces import IConnection
 
 from nti.cabinet.filer import read_source
@@ -81,6 +83,8 @@ from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
 
 from nti.externalization.internalization import update_from_external_object
+
+from nti.intid.common import addIntId
 
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
@@ -499,6 +503,14 @@ class CourseImporter(object):
             except AttributeError:
                 pass
 
+    def _prepare_entry(self, course):
+        entry = ICourseCatalogEntry(course)
+        intids = component.queryUtility(IIntIds)
+        if intids is not None and intids.queryId(entry) is None:
+            addIntId(entry)
+        # make sure ntiid is initialized
+        getattr(entry, 'ntiid')
+
     def process(self, context, filer, writeout=True):
         now = time.time()
         course = ICourseInstance(context)
@@ -506,6 +518,9 @@ class CourseImporter(object):
             and not ICourseSubInstance.providedBy(course) \
             and IFilesystemBucket.providedBy(course.root):
             self.makedirs(course.root.absolute_path)
+        # prepare entry
+        self._prepare_entry(course)
+        # run import sections
         for name, importer in sorted(component.getUtilitiesFor(ICourseSectionImporter)):
             current = time.time()
             logger.info("Processing %s", name)
