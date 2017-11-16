@@ -18,7 +18,7 @@ from nti.contenttypes.courses.index import install_courses_catalog
 from nti.contenttypes.courses.index import install_enrollment_catalog
 from nti.contenttypes.courses.index import install_course_outline_catalog
 
-generation = 35
+generation = 36
 
 logger = __import__('logging').getLogger(__name__)
 
