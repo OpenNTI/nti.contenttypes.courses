@@ -91,15 +91,8 @@ class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
 
     Most of this is unmodeled content that the server doesn't interpret.
 
-    A decorator should add a `ContentPackageNTIID` property
-    if possible.
+    A decorator should add a `ContentPackageNTIID` property if possible.
     """
-
-    # Legacy. This isn't really part of the course catalog.
-    # Nothing seems to use it anyway
-    # Communities = ListOrTuple(value_type=TextLine(title='The community'),
-    #                           title=u"Course communities",
-    #                           required=False)
 
     # While this might be a valid part of the course catalog, this
     # representation of it isn't very informative or flexible
@@ -149,13 +142,13 @@ class CourseCreditLegacyInfo(SchemaConfigured):
 
 
 @interface.implementer(ICourseCatalogInstructorLegacyInfo)
-class CourseCatalogInstructorLegacyInfo(CourseCatalogInstructorInfo): 
+class CourseCatalogInstructorLegacyInfo(CourseCatalogInstructorInfo):
     createDirectFieldProperties(ICourseCatalogInstructorLegacyInfo)
 
     Email = None
     Biography = None
     defaultphoto = None
-   
+
     email = alias('Email')
     Bio = alias('Biography')
 
@@ -171,7 +164,7 @@ class CourseCatalogLegacyEntry(CourseCatalogEntry):
 
     creators = ()
     DisableOverviewCalendar = False
-    
+
     # For legacy catalog entries created from a content package,
     # this will be that package (an implementation of
     # :class:`.ILegacyCourseConflatedContentPackage`)

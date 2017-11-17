@@ -160,7 +160,10 @@ class _CourseCatalogEntryExporter(object):
         ('ProviderUniqueID', 'id'), ('ProviderDepartmentTitle', 'school'),
         ('AdditionalProperties', 'additionalProperties'),
         ('Credit', 'credit'), ('Instructors', 'instructors'),
-        ('Description', 'description'), ('RichDescription', 'richDescription')
+        ('Description', 'description'), ('RichDescription', 'richDescription'),
+        ('Schedule', 'schedule'),
+        ('Prerequisites', 'prerequisites'),
+        ('AdditionalProperties', 'additionalProperties')
     )
 
     REQUIRED = {x[0] for x in REPLACE} | {'tags'}
