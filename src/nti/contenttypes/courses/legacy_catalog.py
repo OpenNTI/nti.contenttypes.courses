@@ -283,7 +283,7 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
         return self.ntiid < other.ntiid
 
     ntiid = property(_ntiid_from_entry,
-                     lambda s, nv: None)
+                     lambda unused_s, unused_nv: None)
 
     @property
     def links(self):
@@ -300,8 +300,7 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
 
     @property
     def PlatformPresentationResources(self):
-        ours = super(_CourseSubInstanceCatalogLegacyEntry,
-                     self).PlatformPresentationResources
+        ours = super(_CourseSubInstanceCatalogLegacyEntry, self).PlatformPresentationResources
         if ours:
             return ours
         return self._next_entry.PlatformPresentationResources
