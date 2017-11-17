@@ -165,6 +165,13 @@ class _CourseCatalogEntryExporter(object):
 
     REQUIRED = {x[0] for x in REPLACE} | {'tags'}
 
+    INSTRUCTOR_REPLACE = (
+        ('Name', 'name'), ('JobTitle', 'jobTitle'), ('Suffix', 'suffix'),
+        ('Title', 'title'), ('Email', 'email'), ('Biography', 'biography'),
+    )
+
+    INSTRUCTOR_REQUIRED = {x[0] for x in INSTRUCTOR_REPLACE} | {'username', 'userid'}
+
     def __init__(self, obj):
         self.entry = obj
 
@@ -181,9 +188,9 @@ class _CourseCatalogEntryExporter(object):
 
     def _fix_instructors(self, instructors):
         for instructor in instructors or ():
-            self._remover(instructor, ('Name', 'JobTitle'))
-            self._replacer(instructor, 'Name', 'name')
-            self._replacer(instructor, 'JobTitle', 'title')
+            self._remover(instructor, self.INSTRUCTOR_REQUIRED)
+            for frm, to in self.INSTRUCTOR_REPLACE:
+                self._replacer(instructor, frm, to)
 
     def _fix_credits(self, data):
         for credit in data or ():
