@@ -804,11 +804,12 @@ class ICourseCatalogInstructorInfo(interface.Interface):
     Title = ValidTextLine(title=u"The instructor's title of address such as Dr.",
                           required=False)
 
-    JobTitle = ValidTextLine(title=u"The instructor's academic job title")
+    JobTitle = ValidTextLine(title=u"The instructor's academic job title",
+                             required=False)
 
     Suffix = ValidTextLine(title=u"The instructor's suffix such as PhD or Jr",
                            required=False)
-    
+
     Email = ValidTextLine(title=u"The instructor's email",
                           required=False,
                           constraint=checkEmailAddress)
