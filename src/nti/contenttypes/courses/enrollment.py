@@ -134,6 +134,8 @@ def remove_from_container(container, key, event=False):
 @interface.implementer(IDefaultCourseInstanceEnrollmentStorage)
 class DefaultCourseInstanceEnrollmentStorage(CaseInsensitiveCheckingLastModifiedBTreeContainer):
     pass
+
+
 _DefaultCourseInstanceEnrollmentStorageFactory = an_factory(DefaultCourseInstanceEnrollmentStorage,
                                                             u'CourseInstanceEnrollmentStorage')
 
@@ -245,6 +247,7 @@ class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedB
                 if jar is not None:
                     jar.add(self)
             return result
+
 
 DefaultCourseCatalogEnrollmentStorageFactory = an_factory(DefaultCourseCatalogEnrollmentStorage,
                                                           'CourseCatalogEnrollmentStorage')
@@ -359,6 +362,13 @@ class DefaultCourseEnrollmentManager(object):
     # support Modified events (e.g., a user starts out open/public
     # enrolled, then pays for the course, and becomes for-credit-non-degree)
 
+    def _enrollments_for_id(self, principal_id, principal):
+        storage = self._cat_enrollment_storage
+        return storage.enrollments_for_id(principal_id, principal)
+
+    def _new_enrollment_record(self, principal, scope):
+        return DefaultCourseInstanceEnrollmentRecord(Principal=principal, Scope=scope)
+
     def enroll(self, principal, scope=ES_PUBLIC, context=None):
         principal_id = IPrincipal(principal).id
         if principal_id in self._inst_enrollment_storage:
@@ -377,12 +387,10 @@ class DefaultCourseEnrollmentManager(object):
                         principal_id, entry_ntiid)
             raise InstructorEnrolledException()
 
-        record = DefaultCourseInstanceEnrollmentRecord(
-            Principal=principal, Scope=scope)
-        enrollments = self._cat_enrollment_storage.enrollments_for_id(principal_id,
-                                                                      principal)
-
+        record = self._new_enrollment_record(principal, scope)
         notify(CourseInstanceEnrollmentRecordCreatedEvent(record, context))
+
+        enrollments = self._enrollments_for_id(principal_id, principal)
         enrollments.add(record)
         # now install and fire the ObjectAdded event, after
         # it's in the IPrincipalEnrollments; that way
@@ -627,7 +635,7 @@ def on_modified_potentially_move_courses(record, _):
 
 
 @component.adapter(ICourseInstanceEnrollmentRecord, IObjectAddedEvent)
-def check_open_enrollment_record_added(record, event):
+def check_open_enrollment_record_added(record, unused_event):
     """
     If a user moves between scopes in an enrollment-mapped course,
     we may need to transfer them to a different section too.
@@ -726,7 +734,8 @@ class DefaultPrincipalEnrollments(object):
 
         principal_id = iprincipal.id
         # See comments in catalog.py about queryNextUtility
-        catalogs = reversed(component.getAllUtilitiesRegisteredFor(ICourseCatalog))
+        catalogs = component.getAllUtilitiesRegisteredFor(ICourseCatalog)
+        catalogs = reversed(catalogs)
         seen_cats = []
         seen_storages = []
         seen_records = []
@@ -814,7 +823,7 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
             return self.__parent__.__parent__
         except AttributeError:
             return None
-    CourseInstance = property(_get_CourseInstance, lambda s, nv: None)
+    CourseInstance = property(_get_CourseInstance, lambda unused_s, unused_nv: None)
 
     _principal = None
 
@@ -847,8 +856,7 @@ class DefaultCourseInstanceEnrollmentRecord(SchemaConfigured,
         if ICourseInstance.isOrExtends(iface):
             return self.CourseInstance
 
-        if        IPrincipal.isOrExtends(iface) \
-            or IUser.isOrExtends(iface):
+        if IPrincipal.isOrExtends(iface) or IUser.isOrExtends(iface):
             return self.Principal
 
 # Subscribers to keep things in sync when
@@ -938,7 +946,8 @@ def migrate_enrollments_from_course_to_course(source, dest, verbose=False, resul
     log = logger.debug if not verbose else logger.info
 
     log('Moving enrollment records from %s to %s',
-        ICourseCatalogEntry(source).ntiid, ICourseCatalogEntry(dest).ntiid)
+        ICourseCatalogEntry(source).ntiid, 
+        ICourseCatalogEntry(dest).ntiid)
 
     # All we need to do is use IObjectMover to transport the
     # EnrollmentRecord objects; they find their course from
