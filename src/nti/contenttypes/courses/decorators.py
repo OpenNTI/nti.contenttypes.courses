@@ -68,6 +68,7 @@ class _InstructorLegacyInfoDecorator(Singleton):
 class _CourseInstanceSharingScopeDecorator(Singleton):
 
     def decorateExternalObject(self, unused_original, external):
+        # XXX: For BWC w/ clients
         external[MIMETYPE] = 'application/vnd.nextthought.community'
 
 
@@ -88,8 +89,7 @@ class _CourseAdminLevelDecorator(Singleton):
     def decorateExternalObject(self, original, external):
         course = ICourseInstance(original, None)
         if course is not None:
-            admin = find_interface(course, ICourseAdministrativeLevel, 
-                                   strict=False)
+            admin = find_interface(course, ICourseAdministrativeLevel, strict=False)
             if admin is not None:
                 external['AdminLevel'] = admin.__name__
 
