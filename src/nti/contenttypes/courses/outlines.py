@@ -80,6 +80,8 @@ class _AbstractCourseOutlineNode(Contained,
     description = AdaptingFieldProperty(ITitledDescribedContent['description'])
 
     def __setitem__(self, key, value):
+        # XXX: Notify a node is going to be added 
+        # i.e. the node may be added to a DB connection
         notify(BeforeCourseOutlineNodeAddedEvent(value, self, key))
         super(_AbstractCourseOutlineNode, self).__setitem__(key, value)
         

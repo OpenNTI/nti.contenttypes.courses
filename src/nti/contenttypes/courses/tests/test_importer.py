@@ -53,19 +53,15 @@ class TestImporter(CourseLayerTest):
             inst = ContentCourseInstance()
             connection = mock_dataserver.current_transaction
             connection.add(inst)
-
             # initialize entry
             entry = ICourseCatalogEntry(inst)
             entry.ntiid = u'tag:nextthought.com,2011-10:NTI-CourseInfo-XYZ'
-
             # initialize outline
             getattr(inst, 'Outline')
-
             # do import
             try:
                 importer = CourseOutlineImporter()
                 importer.load_external(inst, ext_obj)
-                
                 # check import
                 assert_that(inst.Outline, has_length(14))
                 for node in inst.Outline.values():
