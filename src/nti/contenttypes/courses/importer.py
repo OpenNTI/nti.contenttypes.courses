@@ -23,8 +23,6 @@ from zope.event import notify
 
 from zope.intid.interfaces import IIntIds
 
-from ZODB.interfaces import IConnection
-
 from nti.cabinet.filer import read_source
 from nti.cabinet.filer import transfer_to_native_file
 
@@ -67,7 +65,6 @@ from nti.contenttypes.courses.interfaces import iface_of_node
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseImporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSectionImporter
@@ -166,18 +163,11 @@ class CourseOutlineImporter(BaseSectionImporter):
         return ntiid
 
     def _update_and_register(self, course, ext_obj):
-        # require connection
-        connection = IConnection(course)
-
-        def _object_hook(unused_k, v, unused_x):
-            if      ICourseOutlineNode.providedBy(v) \
-                and not ICourseOutline.providedBy(v):
-                connection.add(v)
-            return v
+        # update outline. nodes should be added to DB connection
+        # in a subscriber
         update_from_external_object(course.Outline,
-                                    ext_obj,
-                                    notify=False,
-                                    object_hook=_object_hook)
+                                    ext_obj, 
+                                    notify=False)
 
         # get site registry
         folder = find_interface(course, IHostPolicyFolder, strict=False)
@@ -186,6 +176,8 @@ class CourseOutlineImporter(BaseSectionImporter):
         # register nodes
         def _recur(node, idx=0):
             if not ICourseOutline.providedBy(node):
+                # create an ntiid using the parent and
+                # a counter
                 if not getattr(node, "ntiid", None):
                     parent = node.__parent__
                     node.ntiid = self.make_ntiid(parent, idx)
@@ -210,6 +202,11 @@ class CourseOutlineImporter(BaseSectionImporter):
         else:
             clear_course_outline(course)
 
+    def load_external(self, course, ext_obj):
+        from IPython.terminal.debugger import set_trace;set_trace()
+        self._delete_outline(course)  # not merging
+        self._update_and_register(course, ext_obj)
+            
     def process(self, context, filer, writeout=True):
         course = ICourseInstance(context)
         path = self.course_bucket_path(course) + COURSE_OUTLINE_NAME
@@ -217,8 +214,7 @@ class CourseOutlineImporter(BaseSectionImporter):
         if source is not None:
             # import
             ext_obj = self.load(source)
-            self._delete_outline(course)  # not merging
-            self._update_and_register(course, ext_obj)
+            self.load_external(course, ext_obj)
             # save source
             if writeout and IFilesystemBucket.providedBy(course.root):
                 for name in (COURSE_OUTLINE_NAME, 'course_outline.xml'):
