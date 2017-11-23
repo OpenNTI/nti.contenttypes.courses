@@ -81,7 +81,7 @@ class _AbstractCourseOutlineNode(Contained,
 
     def __setitem__(self, key, value):
         notify(BeforeCourseOutlineNodeAddedEvent(value, self, key))
-        super(CourseOutlineNode, self).__setitem__(key, value)
+        super(_AbstractCourseOutlineNode, self).__setitem__(key, value)
         
     def append(self, node):
         try:
@@ -147,8 +147,8 @@ class _AbstractCourseOutlineNode(Contained,
 
 
 @interface.implementer(ICourseOutlineNode, ILastModified)
-class CourseOutlineNode(_AbstractCourseOutlineNode,
-                        # order matters
+class CourseOutlineNode(# order matters
+                        _AbstractCourseOutlineNode,
                         PersistentCreatedModDateTrackingObject,
                         OrderedContainer):
 
