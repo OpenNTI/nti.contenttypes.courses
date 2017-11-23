@@ -23,14 +23,17 @@ from zope.container.constraints import checkObject
 
 from zope.container.ordered import OrderedContainer  # this is persistent
 
+from zope.event import notify
+
 from nti.base._compat import text_
+
+from nti.base.interfaces import ILastModified
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
-
-from nti.coremetadata.interfaces import ILastModified
+from nti.contenttypes.courses.interfaces import BeforeCourseOutlineNodeAddedEvent
 
 from nti.dataserver.interfaces import SYSTEM_USER_ID
 from nti.dataserver.interfaces import ITitledDescribedContent
@@ -76,6 +79,12 @@ class _AbstractCourseOutlineNode(Contained,
     title = AdaptingFieldProperty(ICourseOutlineNode['title'])
     description = AdaptingFieldProperty(ITitledDescribedContent['description'])
 
+    def __setitem__(self, key, value):
+        # XXX: Notify a node is going to be added 
+        # i.e. the node may be added to a DB connection
+        notify(BeforeCourseOutlineNodeAddedEvent(value, self, key))
+        super(_AbstractCourseOutlineNode, self).__setitem__(key, value)
+        
     def append(self, node):
         try:
             name = node.ntiid
@@ -140,8 +149,8 @@ class _AbstractCourseOutlineNode(Contained,
 
 
 @interface.implementer(ICourseOutlineNode, ILastModified)
-class CourseOutlineNode(_AbstractCourseOutlineNode,
-                        # order matters
+class CourseOutlineNode(# order matters
+                        _AbstractCourseOutlineNode,
                         PersistentCreatedModDateTrackingObject,
                         OrderedContainer):
 

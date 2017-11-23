@@ -385,6 +385,23 @@ class CourseOutlineNodeMovedEvent(ObjectEvent):
         self.principal = principal
         self.old_parent_ntiid = old_parent_ntiid
 
+
+class IBeforeCourseOutlineNodeAddedEvent(IObjectEvent):
+    key = interface.Attribute("Insertion key")
+    parent = interface.Attribute("Parent node")
+
+
+@interface.implementer(IBeforeCourseOutlineNodeAddedEvent)
+class BeforeCourseOutlineNodeAddedEvent(ObjectEvent):
+
+    node = alias('object')
+
+    def __init__(self, obj, parent=None, key=None):
+        super(BeforeCourseOutlineNodeAddedEvent, self).__init__(obj)
+        self.key = key
+        self.parent = parent
+        
+
 # Sharing
 
 # Despite the notes at the top of this file about group-folders,

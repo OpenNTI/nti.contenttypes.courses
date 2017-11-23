@@ -23,8 +23,6 @@ from zope.event import notify
 
 from zope.intid.interfaces import IIntIds
 
-from ZODB.interfaces import IConnection
-
 from nti.cabinet.filer import read_source
 from nti.cabinet.filer import transfer_to_native_file
 
@@ -67,7 +65,6 @@ from nti.contenttypes.courses.interfaces import iface_of_node
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseImporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseSectionImporter
@@ -166,26 +163,24 @@ class CourseOutlineImporter(BaseSectionImporter):
         return ntiid
 
     def _update_and_register(self, course, ext_obj):
-        # require connection
-        connection = IConnection(course)
-
-        def _object_hook(unused_k, v, unused_x):
-            if      ICourseOutlineNode.providedBy(v) \
-                and not ICourseOutline.providedBy(v):
-                connection.add(v)
-            return v
+        # update outline. nodes should be added to DB connection
+        # in a subscriber
         update_from_external_object(course.Outline,
                                     ext_obj,
-                                    notify=False,
-                                    object_hook=_object_hook)
+                                    notify=False)
 
-        # get site registry
+        # get course registry
         folder = find_interface(course, IHostPolicyFolder, strict=False)
-        registry = folder.getSiteManager()
+        if folder is not None:  # pragma: no cover
+            registry = folder.getSiteManager()
+        else:
+            registry = component.getSiteManager()
 
         # register nodes
         def _recur(node, idx=0):
             if not ICourseOutline.providedBy(node):
+                # create an ntiid using the parent and
+                # a counter
                 if not getattr(node, "ntiid", None):
                     parent = node.__parent__
                     node.ntiid = self.make_ntiid(parent, idx)
@@ -210,6 +205,10 @@ class CourseOutlineImporter(BaseSectionImporter):
         else:
             clear_course_outline(course)
 
+    def load_external(self, course, ext_obj):
+        self._delete_outline(course)  # not merging
+        self._update_and_register(course, ext_obj)
+
     def process(self, context, filer, writeout=True):
         course = ICourseInstance(context)
         path = self.course_bucket_path(course) + COURSE_OUTLINE_NAME
@@ -217,8 +216,7 @@ class CourseOutlineImporter(BaseSectionImporter):
         if source is not None:
             # import
             ext_obj = self.load(source)
-            self._delete_outline(course)  # not merging
-            self._update_and_register(course, ext_obj)
+            self.load_external(course, ext_obj)
             # save source
             if writeout and IFilesystemBucket.providedBy(course.root):
                 for name in (COURSE_OUTLINE_NAME, 'course_outline.xml'):
@@ -287,7 +285,8 @@ class RoleInfoImporter(BaseSectionImporter):
             if writeout and IFilesystemBucket.providedBy(course.root):
                 source = self.safe_get(filer, path)  # reload
                 self.makedirs(course.root.absolute_path)
-                new_path = os.path.join(course.root.absolute_path, ROLE_INFO_NAME)
+                new_path = os.path.join(course.root.absolute_path, 
+                                        ROLE_INFO_NAME)
                 transfer_to_native_file(source, new_path)
         # process subinstances
         for sub_instance in get_course_subinstances(course):
@@ -345,7 +344,7 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
                 created_bundle = created_content_package_bundle(course, root)
                 if created_bundle:
                     lifecycleevent.created(course.ContentPackageBundle)
-            else: # reset root
+            else:  # reset root
                 course.ContentPackageBundle.root = root
 
     def process(self, context, filer, writeout=True):
@@ -527,7 +526,8 @@ class CourseImporter(object):
             try:
                 importer.process(course, filer, writeout)
                 notify(CourseSectionImporterExecutedEvent(course, importer, filer, writeout))
-                logger.info("%s processed in %s(s)", name, time.time() - current)
+                logger.info("%s processed in %s(s)",
+                            name, time.time() - current)
             except Exception as e:
                 logger.exception("Error while processing %s", name)
                 raise e

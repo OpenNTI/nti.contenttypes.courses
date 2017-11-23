@@ -8,6 +8,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from ZODB.interfaces import IConnection
+
 from zope import component
 
 from zope.component.hooks import site
@@ -82,6 +84,7 @@ from nti.contenttypes.courses.interfaces import ICourseRolePermissionManager
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import ICourseVendorInfoSynchronized
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
+from nti.contenttypes.courses.interfaces import IBeforeCourseOutlineNodeAddedEvent
 
 from nti.contenttypes.courses.interfaces import iface_of_node
 
@@ -109,6 +112,7 @@ from nti.site.localutility import install_utility
 from nti.site.localutility import uninstall_utility_on_unregistration
 
 from nti.site.utils import registerUtility
+
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -376,6 +380,22 @@ def on_course_outline_node_added(node, _):
                             node,
                             provided=iface_of_node(node),
                             name=ntiid)
+
+
+@component.adapter(ICourseOutlineNode, IBeforeCourseOutlineNodeAddedEvent)
+def on_before_node_added(node, event):
+    # if node does not have a connection 
+    if IConnection(node, None) is None:
+        # try to get one from parent
+        connection = IConnection(event.parent, None)
+        if connection is None:
+            # otherwise from the site manager
+            registry = component.getSiteManager()
+            connection = IConnection(registry, None)
+        # add to connection to avoid NoYet errors
+        # this may happen during course imports
+        if connection is not None:
+            connection.add(node)
 
 
 def _lock_assessment_policy(event, course=None):
