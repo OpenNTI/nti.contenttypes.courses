@@ -71,13 +71,13 @@ from nti.contenttypes.courses.interfaces import ICourseRoleRemovedEvent
 from nti.contenttypes.courses.interfaces import ICourseEditorAddedEvent
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
-from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseRolesSynchronized
+from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 from nti.contenttypes.courses.interfaces import CourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import CourseCatalogDidSyncEvent
 from nti.contenttypes.courses.interfaces import CourseBundleWillUpdateEvent
-from nti.contenttypes.courses.interfaces import ICourseBundleWillUpdateEvent
 from nti.contenttypes.courses.interfaces import ICourseInstructorAddedEvent
+from nti.contenttypes.courses.interfaces import ICourseBundleWillUpdateEvent
 from nti.contenttypes.courses.interfaces import ICourseInstanceImportedEvent
 from nti.contenttypes.courses.interfaces import ICourseOutlineNodeMovedEvent
 from nti.contenttypes.courses.interfaces import ICourseRolePermissionManager
@@ -112,7 +112,6 @@ from nti.site.localutility import install_utility
 from nti.site.localutility import uninstall_utility_on_unregistration
 
 from nti.site.utils import registerUtility
-
 
 logger = __import__('logging').getLogger(__name__)
 
