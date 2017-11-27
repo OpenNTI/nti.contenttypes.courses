@@ -162,6 +162,15 @@ def _create_bundle_ntiid(bundle, ntiid_type):
     return ntiid
 
 
+def _prepare_entry(course):
+    entry = ICourseCatalogEntry(course)
+    intids = component.queryUtility(IIntIds)
+    if intids is not None and intids.queryId(entry) is None:
+        addIntId(entry)
+    # make sure ntiid is initialized
+    getattr(entry, 'ntiid')
+
+        
 def create_course(admin, key, catalog=None, writeout=False,
                   strict=False, creator=None, factory=ContentCourseInstance):
     """
@@ -216,6 +225,8 @@ def create_course(admin, key, catalog=None, writeout=False,
         course = factory()
         course.root = course_root
         administrative_level[key] = course  # gain intid
+        # initialize catalog entry
+        _prepare_entry(course)
         # make sure annotations are created to get a connection
         create_annotations(course)
         # mark & set creator
@@ -270,6 +281,8 @@ def create_course_subinstance(course, name, writeout=False, creator=None,
         subinstance = factory()
         subinstance.root = sub_section_root
         course.SubInstances[name] = subinstance
+        # initialize catalog entry
+        _prepare_entry(course)
         # mark & set creator
         creator = creator or current_principal().id
         interface.alsoProvides(subinstance, ICreatedCourse)
