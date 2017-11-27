@@ -188,8 +188,8 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
             email = inst.get('email') or None
             username = inst.get('username') or u''
             userid = inst.get('userid') or u''  # legacy
-            job_title = inst.get('jobTitle') or inst.get('title')
-            biography = inst.get('biography') or inst.get('bio')
+            job_title = inst.get('jobTitle') or inst.get('title') or u''
+            biography = inst.get('biography') or inst.get('bio') or u''
             instructors.append({
                 MIMETYPE: 'application/vnd.nextthought.courses.coursecataloginstructorlegacyinfo',
                 u'Name': name,
