@@ -376,7 +376,8 @@ class CourseCatalogEntry(CatalogFamily,
         sig_lines = []
         for inst in self.Instructors or ():
             sig_lines.append(inst.Name)
-            sig_lines.append(inst.JobTitle)
+            if inst.JobTitle:
+                sig_lines.append(inst.JobTitle)
             sig_lines.append("")
         if sig_lines:
             # always at least one instructor. take off the last trailing line
