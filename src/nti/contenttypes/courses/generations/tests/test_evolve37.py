@@ -16,7 +16,7 @@ from nti.contenttypes.courses._bundle import created_content_package_bundle
 
 from nti.contenttypes.courses.courses import ContentCourseInstance
 
-from nti.contenttypes.courses.generations.evolve35 import process_course
+from nti.contenttypes.courses.generations.evolve37 import process_course
 
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
@@ -26,7 +26,7 @@ from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 from nti.dataserver.tests.mock_dataserver import DataserverLayerTest
 
 
-class TestEvolve35(DataserverLayerTest):
+class TestEvolve37(DataserverLayerTest):
 
     @WithMockDSTrans
     def test_process_course(self):

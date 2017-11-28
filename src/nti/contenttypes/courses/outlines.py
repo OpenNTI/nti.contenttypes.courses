@@ -13,6 +13,9 @@ from __future__ import absolute_import
 import time
 from functools import total_ordering
 
+from ZODB.interfaces import IConnection
+
+from zope import component
 from zope import interface
 
 from zope.annotation.interfaces import IAttributeAnnotatable
@@ -23,8 +26,6 @@ from zope.container.constraints import checkObject
 
 from zope.container.ordered import OrderedContainer  # this is persistent
 
-from zope.event import notify
-
 from nti.base._compat import text_
 
 from nti.base.interfaces import ILastModified
@@ -33,7 +34,6 @@ from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseOutlineContentNode
 from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
-from nti.contenttypes.courses.interfaces import BeforeCourseOutlineNodeAddedEvent
 
 from nti.dataserver.interfaces import SYSTEM_USER_ID
 from nti.dataserver.interfaces import ITitledDescribedContent
@@ -79,10 +79,24 @@ class _AbstractCourseOutlineNode(Contained,
     title = AdaptingFieldProperty(ICourseOutlineNode['title'])
     description = AdaptingFieldProperty(ITitledDescribedContent['description'])
 
+    def _before_adding_node(self, node):
+        # if node does not have a connection 
+        if IConnection(node, None) is None:
+            # try to get one from parent
+            connection = IConnection(self, None)
+            if connection is None:
+                # otherwise from the site manager
+                registry = component.getSiteManager()
+                connection = IConnection(registry, None)
+            # add to connection to avoid NoYet errors
+            # this may happen during course imports
+            if connection is not None:
+                connection.add(node)
+                return True
+        return False
+
     def __setitem__(self, key, value):
-        # XXX: Notify a node is going to be added 
-        # i.e. the node may be added to a DB connection
-        notify(BeforeCourseOutlineNodeAddedEvent(value, self, key))
+        self._before_adding_node(value)
         super(_AbstractCourseOutlineNode, self).__setitem__(key, value)
         
     def append(self, node):
