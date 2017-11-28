@@ -44,6 +44,7 @@ from nti.contenttypes.courses import get_enrollment_catalog
 
 from nti.contenttypes.courses.common import get_course_packages
 from nti.contenttypes.courses.common import get_course_site_name
+from nti.contenttypes.courses.common import get_course_site_registry
 
 from nti.contenttypes.courses.catalog import CourseCatalogFolder
 
@@ -101,7 +102,7 @@ from nti.dataserver.interfaces import IUser
 from nti.dataserver.users.interfaces import IWillDeleteEntityEvent
 
 from nti.intid.common import addIntId
-from nti.intid.common import removeIntId 
+from nti.intid.common import removeIntId
 
 from nti.recorder.utils import record_transaction
 
@@ -369,7 +370,9 @@ def on_course_outline_node_moved(node, event):
 def on_course_outline_node_added(node, _):
     ntiid = getattr(node, 'ntiid', None)
     if ntiid and not ICourseOutline.providedBy(node):
-        registry = component.getSiteManager()
+        registry = get_course_site_registry(node)
+        if registry is None:
+            registry = component.getSiteManager()
         provided = iface_of_node(node)
         if registry.queryUtility(provided, name=ntiid) is None:
             registerUtility(registry,
