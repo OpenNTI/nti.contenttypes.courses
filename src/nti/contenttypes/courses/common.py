@@ -50,5 +50,6 @@ get_course_site = get_course_site_name
 
 
 def get_course_site_registry(context):
-    folder = IHostPolicyFolder(ICourseInstance(context, None))
+    course = ICourseInstance(context, None)
+    folder = IHostPolicyFolder(course, None)
     return folder.getSiteManager() if folder is not None else None

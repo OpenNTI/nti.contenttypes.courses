@@ -57,6 +57,8 @@ from nti.contenttypes.courses import CATALOG_INFO_NAME
 from nti.contenttypes.courses import COURSE_OUTLINE_NAME
 from nti.contenttypes.courses import ASSIGNMENT_POLICIES_NAME
 
+from nti.contenttypes.courses.common import get_course_site_registry
+
 from nti.contenttypes.courses.interfaces import SECTIONS
 from nti.contenttypes.courses.interfaces import NTI_COURSE_OUTLINE_NODE
 
@@ -86,8 +88,6 @@ from nti.intid.common import addIntId
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_provider
 from nti.ntiids.ntiids import get_specific
-
-from nti.site.interfaces import IHostPolicyFolder
 
 from nti.site.utils import registerUtility
 
@@ -170,10 +170,8 @@ class CourseOutlineImporter(BaseSectionImporter):
                                     notify=False)
 
         # get course registry
-        folder = find_interface(course, IHostPolicyFolder, strict=False)
-        if folder is not None:  # pragma: no cover
-            registry = folder.getSiteManager()
-        else:
+        registry = get_course_site_registry(course)
+        if registry is None:
             registry = component.getSiteManager()
 
         # register nodes
@@ -285,7 +283,7 @@ class RoleInfoImporter(BaseSectionImporter):
             if writeout and IFilesystemBucket.providedBy(course.root):
                 source = self.safe_get(filer, path)  # reload
                 self.makedirs(course.root.absolute_path)
-                new_path = os.path.join(course.root.absolute_path, 
+                new_path = os.path.join(course.root.absolute_path,
                                         ROLE_INFO_NAME)
                 transfer_to_native_file(source, new_path)
         # process subinstances
