@@ -1099,7 +1099,7 @@ def get_context_enrollment_records(user, requesting_user):
     For a requesting_user, fetch all relevant enrollment records.
     """
     enrollments = get_enrollments(user)
-    if is_admin_or_site_admin(requesting_user):
+    if is_admin_or_site_admin(requesting_user) or (user == requesting_user):
         # Admins get everything
         result = enrollments
     else:
