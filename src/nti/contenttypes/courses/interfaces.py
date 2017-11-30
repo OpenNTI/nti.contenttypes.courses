@@ -825,7 +825,7 @@ class ICourseCatalogInstructorInfo(interface.Interface):
 class ICatalogFamily(IDisplayableContent):
 
     ProviderUniqueID = ValidTextLine(title=u"The unique id assigned by the provider",
-                                     required=False)
+                                     required=True)
 
     ProviderDepartmentTitle = ValidTextLine(title=u"The string assigned to the provider's department offering the course",
                                             required=False)
@@ -841,7 +841,7 @@ class ICatalogFamily(IDisplayableContent):
     # don't required dublin core IDCDescriptiveProperties
     title = ValidTextLine(title=u"The human-readable section name of this item",
                           default=u'',
-                          required=False)
+                          required=True)
 
     description = ValidText(title=u"The human-readable description",
                             default=u'',
