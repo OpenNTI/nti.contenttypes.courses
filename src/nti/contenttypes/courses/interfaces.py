@@ -825,7 +825,8 @@ class ICourseCatalogInstructorInfo(interface.Interface):
 class ICatalogFamily(IDisplayableContent):
 
     ProviderUniqueID = ValidTextLine(title=u"The unique id assigned by the provider",
-                                     required=True)
+                                     required=True,
+                                     max_length=32)
 
     ProviderDepartmentTitle = ValidTextLine(title=u"The string assigned to the provider's department offering the course",
                                             required=False)
@@ -841,7 +842,8 @@ class ICatalogFamily(IDisplayableContent):
     # don't required dublin core IDCDescriptiveProperties
     title = ValidTextLine(title=u"The human-readable section name of this item",
                           default=u'',
-                          required=True)
+                          required=True,
+                          max_length=140)
 
     description = ValidText(title=u"The human-readable description",
                             default=u'',
@@ -935,6 +937,7 @@ class ICourseCatalogEntry(ICatalogFamily,
 
     tags = TupleFromObject(title=u"Applied Tags",
                            value_type=MultiWordTag(min_length=1,
+                                                   max_length=64,
                                                    title=u"A single tag",
                                                    __name__=u'tags'),
                            unique=True,
