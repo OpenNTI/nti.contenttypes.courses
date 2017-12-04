@@ -149,7 +149,7 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
         elif delete:
             _quiet_delattr(context, field)
 
-    if 'duration' in parsed:
+    if 'duration' in parsed and parsed['duration']:
         duration = parse_duration(parsed['duration'])
         parsed[u'Duration'] = duration
     elif delete and context is not None:

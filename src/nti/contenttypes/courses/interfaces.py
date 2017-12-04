@@ -841,8 +841,8 @@ class ICatalogFamily(IDisplayableContent):
 
     # don't required dublin core IDCDescriptiveProperties
     title = ValidTextLine(title=u"The human-readable section name of this item",
-                          default=u'',
                           required=True,
+                          min_length=1,
                           max_length=140)
 
     description = ValidText(title=u"The human-readable description",

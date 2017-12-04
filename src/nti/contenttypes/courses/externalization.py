@@ -24,6 +24,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
 from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
+from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
 from nti.dataserver.interfaces import ILinkExternalHrefOnly
 from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
@@ -161,12 +162,12 @@ class _CourseCatalogEntryExporter(object):
         ('AdditionalProperties', 'additionalProperties'),
         ('Credit', 'credit'), ('Instructors', 'instructors'),
         ('Description', 'description'), ('RichDescription', 'richDescription'),
-        ('Schedule', 'schedule'),
+        ('Schedule', 'schedule'), ('Duration', 'duration'),
         ('Prerequisites', 'prerequisites'),
         ('AdditionalProperties', 'additionalProperties')
     )
 
-    REQUIRED = {x[0] for x in REPLACE} | {'tags'}
+    REQUIRED = {x[0] for x in REPLACE} | {'tags', 'title', 'description'}
 
     INSTRUCTOR_REPLACE = (
         ('Name', 'name'), ('JobTitle', 'jobTitle'), ('Suffix', 'suffix'),
@@ -217,6 +218,7 @@ class _CourseCatalogEntryExporter(object):
         self._fix_instructors(result.get('instructors'))
         # extra keys
         result['is_non_public'] = INonPublicCourseInstance.providedBy(self.entry)
+        result['is_anonymously_but_not_publicly_accessible'] = IAnonymouslyAccessibleCourseInstance.providedBy(self.entry)
         return result
 
 
