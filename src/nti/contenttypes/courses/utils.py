@@ -8,7 +8,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-# pylint: disable=E0611,E1101,E1121,W0621
+# pylint: disable=no-name-in-module,no-member,too-many-function-args,redefined-outer-name
 
 from six import string_types
 
@@ -1053,6 +1053,7 @@ def get_courses_for_tag(tag, sites=(), intids=None):
             children = get_course_subinstances(course)
             for child in children or ():
                 child_entry = ICourseCatalogEntry(child, None)
+                # pylint: disable=unsupported-membership-test 
                 if tag in getattr(child_entry, 'tags', ()):
                     result.add(child)
         result.add(course)
@@ -1099,7 +1100,7 @@ def get_context_enrollment_records(user, requesting_user):
     For a requesting_user, fetch all relevant enrollment records.
     """
     enrollments = get_enrollments(user)
-    if is_admin_or_site_admin(requesting_user) or (user == requesting_user):
+    if is_admin_or_site_admin(requesting_user) or user == requesting_user:
         # Admins get everything
         result = enrollments
     else:
