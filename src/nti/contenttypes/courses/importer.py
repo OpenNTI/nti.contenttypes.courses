@@ -385,23 +385,21 @@ class CourseInfoImporter(BaseSectionImporter):
             new_path = os.path.join(root.absolute_path, DCMETA_FILENAME)
             transfer_to_native_file(dc_source, new_path)
 
-        tmp_dir = None
         try:
-            key = root.getChildNamed(CATALOG_INFO_NAME)
-            if key is None:
-                tmp_dir = tempfile.mkdtemp()
-                # save CATALOG_INFO_NAME
-                tmp_cat_info = os.path.join(tmp_dir, CATALOG_INFO_NAME)
-                transfer_to_native_file(source, tmp_cat_info)
-                key = FilesystemKey()
-                key.absolute_path = tmp_cat_info
-                # save DCMETA_FILENAME
-                if dc_source != None:
-                    tmp_dc_meta = os.path.join(tmp_dir, DCMETA_FILENAME)
-                    transfer_to_native_file(dc_source, tmp_dc_meta)
-                    root = FilesystemBucket()
-                    root.absolute_path = tmp_dir
-                    root.key = os.path.split(tmp_dir)[1]
+            # Always import what's given in the zip.
+            tmp_dir = tempfile.mkdtemp()
+            # save CATALOG_INFO_NAME
+            tmp_cat_info = os.path.join(tmp_dir, CATALOG_INFO_NAME)
+            transfer_to_native_file(source, tmp_cat_info)
+            key = FilesystemKey()
+            key.absolute_path = tmp_cat_info
+            # save DCMETA_FILENAME
+            if dc_source != None:
+                tmp_dc_meta = os.path.join(tmp_dir, DCMETA_FILENAME)
+                transfer_to_native_file(dc_source, tmp_dc_meta)
+                root = FilesystemBucket()
+                root.absolute_path = tmp_dir
+                root.key = os.path.split(tmp_dir)[1]
             # process source(s)
             entry = ICourseCatalogEntry(course)
             update_entry_from_legacy_key(entry, key, root, force=True)
@@ -451,36 +449,26 @@ class BundleMetaInfoImporter(BaseSectionImporter):
             lifecycleevent.created(course.ContentPackageBundle)
 
         # sync
-        tmp_dir = None
         try:
-            update_bundle = True
-            bundle_json_key = root.getChildNamed(BUNDLE_META_NAME)
-            dc_meta_json_key = root.getChildNamed(BUNDLE_DC_METADATA)
-            if bundle_json_key is None:
-                # create a tmp directory root for bundle files
-                tmp_dir = tempfile.mkdtemp()
-                # XXX copy bundle files to new temp root
-                bundle_json_key = self._to_fs_key(name_source,
-                                                  tmp_dir,
-                                                  BUNDLE_META_NAME)
-                if dc_meta_json_key is None:
-                    self._to_fs_key(dc_source, tmp_dir, BUNDLE_DC_METADATA)
-                else:
-                    self._to_fs_key(dc_meta_json_key,
-                                    tmp_dir,
-                                    BUNDLE_DC_METADATA)
-                # XXX new import root temp
-                update_bundle = False
-                root = FilesystemBucket()
-                root.absolute_path = tmp_dir
-                root.key = os.path.split(tmp_dir)[1]
+            # create a tmp directory root for bundle files
+            tmp_dir = tempfile.mkdtemp()
+            # XXX copy bundle files to new temp root
+            bundle_json_key = self._to_fs_key(name_source,
+                                              tmp_dir,
+                                              BUNDLE_META_NAME)
+            self._to_fs_key(dc_source, tmp_dir, BUNDLE_DC_METADATA)
+            # XXX new import root temp
+            root = FilesystemBucket()
+            root.absolute_path = tmp_dir
+            root.key = os.path.split(tmp_dir)[1]
 
+            # update_bundle is False to not set bundle parent to temp dir.
             sync_bundle_from_json_key(bundle_json_key,
                                       course.ContentPackageBundle,
                                       dc_meta_name=BUNDLE_DC_METADATA,
                                       excluded_keys=('ntiid',),
                                       dc_bucket=root,
-                                      update_bundle=update_bundle)
+                                      update_bundle=False)
         finally:
             if tmp_dir is not None:  # clean up
                 shutil.rmtree(tmp_dir)
