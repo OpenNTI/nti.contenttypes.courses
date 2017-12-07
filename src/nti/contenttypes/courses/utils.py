@@ -1000,16 +1000,18 @@ def deny_instructor_access_to_course(user, course):
     # and has a hard reference to it, and so can become an IUser again
     if not is_course_editor(course, user):
         remove_principal_from_course_content_roles(user, course, unenroll=True)
-    for scope in course.SharingScopes.values():
-        user.record_no_longer_dynamic_member(scope)
-        user.stop_following(scope)
+    if not is_enrolled(course, user):
+        # Only remove from scopes if not enrolled.
+        for scope in course.SharingScopes.values():
+            user.record_no_longer_dynamic_member(scope)
+            user.stop_following(scope)
 
-    # And remove access to the parent public scope.
-    if ICourseSubInstance.providedBy(course):
-        parent_course = get_parent_course(course)
-        public_scope = parent_course.SharingScopes[ES_PUBLIC]
-        user.record_no_longer_dynamic_member(public_scope)
-        user.stop_following(public_scope)
+        # And remove access to the parent public scope.
+        if ICourseSubInstance.providedBy(course):
+            parent_course = get_parent_course(course)
+            public_scope = parent_course.SharingScopes[ES_PUBLIC]
+            user.record_no_longer_dynamic_member(public_scope)
+            user.stop_following(public_scope)
 
 
 # catalog entry
@@ -1053,7 +1055,7 @@ def get_courses_for_tag(tag, sites=(), intids=None):
             children = get_course_subinstances(course)
             for child in children or ():
                 child_entry = ICourseCatalogEntry(child, None)
-                # pylint: disable=unsupported-membership-test 
+                # pylint: disable=unsupported-membership-test
                 if tag in getattr(child_entry, 'tags', ()):
                     result.add(child)
         result.add(course)

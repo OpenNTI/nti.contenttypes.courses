@@ -946,7 +946,7 @@ def migrate_enrollments_from_course_to_course(source, dest, verbose=False, resul
     log = logger.debug if not verbose else logger.info
 
     log('Moving enrollment records from %s to %s',
-        ICourseCatalogEntry(source).ntiid, 
+        ICourseCatalogEntry(source).ntiid,
         ICourseCatalogEntry(dest).ntiid)
 
     # All we need to do is use IObjectMover to transport the
