@@ -90,6 +90,7 @@ class _UserBoardPrincipalObjects(BasePrincipalObjects, BoardObjectsMixin):
         result = []
         for course in course_collector():
             enrollments = ICourseEnrollments(course)
+            # pylint: disable=too-many-function-args
             if enrollments.is_principal_enrolled(self.user):
                 result.extend(self.board_objects(course.Discussions))
                 parent = get_parent_course(course)

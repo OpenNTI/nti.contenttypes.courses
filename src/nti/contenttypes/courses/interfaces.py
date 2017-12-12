@@ -16,8 +16,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-# disable: too many ancestors, missing 'self''
-# pylint: disable=I0011,R0901,E0213
+# pylint: disable=inherit-non-class,no-value-for-parameter
+# pylint: disable=locally-disabled,too-many-ancestors,no-self-argument
 
 from z3c.schema.email import isValidMailAddress
 
@@ -283,7 +283,6 @@ class ICourseOutlineNode(IRecordableContainer,
         """
         A synonym for __setitem__ that automatically handles naming.
         """
-
 
 _tag_iface_fields(ICourseOutlineNode, 'title', 'description')
 
@@ -554,7 +553,7 @@ class ICourseInstance(IFolder,
     # These are lower-case attributes because someone might be able to
     # edit them through-the-web?
 
-    # # XXX: JAM: 20140716: The above description has now been surpassed,
+    # JAM: 20140716: The above description has now been surpassed,
     # and we are in fact using a structured role model. The use of
     # this attribute is deprecated. It in fact holds everyone, both
     # instructors and TAs and others.
@@ -880,7 +879,7 @@ class MultiWordTag(PlainTextLine):
     Tags that may span multiple, lowercase words.
     """
 
-    def fromUnicode(self, value):
+    def fromUnicode(self, value):  # pylint: disable=arguments-differ
         return super(MultiWordTag, self).fromUnicode(value.lower())
 
 

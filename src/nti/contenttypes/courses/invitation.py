@@ -90,5 +90,6 @@ class JoinCourseInvitationActor(object):
             raise AlreadyEnrolledException(msg)
 
         enrollment_manager = ICourseEnrollmentManager(course)
+        # pylint: disable=redundant-keyword-arg
         enrollment_manager.enroll(user, scope=scope)
         return True
