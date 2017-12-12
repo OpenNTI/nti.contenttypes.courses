@@ -10,6 +10,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+# pylint: disable=inherit-non-class
+
 from datetime import datetime
 
 from zope import component
@@ -58,7 +60,7 @@ class ICourseCatalogInstructorLegacyInfo(ICourseCatalogInstructorInfo):
     defaultphoto = ValidTextLine(title=u"A URL path for an extra copy of the instructor's photo",
                                  description=u"ideally this should be the profile photo",
                                  default=u'',
-                                 required=False)  # TODO: We need a schema field for this
+                                 required=False)  # We need a schema field for this
 
     username = ValidTextLine(title=u"A username string that may or may not refer to an actual account.",
                              default=u'',
@@ -120,11 +122,9 @@ class ICourseCatalogLegacyEntry(ICourseCatalogEntry):
                                    required=False,
                                    default=False)
 
-    # ##
     # These are being replaced with presentation specific asset bundles
     # (one path is insufficient to handle things like retina displays
     # and the various platforms).
-    # ##
     LegacyPurchasableIcon = ValidTextLine(title=u"A URL or path of indeterminate type or meaning",
                                           required=False)
 
@@ -212,6 +212,7 @@ class PersistentCourseCatalogLegacyEntry(CourseCatalogLegacyEntry,
                                          PersistentCreatedAndModifiedTimeObject,
                                          RecordableMixin):
 
+    # pylint: disable=super-init-not-called
     def __init__(self, *args, **kwargs):
         # Schema configured is not cooperative
         CourseCatalogLegacyEntry.__init__(self, *args, **kwargs)
@@ -301,8 +302,9 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
     @property
     def PlatformPresentationResources(self):
         ours = super(_CourseSubInstanceCatalogLegacyEntry, self).PlatformPresentationResources
-        if ours:
+        if ours:  # pylint: disable=using-constant-test
             return ours
+        # pylint: disable=no-member
         return self._next_entry.PlatformPresentationResources
 
     @readproperty
@@ -317,7 +319,7 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
         return getattr(self._next_entry, 'Preview', None)
 
     def isCourseCurrentlyActive(self):
-        # XXX: duplicated from the main catalog entry
+        # duplicated from the main catalog entry
         if getattr(self, 'Preview', False):
             # either manually set, or before the start date
             # some objects don't have this flag at all
@@ -350,7 +352,7 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
     def __getattr__(self, key):
         # We don't have it. Does our parent?
         if key.startswith('_'):
-            # TODO: would really like to use the actual
+            # Would really like to use the actual
             # acquisition policy
             raise AttributeError(key)
         return getattr(self._next_entry, key)

@@ -45,7 +45,7 @@ class CourseInstancePrincipalRoleMap(object):
         self.context = course
 
     def _principals_for_ta(self):
-        # XXX: FIXME: Right now, we don't have anything that distinguishes
+        # Right now, we don't have anything that distinguishes
         # the TAs from the instructors definitively. All we have is the catalog
         # entry and the convention that the JobTitle will be 'Teaching Assistant'
         # So right now we never put anyone in that role.
@@ -96,7 +96,7 @@ class CourseInstancePrincipalRoleMap(object):
 class CourseRolePermissionManager(AnnotationRolePermissionManager):
 
     def initialize(self):
-        if not self.map or not self.map._byrow:
+        if not self.map or not self.map._byrow:  # pylint: disable=protected-access
             # Initialize with perms for our global content admin.
             for perm in (ACT_READ, ACT_CONTENT_EDIT, ACT_UPDATE):
                 self.grantPermissionToRole(perm.id, ROLE_CONTENT_ADMIN.id)

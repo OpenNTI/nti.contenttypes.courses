@@ -97,6 +97,7 @@ class _AbstractCourseOutlineNode(Contained,
 
     def __setitem__(self, key, value):
         self._before_adding_node(value)
+        # pylint: disable=no-member
         super(_AbstractCourseOutlineNode, self).__setitem__(key, value)
         
     def append(self, node):
@@ -107,6 +108,7 @@ class _AbstractCourseOutlineNode(Contained,
         self[name] = node
 
     def rename(self, old, new):
+        # pylint: disable=no-member
         # remove no event
         item = self._data[old]
         del self._data[old]
@@ -118,6 +120,7 @@ class _AbstractCourseOutlineNode(Contained,
         self._order[idx] = new
 
     def _do_reorder(self, index, ntiid):
+        # pylint: disable=no-member
         old_keys = list(self.keys())
         old_keys.remove(ntiid)
         if index is not None and index < len(old_keys):
@@ -132,6 +135,7 @@ class _AbstractCourseOutlineNode(Contained,
         self.updateOrder(new_keys)  # see OrderedContainer
 
     def insert(self, index, obj):
+        # pylint: disable=no-member
         if obj.ntiid not in list(self.keys()):
             self.append(obj)
         self._do_reorder(index, obj.ntiid)
@@ -139,16 +143,17 @@ class _AbstractCourseOutlineNode(Contained,
     def __lt__(self, other):
         try:
             return (self.mimeType, self.ntiid) < (other.mimeType, other.ntiid)
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             return NotImplemented
 
     def __gt__(self, other):
         try:
             return (self.mimeType, self.ntiid) > (other.mimeType, other.ntiid)
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             return NotImplemented
 
     def _delitemf(self, key):
+        # pylint: disable=no-member
         del self._data[key]
         self._order.remove(key)
 
@@ -156,7 +161,7 @@ class _AbstractCourseOutlineNode(Contained,
         keys = list(self)
         for k in keys:
             if event:
-                del self[k]
+                del self[k]  # pylint: disable=unsupported-delete-operation 
             else:
                 self._delitemf(k)
     clear = reset
@@ -170,7 +175,7 @@ class CourseOutlineNode(# order matters
 
     LessonOverviewNTIID = None
 
-    # XXX This class used to be persistent. Although there were
+    # This class used to be persistent. Although there were
     # never any references explicitly stored to them, because it
     # was persistent and is a Container, the intid utility grabbed
     # the children when IObjectAdded fired. Now that we're not
