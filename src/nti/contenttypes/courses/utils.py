@@ -79,6 +79,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntryFilterUtility
 
 from nti.contenttypes.courses.vendorinfo import VENDOR_INFO_KEY
 
@@ -1117,6 +1118,46 @@ def get_context_enrollment_records(user, requesting_user):
             except KeyError:
                 pass
     return result
+
+
+@interface.implementer(ICourseCatalogEntryFilterUtility)
+class CourseCatalogEntryFilterUtility(object):
+    """
+    A utility to fetch filter :class:`ICourseCatalogEntry` objects.
+    """
+
+    def get_tagged_entries(self, tag):
+        """
+        Return the set of tagged entries for the given tag.
+        """
+        tagged_courses = get_courses_for_tag(tag)
+        tagged_entries = {
+            ICourseCatalogEntry(x, None) for x in tagged_courses
+        }
+        tagged_entries.discard(None)
+        return tagged_entries
+
+    def _include_entry(self, entry, filter_str, tagged_entries):
+        result =   (entry.title and filter_str in entry.title.lower()) \
+                or (entry.description and filter_str in entry.description.lower()) \
+                or (entry.ProviderUniqueID and filter_str in entry.ProviderUniqueID.lower()) \
+                or entry in tagged_entries
+        return result
+
+    def filter_entries(self, entries, filter_str):
+        """
+        Returns a filtered sequence of included :class:`ICourseCatalogEntry`
+        matches the given filter str. `entry` may be a single instance
+        or a sequence. The given order is maintained.
+        """
+        if isinstance(entries, ICourseCatalogEntry):
+            entries = (entries,)
+        entries = entries or ()
+        if filter_str:
+            tagged_entries = self.get_tagged_entries(filter_str)
+            entries = [x for x in entries
+                       if self._include_entry(x, filter_str, tagged_entries)]
+        return entries
 
 
 import zope.deferredimport

@@ -126,7 +126,7 @@
 	<subscriber factory=".decorators._CourseNonPublicStatusDecorator"
                 for=".interfaces.ICourseInstance"
                 provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
-                
+
  	<subscriber factory=".decorators._CourseAdminLevelDecorator"
 				for=".interfaces.ICourseCatalogEntry"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
@@ -169,7 +169,7 @@
     <subscriber handler=".subscribers.on_course_role_removed" />
     <subscriber handler=".subscribers.on_course_editor_added" />
     <subscriber handler=".subscribers.on_course_instructor_added" />
- 
+
 	<!-- Roles and permissions -->
 	<include package="zope.securitypolicy" file="meta.zcml" />
 	<include package="zope.security" file="meta.zcml" />
@@ -242,6 +242,9 @@
 	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
 				for=".interfaces.ICourseInstance
 					 .interfaces.ICourseInstanceImportedEvent" />
+
+	<utility factory=".utils.CourseCatalogEntryFilterUtility"
+             provides=".interfaces.ICourseCatalogEntryFilterUtility" />
 
 	<!-- By default, courses store their own catalog entries -->
 	<adapter factory=".legacy_catalog.CourseInstanceCatalogLegacyEntryFactory" />

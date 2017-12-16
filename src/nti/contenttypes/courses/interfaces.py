@@ -1749,6 +1749,19 @@ def get_course_assessment_predicate_for_user(user, course):
     return uber_filter
 
 
+class ICourseCatalogEntryFilterUtility(interface.Interface):
+    """
+    A utility to fetch filter :class:`ICourseCatalogEntry` objects.
+    """
+
+    def filter_entries(entries, filter_str):
+        """
+        Returns a filtered sequence of included :class:`ICourseCatalogEntry`
+        matches the given filter str. `entry` may be a single instance
+        or a sequence. The given order is maintained.
+        """
+
+
 # Invitations
 
 
