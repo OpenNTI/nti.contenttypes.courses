@@ -235,6 +235,10 @@ class TestContextEnrollments(CourseLayerTest):
         records = get_context_enrollment_records(student_user, instructor_user)
         assert_that(records, has_length(1))
         assert_that(records, contains(record))
+        
+        records = get_context_enrollment_records(student_user, student_user)
+        assert_that(records, has_length(1))
+        assert_that(records, contains(record))
 
         # Two courses
         enrollments = ICourseEnrollmentManager(inst2)
@@ -249,3 +253,7 @@ class TestContextEnrollments(CourseLayerTest):
         records = get_context_enrollment_records(student_user, instructor_user)
         assert_that(records, has_length(1))
         assert_that(records, contains(record))
+        
+        records = get_context_enrollment_records(student_user, student_user)
+        assert_that(records, has_length(2))
+        assert_that(records, contains_inanyorder(record, record2))
