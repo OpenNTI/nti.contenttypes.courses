@@ -57,7 +57,7 @@ class MockPrincipal(SharingSourceMixin, Persistent):
 
     username = id = u'MyPrincipal'
 
-    def __call__(self):
+    def __call__(self, **kwargs):
         return self
 
     def __eq__(self, other):
