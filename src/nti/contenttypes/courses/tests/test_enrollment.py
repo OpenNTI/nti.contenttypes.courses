@@ -524,3 +524,16 @@ class TestFunctionalEnrollment(CourseLayerTest):
                     has_entry(ES_ALL, is_((ES_PUBLIC, ES_CREDIT,))))
         assert_that(ENROLLMENT_LINEAGE_MAP,
                     has_entry(ES_CREDIT_NONDEGREE, is_((ES_CREDIT,))))
+
+    @WithMockDSTrans
+    def test_count_by_scope(self):
+        self._shared_setup()
+
+        def verify_credit():
+            enrollments = ICourseEnrollments(self.course)
+            assert_that(enrollments.count_scope_enrollments(ES_CREDIT), is_(1))
+            assert_that(enrollments.count_scope_enrollments(ES_PUBLIC), is_(0))
+
+        self._do_test_add_drop(self.principal, self.course, enroll_scope=ES_CREDIT, extra_enroll_test=verify_credit)
+
+
