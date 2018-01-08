@@ -59,6 +59,7 @@ from nti.contenttypes.courses import MessageFactory as _
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
+from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_MAP
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -698,6 +699,26 @@ class DefaultCourseEnrollments(object):
 
     # If we really wanted to, we could cache these persistently on the
     # enrollment storage object.
+
+    @cachedIn('_v_count_scope_enrollments')
+    def count_scope_enrollments(self, scope):
+        scope_term = ENROLLMENT_SCOPE_MAP[scope]
+        scopes_to_exclude = list(scope_term.implied_by)
+        for implied_scope in scope_term.implied_by:
+            for recursive_implied_scope in ENROLLMENT_SCOPE_MAP[implied_scope].implied_by:
+                try:
+                    scopes_to_exclude.remove(recursive_implied_scope)
+                except ValueError:
+                    pass
+                if not scopes_to_exclude:
+                    break
+
+        scope_count = self._count_in_scope_without_instructors(scope)
+        for exclude in scopes_to_exclude:
+            scope_count -= self._count_in_scope_without_instructors(exclude)
+
+        return scope_count
+
 
     @cachedIn('_v_count_credit_enrollments')
     def count_legacy_forcredit_enrollments(self):
