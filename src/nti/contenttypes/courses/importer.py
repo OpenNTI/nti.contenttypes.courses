@@ -76,11 +76,11 @@ from nti.contenttypes.courses.interfaces import CourseInstanceImportedEvent
 from nti.contenttypes.courses.interfaces import CourseVendorInfoSynchronized
 from nti.contenttypes.courses.interfaces import CourseSectionImporterExecutedEvent
 
-from nti.contenttypes.courses.utils import get_parent_course,\
-    unregister_outline_nodes
+from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import clear_course_outline
 from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
+from nti.contenttypes.courses.utils import unregister_outline_nodes
 
 from nti.externalization.internalization import update_from_external_object
 
