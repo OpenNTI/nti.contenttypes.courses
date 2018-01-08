@@ -80,6 +80,7 @@ from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import clear_course_outline
 from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
+from nti.contenttypes.courses.utils import unregister_outline_nodes
 
 from nti.externalization.internalization import update_from_external_object
 
@@ -170,9 +171,13 @@ class CourseOutlineImporter(BaseSectionImporter):
                                     notify=False)
 
         # get course registry
-        registry = get_course_site_registry(course)
-        if registry is None:
-            registry = component.getSiteManager()
+        registry = component.getSiteManager()
+        course_registry = get_course_site_registry(course)
+        if course_registry is not None:
+            # Because of how events are fired, we'll want to make sure we
+            # re-register everything below.
+            unregister_outline_nodes(course)
+            registry = course_registry
 
         # register nodes
         def _recur(node, idx=0):
