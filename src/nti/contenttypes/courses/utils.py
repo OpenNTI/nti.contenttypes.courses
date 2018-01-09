@@ -733,9 +733,11 @@ def unregister_outline_nodes(course):
         for child in node.values():
             recur(child)
         if not ICourseOutline.providedBy(node):
-            unregisterUtility(registry,
-                              name=node.ntiid,
-                              provided=iface_of_node(node))
+            node_ntiid = getattr(node, 'ntiid', None)
+            if node_ntiid:
+                unregisterUtility(registry,
+                                  name=node.ntiid,
+                                  provided=iface_of_node(node))
 
     if registry is not None and course.Outline:
         recur(course.Outline)
