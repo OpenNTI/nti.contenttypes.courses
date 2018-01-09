@@ -5,8 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-# disable: accessing protected members, too many methods
-# pylint: disable=W0212,R0904
+# pylint: disable=protected-access,too-many-public-methods,arguments-differ
 
 from hamcrest import is_
 from hamcrest import assert_that
@@ -16,7 +15,7 @@ from nti.contenttypes.courses._bundle import created_content_package_bundle
 
 from nti.contenttypes.courses.courses import ContentCourseInstance
 
-from nti.contenttypes.courses.generations.evolve37 import process_course
+from nti.contenttypes.courses.generations.evolve38 import process_course
 
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
@@ -26,7 +25,7 @@ from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 from nti.dataserver.tests.mock_dataserver import DataserverLayerTest
 
 
-class TestEvolve37(DataserverLayerTest):
+class TestEvolve38(DataserverLayerTest):
 
     @WithMockDSTrans
     def test_process_course(self):
