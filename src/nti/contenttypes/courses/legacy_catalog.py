@@ -156,6 +156,7 @@ class CourseCatalogInstructorLegacyInfo(CourseCatalogInstructorInfo):
 def _derive_preview(self):
     if self.StartDate is not None:
         return self.StartDate > datetime.utcnow()
+    return False
 
 
 @interface.implementer(ICourseCatalogLegacyEntry)
@@ -316,7 +317,7 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
         self._p_activate()
         if 'StartDate' in self.__dict__:  # whether or not its None
             return _derive_preview(self)
-        return getattr(self._next_entry, 'Preview', None)
+        return getattr(self._next_entry, 'Preview', False)
 
     def isCourseCurrentlyActive(self):
         # duplicated from the main catalog entry
