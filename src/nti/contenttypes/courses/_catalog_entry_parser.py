@@ -53,13 +53,6 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/',
     legacy_to_schema_transform(info_json_dict, catalog_entry, delete=delete)
     update_from_external_object(catalog_entry, info_json_dict, notify=notify)
 
-    # check preview information
-    if      catalog_entry.StartDate \
-        and datetime.utcnow() < catalog_entry.StartDate \
-        and catalog_entry.Preview is None:
-            logger.info('Enabling catalog entry preview flag based on dates')
-            catalog_entry.Preview = True
-
     # check instructors
     if catalog_entry.Instructors:
         instructors = []

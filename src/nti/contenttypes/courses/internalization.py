@@ -155,10 +155,8 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
     elif delete and context is not None:
         context.Duration = None
 
-    if 'isPreview' in parsed:
-        parsed[u'Preview'] = parsed['isPreview'] or False
-    elif 'Preview' not in parsed:
-        parsed[u'Preview'] = getattr(context, 'Preview', '') or False
+    if 'Preview' not in parsed and 'isPreview' in parsed:
+        parsed[u'Preview'] = parsed['isPreview']
 
     if parsed.get('disable_calendar_overview', None) is not None:
         parsed[u'DisableOverviewCalendar'] = parsed['disable_calendar_overview']
@@ -312,7 +310,16 @@ class CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
                                            IAnonymouslyAccessibleCourseInstance)
         return self
 
+    def parsePreview(self, parsed):
+        context = self._ext_replacement()
+        if 'Preview' in parsed and parsed['Preview'] is None:
+            del parsed['Preview']
+            context._p_activate()
+            if 'Preview' in context.__dict__:
+                del context.__dict__['Preview']
+
     def updateFromExternalObject(self, parsed, *args, **kwargs):
         self.transform(parsed).parseInstructors(parsed).parseCredit(parsed)
         self.parseMarkers(parsed).updateCourse()
+        self.parsePreview(parsed)
         return super(CourseCatalogLegacyEntryUpdater, self).updateFromExternalObject(parsed, *args, **kwargs)
