@@ -188,6 +188,11 @@ class CourseCatalogLegacyEntry(CourseCatalogEntry):
         """
         return _derive_preview(self)
 
+    @property
+    def PreviewRawValue(self):
+        self._p_activate()
+        return self.__dict__.get('Preview', None)
+
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
@@ -318,6 +323,11 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
         if 'StartDate' in self.__dict__:  # whether or not its None
             return _derive_preview(self)
         return getattr(self._next_entry, 'Preview', False)
+
+    @property
+    def PreviewRawValue(self):
+        self._p_activate()
+        return self.__dict__.get('Preview', None)
 
     def isCourseCurrentlyActive(self):
         # duplicated from the main catalog entry
