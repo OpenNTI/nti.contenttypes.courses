@@ -9,7 +9,6 @@ from __future__ import absolute_import
 # pylint: disable=W0212,R0904
 
 from hamcrest import is_
-from hamcrest import none
 from hamcrest import assert_that
 from hamcrest import has_property
 
