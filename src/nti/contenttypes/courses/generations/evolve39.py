@@ -72,7 +72,7 @@ def do_evolve(context, generation=generation):
 
 def evolve(context):
     """
-    Evolve to generation 32 by making sure only catalog entries are indexed
+    Evolve to generation 39 by making sure only catalog entries are indexed
     in tag index.
     """
     do_evolve(context, generation)
