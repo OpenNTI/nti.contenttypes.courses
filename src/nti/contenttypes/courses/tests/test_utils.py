@@ -82,16 +82,16 @@ class TestTags(CourseLayerTest):
         entry1 = ICourseCatalogEntry(inst1)
         entry1.title = u'course1'
         ds_folder._p_jar.add(inst1)
-        addIntId(inst1)
-        catalog.index_doc(intids.getId(inst1), inst1)
+        addIntId(entry1)
+        catalog.index_doc(intids.getId(entry1), entry1)
 
         inst2 = ContentCourseInstance()
         entry2 = ICourseCatalogEntry(inst2)
         entry2.title = u'course2'
         entry2.tags = (IPlainTextContentFragment(u'duplicate_tag'),)
         ds_folder._p_jar.add(inst2)
-        addIntId(inst2)
-        catalog.index_doc(intids.getId(inst2), inst2)
+        addIntId(entry2)
+        catalog.index_doc(intids.getId(entry2), entry2)
 
         inst3 = ContentCourseInstance()
         entry3 = ICourseCatalogEntry(inst3)
@@ -99,8 +99,8 @@ class TestTags(CourseLayerTest):
         entry3.tags = (IPlainTextContentFragment(u'entry3 tag'),
                        IPlainTextContentFragment(u'DUPLICATE_TAG'))
         ds_folder._p_jar.add(inst3)
-        addIntId(inst3)
-        catalog.index_doc(intids.getId(inst3), inst3)
+        addIntId(entry3)
+        catalog.index_doc(intids.getId(entry3), entry3)
 
         # Fetch tags
         all_tags = get_course_tags()
@@ -143,7 +143,7 @@ class TestTags(CourseLayerTest):
                                                               'course3'))
 
         # Unindex third course
-        catalog.unindex_doc(intids.getId(inst3))
+        catalog.unindex_doc(intids.getId(entry3))
 
         all_tags = get_course_tags()
         assert_that(all_tags, has_length(1))
@@ -160,7 +160,7 @@ class TestTags(CourseLayerTest):
         assert_that(_get_titles(courses), contains('course2'))
 
         # No courses with tags
-        catalog.unindex_doc(intids.getId(inst2))
+        catalog.unindex_doc(intids.getId(entry2))
 
         all_tags = get_course_tags()
         assert_that(all_tags, has_length(0))
@@ -235,7 +235,7 @@ class TestContextEnrollments(CourseLayerTest):
         records = get_context_enrollment_records(student_user, instructor_user)
         assert_that(records, has_length(1))
         assert_that(records, contains(record))
-        
+
         records = get_context_enrollment_records(student_user, student_user)
         assert_that(records, has_length(1))
         assert_that(records, contains(record))
@@ -253,7 +253,7 @@ class TestContextEnrollments(CourseLayerTest):
         records = get_context_enrollment_records(student_user, instructor_user)
         assert_that(records, has_length(1))
         assert_that(records, contains(record))
-        
+
         records = get_context_enrollment_records(student_user, student_user)
         assert_that(records, has_length(2))
         assert_that(records, contains_inanyorder(record, record2))
