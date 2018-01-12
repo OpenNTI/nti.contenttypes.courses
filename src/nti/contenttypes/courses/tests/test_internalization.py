@@ -102,12 +102,8 @@ class TestInternalization(CourseLayerTest):
 
         # And because we aren't explicitly set a date in the future
         # now has us in preview mode
-
         data = legacy_to_schema_transform({"startDate": "2050-08-22T05:00:00Z"})
         update_from_external_object(entry, data)
 
         assert_that(entry.StartDate, is_not(none()))
         assert_that(entry.Preview, is_(True))
-
-
-
