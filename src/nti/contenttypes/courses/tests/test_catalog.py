@@ -76,13 +76,13 @@ class TestCatalog(unittest.TestCase):
 
     def test_preview(self):
         cce = CourseCatalogLegacyEntry()
-        assert_that(cce, has_property('Preview', is_(none())))
+        assert_that(cce, has_property('Preview', is_(False)))
 
         lcce = _CourseSubInstanceCatalogLegacyEntry()
-        assert_that(lcce, has_property('Preview', is_(none())))
+        assert_that(lcce, has_property('Preview', is_(False)))
 
         lcce._next_entry = cce
-        assert_that(lcce, has_property('Preview', is_(none())))
+        assert_that(lcce, has_property('Preview', is_(False)))
 
         cce.Preview = True
 

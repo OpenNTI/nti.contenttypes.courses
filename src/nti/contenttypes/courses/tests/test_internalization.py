@@ -63,3 +63,51 @@ class TestInternalization(CourseLayerTest):
 
         update_from_external_object(entry, {'Preview': True})
         assert_that(entry.Preview, is_(True))
+
+    def test_preview_derivation(self):
+        entry = PersistentCourseCatalogLegacyEntry()
+        with codecs.open(self.path, "r", "utf-8") as fp:
+            json_data = simplejson.load(fp)
+        json_data.pop('startDate', None)
+        json_data.pop('isPreview', None)
+        json_data = legacy_to_schema_transform(json_data)
+        update_from_external_object(entry, json_data)
+
+        # By default we have no startdate, no explicit Preview
+        # so preview is False
+        assert_that(entry.StartDate, none())
+        assert_that(entry.Preview, is_(False))
+
+        # If our start date is in the past, we are still not in preview
+        data = legacy_to_schema_transform({"startDate": "2000-08-22T05:00:00Z"})
+        update_from_external_object(entry, data)
+
+        assert_that(entry.StartDate, is_not(none()))
+        assert_that(entry.Preview, is_(False))
+
+        # But we can make it explicitly in preview
+        data = legacy_to_schema_transform({"Preview": True})
+        update_from_external_object(entry, data)
+
+        assert_that(entry.StartDate, is_not(none()))
+        assert_that(entry.Preview, is_(True))
+
+        # If we remove the explicit preview setting we are back to being
+        # derived by the StartDate
+        data = legacy_to_schema_transform({"Preview": None})
+        update_from_external_object(entry, data)
+
+        assert_that(entry.StartDate, is_not(none()))
+        assert_that(entry.Preview, is_(False))
+
+        # And because we aren't explicitly set a date in the future
+        # now has us in preview mode
+
+        data = legacy_to_schema_transform({"startDate": "2050-08-22T05:00:00Z"})
+        update_from_external_object(entry, data)
+
+        assert_that(entry.StartDate, is_not(none()))
+        assert_that(entry.Preview, is_(True))
+
+
+

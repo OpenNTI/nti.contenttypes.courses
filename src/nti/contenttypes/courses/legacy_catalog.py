@@ -156,6 +156,7 @@ class CourseCatalogInstructorLegacyInfo(CourseCatalogInstructorInfo):
 def _derive_preview(self):
     if self.StartDate is not None:
         return self.StartDate > datetime.utcnow()
+    return False
 
 
 @interface.implementer(ICourseCatalogLegacyEntry)
@@ -186,6 +187,11 @@ class CourseCatalogLegacyEntry(CourseCatalogEntry):
         if possible.
         """
         return _derive_preview(self)
+
+    @property
+    def PreviewRawValue(self):
+        self._p_activate()
+        return self.__dict__.get('Preview', None)
 
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
@@ -316,7 +322,12 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
         self._p_activate()
         if 'StartDate' in self.__dict__:  # whether or not its None
             return _derive_preview(self)
-        return getattr(self._next_entry, 'Preview', None)
+        return getattr(self._next_entry, 'Preview', False)
+
+    @property
+    def PreviewRawValue(self):
+        self._p_activate()
+        return self.__dict__.get('Preview', None)
 
     def isCourseCurrentlyActive(self):
         # duplicated from the main catalog entry
