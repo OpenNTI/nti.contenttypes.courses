@@ -10,9 +10,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-from datetime import datetime
 from collections import Mapping
-from six.moves.urllib_parse import urljoin
+from six.moves import urllib_parse
 
 from nti.contentlibrary.dublincore import read_dublincore_from_named_key
 
@@ -59,7 +58,7 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/',
         for instructor in catalog_entry.Instructors:
             username = instructor.username or u''
             userid = instructor.userid or u''  # OU legacy
-            # XXX: The need to map catalog instructors to the actual
+            # The need to map catalog instructors to the actual
             # instructors is going away, coming from a new place
             try:
                 if      Entity.get_entity(username) is None \
@@ -71,8 +70,8 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/',
 
             if instructor.defaultphoto:
                 # Ensure it exists and is readable before we advertise it
-                instructor.defaultphoto = urljoin(base_href,
-                                                  instructor.defaultphoto)
+                instructor.defaultphoto = urllib_parse.urljoin(base_href,
+                                                               instructor.defaultphoto)
 
             instructors.append(instructor)
         catalog_entry.Instructors = tuple(instructors)
@@ -95,6 +94,7 @@ def fill_entry_from_legacy_key(catalog_entry, key, base_href='/', force=False):
     """
 
     if force or key.lastModified > catalog_entry.lastModified:
+        # pylint: disable=unused-variable
         __traceback_info__ = key, catalog_entry
         logger.info("Updating catalog entry %s with [legacy] json %s. (dates: key=%s, ce=%s)",
                     catalog_entry.ntiid,
