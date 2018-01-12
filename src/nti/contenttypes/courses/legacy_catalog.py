@@ -190,6 +190,7 @@ class CourseCatalogLegacyEntry(CourseCatalogEntry):
 
     @property
     def PreviewRawValue(self):
+        # pylint: disable=no-member
         self._p_activate()
         return self.__dict__.get('Preview', None)
 
