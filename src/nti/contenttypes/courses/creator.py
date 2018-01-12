@@ -170,7 +170,7 @@ def _prepare_entry(course):
     # make sure ntiid is initialized
     getattr(entry, 'ntiid')
 
-        
+
 def create_course(admin, key, catalog=None, writeout=False,
                   strict=False, creator=None, factory=ContentCourseInstance):
     """

@@ -135,7 +135,7 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
         value = parsed.get(key)
         if value:
             parsed[text_(field)] = value
-        elif delete:
+        elif delete and key != 'ntiid':
             _quiet_delattr(context, field)
 
     if 'ntiid' in parsed and not parsed['ntiid']:
