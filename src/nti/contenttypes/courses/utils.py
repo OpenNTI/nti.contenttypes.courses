@@ -1047,8 +1047,11 @@ def get_courses_for_tag(tag, sites=(), intids=None):
         query[IX_SITE] = {'any_of': sites}
     intids = component.getUtility(IIntIds) if intids is None else intids
     for uid in catalog.apply(query) or ():
-        course = ICourseInstance(intids.queryObject(uid), None)
-        courses.add(course)
+        # Only want catalog entries from index
+        obj = intids.queryObject(uid)
+        if ICourseCatalogEntry.providedBy(obj):
+            course = ICourseInstance(obj, None)
+            courses.add(course)
     courses.discard(None)
     result = set()
     # CourseSubinstances will inherit the parent's tags unless they are
