@@ -175,8 +175,8 @@ class CourseOutlineImporter(BaseSectionImporter):
         course_registry = get_course_site_registry(course)
         if course_registry is not None:
             # Because of how events are fired, we'll want to make sure we
-            # re-register everything below.
-            unregister_outline_nodes(course)
+            # re-register everything below (and remove from this registry).
+            unregister_outline_nodes(course, registry)
             registry = course_registry
 
         # register nodes
