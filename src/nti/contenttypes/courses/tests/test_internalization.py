@@ -16,10 +16,14 @@ from hamcrest import assert_that
 from hamcrest import has_entries
 does_not = is_not
 
+from nose.tools import assert_raises
+
 import os
 import codecs
 
 import simplejson
+
+from zope.schema.interfaces import TooShort
 
 from nti.contenttypes.courses.internalization import legacy_to_schema_transform
 
@@ -63,6 +67,32 @@ class TestInternalization(CourseLayerTest):
 
         update_from_external_object(entry, {'Preview': True})
         assert_that(entry.Preview, is_(True))
+
+    def test_provider_unique_id_trims(self):
+        with codecs.open(self.path, "r", "utf-8") as fp:
+            json_data = simplejson.load(fp)
+
+        json_data["id"] = u" foo_bar baz    "
+        entry = PersistentCourseCatalogLegacyEntry()
+        update_from_external_object(entry, json_data)
+
+        assert_that(entry.ProviderUniqueID, is_('foo_bar baz'))
+
+    def test_provider_unique_not_empty(self):
+        with codecs.open(self.path, "r", "utf-8") as fp:
+            json_data = simplejson.load(fp)
+
+        json_data["id"] = u""
+        entry = PersistentCourseCatalogLegacyEntry()
+        with assert_raises(TooShort) as exc:
+            update_from_external_object(entry, json_data)
+
+        with codecs.open(self.path, "r", "utf-8") as fp:
+            json_data = simplejson.load(fp)
+
+        json_data["id"] = u"    "
+        with assert_raises(TooShort) as exc:
+            update_from_external_object(entry, json_data)
 
     def test_preview_derivation(self):
         entry = PersistentCourseCatalogLegacyEntry()
