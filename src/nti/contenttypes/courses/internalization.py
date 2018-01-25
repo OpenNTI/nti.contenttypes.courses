@@ -133,7 +133,7 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
                        ('ProviderDepartmentTitle', 'school'),
                        ('InstructorsSignature', 'InstructorsSignature')):
         value = parsed.get(key)
-        if value:
+        if value is not None:
             parsed[text_(field)] = value
         elif delete and key != 'ntiid':
             _quiet_delattr(context, field)
@@ -322,4 +322,6 @@ class CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
         self.transform(parsed).parseInstructors(parsed).parseCredit(parsed)
         self.parseMarkers(parsed).updateCourse()
         self.parsePreview(parsed)
+        if parsed.get('ProviderUniqueID', None):
+            parsed['ProviderUniqueID'] = parsed['ProviderUniqueID'].strip()
         return super(CourseCatalogLegacyEntryUpdater, self).updateFromExternalObject(parsed, *args, **kwargs)

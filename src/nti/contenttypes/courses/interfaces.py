@@ -253,6 +253,7 @@ class ICourseOutlineNode(IRecordableContainer,
                          IOrderedContainer,
                          IContainerNamesContainer,
                          ICalendarPublishable,
+                         IShouldHaveTraversablePath,
                          _ICourseOutlineNodeContainer):
     """
     A part of the course outline. Children are the sub-nodes of this
@@ -825,7 +826,8 @@ class ICatalogFamily(IDisplayableContent):
 
     ProviderUniqueID = ValidTextLine(title=u"The unique id assigned by the provider",
                                      required=True,
-                                     max_length=32)
+                                     max_length=32,
+                                     min_length=1)
 
     ProviderDepartmentTitle = ValidTextLine(title=u"The string assigned to the provider's department offering the course",
                                             required=False)
