@@ -5,8 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-# disable: accessing protected members, too many methods
-# pylint: disable=W0212,R0904
+# pylint: disable=protected-access,too-many-public-methods
 
 from hamcrest import is_
 from hamcrest import none
@@ -15,8 +14,6 @@ from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import has_entries
 does_not = is_not
-
-from nose.tools import assert_raises
 
 import os
 import codecs
@@ -84,14 +81,14 @@ class TestInternalization(CourseLayerTest):
 
         json_data["id"] = u""
         entry = PersistentCourseCatalogLegacyEntry()
-        with assert_raises(TooShort) as exc:
+        with self.assertRaises(TooShort):
             update_from_external_object(entry, json_data)
 
         with codecs.open(self.path, "r", "utf-8") as fp:
             json_data = simplejson.load(fp)
 
         json_data["id"] = u"    "
-        with assert_raises(TooShort) as exc:
+        with self.assertRaises(TooShort):
             update_from_external_object(entry, json_data)
 
     def test_preview_derivation(self):
