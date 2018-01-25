@@ -253,7 +253,6 @@ class ICourseOutlineNode(IRecordableContainer,
                          IOrderedContainer,
                          IContainerNamesContainer,
                          ICalendarPublishable,
-                         IShouldHaveTraversablePath,
                          _ICourseOutlineNodeContainer):
     """
     A part of the course outline. Children are the sub-nodes of this
