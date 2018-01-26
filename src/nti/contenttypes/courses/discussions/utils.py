@@ -90,7 +90,7 @@ def get_course_for_discussion(discussion, context):
             splits = path.split(os.path.sep)
             if SECTIONS in splits:  # e.g. /Sections/02/Discussions
                 if len(splits) >= 3:
-                    return parent.SubInstances.get(splits[2]) 
+                    return parent.SubInstances.get(splits[2])
                 return None
             else:
                 return parent
@@ -234,6 +234,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
             # check the forum scopes against the mapped enrollment scope
             forum_scopes = get_forum_scopes(v) if m_scope != ES_ALL else ()
             if     m_scope == ES_ALL \
+                or not forum_scopes \
                 or m_scope in forum_scopes \
                 or m_scope_implies.intersection(forum_scopes):
                 if topic_key in v:
