@@ -1897,6 +1897,13 @@ class ICourseEvaluationImporter(interface.Interface):
         """
 
 
+class DuplicateImportFromExportException(ValidationError):
+    """
+    We prevent courses from being imported with the same export zip since we do
+    not want ntiids to collide.
+    """
+
+
 class ICourseInstanceExportedEvent(IObjectEvent):
     pass
 
@@ -1947,6 +1954,16 @@ class CourseSectionImporterExecutedEvent(ObjectEvent):
         self.filer = filer
         self.importer = importer
         self.writeout = writeout
+
+
+class ICourseImportMetadata(interface.Interface):
+    """
+    Contains import metadata information for this.
+    """
+
+    last_import_hash = interface.Attribute("The export hash value of the data used to import this course.")
+    last_import_time = interface.Attribute("The last date time this course was imported onto.")
+
 
 # removal
 

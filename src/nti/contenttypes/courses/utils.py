@@ -52,6 +52,7 @@ from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_COURSE
 from nti.contenttypes.courses.index import IX_PACKAGES
 from nti.contenttypes.courses.index import IX_USERNAME
+from nti.contenttypes.courses.index import IX_IMPORT_HASH
 from nti.contenttypes.courses.index import IX_CONTENT_UNIT
 
 from nti.contenttypes.courses.index import IndexRecord
@@ -1124,6 +1125,24 @@ def get_context_enrollment_records(user, requesting_user):
             except KeyError:
                 pass
     return result
+
+
+def get_courses_for_export_hash(export_hash):
+    """
+    For the given export hash, return all :class:`ICourseInstance` objects
+    that were imported with this hash.
+    """
+    catalog = get_courses_catalog()
+    result = set()
+    query = {
+        IX_IMPORT_HASH: {'any_of': (export_hash,)},
+    }
+    intids = component.getUtility(IIntIds)
+    for uid in catalog.apply(query) or ():
+        course = ICourseInstance(intids.queryObject(uid), None)
+        result.add(course)
+    result.discard(None)
+    return tuple(result)
 
 
 @interface.implementer(ICourseCatalogEntryFilterUtility)

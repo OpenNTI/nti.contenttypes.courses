@@ -34,6 +34,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseKeywords
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseImportMetadata
 from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
@@ -279,6 +280,7 @@ IX_NAME = 'name'
 IX_TAGS = 'tags'
 IX_KEYWORDS = 'keywords'
 IX_PACKAGES = 'packages'
+IX_IMPORT_HASH = 'import_hash'
 COURSES_CATALOG_NAME = 'nti.dataserver.++etc++courses-catalog'
 
 
@@ -298,6 +300,11 @@ class ValidatingCourseSiteName(object):
 class CourseSiteIndex(ValueIndex):
     default_field_name = 'site'
     default_interface = ValidatingCourseSiteName
+
+
+class CourseImportHashIndex(ValueIndex):
+    default_field_name = 'import_hash'
+    default_interface = ICourseImportMetadata
 
 
 class ValidatingCourseName(object):
@@ -395,7 +402,8 @@ def create_courses_catalog(catalog=None, family=BTrees.family64):
                         (IX_TAGS, CourseTagsIndex),
                         (IX_PACKAGES, CoursePackagesIndex),
                         (IX_KEYWORDS, CourseKeywordsIndex),
-                        (IX_ENTRY, CourseCatalogEntryIndex)):
+                        (IX_ENTRY, CourseCatalogEntryIndex),
+                        (IX_IMPORT_HASH, CourseImportHashIndex)):
         index = clazz(family=family)
         locate(index, catalog, name)
         catalog[name] = index
