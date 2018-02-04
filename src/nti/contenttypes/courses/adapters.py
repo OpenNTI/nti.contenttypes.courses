@@ -9,10 +9,15 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import six
+
 from collections import Mapping
+
+from datetime import datetime
 
 from zope import component
 from zope import interface
+
+from zope.annotation.factory import factory as an_factory
 
 from zope.traversing.api import traverse
 
@@ -21,6 +26,7 @@ from nti.contenttypes.courses.interfaces import ICourseKeywords
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseImportMetadata
 from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
 
 from nti.contenttypes.courses.utils import get_parent_course
@@ -98,7 +104,7 @@ def _names(course):
     result = None
     if course is not None:
         result = set()
-        level = find_interface(course, 
+        level = find_interface(course,
                                ICourseAdministrativeLevel,
                                strict=False)
         if level is not None:
@@ -134,3 +140,25 @@ def _course_keywords(context):
     result.discard('')
     result.discard(None)
     return _Keywords(sorted(result))
+
+
+@component.adapter(ICourseInstance)
+@interface.implementer(ICourseImportMetadata)
+class _CourseImportMetadata(object):
+
+    _import_hash = None
+    last_import_time = None
+
+    @property
+    def import_hash(self):
+        return self._import_hash
+
+    @import_hash.setter
+    def import_hash(self, new_import_hash):
+        self._import_hash = new_import_hash
+        self.last_import_time = datetime.utcnow()
+
+
+COURSE_IMPORT_METADATA_KEY = 'nti.contenttypes.courses.import.CourseImportMetadata'
+CourseImportMetadataFactory = an_factory(_CourseImportMetadata,
+                                         key=COURSE_IMPORT_METADATA_KEY)

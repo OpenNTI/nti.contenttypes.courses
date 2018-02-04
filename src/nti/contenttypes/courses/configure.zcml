@@ -434,6 +434,8 @@
 	<utility factory=".exporter.BundlePresentationAssetsExporter" name="003:Presentation_Assets" />
 
 	<!-- Importer -->
+	<adapter factory=".adapters.CourseImportMetadataFactory" />
+
 	<utility factory=".importer.CourseImporter" />
 	<!-- 1. -->
 	<utility factory=".importer.BundleMetaInfoImporter" name="001:Bundle_Metainfo" />

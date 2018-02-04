@@ -47,3 +47,6 @@ EVALUATION_INDEX = 'evaluation_index.json'
 
 #: Course evaluation last modified annotation key
 EVALUATION_INDEX_LAST_MODIFIED = EVALUATION_INDEX + '.lastModified'
+
+#: Export a seed to validate an export is only used once per environment
+COURSE_EXPORT_HASH_FILE = 'course_export_hash.txt'
