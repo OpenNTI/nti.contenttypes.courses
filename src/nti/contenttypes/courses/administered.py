@@ -33,8 +33,9 @@ from nti.contenttypes.courses.utils import get_course_editors
 from nti.contenttypes.courses.utils import get_instructed_and_edited_courses
 from nti.contenttypes.courses.utils import AbstractInstanceWrapper
 
+from nti.dataserver.authorization import is_admin
+from nti.dataserver.authorization import is_site_admin
 from nti.dataserver.authorization import is_content_admin
-from nti.dataserver.authorization import is_admin_or_site_admin
 
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 
@@ -123,16 +124,29 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
 
     @Lazy
     def _is_admin(self):
-        return is_admin_or_site_admin(self.user)
+        return is_admin(self.user)
+
+    @Lazy
+    def _is_site_admin(self):
+        return is_site_admin(self.user)
 
     @Lazy
     def _is_content_admin(self):
         return is_content_admin(self.user)
 
+    @Lazy
+    def _is_global_editor(self):
+        return self._is_admin \
+            or self._is_site_admin \
+            or self._is_content_admin
+
     def _iter_all_courses(self):
         # We do not filter based on enrollment or anything else.
         # This will probably move to its own workspace eventually.
         catalog = component.queryUtility(ICourseCatalog)
+        # NT admins can see all
+        # site admins/content admins can view any courses they can edit
+        # (courses in site for site admins)
         for entry in catalog.iterCatalogEntries():
             course = ICourseInstance(entry, None)
             if      course is not None \
@@ -147,7 +161,7 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
             yield context
 
     def _get_course_iterator(self):
-        if self._is_admin or self._is_content_admin:
+        if self._is_global_editor:
             result = self._iter_all_courses
         else:
             result = self._iter_admin_courses
@@ -158,7 +172,7 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
         for course in course_iter_func():
             admin_role = get_course_admin_role(course,
                                                self.user,
-                                               is_admin=self._is_admin)
+                                               is_admin=self._is_global_editor)
             yield admin_role
 
     iter_enrollments = iter_administrations  # for convenience
