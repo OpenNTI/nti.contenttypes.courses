@@ -17,6 +17,7 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
+from nti.contenttypes.courses.interfaces import ICourseContentPackageBundle
 from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
 
 from nti.contenttypes.courses.legacy_catalog import ICourseCatalogInstructorLegacyInfo
@@ -105,3 +106,21 @@ class _CourseSiteDecorator(Singleton):
             site = find_interface(course, IHostPolicyFolder, strict=False)
             if site is not None:
                 external['Site'] = site.__name__
+
+
+@component.adapter(ICourseContentPackageBundle)
+@interface.implementer(IExternalObjectDecorator)
+class _CourseBundleDecorator(Singleton):
+    """
+    The client apparently uses the bundle title as a proxy to the course title.
+    With edits, these may fall out of sync. Should we always overwrite?
+    """
+
+    def decorateExternalObject(self, original, external):
+        title = external['title']
+        if not title:
+            course = ICourseInstance(original, None)
+            entry = ICourseCatalogEntry(course, None)
+            entry_title = getattr(entry, 'title', '')
+            if entry_title:
+                external['title'] = entry_title

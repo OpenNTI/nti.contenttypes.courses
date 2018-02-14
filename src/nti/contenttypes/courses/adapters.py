@@ -28,6 +28,7 @@ from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseImportMetadata
 from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
+from nti.contenttypes.courses.interfaces import ICourseContentPackageBundle
 
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import get_course_vendor_info
@@ -55,6 +56,12 @@ def _entry_to_site(context):
 @interface.implementer(ICourseInstance)
 def _outlinenode_to_course(outline):
     return find_interface(outline, ICourseInstance, strict=False)
+
+
+@component.adapter(ICourseContentPackageBundle)
+@interface.implementer(ICourseInstance)
+def _bundle_to_course(bundle):
+    return find_interface(bundle, ICourseInstance, strict=False)
 
 
 # keywords
