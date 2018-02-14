@@ -143,6 +143,10 @@
                 for=".interfaces.ICourseInstance"
                 provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
 
+    <subscriber factory=".decorators._CourseBundleDecorator"
+                provides="nti.externalization.interfaces.IExternalObjectDecorator"
+                for="nti.contenttypes.courses.interfaces.ICourseContentPackageBundle" />
+
 	<!-- Events -->
 	<subscriber handler=".subscribers.install_site_course_catalog" />
 	<subscriber handler=".subscribers.uninstall_site_course_catalog" />
@@ -413,6 +417,9 @@
 	<!-- Site -->
 	<adapter factory=".adapters._entry_to_site" />
 	<adapter factory=".adapters._course_to_site" />
+
+    <!-- Bundle -->
+    <adapter factory=".adapters._bundle_to_course" />
 
 	<!-- Outline nodes -->
 	<adapter factory=".adapters._outlinenode_to_course" />
