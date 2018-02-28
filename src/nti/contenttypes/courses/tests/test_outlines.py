@@ -168,9 +168,5 @@ class TestCourseOutline(CourseLayerTest):
         course.SubInstances[subcourse.__name__] = subcourse
         
         assert_that(subcourse.Outline, is_(course.Outline))
-
-        outline = subcourse.Outline
-
-        parent = outline.__parent__
         assert_that(subcourse.Outline.__parent__, is_(subcourse))
         
