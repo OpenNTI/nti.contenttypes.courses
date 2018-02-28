@@ -176,9 +176,10 @@ class ContentCourseInstance(DisplayableContentMixin,
         if self.ContentPackageBundle and self.root != self.ContentPackageBundle.root:
             return self.ContentPackageBundle.PlatformPresentationResources
 
-
+from Acquisition import Explicit as AQExplicit
+        
 @interface.implementer(IContentCourseSubInstance)
-class ContentCourseSubInstance(ContentCourseInstance):
+class ContentCourseSubInstance(AQExplicit, ContentCourseInstance):
 
     def __getattr__(self, name):
         if name.startswith('_'):
@@ -210,7 +211,7 @@ class ContentCourseSubInstance(ContentCourseInstance):
         self._p_activate()
         if 'Outline' in self.__dict__:
             return self.__dict__['Outline']
-        return aq_acquire(self.__parent__, 'Outline')
+        return aq_acquire(self.__parent__, 'Outline').__of__(self) 
 
     def _set_Outline(self, outline):
         self._p_activate()

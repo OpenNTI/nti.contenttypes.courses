@@ -230,8 +230,11 @@ class CourseOutlineContentNode(CourseOutlineCalendarNode):
     createDirectFieldProperties(ICourseOutlineContentNode)
 
 
+from Acquisition import Explicit as AQExplicit
+
 @interface.implementer(ICourseOutline, ILastModified)
-class CourseOutline(CourseOutlineNode,
+class CourseOutline(AQExplicit,
+                    CourseOutlineNode,
                     PersistentCreatedModDateTrackingObject):
     createDirectFieldProperties(ICourseOutline)
 
