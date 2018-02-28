@@ -156,3 +156,21 @@ class TestCourseOutline(CourseLayerTest):
         for node in new_outline.values():
             assert_that(node, has_property('ntiid', is_not(none())))
             assert_that(is_valid_ntiid_string(node.ntiid), is_(True))
+
+
+    def test_outline_container(self):
+        course = courses.CourseInstance()
+        assert_that(course.Outline, is_not(none()))
+        assert_that(course.Outline.__parent__, course)
+
+        subcourse = courses.ContentCourseSubInstance()
+        subcourse.__name__ = 'subcourse'
+        course.SubInstances[subcourse.__name__] = subcourse
+        
+        assert_that(subcourse.Outline, is_(course.Outline))
+
+        outline = subcourse.Outline
+
+        parent = outline.__parent__
+        assert_that(subcourse.Outline.__parent__, is_(subcourse))
+        
