@@ -69,6 +69,8 @@ from nti.contentlibrary.interfaces import IEditableContentPackageBundle
 from nti.contentlibrary.interfaces import IGenericSynchronizationResults
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
+from nti.contenttypes.completion.interfaces import ICompletionContext
+
 from nti.contenttypes.courses import MessageFactory as _
 
 from nti.contenttypes.reports.interfaces import IReportContext
@@ -492,7 +494,8 @@ class ICourseInstance(IFolder,
                       IShouldHaveTraversablePath,
                       _ICourseOutlineNodeContainer,
                       ISynchronizable,
-                      IReportContext):
+                      IReportContext,
+                      ICompletionContext):
     """
     A concrete instance of a course (typically
     in progress or opening). This can be annotated,
