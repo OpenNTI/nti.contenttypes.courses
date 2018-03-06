@@ -205,21 +205,20 @@ class CourseOutlineNode(# order matters
         super(CourseOutlineNode, self).__delitem__(key)
         self.updateLastMod()
 
-    def __acquire(self, result):
-        """
-        Based on AcquireObjectsOnReadMixin.__acquire
-        """
-        if IAcquirer.providedBy(result):
-            result = result.__of__(self)
-        return result
-        
     def values(self):
         """
         OrderedContainer.values doesn't invoke get or __getitem__
         so we must acquire our values manually
         """
-        vals = super(CourseOutlineNode, self).values()
-        return [self.__acquire(v) for v in vals]
+        for val in super(CourseOutlineNode, self).values():
+            yield self._acquire(val)
+
+    def items(self):
+        """
+        Acquire from items as well
+        """
+        for k, v in super(CourseOutlineNode, self).items():
+            yield k, self._acquire(v)
         
     def reset(self, event=True):
         super(CourseOutlineNode, self).reset(event=event)

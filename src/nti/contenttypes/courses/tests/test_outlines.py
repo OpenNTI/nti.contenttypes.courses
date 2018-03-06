@@ -176,5 +176,7 @@ class TestCourseOutline(CourseLayerTest):
         assert_that(course.Outline['0'].__parent__.__parent__, is_(course)) 
 
         assert_that(subcourse.Outline['0'].__parent__.__parent__, is_(subcourse))
-        assert_that(subcourse.Outline.values()[0].__parent__.__parent__, is_(subcourse))
+        assert_that(subcourse.Outline.values().next().__parent__.__parent__, is_(subcourse))
+
+        assert_that(subcourse.Outline.items().next()[1].__parent__.__parent__, is_(subcourse))
         
