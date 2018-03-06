@@ -13,6 +13,10 @@ from __future__ import absolute_import
 import time
 from functools import total_ordering
 
+from Acquisition import Implicit
+
+from Acquisition.interfaces import IAcquirer
+
 from ZODB.interfaces import IConnection
 
 from zope import component
@@ -29,6 +33,8 @@ from zope.container.ordered import OrderedContainer  # this is persistent
 from nti.base._compat import text_
 
 from nti.base.interfaces import ILastModified
+
+from nti.containers.containers import AcquireObjectsOnReadMixin
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -169,6 +175,8 @@ class _AbstractCourseOutlineNode(Contained,
 
 @interface.implementer(ICourseOutlineNode, ILastModified)
 class CourseOutlineNode(# order matters
+                        Implicit,
+                        AcquireObjectsOnReadMixin,
                         _AbstractCourseOutlineNode,
                         PersistentCreatedModDateTrackingObject,
                         OrderedContainer):
@@ -197,6 +205,22 @@ class CourseOutlineNode(# order matters
         super(CourseOutlineNode, self).__delitem__(key)
         self.updateLastMod()
 
+    def __acquire(self, result):
+        """
+        Based on AcquireObjectsOnReadMixin.__acquire
+        """
+        if IAcquirer.providedBy(result):
+            result = result.__of__(self)
+        return result
+        
+    def values(self):
+        """
+        OrderedContainer.values doesn't invoke get or __getitem__
+        so we must acquire our values manually
+        """
+        vals = super(CourseOutlineNode, self).values()
+        return [self.__acquire(v) for v in vals]
+        
     def reset(self, event=True):
         super(CourseOutlineNode, self).reset(event=event)
         self.updateLastMod()
@@ -230,11 +254,8 @@ class CourseOutlineContentNode(CourseOutlineCalendarNode):
     createDirectFieldProperties(ICourseOutlineContentNode)
 
 
-from Acquisition import Explicit as AQExplicit
-
 @interface.implementer(ICourseOutline, ILastModified)
-class CourseOutline(AQExplicit,
-                    CourseOutlineNode,
+class CourseOutline(CourseOutlineNode,
                     PersistentCreatedModDateTrackingObject):
     createDirectFieldProperties(ICourseOutline)
 
