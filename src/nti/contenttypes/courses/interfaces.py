@@ -1721,7 +1721,6 @@ class ICourseRolePermissionManager(IRolePermissionManager):
 
 
 class IUserAdministeredCourses(interface.Interface):
-
     """
     Marker for a callable utility that return the administered courses of a user
     """
@@ -1730,6 +1729,13 @@ class IUserAdministeredCourses(interface.Interface):
         """
         return an iterable with the users administered courses
         """
+
+
+class INonExportable(interface.Interface):
+    """
+    Marker interface for those :class:`ICourseInstance` objects which may not
+    be exportable.
+    """
 
 
 def get_course_assessment_predicate_for_user(user, course):
