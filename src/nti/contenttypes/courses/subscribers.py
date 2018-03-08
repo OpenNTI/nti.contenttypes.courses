@@ -42,6 +42,8 @@ from nti.contentlibrary.interfaces import IDelimitedHierarchyContentPackageEnume
 
 from nti.contenttypes.courses import get_enrollment_catalog
 
+from nti.contenttypes.courses._enrollment import update_deny_open_enrollment
+
 from nti.contenttypes.courses.common import get_course_packages
 from nti.contenttypes.courses.common import get_course_site_name
 from nti.contenttypes.courses.common import get_course_site_registry
@@ -268,6 +270,7 @@ def on_course_vendor_info_synced(course, _):
     doc_id = intids.queryId(course) if intids is not None else None
     if doc_id is not None:
         catalog.index_doc(doc_id, course)
+    update_deny_open_enrollment(course)
 
 
 @component.adapter(IUser, IWillDeleteEntityEvent)
