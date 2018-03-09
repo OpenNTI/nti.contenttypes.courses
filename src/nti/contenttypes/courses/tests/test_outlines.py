@@ -169,6 +169,12 @@ class TestCourseOutline(CourseLayerTest):
         assert_that(subcourse.Outline, is_(course.Outline))
         assert_that(subcourse.Outline.__parent__, is_(subcourse))
 
+        # Even though our parent (via acquisition) is subcourse
+        # we want an adaptation to ICourseInstance to find the true outline
+        # owner.  This is for backwards compatibility since we really don't
+        # know the callers intent when adapting
+        assert_that(interfaces.ICourseInstance(subcourse.Outline), is_(course))
+
         child_node = outlines.CourseOutlineNode()
         course.Outline['0'] = child_node
 
