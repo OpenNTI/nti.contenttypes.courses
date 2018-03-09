@@ -8,6 +8,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from ExtensionClass import Base
+
 from zope import interface
 
 from zope import lifecycleevent
@@ -49,9 +51,8 @@ class CourseAdministrativeLevel(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 class CourseSubInstances(CaseInsensitiveCheckingLastModifiedBTreeContainer):
     pass
 
-
 @interface.implementer(ICourseInstance)
-class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
+class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder, Base):
     __external_can_create__ = False
     createDirectFieldProperties(ICourseInstance)
 
