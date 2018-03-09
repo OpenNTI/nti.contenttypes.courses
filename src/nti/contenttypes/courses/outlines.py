@@ -13,7 +13,7 @@ from __future__ import absolute_import
 import time
 from functools import total_ordering
 
-from Acquisition import Implicit
+from Acquisition import Explicit
 
 from Acquisition.interfaces import IAcquirer
 
@@ -175,7 +175,7 @@ class _AbstractCourseOutlineNode(Contained,
 
 @interface.implementer(ICourseOutlineNode, ILastModified)
 class CourseOutlineNode(# order matters
-                        Implicit,
+                        Explicit,
                         AcquireObjectsOnReadMixin,
                         _AbstractCourseOutlineNode,
                         PersistentCreatedModDateTrackingObject,
