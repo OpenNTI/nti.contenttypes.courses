@@ -201,7 +201,6 @@ class CourseOutlineNode(# order matters
         self.updateLastMod()
 
     def __delitem__(self, key):
-        uncontained(self[key], self, key)
         super(CourseOutlineNode, self).__delitem__(key)
         self.updateLastMod()
 
