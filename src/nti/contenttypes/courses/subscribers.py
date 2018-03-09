@@ -341,7 +341,7 @@ def on_course_instance_removed(course, _):
     remove_enrollment_records(course)
     unindex_enrollment_records(course)
     if     not ICourseSubInstance.providedBy(course) \
-        or course.Outline is not get_parent_course(course).Outline:
+        or course.Outline != get_parent_course(course).Outline:
         clear_course_outline(course)
 
 
