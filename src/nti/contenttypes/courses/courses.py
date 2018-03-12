@@ -37,6 +37,8 @@ from nti.contenttypes.courses.outlines import CourseOutline
 from nti.contenttypes.courses.sharing import CourseInstanceSharingScopes
 from nti.contenttypes.courses.sharing import CourseSubInstanceSharingScopes
 
+from nti.ntiids.oids import to_external_ntiid_oid
+
 from nti.schema.fieldproperty import createDirectFieldProperties
 
 logger = __import__('logging').getLogger(__name__)
@@ -66,6 +68,10 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder, Base):
         return True
     __nonzero__ = __bool__
 
+    @property
+    def ntiid(self):
+        return to_external_ntiid_oid(self)
+    
     @Lazy
     def Discussions(self):
         self._p_changed = True
