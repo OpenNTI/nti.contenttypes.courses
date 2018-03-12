@@ -23,6 +23,7 @@ from zope.traversing.api import traverse
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseKeywords
+from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -55,6 +56,8 @@ def _entry_to_site(context):
 @component.adapter(ICourseOutlineNode)
 @interface.implementer(ICourseInstance)
 def _outlinenode_to_course(outline):
+    outline = find_interface(outline, ICourseOutline, strict=False)
+    outline = getattr(outline, 'aq_base', outline)
     return find_interface(outline, ICourseInstance, strict=False)
 
 

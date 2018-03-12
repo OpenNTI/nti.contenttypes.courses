@@ -202,7 +202,7 @@ class CourseOutlineImporter(BaseSectionImporter):
         if ICourseSubInstance.providedBy(course):
             parent_course = get_parent_course(course)
             # Only clear our outline if we're not shared currently.
-            if course.Outline is not parent_course.Outline:
+            if course.Outline != parent_course.Outline:
                 clear_course_outline(course)
             course.prepare_own_outline()
         else:

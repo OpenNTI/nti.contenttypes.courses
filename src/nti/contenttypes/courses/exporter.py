@@ -312,7 +312,7 @@ class CourseOutlineExporter(BaseSectionExporter):
                    overwrite=True)
         # process subinstances
         for sub_instance in get_course_subinstances(course):
-            if sub_instance.Outline is not course.Outline:
+            if sub_instance.Outline != course.Outline:
                 self.export(sub_instance, filer, backup, salt)
 
 

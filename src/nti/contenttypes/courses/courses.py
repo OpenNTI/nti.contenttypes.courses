@@ -8,6 +8,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from ExtensionClass import Base
+
 from zope import interface
 
 from zope import lifecycleevent
@@ -49,9 +51,8 @@ class CourseAdministrativeLevel(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 class CourseSubInstances(CaseInsensitiveCheckingLastModifiedBTreeContainer):
     pass
 
-
 @interface.implementer(ICourseInstance)
-class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder):
+class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder, Base):
     __external_can_create__ = False
     createDirectFieldProperties(ICourseInstance)
 
@@ -175,8 +176,7 @@ class ContentCourseInstance(DisplayableContentMixin,
 
         if self.ContentPackageBundle and self.root != self.ContentPackageBundle.root:
             return self.ContentPackageBundle.PlatformPresentationResources
-
-
+        
 @interface.implementer(IContentCourseSubInstance)
 class ContentCourseSubInstance(ContentCourseInstance):
 
@@ -210,7 +210,7 @@ class ContentCourseSubInstance(ContentCourseInstance):
         self._p_activate()
         if 'Outline' in self.__dict__:
             return self.__dict__['Outline']
-        return aq_acquire(self.__parent__, 'Outline')
+        return aq_acquire(self.__parent__, 'Outline').__of__(self)
 
     def _set_Outline(self, outline):
         self._p_activate()
