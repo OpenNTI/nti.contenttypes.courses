@@ -1686,6 +1686,7 @@ class ICourseInstanceAdministrativeRole(IShouldHaveTraversablePath):
     RoleName = Choice(title=u"The name of the role this principal holds",
                       values=('instructor', 'teaching assistant', 'editor'))
     CourseInstance = Object(ICourseInstance)
+    CourseInstance.setTaggedValue('_ext_excluded_out', True)
 
 
 class IPrincipalAdministrativeRoleCatalog(interface.Interface):
