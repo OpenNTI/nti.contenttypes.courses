@@ -71,6 +71,10 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder, Base):
     @property
     def ntiid(self):
         return to_external_ntiid_oid(self)
+
+    @ntiid.setter
+    def ntiid(self, nv):
+        pass
     
     @Lazy
     def Discussions(self):
