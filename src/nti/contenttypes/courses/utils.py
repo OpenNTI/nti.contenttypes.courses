@@ -156,7 +156,8 @@ def get_course_vendor_info(context, create=True):
 
 
 def get_sites_4_index(sites=None):
-    sites = get_component_hierarchy_names() if not sites else sites
+    if not sites and getSite() is not None:
+        sites = get_component_hierarchy_names()
     sites = sites.split() if isinstance(sites, string_types) else sites
     return sites
 
