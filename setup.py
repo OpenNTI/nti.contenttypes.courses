@@ -59,6 +59,7 @@ setup(
         'nti.coremetadata',
         'nti.dublincore',
         'nti.externalization',
+        'nti.invitations',
         'nti.links',
         'nti.metadata',
         'nti.mimetype',
