@@ -1908,6 +1908,14 @@ class ICourseEvaluationImporter(interface.Interface):
         """
 
 
+class ICourseCompletionSectionExporter(ICourseSectionExporter):
+    pass
+
+
+class ICourseCompletionSectionImporter(ICourseSectionImporter):
+    pass
+
+
 class DuplicateImportFromExportException(ValidationError):
     """
     We prevent courses from being imported with the same export zip since we do
