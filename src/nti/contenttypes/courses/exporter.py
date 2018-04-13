@@ -467,7 +467,9 @@ class BundlePresentationAssetsExporter(BaseSectionExporter):
         course = ICourseInstance(context)
         filer.default_bucket = bucket = self.course_bucket(course)
         bucket = '' if not bucket else bucket + '/'
-        for resource in course.PlatformPresentationResources or ():
+        presentation_resources = getattr(course, 'PlatformPresentationResources', None) \
+                              or ICourseCatalogEntry(course).PlatformPresentationResources
+        for resource in presentation_resources or ():
             self._process_root(resource.root, bucket, filer)
 
 
