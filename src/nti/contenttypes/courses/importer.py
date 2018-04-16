@@ -346,7 +346,9 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
             if not IContentCourseInstance.providedBy(course):
                 return
             # create bundle if required
-            if course.PlatformPresentationResources is None:
+            presentation_resources = getattr(course, 'PlatformPresentationResources', None) \
+                                  or ICourseCatalogEntry(course).PlatformPresentationResources
+            if presentation_resources is None:
                 created_bundle = created_content_package_bundle(course, root)
                 if created_bundle:
                     lifecycleevent.created(course.ContentPackageBundle)
