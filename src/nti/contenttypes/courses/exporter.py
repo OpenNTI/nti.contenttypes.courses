@@ -98,8 +98,11 @@ from nti.ntiids.ntiids import make_ntiid
 ID = StandardExternalFields.ID
 OID = StandardExternalFields.OID
 NTIID = StandardExternalFields.NTIID
+MIMETYPE = StandardExternalFields.MIMETYPE
 
 INTERNAL_NTIID = StandardInternalFields.NTIID
+
+META_NAME = u'meta_info.json'
 
 _primitives = six.string_types + (Number, bool)
 
@@ -574,6 +577,24 @@ class CourseInfoExporter(BaseSectionExporter):
                    contentType="application/json", overwrite=True)
         for sub_instance in get_course_subinstances(course):
             self.export(sub_instance, filer, backup, salt)
+            
+
+@interface.implementer(ICourseSectionExporter)
+class CourseMetaInfoExporter(BaseSectionExporter):
+    
+    def export(self, context, filer, backup=True, salt=None):
+        filer.default_bucket = None
+        course = ICourseInstance(context)
+        if ICourseSubInstance.providedBy(course):
+            return
+        data = {
+            MIMETYPE: course.mime_type
+        }
+        ext_obj = to_external_object(data, decorate=False)
+        source = self.dump(ext_obj)
+        filer.save(META_NAME, source,
+                   contentType="application/json",
+                   overwrite=True)
 
 
 @interface.implementer(ICourseExporter)
