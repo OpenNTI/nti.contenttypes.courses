@@ -233,7 +233,7 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
 
     tags = parsed.get('tags', ())
     if tags:
-        parsed['tags'] = tuple(set(tags))
+        parsed['tags'] = tuple({x.strip() for x in tags})
     return parsed
 
 
