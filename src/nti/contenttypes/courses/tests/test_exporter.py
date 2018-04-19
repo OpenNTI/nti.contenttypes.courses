@@ -8,6 +8,8 @@ from __future__ import absolute_import
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
+import fudge
+
 from hamcrest import is_
 from hamcrest import assert_that
 from hamcrest import greater_than
@@ -93,7 +95,9 @@ class TestExporter(CourseLayerTest):
         finally:
             shutil.rmtree(tmp_dir)
     
-    def test_export_course_meta_info(self):
+    @fudge.patch('nti.contenttypes.courses.exporter.CourseMetaInfoExporter._get_export_hash')
+    def test_export_course_meta_info(self, mock_get_export_hash):
+        mock_get_export_hash.is_callable().returns('export_hash')
         path = os.path.join(os.path.dirname(__file__),
                             'TestSynchronizeWithSubInstances',
                             'Spring2014',
