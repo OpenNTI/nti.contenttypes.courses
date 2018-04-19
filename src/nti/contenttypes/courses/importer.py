@@ -69,6 +69,7 @@ from nti.contenttypes.courses.interfaces import ICourseImporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import IContentCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSectionImporter
 
 from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
@@ -342,8 +343,12 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
             root_path = os.path.join(root.absolute_path, self.__PA__)
             shutil.rmtree(root_path, True)  # not merging
             self._transfer(filer, path, root_path)
+            if not IContentCourseInstance.providedBy(course):
+                return
             # create bundle if required
-            if course.PlatformPresentationResources is None:
+            presentation_resources = getattr(course, 'PlatformPresentationResources', None) \
+                                  or ICourseCatalogEntry(course).PlatformPresentationResources
+            if presentation_resources is None:
                 created_bundle = created_content_package_bundle(course, root)
                 if created_bundle:
                     lifecycleevent.created(course.ContentPackageBundle)
@@ -433,6 +438,7 @@ class BundleMetaInfoImporter(BaseSectionImporter):
         course = get_parent_course(course)
         root = course.root
         if     ICourseSubInstance.providedBy(course) \
+            or not IContentCourseInstance.providedBy(course) \
             or not IFilesystemBucket.providedBy(root):
             return
         name_source = self.safe_get(filer, BUNDLE_META_NAME)
