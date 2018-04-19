@@ -29,7 +29,9 @@ from nti.contenttypes.courses._outline_parser import fill_outline_from_key
 
 from nti.contenttypes.courses.courses import ContentCourseInstance
 
+from nti.contenttypes.courses.exporter import META_NAME
 from nti.contenttypes.courses.exporter import CourseOutlineExporter
+from nti.contenttypes.courses.exporter import CourseMetaInfoExporter
 from nti.contenttypes.courses.exporter import BundlePresentationAssetsExporter
 
 from nti.contenttypes.courses.interfaces import iface_of_node
@@ -88,5 +90,24 @@ class TestExporter(CourseLayerTest):
             p201 = 'presentation-assets/shared/v1/instructor-photos/01.png'
             path = os.path.join(tmp_dir, p201)
             assert_that(os.path.exists(path), is_(True))
+        finally:
+            shutil.rmtree(tmp_dir)
+    
+    def test_export_course_meta_info(self):
+        path = os.path.join(os.path.dirname(__file__),
+                            'TestSynchronizeWithSubInstances',
+                            'Spring2014',
+                            'Gateway')
+        inst = ContentCourseInstance()
+        inst.root = FilesystemBucket(name=u"Gateway")
+        inst.root.absolute_path = path
+        tmp_dir = tempfile.mkdtemp(dir="/tmp")
+        try:
+            filer = DirectoryFiler(tmp_dir)
+            exporter = CourseMetaInfoExporter()
+            exporter.export(inst, filer)
+            path = os.path.join(tmp_dir, META_NAME)
+            assert_that(os.path.exists(path), is_(True))
+            assert_that(get_file_size(path), is_(greater_than(0)))
         finally:
             shutil.rmtree(tmp_dir)
