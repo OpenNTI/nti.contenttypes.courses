@@ -50,3 +50,9 @@ EVALUATION_INDEX_LAST_MODIFIED = EVALUATION_INDEX + '.lastModified'
 
 #: Export a seed to validate an export is only used once per environment
 COURSE_EXPORT_HASH_FILE = 'course_export_hash.txt'
+
+#: Course meta-info file name.
+COURSE_META_NAME = u'meta_info.json'
+
+#: Course meta-info export-hash key.
+EXPORT_HASH_KEY  = u'ExportHash'

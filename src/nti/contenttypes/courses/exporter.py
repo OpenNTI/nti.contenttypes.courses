@@ -59,10 +59,11 @@ from nti.contentlibrary.interfaces import IEditableContentPackage
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
 from nti.contenttypes.courses import ROLE_INFO_NAME
+from nti.contenttypes.courses import EXPORT_HASH_KEY
+from nti.contenttypes.courses import COURSE_META_NAME
 from nti.contenttypes.courses import VENDOR_INFO_NAME
 from nti.contenttypes.courses import CATALOG_INFO_NAME
 from nti.contenttypes.courses import COURSE_OUTLINE_NAME
-from nti.contenttypes.courses import COURSE_EXPORT_HASH_FILE
 from nti.contenttypes.courses import ASSIGNMENT_POLICIES_NAME
 
 from nti.contenttypes.courses.common import get_course_packages
@@ -101,9 +102,6 @@ NTIID = StandardExternalFields.NTIID
 MIMETYPE = StandardExternalFields.MIMETYPE
 
 INTERNAL_NTIID = StandardInternalFields.NTIID
-
-META_NAME = u'meta_info.json'
-EXPORT_HASH = u'ExportHash'
 
 _primitives = six.string_types + (Number, bool)
 
@@ -598,11 +596,11 @@ class CourseMetaInfoExporter(BaseSectionExporter):
         export_hash = self._get_export_hash(course, salt)
         data = {
             MIMETYPE: course.mime_type,
-            EXPORT_HASH: export_hash
+            EXPORT_HASH_KEY: export_hash
         }
         ext_obj = to_external_object(data, decorate=False)
         source = self.dump(ext_obj)
-        filer.save(META_NAME, source,
+        filer.save(COURSE_META_NAME, source,
                    contentType="application/json",
                    overwrite=True)
 

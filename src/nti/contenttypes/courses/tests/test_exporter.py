@@ -27,11 +27,12 @@ from nti.cabinet.mixins import get_file_size
 from nti.contentlibrary.filesystem import FilesystemKey
 from nti.contentlibrary.filesystem import FilesystemBucket
 
+from nti.contenttypes.courses import COURSE_META_NAME
+
 from nti.contenttypes.courses._outline_parser import fill_outline_from_key
 
 from nti.contenttypes.courses.courses import ContentCourseInstance
 
-from nti.contenttypes.courses.exporter import META_NAME
 from nti.contenttypes.courses.exporter import CourseOutlineExporter
 from nti.contenttypes.courses.exporter import CourseMetaInfoExporter
 from nti.contenttypes.courses.exporter import BundlePresentationAssetsExporter
@@ -110,7 +111,7 @@ class TestExporter(CourseLayerTest):
             filer = DirectoryFiler(tmp_dir)
             exporter = CourseMetaInfoExporter()
             exporter.export(inst, filer)
-            path = os.path.join(tmp_dir, META_NAME)
+            path = os.path.join(tmp_dir, COURSE_META_NAME)
             assert_that(os.path.exists(path), is_(True))
             assert_that(get_file_size(path), is_(greater_than(0)))
         finally:
