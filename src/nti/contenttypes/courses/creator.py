@@ -185,6 +185,8 @@ def create_course(admin, key, catalog=None, writeout=False,
         raise ValueError("Must specify a course name")
     if not admin:
         raise ValueError("Must specify an administrative level key")
+    if factory is None:
+        factory = ContentCourseInstance
 
     catalog = course_catalog(catalog)
     if admin not in catalog:
