@@ -59,8 +59,6 @@ from nti.contentlibrary.interfaces import IEditableContentPackage
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
 from nti.contenttypes.courses import ROLE_INFO_NAME
-from nti.contenttypes.courses import EXPORT_HASH_KEY
-from nti.contenttypes.courses import COURSE_META_NAME
 from nti.contenttypes.courses import VENDOR_INFO_NAME
 from nti.contenttypes.courses import CATALOG_INFO_NAME
 from nti.contenttypes.courses import COURSE_OUTLINE_NAME
@@ -576,33 +574,6 @@ class CourseInfoExporter(BaseSectionExporter):
                    contentType="application/json", overwrite=True)
         for sub_instance in get_course_subinstances(course):
             self.export(sub_instance, filer, backup, salt)
-            
-
-@interface.implementer(ICourseSectionExporter)
-class CourseMetaInfoExporter(BaseSectionExporter):
-    
-    def _get_export_hash(self, course, salt):
-        # This should ensure we only ever import this course/salt combo once
-        # per environment.
-        intids = component.queryUtility(IIntIds)
-        course_intid = intids.getId(course)
-        return '%s_%s' % (course_intid, salt)
-    
-    def export(self, context, filer, backup=True, salt=None):
-        filer.default_bucket = None
-        course = ICourseInstance(context)
-        if ICourseSubInstance.providedBy(course):
-            return
-        export_hash = self._get_export_hash(course, salt)
-        data = {
-            MIMETYPE: course.mime_type,
-            EXPORT_HASH_KEY: export_hash
-        }
-        ext_obj = to_external_object(data, decorate=False)
-        source = self.dump(ext_obj)
-        filer.save(COURSE_META_NAME, source,
-                   contentType="application/json",
-                   overwrite=True)
 
 
 @interface.implementer(ICourseExporter)

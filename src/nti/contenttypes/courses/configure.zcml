@@ -439,7 +439,6 @@
 	<utility factory=".exporter.BundleDCMetadataExporter" name="002:Bundle_DC_Metadata" />
 	<utility factory=".exporter.AssignmentPoliciesExporter" name="100:Assignment_Policies" />
 	<utility factory=".exporter.BundlePresentationAssetsExporter" name="003:Presentation_Assets" />
-	<utility factory=".exporter.CourseMetaInfoExporter" name="009:Course_Metainfo" />
 
 	<!-- Importer -->
 	<adapter factory=".adapters.CourseImportMetadataFactory" />

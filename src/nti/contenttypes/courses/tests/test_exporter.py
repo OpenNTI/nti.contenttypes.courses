@@ -8,7 +8,6 @@ from __future__ import absolute_import
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
-import fudge
 
 from hamcrest import is_
 from hamcrest import assert_that
@@ -27,14 +26,11 @@ from nti.cabinet.mixins import get_file_size
 from nti.contentlibrary.filesystem import FilesystemKey
 from nti.contentlibrary.filesystem import FilesystemBucket
 
-from nti.contenttypes.courses import COURSE_META_NAME
-
 from nti.contenttypes.courses._outline_parser import fill_outline_from_key
 
 from nti.contenttypes.courses.courses import ContentCourseInstance
 
 from nti.contenttypes.courses.exporter import CourseOutlineExporter
-from nti.contenttypes.courses.exporter import CourseMetaInfoExporter
 from nti.contenttypes.courses.exporter import BundlePresentationAssetsExporter
 
 from nti.contenttypes.courses.interfaces import iface_of_node
@@ -96,23 +92,3 @@ class TestExporter(CourseLayerTest):
         finally:
             shutil.rmtree(tmp_dir)
     
-    @fudge.patch('nti.contenttypes.courses.exporter.CourseMetaInfoExporter._get_export_hash')
-    def test_export_course_meta_info(self, mock_get_export_hash):
-        mock_get_export_hash.is_callable().returns('export_hash')
-        path = os.path.join(os.path.dirname(__file__),
-                            'TestSynchronizeWithSubInstances',
-                            'Spring2014',
-                            'Gateway')
-        inst = ContentCourseInstance()
-        inst.root = FilesystemBucket(name=u"Gateway")
-        inst.root.absolute_path = path
-        tmp_dir = tempfile.mkdtemp(dir="/tmp")
-        try:
-            filer = DirectoryFiler(tmp_dir)
-            exporter = CourseMetaInfoExporter()
-            exporter.export(inst, filer)
-            path = os.path.join(tmp_dir, COURSE_META_NAME)
-            assert_that(os.path.exists(path), is_(True))
-            assert_that(get_file_size(path), is_(greater_than(0)))
-        finally:
-            shutil.rmtree(tmp_dir)
