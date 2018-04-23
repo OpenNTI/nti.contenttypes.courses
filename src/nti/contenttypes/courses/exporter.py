@@ -62,7 +62,6 @@ from nti.contenttypes.courses import ROLE_INFO_NAME
 from nti.contenttypes.courses import VENDOR_INFO_NAME
 from nti.contenttypes.courses import CATALOG_INFO_NAME
 from nti.contenttypes.courses import COURSE_OUTLINE_NAME
-from nti.contenttypes.courses import COURSE_EXPORT_HASH_FILE
 from nti.contenttypes.courses import ASSIGNMENT_POLICIES_NAME
 
 from nti.contenttypes.courses.common import get_course_packages
@@ -98,6 +97,7 @@ from nti.ntiids.ntiids import make_ntiid
 ID = StandardExternalFields.ID
 OID = StandardExternalFields.OID
 NTIID = StandardExternalFields.NTIID
+MIMETYPE = StandardExternalFields.MIMETYPE
 
 INTERNAL_NTIID = StandardInternalFields.NTIID
 
@@ -579,21 +579,11 @@ class CourseInfoExporter(BaseSectionExporter):
 @interface.implementer(ICourseExporter)
 class CourseExporter(object):
 
-    def _get_export_hash(self, course, salt):
-        # This should ensure we only ever import this course/salt combo once
-        # per environment.
-        intids = component.queryUtility(IIntIds)
-        course_intid = intids.getId(course)
-        return '%s_%s' % (course_intid, salt)
-
     def export(self, context, filer, backup=True, salt=None):
         now = time.time()
         salt = salt or str(time.time())
         course = ICourseInstance(context)
         entry = ICourseCatalogEntry(course)
-        export_hash = self._get_export_hash(course, salt)
-        filer.save(COURSE_EXPORT_HASH_FILE, export_hash,
-                   contentType="text/plain", overwrite=True)
         for name, exporter in sorted(component.getUtilitiesFor(ICourseSectionExporter)):
             current = time.time()
             logger.info("Processing %s", name)

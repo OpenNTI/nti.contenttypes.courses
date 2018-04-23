@@ -8,6 +8,7 @@ from __future__ import absolute_import
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
+
 from hamcrest import is_
 from hamcrest import assert_that
 from hamcrest import greater_than
@@ -90,3 +91,4 @@ class TestExporter(CourseLayerTest):
             assert_that(os.path.exists(path), is_(True))
         finally:
             shutil.rmtree(tmp_dir)
+    
