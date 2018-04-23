@@ -1921,6 +1921,12 @@ class DuplicateImportFromExportException(ValidationError):
     We prevent courses from being imported with the same export zip since we do
     not want ntiids to collide.
     """
+    
+
+class InvalidCourseArchiveException(ValidationError):
+    """
+    We prevent courses from being imported using invalid course archives.
+    """
 
 
 class ICourseInstanceExportedEvent(IObjectEvent):
