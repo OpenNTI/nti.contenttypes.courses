@@ -1927,6 +1927,12 @@ class InvalidCourseArchiveException(ValidationError):
     """
     We prevent courses from being imported using invalid course archives.
     """
+    
+    
+class ImportCourseTypeUnsupportedError(ValidationError):
+    """
+    Error raised when a course of an unsupported type is imported.
+    """
 
 
 class ICourseInstanceExportedEvent(IObjectEvent):
