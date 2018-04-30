@@ -349,6 +349,15 @@ class CourseCatalogEntry(CatalogFamily,
         if course is None:
             # we got nothing
             return
+        
+        # Does it have resources?
+        try:
+            theirs = course.PlatformPresentationResources
+        except AttributeError:
+            pass
+        
+        if theirs:
+            return theirs
 
         # Does it have a bundle with resources?
         try:
