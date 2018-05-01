@@ -322,9 +322,13 @@ class VendorInfoExporter(BaseSectionExporter):
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
         filer.default_bucket = bucket = self.course_bucket(course)
-        verdor_info = get_course_vendor_info(course, False)
-        if verdor_info:
-            ext_obj = to_external_object(verdor_info,
+        vendor_info = get_course_vendor_info(course, False)
+        if vendor_info:
+            if not backup:
+                # Pop invitation to avoid collision
+                nti_map = vendor_info.get('NTI', {})
+                nti_map.pop('Invitations', None)
+            ext_obj = to_external_object(vendor_info,
                                          name="exporter",
                                          decorate=False)
             source = self.dump(ext_obj)
