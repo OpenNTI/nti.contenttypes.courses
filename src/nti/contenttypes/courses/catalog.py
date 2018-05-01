@@ -359,15 +359,6 @@ class CourseCatalogEntry(CatalogFamily,
         if theirs:
             return theirs
 
-        # Does it have a bundle with resources?
-        try:
-            theirs = course.ContentPackageBundle.PlatformPresentationResources
-        except AttributeError:
-            pass
-
-        if theirs:
-            return theirs
-
         # Does it have the old legacy property?
         try:
             theirs = course.legacy_content_package.PlatformPresentationResources
