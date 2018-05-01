@@ -349,13 +349,13 @@ class CourseCatalogEntry(CatalogFamily,
         if course is None:
             # we got nothing
             return
-
-        # Does it have a bundle with resources?
+        
+        # Does it have resources?
         try:
-            theirs = course.ContentPackageBundle.PlatformPresentationResources
+            theirs = course.PlatformPresentationResources
         except AttributeError:
             pass
-
+        
         if theirs:
             return theirs
 
