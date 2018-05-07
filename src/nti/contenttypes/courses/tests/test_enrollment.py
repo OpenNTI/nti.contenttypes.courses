@@ -223,8 +223,8 @@ class TestFunctionalEnrollment(CourseLayerTest):
 
     @WithMockDSTrans
     def test_enrollment_map_change_scope(self):
-        # If you initially enroll openly, you can get moved
-        # into a new section by changing your scope
+        # If you initially enroll openly, you can get moved into a new section
+        # by changing your scope
         self._shared_setup()
         vendor_info = ICourseInstanceVendorInfo(self.course)
         vendor_info.setdefault('NTI', dict()).setdefault('EnrollmentMap', {})
