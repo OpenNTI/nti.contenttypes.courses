@@ -77,6 +77,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecordC
 
 from nti.contenttypes.courses.utils import is_instructor_in_hierarchy
 
+from nti.dataserver.interfaces import IEnumerableEntityContainer
+
 from nti.dataserver.users.users import User
 
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
@@ -673,7 +675,9 @@ class DefaultCourseEnrollments(object):
         return self._inst_enrollment_storage.values()
 
     def count_enrollments(self):
-        return len(self._inst_enrollment_storage)
+        # Only return enrollment record count with non-deleted principals.
+        return len([x for x in self._inst_enrollment_storage.values()
+                    if x.Principal is not None])
 
     def is_principal_enrolled(self, principal):
         principal_id = IPrincipal(principal).id
@@ -688,7 +692,6 @@ class DefaultCourseEnrollments(object):
     def _count_in_scope_without_instructors(self, scope_name):
         scope = self.context.SharingScopes[scope_name]
         len_scope = len(ILengthEnumerableEntityContainer(scope))
-
         container = IEntityContainer(scope)
 
         for instructor in self.context.instructors:
@@ -702,22 +705,25 @@ class DefaultCourseEnrollments(object):
 
     @cachedIn('_v_count_scope_enrollments')
     def count_scope_enrollments(self, scope):
+        # This might not be very performant
+        target_scope = self.context.SharingScopes[scope]
+        target_users = {
+            x.lower() for x in IEnumerableEntityContainer(target_scope).iter_usernames()
+        }
+
+        implied_users = set()
         scope_term = ENROLLMENT_SCOPE_MAP[scope]
-        scopes_to_exclude = list(scope_term.implied_by)
         for implied_scope in scope_term.implied_by:
-            for recursive_implied_scope in ENROLLMENT_SCOPE_MAP[implied_scope].implied_by:
-                try:
-                    scopes_to_exclude.remove(recursive_implied_scope)
-                except ValueError:
-                    pass
-                if not scopes_to_exclude:
-                    break
+            implied_scope = self.context.SharingScopes[implied_scope]
+            scope_users = {
+                x.lower() for x in IEnumerableEntityContainer(implied_scope).iter_usernames()
+            }
+            implied_users.update(scope_users)
 
-        scope_count = self._count_in_scope_without_instructors(scope)
-        for exclude in scopes_to_exclude:
-            scope_count -= self._count_in_scope_without_instructors(exclude)
-
-        return scope_count
+        target_users = target_users - implied_users
+        instructor_usernames = {x.id.lower() for x in self.context.instructors}
+        target_users = target_users - instructor_usernames
+        return len(target_users)
 
 
     @cachedIn('_v_count_credit_enrollments')
