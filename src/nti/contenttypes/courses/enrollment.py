@@ -59,7 +59,6 @@ from nti.contenttypes.courses import MessageFactory as _
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
-from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_MAP
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -76,8 +75,6 @@ from nti.contenttypes.courses.interfaces import IDefaultCourseInstanceEnrollment
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecordContainer
 
 from nti.contenttypes.courses.utils import is_instructor_in_hierarchy
-
-from nti.dataserver.interfaces import IEnumerableEntityContainer
 
 from nti.dataserver.users.users import User
 
@@ -705,25 +702,14 @@ class DefaultCourseEnrollments(object):
 
     @cachedIn('_v_count_scope_enrollments')
     def count_scope_enrollments(self, scope):
-        # This might not be very performant
-        target_scope = self.context.SharingScopes[scope]
-        target_users = {
-            x.lower() for x in IEnumerableEntityContainer(target_scope).iter_usernames()
-        }
-
-        implied_users = set()
-        scope_term = ENROLLMENT_SCOPE_MAP[scope]
-        for implied_scope in scope_term.implied_by:
-            implied_scope = self.context.SharingScopes[implied_scope]
-            scope_users = {
-                x.lower() for x in IEnumerableEntityContainer(implied_scope).iter_usernames()
-            }
-            implied_users.update(scope_users)
-
-        target_users = target_users - implied_users
         instructor_usernames = {x.id.lower() for x in self.context.instructors}
-        target_users = target_users - instructor_usernames
-        return len(target_users)
+        # This might not be very performant
+        def include_record(record):
+            return  record.Principal is not None \
+                and record.Scope == scope \
+                and record.Principal.id.lower() not in instructor_usernames
+        return len([x for x in self._inst_enrollment_storage.values()
+                    if include_record(x)])
 
 
     @cachedIn('_v_count_credit_enrollments')
