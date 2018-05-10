@@ -30,10 +30,13 @@ from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseAwardableCredit
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
 
 from nti.contenttypes.courses.legacy_catalog import ICourseCatalogLegacyEntry
+
+from nti.contenttypes.credit.internalization import CreditDefinitionNormalizationUpdater
 
 from nti.externalization.datastructures import InterfaceObjectIO
 
@@ -325,3 +328,10 @@ class CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
         if parsed.get('ProviderUniqueID', None):
             parsed['ProviderUniqueID'] = parsed['ProviderUniqueID'].strip()
         return super(CourseCatalogLegacyEntryUpdater, self).updateFromExternalObject(parsed, *args, **kwargs)
+
+
+@component.adapter(ICourseAwardableCredit)
+@interface.implementer(IInternalObjectUpdater)
+class _CourseAwardableCreditUpdater(CreditDefinitionNormalizationUpdater):
+
+    iface_to_update = ICourseAwardableCredit
