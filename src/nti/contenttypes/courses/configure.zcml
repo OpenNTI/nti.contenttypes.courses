@@ -41,11 +41,12 @@
 						 .interfaces.ICourseOutlineNode
 						 .interfaces.ICourseCatalogEntry
 						 .interfaces.IJoinCourseInvitation
+						 .interfaces.ICourseAwardableCredit
 						 .interfaces.ICourseLessonSyncResults
 						 .interfaces.ICourseCatalogInstructorInfo
 						 .interfaces.ICourseSynchronizationResults
 						 .interfaces.ICourseInstanceAdministrativeRole"
-		modules=".administered .catalog .courses .outlines .sharing ._synchronize .invitation" />
+		modules=".administered .catalog .courses .credit .outlines .sharing ._synchronize .invitation" />
 
 	<ext:registerAutoPackageIO
 		root_interfaces=".legacy_catalog.ICourseCatalogLegacyEntry
@@ -99,6 +100,10 @@
 	<adapter factory=".internalization.CourseCatalogLegacyEntryUpdater"
 			 for=".legacy_catalog.ICourseCatalogLegacyEntry"
 			 provides="nti.externalization.interfaces.IInternalObjectUpdater" />
+
+    <adapter factory=".internalization._CourseAwardableCreditUpdater"
+             for=".interfaces.ICourseAwardableCredit"
+             provides="nti.externalization.interfaces.IInternalObjectUpdater" />
 
 	<adapter factory="._bundle._CourseContentBundleIO" />
 

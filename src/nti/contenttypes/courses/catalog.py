@@ -297,6 +297,7 @@ class CourseCatalogEntry(CatalogFamily,
     ntiid = None
     Duration = None
     lastSynchronized = 0
+    awardable_credits = ()
 
     RichDescription = AdaptingFieldProperty(ICourseCatalogEntry['RichDescription'])
 
@@ -349,13 +350,13 @@ class CourseCatalogEntry(CatalogFamily,
         if course is None:
             # we got nothing
             return
-        
+
         # Does it have resources?
         try:
             theirs = course.PlatformPresentationResources
         except AttributeError:
             pass
-        
+
         if theirs:
             return theirs
 

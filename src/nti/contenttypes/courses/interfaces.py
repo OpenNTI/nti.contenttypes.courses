@@ -73,6 +73,9 @@ from nti.contenttypes.completion.interfaces import ICompletionContext
 
 from nti.contenttypes.courses import MessageFactory as _
 
+from nti.contenttypes.credit.interfaces import IAwardableCredit
+from nti.contenttypes.credit.interfaces import IAwardableCreditContext
+
 from nti.contenttypes.reports.interfaces import IReportContext
 
 from nti.dataserver.interfaces import ICommunity
@@ -893,7 +896,8 @@ class ICourseCatalogEntry(ICatalogFamily,
                           IShouldHaveTraversablePath,
                           IContained,
                           ISynchronizable,
-                          IRecordable):
+                          IRecordable,
+                          IAwardableCreditContext):
     """
     An entry in the course catalog containing metadata
     and presentation data about the course.
@@ -914,7 +918,7 @@ class ICourseCatalogEntry(ICatalogFamily,
     # Used to have Title/Description, now the lower case versions.
     # The T/D should be aliased in implementations.
 
-    Instructors = ListOrTuple(title=u"The instuctors. Order might matter",
+    Instructors = ListOrTuple(title=u"The instructors. Order might matter",
                               value_type=Object(ICourseCatalogInstructorInfo),
                               required=False,
                               default=())
@@ -954,6 +958,7 @@ class ICourseCatalogEntry(ICatalogFamily,
         about starting and ending dates and durations, preview
         flags, etc.
         """
+
 
 # Enrollments
 
@@ -1921,14 +1926,14 @@ class DuplicateImportFromExportException(ValidationError):
     We prevent courses from being imported with the same export zip since we do
     not want ntiids to collide.
     """
-    
+
 
 class InvalidCourseArchiveException(ValidationError):
     """
     We prevent courses from being imported using invalid course archives.
     """
-    
-    
+
+
 class ImportCourseTypeUnsupportedError(ValidationError):
     """
     Error raised when a course of an unsupported type is imported.
@@ -2026,6 +2031,18 @@ class CourseInstanceRemovedEvent(ObjectEvent):
 
 class ICourseKeywords(interface.Interface):
     keywords = Iterable(title=u"Course key words")
+
+
+class ICourseAwardableCredit(IAwardableCredit):
+    """
+    An :class:`IAwardableCredit` that include a scope, indicating which class of students
+    the credit is applicable to.
+    """
+
+    scope = Choice(title=u"The name of the enrollment scope",
+                   vocabulary=ENROLLMENT_SCOPE_VOCABULARY,
+                   default=ES_PUBLIC,
+                   required=False)
 
 
 #: All course outline node interfaces

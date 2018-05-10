@@ -10,6 +10,7 @@ from __future__ import absolute_import
 from hamcrest import is_
 from hamcrest import none
 from hamcrest import is_not
+from hamcrest import not_none
 from hamcrest import has_length
 from hamcrest import assert_that
 from hamcrest import has_entries
@@ -20,7 +21,11 @@ import codecs
 
 import simplejson
 
+from zope import component
+
 from zope.schema.interfaces import TooShort
+
+from nti.contenttypes.courses.credit import CourseAwardableCredit
 
 from nti.contenttypes.courses.internalization import legacy_to_schema_transform
 
@@ -28,8 +33,14 @@ from nti.contenttypes.courses.legacy_catalog import PersistentCourseCatalogLegac
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 
+from nti.contenttypes.credit.credit import CreditDefinition
+from nti.contenttypes.credit.credit import CreditDefinitionContainer
+
+from nti.contenttypes.credit.interfaces import ICreditDefinitionContainer
+
 from nti.externalization.externalization import toExternalObject
 
+from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
 
 
@@ -39,6 +50,13 @@ class TestInternalization(CourseLayerTest):
         path = os.path.join(os.path.dirname(__file__),
                             'course_info.json')
         self.path = path
+        self.container = CreditDefinitionContainer()
+        component.getGlobalSiteManager().registerUtility(self.container,
+                                                         ICreditDefinitionContainer)
+
+    def tearDown(self):
+        component.getGlobalSiteManager().unregisterUtility(self.container,
+                                                           ICreditDefinitionContainer)
 
     def test_trivial_parse(self):
         with codecs.open(self.path, "r", "utf-8") as fp:
@@ -134,3 +152,47 @@ class TestInternalization(CourseLayerTest):
 
         assert_that(entry.StartDate, is_not(none()))
         assert_that(entry.Preview, is_(True))
+
+    def test_awardable_credits(self):
+        with codecs.open(self.path, "r", "utf-8") as fp:
+            json_data = simplejson.load(fp)
+
+        json_data = legacy_to_schema_transform(json_data)
+        entry = PersistentCourseCatalogLegacyEntry()
+        update_from_external_object(entry, json_data)
+        ext_obj = toExternalObject(entry)
+        assert_that(ext_obj,
+                    has_entries('Preview', False,
+                                "StartDate", "2016-08-22T05:00:00Z",
+                                "EndDate", "2016-12-19T05:00:00Z",
+                                "Schedule", has_entries("days", ["MTWRF"],
+                                                        "times", has_length(2)),
+                                "Instructors", has_length(5),
+                                "ProviderUniqueID", "BIOL 2124",
+                                "ProviderDepartmentTitle", "Department of Biology, University of Oklahoma",
+                                "description", is_not(none()),
+                                "Credit", has_length(1),
+                                "title", "Human Physiology",
+                                "Video", "kaltura://1500101/0_gpczmps5/"))
+
+        credit_definition = CreditDefinition(credit_type=u'Credit',
+                                             credit_units=u'Hours')
+        self.container[credit_definition.ntiid] = credit_definition
+
+        awardable_credit_ext = {'MimeType': CourseAwardableCredit.mime_type,
+                                'amount': 13,
+                                'scope': 'Public',
+                                'credit_definition': credit_definition.ntiid}
+        xx = dict(awardable_credit_ext)
+
+        factory = find_factory_for(awardable_credit_ext)
+        assert_that(factory, not_none())
+        new_io = factory()
+        update_from_external_object(new_io, awardable_credit_ext, require_updater=True)
+
+        update_from_external_object(entry, {'awardable_credits': [xx,]})
+        assert_that(entry.awardable_credits, has_length(1))
+        credit = entry.awardable_credits[0]
+        assert_that(credit.scope, is_('Public'))
+        assert_that(credit.amount, is_(13))
+        assert_that(credit.credit_definition.ntiid, is_(credit_definition.ntiid))
