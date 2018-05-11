@@ -73,6 +73,7 @@ from nti.contenttypes.completion.interfaces import ICompletionContext
 
 from nti.contenttypes.courses import MessageFactory as _
 
+from nti.contenttypes.credit.interfaces import IAwardedCredit
 from nti.contenttypes.credit.interfaces import IAwardableCredit
 from nti.contenttypes.credit.interfaces import IAwardableCreditContext
 
@@ -2031,6 +2032,12 @@ class CourseInstanceRemovedEvent(ObjectEvent):
 
 class ICourseKeywords(interface.Interface):
     keywords = Iterable(title=u"Course key words")
+
+
+class ICourseAwardedCredit(IAwardedCredit):
+    """
+    :class:`IAwardedCredit` awarded for completing courses.
+    """
 
 
 class ICourseAwardableCredit(IAwardableCredit):
