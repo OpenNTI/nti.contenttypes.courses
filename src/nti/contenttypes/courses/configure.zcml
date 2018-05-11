@@ -41,6 +41,7 @@
 						 .interfaces.ICourseOutlineNode
 						 .interfaces.ICourseCatalogEntry
 						 .interfaces.IJoinCourseInvitation
+						 .interfaces.ICourseAwardedCredit
 						 .interfaces.ICourseAwardableCredit
 						 .interfaces.ICourseLessonSyncResults
 						 .interfaces.ICourseCatalogInstructorInfo

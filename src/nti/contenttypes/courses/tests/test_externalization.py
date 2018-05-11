@@ -16,8 +16,14 @@ from hamcrest import has_entries
 from hamcrest import contains_inanyorder
 does_not = is_not
 
+from zope import component
+
 from nti.contenttypes.courses.courses import CourseInstance
 from nti.contenttypes.courses.courses import CourseAdministrativeLevel
+
+from nti.contenttypes.credit.credit import CreditDefinitionContainer
+
+from nti.contenttypes.credit.interfaces import ICreditDefinitionContainer
 
 from nti.externalization.externalization import to_external_object
 from nti.externalization.externalization import StandardExternalFields
@@ -27,9 +33,20 @@ from nti.contenttypes.courses.tests import CourseLayerTest
 CLASS = StandardExternalFields.CLASS
 ITEMS = StandardExternalFields.ITEMS
 MIMETYPE = StandardExternalFields.MIMETYPE
+CREATED_TIME = StandardExternalFields.CREATED_TIME
+LAST_MODIFIED = StandardExternalFields.LAST_MODIFIED
 
 
 class TestExternal(CourseLayerTest):
+
+    def setUp(self):
+        self.container = CreditDefinitionContainer()
+        component.getGlobalSiteManager().registerUtility(self.container,
+                                                         ICreditDefinitionContainer)
+
+    def tearDown(self):
+        component.getGlobalSiteManager().unregisterUtility(self.container,
+                                                           ICreditDefinitionContainer)
 
     def test_admin_level(self):
         level = CourseAdministrativeLevel()
