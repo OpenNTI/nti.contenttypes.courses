@@ -8,7 +8,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+import io
 import os
+import json
 import time
 import shutil
 import tempfile
@@ -45,6 +47,7 @@ from nti.contenttypes.courses._bundle import created_content_package_bundle
 from nti.contenttypes.courses._enrollment import update_deny_open_enrollment
 from nti.contenttypes.courses._enrollment import check_enrollment_mapped_course
 
+from nti.contenttypes.courses._catalog_entry_parser import prepare_json_text
 from nti.contenttypes.courses._catalog_entry_parser import update_entry_from_legacy_key
 
 from nti.contenttypes.courses._role_parser import fill_roles_from_json
@@ -83,6 +86,9 @@ from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import unregister_outline_nodes
 
+from nti.contenttypes.credit.interfaces import ICreditDefinitionContainer
+
+from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
 
 from nti.intid.common import addIntId
@@ -366,6 +372,24 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
 
 @interface.implementer(ICourseSectionImporter)
 class CourseInfoImporter(BaseSectionImporter):
+    
+    def preprocess_credit_definitions(self, key, filer, path):
+        parsed = prepare_json_text(key.readContentsAsYaml())
+        awardable_credits = parsed.get('awardableCredits')
+        if awardable_credits is None:
+            return
+        # Create credit definitions (for cross-environment/site imports)
+        container = component.getUtility(ICreditDefinitionContainer)
+        for awardable_credit in awardable_credits:
+            ext_credit_def = awardable_credit['credit_definition']
+            factory = find_factory_for(ext_credit_def)
+            new_credit_def = factory()
+            stored_credit_def = container.add_credit_definition(new_credit_def)
+            awardable_credit['credit_definition'] = stored_credit_def.ntiid
+        # Write back the updated credit definitions in the JSON
+        json_str = json.dumps(parsed)
+        json_io = io.BytesIO(json_str)
+        filer.save(path, json_io, overwrite=True)
 
     def process(self, context, filer, writeout=True):
         course = ICourseInstance(context)
@@ -410,6 +434,7 @@ class CourseInfoImporter(BaseSectionImporter):
                 root = FilesystemBucket()
                 root.absolute_path = tmp_dir
                 root.key = os.path.split(tmp_dir)[1]
+            self.preprocess_credit_definitions(key, filer, tmp_cat_info)
             # process source(s)
             entry = ICourseCatalogEntry(course)
             update_entry_from_legacy_key(entry, key, root, force=True)
