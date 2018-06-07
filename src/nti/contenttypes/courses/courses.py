@@ -75,7 +75,7 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder, Base):
     @ntiid.setter
     def ntiid(self, nv):
         pass
-    
+
     @Lazy
     def Discussions(self):
         self._p_changed = True
@@ -175,18 +175,18 @@ class ContentCourseInstance(DisplayableContentMixin,
     @property
     def PlatformPresentationResources(self):
         """
-        If we do not have our own presentation resources,
-        and our root is different than our bundle's,
-        we return the bundle's resources.
+        If we do not have our own presentation resources, look in our bundle.
         """
 
         ours = super(ContentCourseInstance, self).PlatformPresentationResources
         if ours:
             return ours
 
-        if self.ContentPackageBundle and self.root != self.ContentPackageBundle.root:
+        if self.ContentPackageBundle:
+            # We always want to check bundle, even if the root is the same,
+            # because we may need to look at the package level.
             return self.ContentPackageBundle.PlatformPresentationResources
-        
+
 @interface.implementer(IContentCourseSubInstance)
 class ContentCourseSubInstance(ContentCourseInstance):
 
