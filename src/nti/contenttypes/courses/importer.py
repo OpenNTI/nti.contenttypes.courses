@@ -385,6 +385,7 @@ class CourseInfoImporter(BaseSectionImporter):
             ext_credit_def = awardable_credit['credit_definition']
             factory = find_factory_for(ext_credit_def)
             new_credit_def = factory()
+            update_from_external_object(new_credit_def, ext_credit_def)
             stored_credit_def = container.add_credit_definition(new_credit_def)
             awardable_credit['credit_definition'] = stored_credit_def.ntiid
         # Write back the updated credit definitions in the JSON
