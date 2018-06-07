@@ -134,7 +134,8 @@ def legacy_to_schema_transform(parsed, context=None, delete=False):
                        ('ProviderUniqueID', 'id'),
                        ('RichDescription', 'richDescription'),
                        ('ProviderDepartmentTitle', 'school'),
-                       ('InstructorsSignature', 'InstructorsSignature')):
+                       ('InstructorsSignature', 'InstructorsSignature'),
+                       ('awardable_credits', 'awardableCredits'),):
         value = parsed.get(key)
         if value is not None:
             parsed[text_(field)] = value
