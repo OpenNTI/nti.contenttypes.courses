@@ -26,6 +26,7 @@ from zope.event import notify
 from zope.intid.interfaces import IIntIds
 
 from nti.cabinet.filer import read_source
+from nti.cabinet.filer import DirectoryFiler
 from nti.cabinet.filer import transfer_to_native_file
 
 from nti.contentlibrary import NTI
@@ -373,7 +374,7 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
 @interface.implementer(ICourseSectionImporter)
 class CourseInfoImporter(BaseSectionImporter):
     
-    def preprocess_credit_definitions(self, key, filer, path):
+    def preprocess_credit_definitions(self, key, path):
         parsed = prepare_json_text(key.readContentsAsYaml())
         awardable_credits = parsed.get('awardableCredits')
         if awardable_credits is None:
@@ -389,6 +390,8 @@ class CourseInfoImporter(BaseSectionImporter):
         # Write back the updated credit definitions in the JSON
         json_str = json.dumps(parsed)
         json_io = io.BytesIO(json_str)
+        dir_path = os.path.split(key.absolute_path)[0]
+        filer = DirectoryFiler(dir_path)
         filer.save(path, json_io, overwrite=True)
 
     def process(self, context, filer, writeout=True):
@@ -434,7 +437,7 @@ class CourseInfoImporter(BaseSectionImporter):
                 root = FilesystemBucket()
                 root.absolute_path = tmp_dir
                 root.key = os.path.split(tmp_dir)[1]
-            self.preprocess_credit_definitions(key, filer, tmp_cat_info)
+            self.preprocess_credit_definitions(key, tmp_cat_info)
             # process source(s)
             entry = ICourseCatalogEntry(course)
             update_entry_from_legacy_key(entry, key, root, force=True)
