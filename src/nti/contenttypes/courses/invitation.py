@@ -78,7 +78,10 @@ class JoinCourseInvitationActor(object):
         # find course
         course = find_object_with_ntiid(entry)
         if course is None:
-            course = catalog.getCatalogEntry(entry)
+            try:
+                course = catalog.getCatalogEntry(entry)
+            except KeyError:
+                pass
 
         course = ICourseInstance(course, None)
         if course is None:
