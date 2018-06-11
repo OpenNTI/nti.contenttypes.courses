@@ -27,6 +27,7 @@ from nti.contenttypes.courses.interfaces import ENROLLMENT_LINEAGE_MAP
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseInstanceScopedForum
 
 from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussion
 
@@ -36,6 +37,8 @@ from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_rec
 from nti.dataserver.interfaces import ACE_ACT_ALLOW
 
 from nti.ntiids.ntiids import make_specific_safe
+
+from nti.schema.interfaces import find_most_derived_interface
 
 from nti.traversal.traversal import find_interface
 
@@ -156,12 +159,36 @@ def get_implied_by_scopes(scopes=()):
 
 
 def get_forum_scopes(forum):
+    """
+    Returns the SharingScope keys (Public, ForCredit, etc) that are applicable for
+    this forum. Many forums provide this information via ICourseInstanceScopedForum
+    although for legacy reasons we still look for the special `__entities__` and
+    then fallback to digging through the `__acl__`. The latter of which is extermely
+    fragile and sould go away.
+    """
     result = None
+
+    if ICourseInstanceScopedForum.providedBy(forum):
+        scope_name = getattr(forum, 'SharingScopeName', None)
+        if scope_name is None:
+            # Our interface may statically define the value
+            most_derived = find_most_derived_interface(forum, ICourseInstanceScopedForum)
+            try:
+                scope_name = most_derived['SharingScopeName'].getTaggedValue('value')
+            except KeyError:
+                pass
+        result = set((scope_name, )) if scope_name else None
+
+    if result:
+        return result
+ 
     course = find_interface(forum, ICourseInstance, strict=False)
     m = {v.NTIID: k for k, v in course.SharingScopes.items()} if course else {}
     if hasattr(forum, '__entities__'):
+        logger.warn("Falling back to __entities__ based scope resolution for %s", getattr(forum, 'NTIID', forum))
         result = {m[k] for k, v in m.items() if k in forum.__entities__}
     elif hasattr(forum, '__acl__'):
+        logger.warn("Falling back to __acl__ based scope resolution for %s", getattr(forum, 'NTIID', forum))
         result = set()
         for ace in forum.__acl__:
             if      IPrincipal(ace.actor).id in m \
