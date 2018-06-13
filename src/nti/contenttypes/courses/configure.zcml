@@ -180,6 +180,10 @@
     <subscriber handler=".subscribers.on_course_editor_added" />
     <subscriber handler=".subscribers.on_course_instructor_added" />
 
+    <subscriber handler=".forum._forum_added_to_course_board"
+		    for="nti.dataserver.contenttypes.forums.interfaces.IForum
+			 zope.lifecycleevent.IObjectAddedEvent" />
+
 	<!-- Roles and permissions -->
 	<include package="zope.securitypolicy" file="meta.zcml" />
 	<include package="zope.security" file="meta.zcml" />
@@ -210,6 +214,7 @@
 	<!-- ACLs -->
 	<adapter factory=".acl.CourseBoardACLProvider" />
 	<adapter factory=".acl.CourseForumACLProvider" />
+	<adapter factory=".acl.CourseScopeForumACLProvider" />
 	<adapter factory=".acl.CourseInstanceACLProvider" />
 	<adapter factory=".acl.CourseOutlineNodeACLProvider" />
 	<adapter factory=".acl.CourseCatalogEntryACLProvider" />
