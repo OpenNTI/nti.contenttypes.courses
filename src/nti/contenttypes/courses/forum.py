@@ -47,3 +47,7 @@ class CourseInstanceBoard(NoDefaultForumCommunityBoard):
     NTIID_TYPE = _ntiid_type = TYPE_OID
     NTIID = cachedIn('_v_ntiid')(to_external_ntiid_oid)
 
+
+def _forum_added_to_course_board(forum, event):
+    if ICourseInstanceBoard.providedBy(forum.__parent__) and not ICourseInstanceForum.providedBy(forum):
+        interface.alsoProvides(forum, ICourseInstanceForum)
