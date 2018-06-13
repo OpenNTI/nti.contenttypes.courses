@@ -113,6 +113,6 @@ def evolve(context):
     now implement some varient of ICourseInstanceForum (now handled via an
     object added subscriber) and it removes the use of pickled `__acl__`s on such
     forums by making them no longer provide `IACLProvider`.  The existing persistent
-    `__acl__` and `__entities__` attributes are left in place for now.
+    `__acl__` is moved to a `__legacy__acl__` and `__entities__` is left in place for now.
     """
     do_evolve(context, generation)
