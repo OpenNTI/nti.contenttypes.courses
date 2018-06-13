@@ -307,9 +307,9 @@ class AbstractCourseForumACLProvider(_ACLCommunityForumACLProvider):
             return #Legacy community based courses
         
         for inst in get_course_instructors(course):
-            self._adjust_acl_for_inst(course, inst)
+            self._adjust_acl_for_inst(acl, inst)
         for editor in get_course_editors(course):
-            self._adjust_acl_for_editor(course, editor)
+            self._adjust_acl_for_editor(acl, editor)
         self._extend_with_admin_privs(acl)
 
 @component.adapter(ICourseInstanceForum)
