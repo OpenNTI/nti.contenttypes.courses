@@ -265,12 +265,27 @@ class CourseBoardACLProvider(CommunityBoardACLProvider):
 
 
 class AbstractCourseForumACLProvider(_ACLCommunityForumACLProvider):
+    """
+    An abstract ACLProvider for ICourseInstanceForums. Note we extend _ACLCommunityForumACLProvider
+    as there are legacy "ICourseInstanceForum" that aren't actually beneath an ICourseInstanceBoard
+    and ICourseInstance.  The dynamic acl generation breaks down in that case so our superclass
+    handles using the static persistent ACLs on those forums when necessary.
+
+    In general ICourseInstanceForums are created by a course scope.  Usually this is the public
+    scope but in some cases of ICourseInstanceScopedForums this may be a different scope. Members of the
+    applicable sharing scope typically have read access. Instructors and Editors have elevated permissions.
+
+    Admins also have elevated permissions by default.
+    """
     
     _PERMS_FOR_SHARING_TARGETS = (ACT_READ, )
     _PERMS_FOR_CREATOR = ()
     _DENY_ALL = True
 
     def _sharing_scopes(self):
+        """
+        By default treat these forums as being shared with everyone in the course
+        """
         return (ES_PUBLIC, )
 
     def _get_sharing_target_names(self):
@@ -278,45 +293,68 @@ class AbstractCourseForumACLProvider(_ACLCommunityForumACLProvider):
         scopes = self._sharing_scopes()
         return [course.SharingScopes[scope] for scope in scopes if scope in course.SharingScopes]
 
+    def _adjust_acl_for_inst(self, acl, inst):
+        pass
+
+    def _adjust_acl_for_editor(self, acl, editor):
+        pass
+
+    def _extend_acl_after_creator_and_sharing(self, acl):
+        super(AbstractCourseForumACLProvider, self)._extend_acl_after_creator_and_sharing(acl)
+        
+        course = find_interface(self.context, ICourseInstance)
+        if course is None:
+            return #Legacy community based courses
+        
+        for inst in get_course_instructors(course):
+            self._adjust_acl_for_inst(course, inst)
+        for editor in get_course_editors(course):
+            self._adjust_acl_for_editor(course, editor)
+        self._extend_with_admin_privs(acl)
+
 @component.adapter(ICourseInstanceForum)
 @interface.implementer(IACLProvider)
 class CourseForumACLProvider(AbstractCourseForumACLProvider):
     """
-    Plug in our editors to have READ access to the forums.
+    Basic ICourseInstanceForums grant the sharing target read and create.  That is
+    members of that scope can both see the forum and create new topics beneath it.
+
+    Instructors have elevated permissions allowing them to edit and delete.  Editors
+    also have those eleveated permissions but they can only delete if there are no
+    topics created beneath the forums. (This editor/instructor difference makes sense now,
+    but it seems like we may want to lift or unify that and move to a mark as deleted).
     """
 
     _PERMS_FOR_SHARING_TARGETS = (ACT_READ, ACT_CREATE, )
 
-    def _extend_acl_after_creator_and_sharing(self, acl):
-        super(CourseForumACLProvider, self)._extend_acl_after_creator_and_sharing(acl)
-        course = find_interface(self.context, ICourseInstance)
-        for inst in get_course_instructors(course):
-            acl.append(ace_allowing(inst, ALL_PERMISSIONS, type(self)))
-        for editor in get_course_editors(course):
-            if len(self.context) > 0:
-                acl.append(ace_denying(editor, ACT_DELETE, type(self)))
-            acl.append(ace_allowing(editor, ALL_PERMISSIONS, type(self)))
-        self._extend_with_admin_privs(acl)
+    def _adjust_acl_for_inst(self, acl, inst):
+        acl.append(ace_allowing(inst, ALL_PERMISSIONS, type(self)))
+
+    def _adjust_acl_for_editor(self, acl, editor):
+        if len(self.context) > 0:
+            acl.append(ace_denying(editor, ACT_DELETE, type(self)))
+        acl.append(ace_allowing(editor, ALL_PERMISSIONS, type(self)))
 
 
 @component.adapter(ICourseInstanceScopedForum)
 @interface.implementer(IACLProvider)
 class CourseScopeForumACLProvider(AbstractCourseForumACLProvider):
     """
-    Plug in our editors to have READ access to the forums.
+    ICourseInstanceScopedForums restrict the sharing scopes with access to the scope
+    represented by the forum itself.  These forums typcially hold the system managed
+    course topics and as such we don't allow the creation of topics beneath them by students,
+    nor do we allow the deletion of topics. This is a bit of an abuse but it keeps behaviour
+    sane and consistent until the auto generated topics are tagged approrpiately so that their
+    acls can be handled seperately.
     """
 
     def _sharing_scopes(self):
         return get_forum_scopes(self.context)
 
-    def _extend_acl_after_creator_and_sharing(self, acl):
-        super(CourseScopeForumACLProvider, self)._extend_acl_after_creator_and_sharing(acl)
-        course = find_interface(self.context, ICourseInstance)
-        for editor in get_course_editors(course):
-            acl.append(ace_allowing(editor, (ACT_READ, ACT_CREATE, ), type(self)))
 
-        self._extend_with_admin_privs(acl)
-
+    def _adjust_acl_for_editor(self, acl, editor):
+         acl.append(ace_allowing(editor, (ACT_READ, ACT_CREATE, ), type(self)))
+        
 
 @component.adapter(IRenderableContentPackage)
 @interface.implementer(ISupplementalACLProvider)
