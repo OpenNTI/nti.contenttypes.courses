@@ -441,8 +441,7 @@ from nti.dataserver.contenttypes.forums.interfaces import ICommunityForum
 from nti.dataserver.contenttypes.forums.interfaces import IUseOIDForNTIID
 
 
-class ICourseInstanceBoard(IUseOIDForNTIID,
-                           ICommunityBoard):
+class ICourseInstanceBoard(IUseOIDForNTIID, ICommunityBoard):
     """
     Specialization of boards for courses.
 
