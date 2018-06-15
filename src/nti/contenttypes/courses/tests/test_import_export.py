@@ -26,10 +26,11 @@ import simplejson
 from zope import component 
  
 from nti.cabinet.filer import DirectoryFiler 
+from nti.cabinet.filer import transfer_to_native_file
  
-from nti.contentlibrary.filesystem import FilesystemBucket 
+from nti.contentlibrary.filesystem import FilesystemBucket
  
-from nti.contenttypes.courses.courses import ContentCourseInstance 
+from nti.contenttypes.courses.courses import ContentCourseInstance
  
 from nti.contenttypes.courses.importer import CourseInfoImporter 
  
@@ -62,21 +63,25 @@ class TestImportExport(CourseCreditLayerTest):
         gsm.unregisterUtility(self.container, 
                               ICreditDefinitionContainer)
      
-    def _create_source_data(self, source_course): 
-        addIntId()
-        self.credit_definition = CreditDefinition(credit_type=u'credit',
-                                                  credit_units=u'hours')
-        awardable_credit = AwardableCredit() 
-        awardable_credit.credit_definition = self.credit_definition 
-        source_course.awardable_credits = [awardable_credit] 
-     
     @WithMockDSTrans 
     def test_import_export(self):
         path = os.path.join(os.path.dirname(__file__), 
                             'course_info.json') 
         with open(path, "r") as fp: 
-            source = fp.read().decode("utf-8") 
-            ext_obj = simplejson.loads(source) 
+            source = fp.read().decode("utf-8")
+            ext_obj = simplejson.loads(source)
+            
+        root_path = os.path.join(os.path.dirname(__file__), 
+                                                'TestSynchronizeWithSubInstances',
+                                                'Spring2014',
+                                                'Gateway')
+        # This file will be overwritten later; copy it so it can be restored
+        course_info_path = os.path.join(root_path,
+                                        'course_info.json')
+        with open(course_info_path, "r") as fp:
+            old_source = fp.read().decode("utf-8")
+            
+        # This extra information should be imported
         ext_obj['awardableCredits'] = [ 
         { 
             "Class": "CourseAwardableCredit", 
@@ -98,13 +103,11 @@ class TestImportExport(CourseCreditLayerTest):
                 "credit_units": "Hours" 
             } 
         }] 
-         
-        tmp_dir = tempfile.mkdtemp() 
-        export_filer = DirectoryFiler(tmp_dir) 
-
-        json_str = json.dumps(ext_obj) 
-        json_io = io.BytesIO(json_str) 
-        export_path = os.path.join(tmp_dir, 'course_info.json') 
+        tmp_dir = tempfile.mkdtemp()
+        json_str = json.dumps(ext_obj)
+        json_io = io.BytesIO(json_str)
+        export_path = os.path.join(tmp_dir, 'course_info.json')
+        export_filer = DirectoryFiler(tmp_dir)
 
         with mock_dataserver.mock_db_trans(self.ds):
             # Create course and add to connection 
@@ -113,17 +116,15 @@ class TestImportExport(CourseCreditLayerTest):
             connection.add(course)
             connection.add(self.container)
             course.root = FilesystemBucket(name=u"Gateway") 
-            course.root.absolute_path = os.path.join(os.path.dirname(__file__), 
-                                                     'TestSynchronizeWithSubInstances',
-                                                     'Spring2014',
-                                                     'Gateway')
+            course.root.absolute_path = root_path
+            # Set up the credit definition
             credit_definition = CreditDefinition(credit_type=u'Credit',
                                                  credit_units=u'Hours')
             credit_definition = self.container.add_credit_definition(credit_definition)
             addIntId(credit_definition)
             try: 
-                importer = CourseInfoImporter() 
                 export_filer.save(export_path, json_io, overwrite=True) 
+                importer = CourseInfoImporter() 
                 importer.process(course, export_filer) 
                 catalog_entry = ICourseCatalogEntry(course)
                 assert_that(catalog_entry.awardable_credits, has_length(1))
@@ -133,4 +134,6 @@ class TestImportExport(CourseCreditLayerTest):
                 assert_that(credit_def, has_properties(u'credit_type', u'Credit',
                                                        u'credit_units', u'Hours'))
             finally: 
-                shutil.rmtree(tmp_dir) 
+                shutil.rmtree(tmp_dir)
+                # Restore the file we overwrote
+                transfer_to_native_file(old_source, course_info_path)
