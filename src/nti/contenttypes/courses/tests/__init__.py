@@ -30,6 +30,25 @@ class CourseTestLayer(DataserverTestLayer):
 
 class CourseLayerTest(DataserverLayerTest):
     layer = CourseTestLayer
+    
+    
+class CourseCreditTestLayer(DataserverTestLayer):
+    
+    set_up_packages = ('nti.dataserver', 'nti.contenttypes.credit')
+
+    @classmethod
+    def setUp(cls):
+        DataserverTestLayer.setUp()
+        cls.configure_packages(set_up_packages=cls.set_up_packages,
+                               features=cls.features,
+                               context=cls.configuration_context)
+    tearDown = setUp
+    setUpTest = setUp
+    tearDownTest = setUp
+    
+    
+class CourseCreditLayerTest(DataserverLayerTest):
+    layer = CourseCreditTestLayer
 
 
 import functools

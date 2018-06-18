@@ -380,7 +380,9 @@ class CourseInfoImporter(BaseSectionImporter):
         if awardable_credits is None:
             return
         # Create credit definitions (for cross-environment/site imports)
-        container = component.getUtility(ICreditDefinitionContainer)
+        container = component.queryUtility(ICreditDefinitionContainer)
+        if container is None:
+            return
         for awardable_credit in awardable_credits:
             ext_credit_def = awardable_credit['credit_definition']
             factory = find_factory_for(ext_credit_def)
