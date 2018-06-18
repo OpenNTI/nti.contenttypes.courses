@@ -335,4 +335,4 @@ class CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
 @interface.implementer(IInternalObjectUpdater)
 class _CourseAwardableCreditUpdater(CreditDefinitionNormalizationUpdater):
 
-    iface_to_update = ICourseAwardableCredit
+    _ext_iface_upper_bound = ICourseAwardableCredit

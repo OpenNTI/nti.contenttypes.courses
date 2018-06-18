@@ -38,6 +38,10 @@ from nti.contenttypes.credit.credit import CreditDefinitionContainer
 
 from nti.contenttypes.credit.interfaces import ICreditDefinitionContainer
 
+from nti.dataserver.tests import mock_dataserver
+
+from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
+
 from nti.externalization.externalization import toExternalObject
 
 from nti.externalization.internalization import find_factory_for
@@ -153,6 +157,7 @@ class TestInternalization(CourseLayerTest):
         assert_that(entry.StartDate, is_not(none()))
         assert_that(entry.Preview, is_(True))
 
+    @WithMockDSTrans
     def test_awardable_credits(self):
         with codecs.open(self.path, "r", "utf-8") as fp:
             json_data = simplejson.load(fp)
@@ -177,6 +182,9 @@ class TestInternalization(CourseLayerTest):
 
         credit_definition = CreditDefinition(credit_type=u'Credit',
                                              credit_units=u'Hours')
+        # Add to connection for weak refs
+        connection = mock_dataserver.current_transaction
+        connection.add(self.container)
         self.container[credit_definition.ntiid] = credit_definition
 
         awardable_credit_ext = {'MimeType': CourseAwardableCredit.mime_type,

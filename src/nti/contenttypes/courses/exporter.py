@@ -32,8 +32,6 @@ from zope.dublincore.interfaces import IWriteZopeDublinCore
 
 from zope.interface.interfaces import IMethod
 
-from zope.intid.interfaces import IIntIds
-
 from zope.proxy import isProxy
 from zope.proxy import ProxyBase
 

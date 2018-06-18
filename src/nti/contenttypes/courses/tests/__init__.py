@@ -17,39 +17,40 @@ from hamcrest import assert_that
 from nti.dataserver.tests.mock_dataserver import DataserverTestLayer
 from nti.dataserver.tests.mock_dataserver import DataserverLayerTest
 
+import zope.testing.cleanup
+
 
 class CourseTestLayer(DataserverTestLayer):
 
+    set_up_packages = ('nti.contenttypes.credit',)
+
     @classmethod
     def setUp(cls):
+        cls.configure_packages(set_up_packages=cls.set_up_packages,
+                               features=cls.features,
+                               context=cls.configuration_context)
+
+    @classmethod
+    def tearDown(cls):
+        cls.tearDownPackages()
+        zope.testing.cleanup.cleanUp()
+
+    @classmethod
+    def testSetUp(cls, test=None):
         pass
-    tearDown = setUp
-    setUpTest = setUp
-    tearDownTest = setUp
+
+    @classmethod
+    def testTearDown(cls):
+        pass
+
+CourseCreditTestLayer = CourseTestLayer
 
 
 class CourseLayerTest(DataserverLayerTest):
     layer = CourseTestLayer
-    
-    
-class CourseCreditTestLayer(DataserverTestLayer):
-    
-    set_up_packages = ('nti.dataserver', 'nti.contenttypes.credit')
 
-    @classmethod
-    def setUp(cls):
-        DataserverTestLayer.setUp()
-        cls.configure_packages(set_up_packages=cls.set_up_packages,
-                               features=cls.features,
-                               context=cls.configuration_context)
-    tearDown = setUp
-    setUpTest = setUp
-    tearDownTest = setUp
-    
-    
-class CourseCreditLayerTest(DataserverLayerTest):
-    layer = CourseCreditTestLayer
 
+CourseCreditLayerTest = CourseLayerTest
 
 import functools
 
