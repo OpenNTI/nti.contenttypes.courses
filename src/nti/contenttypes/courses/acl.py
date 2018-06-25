@@ -310,6 +310,8 @@ class AbstractCourseForumACLProvider(_ACLCommunityForumACLProvider):
             self._adjust_acl_for_inst(acl, inst)
         for editor in get_course_editors(course):
             self._adjust_acl_for_editor(acl, editor)
+        # Make sure content admins behave like course editors
+        self._adjust_acl_for_editor(acl, ROLE_CONTENT_ADMIN)
         self._extend_with_admin_privs(acl)
 
 @component.adapter(ICourseInstanceForum)
