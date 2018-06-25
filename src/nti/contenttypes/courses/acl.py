@@ -353,9 +353,11 @@ class CourseScopeForumACLProvider(AbstractCourseForumACLProvider):
     def _sharing_scopes(self):
         return get_forum_scopes(self.context)
 
-
     def _adjust_acl_for_editor(self, acl, editor):
          acl.append(ace_allowing(editor, (ACT_READ, ACT_CREATE, ), type(self)))
+
+    def _adjust_acl_for_inst(self, acl, inst):
+         acl.append(ace_allowing(inst, (ACT_READ, ACT_CREATE, ), type(self)))
         
 
 @component.adapter(IRenderableContentPackage)
