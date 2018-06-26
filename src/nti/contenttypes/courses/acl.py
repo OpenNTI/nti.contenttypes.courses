@@ -262,6 +262,7 @@ class CourseBoardACLProvider(CommunityBoardACLProvider):
             raise TypeError("Not enough context information to get all parents")
         for editor in get_course_editors(course):
             acl.append(ace_allowing(editor, (ACT_READ, ACT_CREATE), type(self)))
+        acl.append(ace_allowing(ROLE_CONTENT_ADMIN, (ACT_READ, ACT_CREATE), type(self)))
 
 
 class AbstractCourseForumACLProvider(_ACLCommunityForumACLProvider):
