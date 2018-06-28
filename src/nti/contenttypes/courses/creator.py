@@ -257,6 +257,8 @@ def create_course_subinstance(course, name, writeout=False, creator=None,
     course_root = course.root
     if IFilesystemBucket.providedBy(course_root):
         course_path = course_root.absolute_path
+        if writeout:
+            create_directory(course_path)
         # create sections path
         sections_path = os.path.join(course_path, SECTIONS)
         if writeout:
