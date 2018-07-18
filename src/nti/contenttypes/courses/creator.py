@@ -22,6 +22,8 @@ from zope.annotation.interfaces import IAnnotations
 
 from zope.component.hooks import getSite
 
+from zope.container.interfaces import INameChooser
+
 from zope.intid.interfaces import IIntIds
 
 from nti.coremetadata.utils import current_principal
@@ -193,6 +195,12 @@ def create_course(admin, key, catalog=None, writeout=False,
         install_admin_level(admin, catalog, writeout=writeout)
 
     administrative_level = catalog[admin]
+    if key not in administrative_level:
+        # Make sure we get a safe key (no '/')
+        course = factory()
+        name_chooser = INameChooser(administrative_level)
+        key = name_chooser.chooseName(key, course)
+
     root = administrative_level.root
     if root is None:
         raise IOError("Administrative level does not have a root bucket")
