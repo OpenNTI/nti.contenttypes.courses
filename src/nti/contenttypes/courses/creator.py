@@ -234,7 +234,6 @@ def create_course(admin, key, catalog=None, writeout=False,
     else:
         course = factory()
         course.root = course_root
-        name_chooser = INameChooser(course)
         administrative_level[key] = course  # gain intid
         # initialize catalog entry
         _prepare_entry(course)
