@@ -642,7 +642,7 @@ def check_open_enrollment_record_added(record, unused_event):
     """
     course = record.CourseInstance
     if record.Scope == ES_PUBLIC and IDenyOpenEnrollment.providedBy(course):
-        raise ValueError(_("Open enrollment is not allowed"))
+        raise ValueError(_("Open enrollment is not allowed."))
 
 
 from nti.dataserver.interfaces import IEntity
