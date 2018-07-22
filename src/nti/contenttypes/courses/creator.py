@@ -109,7 +109,7 @@ def _get_course_bucket(catalog, site):
     return courses_bucket
 
 
-def install_admin_level(admin_name, catalog=None, site=None, writeout=True, parents=True):
+def install_admin_level(admin_name, catalog=None, site=None, writeout=True, parents=False):
     site = getSite() if site is None else site
     catalog = course_catalog(catalog)
     courses_bucket = _get_course_bucket(catalog, site)
@@ -128,12 +128,16 @@ def install_admin_level(admin_name, catalog=None, site=None, writeout=True, pare
             admin_root.bucket = courses_bucket
             admin_root.absolute_path = path
     # Create admin level; do not want to overwrite parent catalog levels.
-    if admin_name not in catalog.get_admin_levels(parents):
+    # XXX: We *do* want to create the admin level for our current site.
+    # Sub-sites may not have appropriate permissions to create courses
+    # in a parent site.
+    admin_levels = catalog.get_admin_levels(parents)
+    if admin_name not in admin_levels:
         result = CourseAdministrativeLevel()
         result.root = admin_root
         catalog[admin_name] = result
     else:
-        result = catalog[admin_name]
+        result = admin_levels[admin_name]
     return result
 create_admin_level = install_admin_level
 
@@ -191,10 +195,11 @@ def create_course(admin, key, catalog=None, writeout=False,
         factory = ContentCourseInstance
 
     catalog = course_catalog(catalog)
-    if admin not in catalog:
-        install_admin_level(admin, catalog, writeout=writeout)
+    try:
+        administrative_level = catalog[admin]
+    except KeyError:
+        administrative_level = install_admin_level(admin, catalog, writeout=writeout)
 
-    administrative_level = catalog[admin]
     if key not in administrative_level:
         # Make sure we get a safe key (no '/')
         course = factory()
