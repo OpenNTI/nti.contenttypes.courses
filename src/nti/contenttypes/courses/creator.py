@@ -259,13 +259,19 @@ def create_course(admin, key, catalog=None, writeout=False,
 
 
 def create_course_subinstance(course, name, writeout=False, creator=None,
-                              factory=ContentCourseSubInstance):
+                              strict=False, factory=ContentCourseSubInstance):
     """
     Creates a course subinstance
 
     :param course Parent course
     :param name subinstance name
     """
+    if name not in course.SubInstances:
+        # Make sure we get a safe key (no '/')
+        subinstance = factory()
+        name_chooser = INameChooser(course.SubInstances)
+        name = name_chooser.chooseName(name, subinstance)
+
     sub_section_root = None
     course_root = course.root
     if IFilesystemBucket.providedBy(course_root):
@@ -310,5 +316,8 @@ def create_course_subinstance(course, name, writeout=False, creator=None,
         getattr(course, 'SharingScopes')
         lifecycleevent.created(course)
     else:
+        if strict:
+            msg = "Course with key %s already exists" % name
+            raise CourseAlreadyExistsException(msg)
         subinstance = course.SubInstances[name]
     return subinstance
