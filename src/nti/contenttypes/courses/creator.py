@@ -305,16 +305,16 @@ def create_course_subinstance(course, name, writeout=False, creator=None,
         subinstance.root = sub_section_root
         course.SubInstances[name] = subinstance
         # initialize catalog entry
-        _prepare_entry(course)
+        _prepare_entry(subinstance)
         # mark & set creator
         creator = creator or current_principal().id
         interface.alsoProvides(subinstance, ICreatedCourse)
         subinstance.creator = creator
         # make sure annotations are created to get a connection
         create_annotations(subinstance)
-        getattr(course, 'Discussions')
-        getattr(course, 'SharingScopes')
-        lifecycleevent.created(course)
+        getattr(subinstance, 'Discussions')
+        getattr(subinstance, 'SharingScopes')
+        lifecycleevent.created(subinstance)
     else:
         if strict:
             msg = "Course with key %s already exists" % name
