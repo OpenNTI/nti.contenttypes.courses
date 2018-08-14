@@ -435,6 +435,9 @@
 	<!-- Outline nodes -->
 	<adapter factory=".adapters._outlinenode_to_course" />
 
+	<!-- Context -->
+	<adapter factory=".adapters._entry_to_completion_context" />
+	
 	<!-- Export Filer -->
 	<adapter factory=".filer.CourseExportFiler"
 			 for=".interfaces.ICourseInstance"
