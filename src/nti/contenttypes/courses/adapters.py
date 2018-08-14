@@ -21,6 +21,8 @@ from zope.annotation.factory import factory as an_factory
 
 from zope.traversing.api import traverse
 
+from nti.contenttypes.completion.interfaces import ICompletionContext
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseKeywords
 from nti.contenttypes.courses.interfaces import ICourseOutline
@@ -61,11 +63,16 @@ def _outlinenode_to_course(outline):
     return find_interface(outline, ICourseInstance, strict=False)
 
 
-@component.adapter(ICourseContentPackageBundle)
 @interface.implementer(ICourseInstance)
+@component.adapter(ICourseContentPackageBundle)
 def _bundle_to_course(bundle):
     return find_interface(bundle, ICourseInstance, strict=False)
 
+
+@component.adapter(ICourseCatalogEntry)
+@interface.implementer(ICompletionContext)
+def _entry_to_completion_context(context):
+    return ICourseInstance(context, None)
 
 # keywords
 
