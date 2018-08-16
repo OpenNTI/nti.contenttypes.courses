@@ -26,6 +26,7 @@ from nti.contenttypes.courses.interfaces import ES_PUBLIC
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstances
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IContentCourseInstance
 from nti.contenttypes.courses.interfaces import IContentCourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
@@ -151,6 +152,11 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder, Base):
     @property
     def links(self):
         return self._make_links()
+
+    @property
+    def title(self):
+        entry = ICourseCatalogEntry(self, None)
+        return getattr(entry, 'title', None)
 
     def _make_links(self):
         """
