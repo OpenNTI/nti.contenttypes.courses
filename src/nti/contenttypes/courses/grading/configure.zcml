@@ -13,11 +13,11 @@
 
 	<!-- ACL -->
 	<adapter factory=".acl.GradingPolicyACLProvider" />
-	
+
 	<!-- Externalization -->
 	<include package="nti.externalization" file="meta.zcml" />
 	<include package="nti.externalization" />
-		
+
 	<ext:registerAutoPackageIO
 		root_interfaces=".interfaces.IGrader
 						 .interfaces.IPredictedGrade
@@ -26,9 +26,9 @@
 						 .interfaces.ICourseGradingPolicy"
 		modules=".policies" />
 
-	<!-- Internalization -->
-	<adapter factory=".internalization._EqualGroupGraderUpdater"
-			 for=".interfaces.IEqualGroupGrader"
+    <!-- Internalization -->
+	<adapter factory=".internalization._CategoryGradeSchemeUpdater"
+			 for=".interfaces.ICategoryGradeScheme"
 			 provides="nti.externalization.interfaces.IInternalObjectUpdater" />
 
 </configure>
