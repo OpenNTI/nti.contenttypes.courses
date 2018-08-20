@@ -63,7 +63,6 @@ class IEqualGroupGrader(IGrader):
                                     required=True),
                   min_length=1)
 
-
 class ICourseGradingPolicy(IContained, ILastModified, ICreated):
     """
     A marker interface to store a course grading policy
