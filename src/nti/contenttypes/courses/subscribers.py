@@ -394,6 +394,7 @@ def _lock_assessment_policy(event, course=None):
     context = event.object if course is None else course
     course = ICourseInstance(context, None)  # adapt to a course
     if course is not None and assesment:
+        # pylint: disable=too-many-function-args
         policies = IQAssessmentPolicies(course)
         policies.set(assesment, 'locked', True)
         # log message
@@ -418,6 +419,7 @@ def _unlock_assessment_policy(assesment, courses=()):
     for course in courses or ():
         course = ICourseInstance(course, None)
         if course is not None:
+            # pylint: disable=too-many-function-args
             policies = IQAssessmentPolicies(course)
             policies.remove(assesment, 'locked')
             entry = ICourseCatalogEntry(course)
@@ -482,7 +484,7 @@ def _update_course_bundle(new_package, unused_event=True):
     if queryInteraction() is not None:
         return
     # Have to iterate through since our index may not have this package.
-    # XXX: This may be expensive if triggered interactively.
+    # This may be expensive if triggered interactively.
     catalog = component.getUtility(ICourseCatalog)
     for entry in catalog.iterCatalogEntries():
         course = ICourseInstance(entry, None)
