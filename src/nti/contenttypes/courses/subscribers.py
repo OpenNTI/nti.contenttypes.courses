@@ -152,13 +152,14 @@ def install_site_course_catalog(local_library, _=None):
     # up the parent tree)
     local_site_manager = component.getSiteManager(local_library)
 
-    # XXX: Don't import a message factory
+    # Don't import a message factory
     if _ is None and COURSE_CATALOG_NAME in local_site_manager:
         cat = local_site_manager[COURSE_CATALOG_NAME]
         logger.debug("Nothing to do for site %s, catalog already present %s",
                      local_site_manager, cat)
         return cat
 
+    # pylint: disable=no-member
     local_site = local_site_manager.__parent__
     assert bool(local_site.__name__), "sites must be named"
 
@@ -187,7 +188,7 @@ def install_site_course_catalog(local_library, _=None):
 
 
 @component.adapter(IPersistentContentPackageLibrary, IUnregistered)
-def uninstall_site_course_catalog(_, event):
+def uninstall_site_course_catalog(unused_library, event):
     uninstall_utility_on_unregistration(COURSE_CATALOG_NAME,
                                         IPersistentCourseCatalog,
                                         event)
@@ -223,12 +224,12 @@ def sync_catalog_when_library_synched(library, event):
         # which in turn will call back to us
         install_site_course_catalog(library)
         return
-
+    # pylint: disable=no-member
     enumeration = IDelimitedHierarchyContentPackageEnumeration(library)
     enumeration_root = enumeration.root
     courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
     if courses_bucket is None:
-        logger.info(
+        logger.warning(
             "Not synchronizing: no directory named %s in %s for catalog %s",
             catalog.__name__,
             getattr(enumeration_root, 'absolute_path', enumeration_root),
@@ -251,7 +252,7 @@ def sync_catalog_when_library_synched(library, event):
 
 
 @component.adapter(ICourseInstance, ICourseRolesSynchronized)
-def roles_sync_on_course_instance(course, _):
+def roles_sync_on_course_instance(course, unused_event=None):
     catalog = get_enrollment_catalog()
     intids = component.queryUtility(IIntIds)
     if catalog is not None and intids is not None:
@@ -266,7 +267,7 @@ def roles_sync_on_course_instance(course, _):
 
 
 @component.adapter(ICourseInstance, ICourseVendorInfoSynchronized)
-def on_course_vendor_info_synced(course, _):
+def on_course_vendor_info_synced(course, unused_event=None):
     catalog = get_courses_catalog()
     intids = component.queryUtility(IIntIds)
     doc_id = intids.queryId(course) if intids is not None else None
@@ -276,7 +277,7 @@ def on_course_vendor_info_synced(course, _):
 
 
 @component.adapter(IUser, IWillDeleteEntityEvent)
-def on_user_removed(user, _):
+def on_user_removed(user, unused_event=None):
     logger.info('Removing enrollment records for %s', user.username)
     catalog = get_enrollment_catalog()
     if catalog is not None:
@@ -302,6 +303,7 @@ def on_user_removed(user, _):
 
 
 def remove_enrollment_records(course):
+    # pylint: disable=too-many-function-args
     manager = ICourseEnrollmentManager(course)
     manager.drop_all()
 
@@ -321,7 +323,7 @@ def unindex_enrollment_records(course):
 
 
 @component.adapter(ICourseInstance, IBeforeIdRemovedEvent)
-def on_before_course_instance_removed(course, _):
+def on_before_course_instance_removed(course, unused_event=None):
     intids = component.getUtility(IIntIds)
     entry = ICourseCatalogEntry(course, None)
     if entry is not None and intids.queryId(entry) is not None:
@@ -329,7 +331,7 @@ def on_before_course_instance_removed(course, _):
 
 
 @component.adapter(ICourseInstance, IObjectCreatedEvent)
-def on_course_instance_created(course, _):
+def on_course_instance_created(course, unused_event=None):
     intids = component.queryUtility(IIntIds)
     entry = ICourseCatalogEntry(course, None)
     if      entry is not None \
@@ -339,7 +341,7 @@ def on_course_instance_created(course, _):
 
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
-def on_course_instance_removed(course, _):
+def on_course_instance_removed(course, unused_event=None):
     remove_enrollment_records(course)
     unindex_enrollment_records(course)
     if     not ICourseSubInstance.providedBy(course) \
@@ -350,16 +352,17 @@ def on_course_instance_removed(course, _):
 def course_default_roles(course):
     course_role_manager = ICourseRolePermissionManager(course)
     if course_role_manager is not None:
+        # pylint: disable=too-many-function-args
         course_role_manager.initialize()
 
 
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
-def on_course_instance_available(course, _):
+def on_course_instance_available(course, unused_event=None):
     course_default_roles(course)
 
 
 @component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
-def on_course_instance_imported(course, _):
+def on_course_instance_imported(course, unused_event=None):
     course_default_roles(course)
 
 
@@ -372,7 +375,7 @@ def on_course_outline_node_moved(node, event):
 
 
 @component.adapter(ICourseOutlineNode, IIntIdAddedEvent)
-def on_course_outline_node_added(node, _):
+def on_course_outline_node_added(node, unused_event=None):
     ntiid = getattr(node, 'ntiid', None)
     if ntiid and not ICourseOutline.providedBy(node):
         registry = get_course_site_registry(node)
