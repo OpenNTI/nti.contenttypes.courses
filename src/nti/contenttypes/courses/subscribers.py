@@ -8,7 +8,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from zc.intid.interfaces import IBeforeIdRemovedEvent
+
 from zope import component
+from zope import lifecycleevent
 
 from zope.component.hooks import site
 
@@ -24,8 +27,6 @@ from zope.interface.interfaces import IUnregistered
 
 from zope.lifecycleevent.interfaces import IObjectCreatedEvent
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
-
-from zc.intid.interfaces import IBeforeIdRemovedEvent
 
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IUnlockQAssessmentPolicies
@@ -76,6 +77,7 @@ from nti.contenttypes.courses.interfaces import ICourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 from nti.contenttypes.courses.interfaces import CourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import CourseCatalogDidSyncEvent
+from nti.contenttypes.courses.interfaces import ICourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import CourseBundleWillUpdateEvent
 from nti.contenttypes.courses.interfaces import ICourseInstructorAddedEvent
 from nti.contenttypes.courses.interfaces import ICourseBundleWillUpdateEvent
@@ -116,7 +118,7 @@ from nti.site.utils import registerUtility
 logger = __import__('logging').getLogger(__name__)
 
 
-# XXX: This is very similar to nti.contentlibrary.subscribers
+# This is very similar to nti.contentlibrary.subscribers
 
 
 @component.adapter(IPersistentContentPackageLibrary, IRegistered)
@@ -150,13 +152,14 @@ def install_site_course_catalog(local_library, _=None):
     # up the parent tree)
     local_site_manager = component.getSiteManager(local_library)
 
-    # XXX: Don't import a message factory
+    # Don't import a message factory
     if _ is None and COURSE_CATALOG_NAME in local_site_manager:
         cat = local_site_manager[COURSE_CATALOG_NAME]
         logger.debug("Nothing to do for site %s, catalog already present %s",
                      local_site_manager, cat)
         return cat
 
+    # pylint: disable=no-member
     local_site = local_site_manager.__parent__
     assert bool(local_site.__name__), "sites must be named"
 
@@ -185,7 +188,7 @@ def install_site_course_catalog(local_library, _=None):
 
 
 @component.adapter(IPersistentContentPackageLibrary, IUnregistered)
-def uninstall_site_course_catalog(_, event):
+def uninstall_site_course_catalog(unused_library, event):
     uninstall_utility_on_unregistration(COURSE_CATALOG_NAME,
                                         IPersistentCourseCatalog,
                                         event)
@@ -221,12 +224,12 @@ def sync_catalog_when_library_synched(library, event):
         # which in turn will call back to us
         install_site_course_catalog(library)
         return
-
+    # pylint: disable=no-member
     enumeration = IDelimitedHierarchyContentPackageEnumeration(library)
     enumeration_root = enumeration.root
     courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
     if courses_bucket is None:
-        logger.info(
+        logger.warning(
             "Not synchronizing: no directory named %s in %s for catalog %s",
             catalog.__name__,
             getattr(enumeration_root, 'absolute_path', enumeration_root),
@@ -249,7 +252,7 @@ def sync_catalog_when_library_synched(library, event):
 
 
 @component.adapter(ICourseInstance, ICourseRolesSynchronized)
-def roles_sync_on_course_instance(course, _):
+def roles_sync_on_course_instance(course, unused_event=None):
     catalog = get_enrollment_catalog()
     intids = component.queryUtility(IIntIds)
     if catalog is not None and intids is not None:
@@ -264,7 +267,7 @@ def roles_sync_on_course_instance(course, _):
 
 
 @component.adapter(ICourseInstance, ICourseVendorInfoSynchronized)
-def on_course_vendor_info_synced(course, _):
+def on_course_vendor_info_synced(course, unused_event=None):
     catalog = get_courses_catalog()
     intids = component.queryUtility(IIntIds)
     doc_id = intids.queryId(course) if intids is not None else None
@@ -274,7 +277,7 @@ def on_course_vendor_info_synced(course, _):
 
 
 @component.adapter(IUser, IWillDeleteEntityEvent)
-def on_user_removed(user, _):
+def on_user_removed(user, unused_event=None):
     logger.info('Removing enrollment records for %s', user.username)
     catalog = get_enrollment_catalog()
     if catalog is not None:
@@ -300,6 +303,7 @@ def on_user_removed(user, _):
 
 
 def remove_enrollment_records(course):
+    # pylint: disable=too-many-function-args
     manager = ICourseEnrollmentManager(course)
     manager.drop_all()
 
@@ -319,7 +323,7 @@ def unindex_enrollment_records(course):
 
 
 @component.adapter(ICourseInstance, IBeforeIdRemovedEvent)
-def on_before_course_instance_removed(course, _):
+def on_before_course_instance_removed(course, unused_event=None):
     intids = component.getUtility(IIntIds)
     entry = ICourseCatalogEntry(course, None)
     if entry is not None and intids.queryId(entry) is not None:
@@ -327,7 +331,7 @@ def on_before_course_instance_removed(course, _):
 
 
 @component.adapter(ICourseInstance, IObjectCreatedEvent)
-def on_course_instance_created(course, _):
+def on_course_instance_created(course, unused_event=None):
     intids = component.queryUtility(IIntIds)
     entry = ICourseCatalogEntry(course, None)
     if      entry is not None \
@@ -337,7 +341,7 @@ def on_course_instance_created(course, _):
 
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
-def on_course_instance_removed(course, _):
+def on_course_instance_removed(course, unused_event=None):
     remove_enrollment_records(course)
     unindex_enrollment_records(course)
     if     not ICourseSubInstance.providedBy(course) \
@@ -348,16 +352,17 @@ def on_course_instance_removed(course, _):
 def course_default_roles(course):
     course_role_manager = ICourseRolePermissionManager(course)
     if course_role_manager is not None:
+        # pylint: disable=too-many-function-args
         course_role_manager.initialize()
 
 
 @component.adapter(ICourseInstance, ICourseInstanceAvailableEvent)
-def on_course_instance_available(course, _):
+def on_course_instance_available(course, unused_event=None):
     course_default_roles(course)
 
 
 @component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
-def on_course_instance_imported(course, _):
+def on_course_instance_imported(course, unused_event=None):
     course_default_roles(course)
 
 
@@ -370,7 +375,7 @@ def on_course_outline_node_moved(node, event):
 
 
 @component.adapter(ICourseOutlineNode, IIntIdAddedEvent)
-def on_course_outline_node_added(node, _):
+def on_course_outline_node_added(node, unused_event=None):
     ntiid = getattr(node, 'ntiid', None)
     if ntiid and not ICourseOutline.providedBy(node):
         registry = get_course_site_registry(node)
@@ -389,6 +394,7 @@ def _lock_assessment_policy(event, course=None):
     context = event.object if course is None else course
     course = ICourseInstance(context, None)  # adapt to a course
     if course is not None and assesment:
+        # pylint: disable=too-many-function-args
         policies = IQAssessmentPolicies(course)
         policies.set(assesment, 'locked', True)
         # log message
@@ -413,6 +419,7 @@ def _unlock_assessment_policy(assesment, courses=()):
     for course in courses or ():
         course = ICourseInstance(course, None)
         if course is not None:
+            # pylint: disable=too-many-function-args
             policies = IQAssessmentPolicies(course)
             policies.remove(assesment, 'locked')
             entry = ICourseCatalogEntry(course)
@@ -451,14 +458,24 @@ def _update_course_packages(root_course, event=None):
 update_course_packages = _update_course_packages
 
 
+@component.adapter(ICourseInstance, ICourseBundleUpdatedEvent)
+def _on_course_bundle_updated(course, unused_event=None):
+    """
+    The course packages have been updated.
+    """
+    if hasattr(course, 'ContentPackageBundle'):
+        lifecycleevent.modified(course.ContentPackageBundle)
+
+
 @component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
-def _on_course_imported(course, _):
+def _on_course_imported(course, unused_event=True):
     _update_course_packages(course)
+    _on_course_bundle_updated(course)
 on_course_imported = _on_course_imported
 
 
 @component.adapter(IContentPackage, IContentPackageAddedEvent)
-def _update_course_bundle(new_package, _):
+def _update_course_bundle(new_package, unused_event=True):
     """
     With content package added, make sure we update our state
     (index, permissions, etc) in case we have a bundle wref
@@ -467,7 +484,7 @@ def _update_course_bundle(new_package, _):
     if queryInteraction() is not None:
         return
     # Have to iterate through since our index may not have this package.
-    # XXX: This may be expensive if triggered interactively.
+    # This may be expensive if triggered interactively.
     catalog = component.getUtility(ICourseCatalog)
     for entry in catalog.iterCatalogEntries():
         course = ICourseInstance(entry, None)
@@ -481,7 +498,7 @@ def _update_course_bundle(new_package, _):
 
 
 @component.adapter(IContentPackage, IContentPackageRemovedEvent)
-def _update_course_bundle_on_package_removal(package, _):
+def _update_course_bundle_on_package_removal(package, unused_event=True):
     """
     When a content package is deleted, remove it from the
     appropriate courses.
@@ -506,7 +523,7 @@ def on_course_editor_added(user, event):
 
 
 @component.adapter(IUser, ICourseRoleRemovedEvent)
-def on_course_role_removed(_, event):
+def on_course_role_removed(unused_user, event):
     # On role removed, we need to re-index our course.
     unindex_course_roles(event.course)
     index_course_roles(event.course)
