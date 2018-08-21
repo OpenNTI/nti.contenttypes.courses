@@ -8,7 +8,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from zc.intid.interfaces import IBeforeIdRemovedEvent
+
 from zope import component
+from zope import lifecycleevent
 
 from zope.component.hooks import site
 
@@ -24,8 +27,6 @@ from zope.interface.interfaces import IUnregistered
 
 from zope.lifecycleevent.interfaces import IObjectCreatedEvent
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
-
-from zc.intid.interfaces import IBeforeIdRemovedEvent
 
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IUnlockQAssessmentPolicies
@@ -76,6 +77,7 @@ from nti.contenttypes.courses.interfaces import ICourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import IPersistentCourseCatalog
 from nti.contenttypes.courses.interfaces import CourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import CourseCatalogDidSyncEvent
+from nti.contenttypes.courses.interfaces import ICourseBundleUpdatedEvent
 from nti.contenttypes.courses.interfaces import CourseBundleWillUpdateEvent
 from nti.contenttypes.courses.interfaces import ICourseInstructorAddedEvent
 from nti.contenttypes.courses.interfaces import ICourseBundleWillUpdateEvent
@@ -116,7 +118,7 @@ from nti.site.utils import registerUtility
 logger = __import__('logging').getLogger(__name__)
 
 
-# XXX: This is very similar to nti.contentlibrary.subscribers
+# This is very similar to nti.contentlibrary.subscribers
 
 
 @component.adapter(IPersistentContentPackageLibrary, IRegistered)
@@ -451,14 +453,24 @@ def _update_course_packages(root_course, event=None):
 update_course_packages = _update_course_packages
 
 
+@component.adapter(ICourseInstance, ICourseBundleUpdatedEvent)
+def _on_course_bundle_updated(course, unused_event=None):
+    """
+    The course packages have been updated.
+    """
+    if hasattr(course, 'ContentPackageBundle'):
+        lifecycleevent.modified(course.ContentPackageBundle)
+
+
 @component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
-def _on_course_imported(course, _):
+def _on_course_imported(course, unused_event=True):
     _update_course_packages(course)
+    _on_course_bundle_updated(course)
 on_course_imported = _on_course_imported
 
 
 @component.adapter(IContentPackage, IContentPackageAddedEvent)
-def _update_course_bundle(new_package, _):
+def _update_course_bundle(new_package, unused_event=True):
     """
     With content package added, make sure we update our state
     (index, permissions, etc) in case we have a bundle wref
@@ -481,7 +493,7 @@ def _update_course_bundle(new_package, _):
 
 
 @component.adapter(IContentPackage, IContentPackageRemovedEvent)
-def _update_course_bundle_on_package_removal(package, _):
+def _update_course_bundle_on_package_removal(package, unused_event=True):
     """
     When a content package is deleted, remove it from the
     appropriate courses.
@@ -506,7 +518,7 @@ def on_course_editor_added(user, event):
 
 
 @component.adapter(IUser, ICourseRoleRemovedEvent)
-def on_course_role_removed(_, event):
+def on_course_role_removed(unused_user, event):
     # On role removed, we need to re-index our course.
     unindex_course_roles(event.course)
     index_course_roles(event.course)
