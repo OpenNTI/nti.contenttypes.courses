@@ -69,6 +69,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import IContentCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseRoleRemovedEvent
 from nti.contenttypes.courses.interfaces import ICourseEditorAddedEvent
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
@@ -342,11 +343,17 @@ def on_course_instance_created(course, unused_event=None):
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def on_course_instance_removed(course, unused_event=None):
+    # remove enrollment recordss
     remove_enrollment_records(course)
     unindex_enrollment_records(course)
+    # clear outline
     if     not ICourseSubInstance.providedBy(course) \
         or course.Outline != get_parent_course(course).Outline:
         clear_course_outline(course)
+    # remove bundle
+    if      not ICourseSubInstance.providedBy(course) \
+        and IContentCourseInstance.providedBy(course):
+        lifecycleevent.removed(course.ContentPackageBundle)
 
 
 def course_default_roles(course):
