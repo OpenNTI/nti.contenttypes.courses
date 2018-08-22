@@ -352,7 +352,8 @@ def on_course_instance_removed(course, unused_event=None):
         clear_course_outline(course)
     # remove bundle
     if      not ICourseSubInstance.providedBy(course) \
-        and IContentCourseInstance.providedBy(course):
+        and IContentCourseInstance.providedBy(course) \
+        and course.ContentPackageBundle is not None:
         lifecycleevent.removed(course.ContentPackageBundle)
 
 
