@@ -99,6 +99,7 @@ def library_root():
 
 def _get_course_bucket(catalog, site):
     enumeration_root = library_root()
+    # pylint: disable=no-member
     courses_bucket = enumeration_root.getChildNamed(catalog.__name__)
     if courses_bucket is None:
         path = os.path.join(enumeration_root.absolute_path, catalog.__name__)
@@ -128,7 +129,7 @@ def install_admin_level(admin_name, catalog=None, site=None, writeout=True, pare
             admin_root.bucket = courses_bucket
             admin_root.absolute_path = path
     # Create admin level; do not want to overwrite parent catalog levels.
-    # XXX: We *do* want to create the admin level for our current site.
+    # We *do* want to create the admin level for our current site.
     # Sub-sites may not have appropriate permissions to create courses
     # in a parent site.
     admin_levels = catalog.get_admin_levels(parents)
@@ -204,6 +205,7 @@ def create_course(admin, key, catalog=None, writeout=False,
         # Make sure we get a safe key (no '/')
         course = factory()
         name_chooser = INameChooser(administrative_level)
+        # pylint: disable=too-many-function-args
         key = name_chooser.chooseName(key, course)
 
     root = administrative_level.root
@@ -228,7 +230,7 @@ def create_course(admin, key, catalog=None, writeout=False,
             course_root.bucket = root
             course_root.absolute_path = course_path
         else:
-            raise IOError("Could not access course bucket %s", course_path)
+            raise IOError("Could not access course bucket %s" % course_path)
 
     if key in administrative_level:
         if strict:
@@ -271,6 +273,7 @@ def create_course_subinstance(course, name, writeout=False, creator=None,
         # Make sure we get a safe key (no '/')
         subinstance = factory()
         name_chooser = INameChooser(course.SubInstances)
+        # pylint: disable=too-many-function-args
         name = name_chooser.chooseName(name, subinstance)
 
     sub_section_root = None
