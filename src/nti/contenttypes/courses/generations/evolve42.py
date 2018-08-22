@@ -76,7 +76,8 @@ def _process_site(current_site, intids, seen):
             bundle = course.ContentPackageBundle
             doc_id = intids.queryId(bundle)
             if doc_id is None:
-                lifecycleevent.added(bundle)
+                bundle.__parent__ = course
+                lifecycleevent.added(bundle, course)
                 logger.info("Indexig bundle for %s", entry.ntiid)
             else:  # catalogs may be out of sync
                 lifecycleevent.modified(bundle)
