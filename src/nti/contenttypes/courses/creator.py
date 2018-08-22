@@ -255,6 +255,7 @@ def create_course(admin, key, catalog=None, writeout=False,
         if IContentCourseInstance.providedBy(course):
             created_content_package_bundle(course, course_root,
                                            ntiid_factory=_create_bundle_ntiid)
+            lifecycleevent.added(course.ContentPackageBundle)
     return course
 
 
