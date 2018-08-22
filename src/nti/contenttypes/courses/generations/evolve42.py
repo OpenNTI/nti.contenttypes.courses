@@ -17,6 +17,8 @@ from zope.component.hooks import setHooks
 
 from zope.intid.interfaces import IIntIds
 
+from nti.contentlibrary.interfaces import IContentPackageLibrary
+
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
@@ -48,6 +50,12 @@ class MockDataserver(object):
         else:
             return resolver.get_object_by_oid(oid, ignore_creator=ignore_creator)
         return None
+
+
+def _load_library():
+    library = component.queryUtility(IContentPackageLibrary)
+    if library is not None:
+        library.syncContentPackages()
 
 
 def _process_site(current_site, intids, seen):
@@ -108,6 +116,8 @@ def do_evolve(context):
         seen = set()
         lsm = dataserver_folder.getSiteManager()
         intids = lsm.getUtility(IIntIds)
+
+        _load_library()
         logger.info('Evolution %s started.', generation)
 
         # remove bundles for deleted courses
