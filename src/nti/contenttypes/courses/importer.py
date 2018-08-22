@@ -358,7 +358,7 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
             if presentation_resources is None:
                 created_bundle = created_content_package_bundle(course, root)
                 if created_bundle:
-                    lifecycleevent.created(course.ContentPackageBundle)
+                    lifecycleevent.added(course.ContentPackageBundle)
             else:  # reset root
                 course.ContentPackageBundle.root = root
 
@@ -399,6 +399,7 @@ class CourseInfoImporter(BaseSectionImporter):
 
     def process(self, context, filer, writeout=True):
         course = ICourseInstance(context)
+        # pylint: disable=no-member
         course.SharingScopes.initScopes()
         entry = ICourseCatalogEntry(course)
         # make sure Discussions are initialized
@@ -488,18 +489,18 @@ class BundleMetaInfoImporter(BaseSectionImporter):
         # create bundle if required
         created_bundle = created_content_package_bundle(course, root)
         if created_bundle:
-            lifecycleevent.created(course.ContentPackageBundle)
+            lifecycleevent.added(course.ContentPackageBundle)
 
         # sync
         try:
             # create a tmp directory root for bundle files
             tmp_dir = tempfile.mkdtemp()
-            # XXX copy bundle files to new temp root
+            # Copy bundle files to new temp root
             bundle_json_key = self._to_fs_key(name_source,
                                               tmp_dir,
                                               BUNDLE_META_NAME)
             self._to_fs_key(dc_source, tmp_dir, BUNDLE_DC_METADATA)
-            # XXX new import root temp
+            # new import root temp
             root = FilesystemBucket()
             root.absolute_path = tmp_dir
             root.key = os.path.split(tmp_dir)[1]
