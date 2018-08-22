@@ -74,6 +74,8 @@ def _process_site(current_site, intids, seen):
                 continue
             # check bundle
             bundle = course.ContentPackageBundle
+            if bundle is None:
+                logger.warning("Course %s does not have a bundle", entry.ntiid)
             doc_id = intids.queryId(bundle)
             if doc_id is None:
                 bundle.__parent__ = course
