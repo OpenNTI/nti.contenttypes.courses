@@ -103,6 +103,8 @@ class MockContentPackage(object):
 
 class MockContentPackageBundle(object):
 
+    __parent__  = __name__ = None
+
     @property
     def ContentPackages(self):
         return (MockContentPackage(),)

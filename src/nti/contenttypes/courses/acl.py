@@ -56,7 +56,6 @@ from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
 from nti.dataserver.contenttypes.forums.acl import CommunityBoardACLProvider
-from nti.dataserver.contenttypes.forums.acl import CommunityForumACLProvider
 from nti.dataserver.contenttypes.forums.acl import _ACLCommunityForumACLProvider
 
 from nti.dataserver.interfaces import ACE_DENY_ALL
@@ -282,7 +281,7 @@ class AbstractCourseForumACLProvider(_ACLCommunityForumACLProvider):
 
     Admins also have elevated permissions by default.
     """
-    
+
     _PERMS_FOR_SHARING_TARGETS = (ACT_READ, )
     _PERMS_FOR_CREATOR = ()
     _DENY_ALL = True
@@ -306,11 +305,11 @@ class AbstractCourseForumACLProvider(_ACLCommunityForumACLProvider):
 
     def _extend_acl_after_creator_and_sharing(self, acl):
         super(AbstractCourseForumACLProvider, self)._extend_acl_after_creator_and_sharing(acl)
-        
+
         course = find_interface(self.context, ICourseInstance)
         if course is None:
             return #Legacy community based courses
-        
+
         for inst in get_course_instructors(course):
             self._adjust_acl_for_inst(acl, inst)
         for editor in get_course_editors(course):
@@ -363,7 +362,7 @@ class CourseScopeForumACLProvider(AbstractCourseForumACLProvider):
 
     def _adjust_acl_for_inst(self, acl, inst):
          acl.append(ace_allowing(inst, (ACT_READ, ACT_CREATE, ), type(self)))
-        
+
 
 @component.adapter(IRenderableContentPackage)
 @interface.implementer(ISupplementalACLProvider)
