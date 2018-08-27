@@ -31,4 +31,8 @@
 			 for=".interfaces.ICategoryGradeScheme"
 			 provides="nti.externalization.interfaces.IInternalObjectUpdater" />
 
+	<adapter factory=".internalization._EqualGroupGraderUpdater"
+             for=".interfaces.IEqualGroupGrader"
+             provides="nti.externalization.interfaces.IInternalObjectUpdater" />
+
 </configure>
