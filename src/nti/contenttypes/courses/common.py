@@ -52,4 +52,5 @@ get_course_site = get_course_site_name
 def get_course_site_registry(context):
     course = ICourseInstance(context, None)
     folder = IHostPolicyFolder(course, None)
+    # pylint: disable=too-many-function-args
     return folder.getSiteManager() if folder is not None else None
