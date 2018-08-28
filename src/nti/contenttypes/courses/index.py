@@ -289,8 +289,7 @@ class ValidatingCourseSiteName(object):
     __slots__ = ('site',)
 
     def __init__(self, obj, unused_default=None):
-        if     ICourseInstance.providedBy(obj) \
-            or ICourseCatalogEntry.providedBy(obj):
+        if ICourseInstance.providedBy(obj):
             self.site = text_(get_course_site(obj) or '')
 
     def __reduce__(self):
@@ -358,7 +357,7 @@ class ValidatingCoursePackages(object):
         raise TypeError()
 
 
-class CoursePackagesIndex(AttributeSetIndex):
+class CoursePackagesIndex(AttributeSetIndex):  # pylint: disable=inconsistent-mro
     default_field_name = 'packages'
     default_interface = ValidatingCoursePackages
 
@@ -368,8 +367,9 @@ class ValidatingCourseTags(object):
     __slots__ = ('tags',)
 
     def __init__(self, obj, unused_default=None):
-        if ICourseCatalogEntry.providedBy(obj):
-            self.tags = getattr(obj, 'tags', None)
+        if ICourseInstance.providedBy(obj):
+            entry = ICourseCatalogEntry(obj, None)
+            self.tags = getattr(entry, 'tags', None)
 
     def __reduce__(self):
         raise TypeError()
