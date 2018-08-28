@@ -8,11 +8,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-# pylint: disable=no-name-in-module,no-member,too-many-function-args,redefined-outer-name
+from itertools import chain
 
 from six import string_types
 
-from itertools import chain
+from ZODB.POSException import POSError
 
 from zope import component
 from zope import interface
@@ -34,8 +34,6 @@ from zope.security.interfaces import IPrincipal
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
-
-from ZODB.POSException import POSError
 
 from nti.base.mixins import CreatedAndModifiedTimeMixin
 
@@ -302,6 +300,7 @@ def get_parent_course(context):
 def get_course_subinstances(context):
     course = ICourseInstance(context, None)
     if course is not None and not ICourseSubInstance.providedBy(course):
+        # pylint: disable=no-member
         return tuple(course.SubInstances.values())
     return ()
 
@@ -310,6 +309,7 @@ def get_course_hierarchy(context):
     result = []
     parent = get_parent_course(context)
     if parent is not None:
+        # pylint: disable=no-member
         result.append(parent)
         result.extend(parent.SubInstances.values())
     return result
@@ -339,6 +339,7 @@ def is_there_an_open_enrollment(course, user):
         return False
     for instance in get_course_hierarchy(course):
         enrollments = ICourseEnrollments(instance)
+        # pylint: disable=too-many-function-args
         record = enrollments.get_enrollment_for_principal(user)
         if record is not None and record.Scope == ES_PUBLIC:
             return True
@@ -350,6 +351,7 @@ def get_enrollment_in_hierarchy(course, user):
         return None
     for instance in get_course_hierarchy(course):
         enrollments = ICourseEnrollments(instance)
+        # pylint: disable=too-many-function-args
         record = enrollments.get_enrollment_for_principal(user)
         if record is not None:
             return record
@@ -365,14 +367,15 @@ def drop_any_other_enrollments(context, user, ignore_existing=True):
         instance_entry = ICourseCatalogEntry(instance)
         if ignore_existing and main_entry.ntiid == instance_entry.ntiid:
             continue
+        # pylint: disable=too-many-function-args
         enrollments = ICourseEnrollments(instance)
         enrollment = enrollments.get_enrollment_for_principal(user)
         if enrollment is not None:
             enrollment_manager = ICourseEnrollmentManager(instance)
             enrollment_manager.drop(user)
             entry = ICourseCatalogEntry(instance, None)
-            logger.warn("User %s dropped from course '%s' open enrollment",
-                        user, getattr(entry, 'ProviderUniqueID', None))
+            logger.warning("User %s dropped from course '%s' open enrollment",
+                           user, getattr(entry, 'ProviderUniqueID', None))
             result.append(instance)
     return result
 
@@ -392,6 +395,7 @@ def get_enrollment_record(context, user):
     course = ICourseInstance(context, None)
     enrollments = ICourseEnrollments(course, None)
     if user is not None and enrollments is not None:
+        # pylint: disable=too-many-function-args
         return enrollments.get_enrollment_for_principal(user)
     return None
 
@@ -408,6 +412,7 @@ def is_enrolled(context, user):
     course = ICourseInstance(context, None)
     enrollments = ICourseEnrollments(course, None)
     if user is not None and enrollments is not None:
+        # pylint: disable=too-many-function-args
         return enrollments.is_principal_enrolled(user)
     return False
 
@@ -581,6 +586,7 @@ def get_course_editors(context, permission=Allow):
     course = ICourseInstance(context, None)
     role_manager = IPrincipalRoleManager(course, None)
     if role_manager is not None:
+        # pylint: disable=too-many-function-args
         for prin, setting in role_manager.getPrincipalsForRole(RID_CONTENT_EDITOR):
             if setting is permission:
                 try:
@@ -759,6 +765,7 @@ def unenroll(record, user):
     try:
         course = record.CourseInstance
         enrollment_manager = ICourseEnrollmentManager(course)
+        # pylint: disable=too-many-function-args
         enrollment_manager.drop(user)
     except (TypeError, KeyError):
         pass
@@ -773,6 +780,7 @@ def unenroll_instructor(instructor, course):
         if is_enrolled(course, instructor):
             entry_ntiid = ICourseCatalogEntry(course).ntiid
             manager = ICourseEnrollmentManager(course)
+            # pylint: disable=too-many-function-args
             manager.drop(instructor)
             logger.info('Dropping instructor from course (%s) (%s)',
                         instructor, entry_ntiid)
@@ -881,7 +889,8 @@ def _get_principal_visible_packages(principal, courses_to_exclude=()):
     return result
 
 
-def remove_principal_from_course_content_roles(principal, course, packages=None, unenroll=False):
+def remove_principal_from_course_content_roles(principal, course, packages=None, 
+                                               unenroll=False): # pylint: disable=redefined-outer-name
     """
     Remove the principal from the given course roles (and optional packages).
     We must verify the principal does not have access to this content
@@ -931,6 +940,7 @@ def principal_is_enrolled_in_related_course(principal, course):
         main_course = get_parent_course(course)
         potential_other_courses.append(main_course)
         potential_other_courses.extend(
+            # pylint: disable=no-member
             x for x in main_course.SubInstances.values() if x is not course
         )
 
@@ -938,6 +948,7 @@ def principal_is_enrolled_in_related_course(principal, course):
     if principal is not None:
         for other in potential_other_courses:
             enrollments = ICourseEnrollments(other)
+            # pylint: disable=too-many-function-args
             if enrollments.get_enrollment_for_principal(principal) is not None:
                 result.append(other)
     return result
@@ -993,6 +1004,7 @@ def grant_instructor_access_to_course(user, course):
     # access to the public community of the main course.
     if ICourseSubInstance.providedBy(course):
         parent_course = get_parent_course(course)
+        # pylint: disable=unsubscriptable-object
         public_scope = parent_course.SharingScopes[ES_PUBLIC]
         user.record_dynamic_membership(public_scope)
         user.follow(public_scope)
@@ -1018,6 +1030,7 @@ def deny_instructor_access_to_course(user, course):
         # And remove access to the parent public scope.
         if ICourseSubInstance.providedBy(course):
             parent_course = get_parent_course(course)
+            # pylint: disable=unsubscriptable-object
             public_scope = parent_course.SharingScopes[ES_PUBLIC]
             user.record_no_longer_dynamic_member(public_scope)
             user.stop_following(public_scope)
@@ -1034,8 +1047,8 @@ def path_for_entry(context):
         o = getattr(o, '__parent__', None)
     parents.reverse()
     if None in parents:
-        logger.warn("Unable to get path for %r, missing parents: %r",
-                    context, parents)
+        logger.warning("Unable to get path for %r, missing parents: %r",
+                       context, parents)
         return None
     result = u'/'.join(parents) if parents else None
     return result
@@ -1053,11 +1066,10 @@ def get_courses_for_tag(tag, sites=(), intids=None):
         query[IX_SITE] = {'any_of': sites}
     intids = component.getUtility(IIntIds) if intids is None else intids
     for uid in catalog.apply(query) or ():
-        # Only want catalog entries from index
         obj = intids.queryObject(uid)
-        if ICourseCatalogEntry.providedBy(obj):
-            course = ICourseInstance(obj, None)
-            courses.add(course)
+        if     ICourseInstance.providedBy(obj) \
+            or ICourseCatalogEntry.providedBy(obj):
+            courses.add(ICourseInstance(obj, None))
     courses.discard(None)
     result = set()
     # CourseSubinstances will inherit the parent's tags unless they are
