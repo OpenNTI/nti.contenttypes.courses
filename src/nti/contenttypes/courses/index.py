@@ -191,9 +191,8 @@ class ValidatingCatalogEntryID(object):
         # See site index notes.
         if isinstance(obj, IndexRecord):
             self.ntiid = text_(obj.ntiid)
-        elif   ICourseInstanceEnrollmentRecord.providedBy(obj) \
-            or ICourseInstance.providedBy(obj):
-            course = getattr(obj, 'CourseInstance', obj)
+        elif ICourseInstanceEnrollmentRecord.providedBy(obj):
+            course = ICourseInstance(obj, None)
             entry = ICourseCatalogEntry(course, None)
             if entry is not None:
                 self.ntiid = text_(entry.ntiid)
