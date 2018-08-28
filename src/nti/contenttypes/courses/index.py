@@ -145,7 +145,8 @@ class ValidatingSiteName(object):
         if isinstance(obj, IndexRecord):
             self.site = obj.site or current_site
             self.site = text_(self.site)
-        elif ICourseInstanceEnrollmentRecord.providedBy(obj):
+        elif   ICourseInstanceEnrollmentRecord.providedBy(obj) \
+            or ICourseInstance.providedBy(obj):
             course = ICourseInstance(obj, None)
             self.site = get_course_site(course) or current_site
 
@@ -191,7 +192,9 @@ class ValidatingCatalogEntryID(object):
         # See site index notes.
         if isinstance(obj, IndexRecord):
             self.ntiid = text_(obj.ntiid)
-        elif ICourseInstanceEnrollmentRecord.providedBy(obj):
+        elif   ICourseInstanceEnrollmentRecord.providedBy(obj) \
+            or ICourseInstance.providedBy(obj):
+            course = getattr(obj, 'CourseInstance', obj)
             course = ICourseInstance(obj, None)
             entry = ICourseCatalogEntry(course, None)
             if entry is not None:

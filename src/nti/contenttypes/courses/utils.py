@@ -889,7 +889,7 @@ def _get_principal_visible_packages(principal, courses_to_exclude=()):
     return result
 
 
-def remove_principal_from_course_content_roles(principal, course, packages=None, 
+def remove_principal_from_course_content_roles(principal, course, packages=None,
                                                unenroll=False): # pylint: disable=redefined-outer-name
     """
     Remove the principal from the given course roles (and optional packages).
