@@ -10,6 +10,8 @@ from __future__ import absolute_import
 
 import time
 
+import BTrees
+
 from zope import component
 from zope import interface
 
@@ -22,8 +24,6 @@ from zope.deprecation import deprecated
 from zope.intid.interfaces import IIntIds
 
 from zope.location import locate
-
-import BTrees
 
 from nti.base._compat import text_
 
