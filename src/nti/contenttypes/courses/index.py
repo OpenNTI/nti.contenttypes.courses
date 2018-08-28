@@ -145,8 +145,7 @@ class ValidatingSiteName(object):
         if isinstance(obj, IndexRecord):
             self.site = obj.site or current_site
             self.site = text_(self.site)
-        elif   ICourseInstanceEnrollmentRecord.providedBy(obj) \
-            or ICourseInstance.providedBy(obj):
+        elif ICourseInstanceEnrollmentRecord.providedBy(obj):
             course = ICourseInstance(obj, None)
             self.site = get_course_site(course) or current_site
 
