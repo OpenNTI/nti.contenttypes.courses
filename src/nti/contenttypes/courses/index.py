@@ -365,7 +365,7 @@ class ValidatingCourseTags(object):
     __slots__ = ('tags',)
 
     def __init__(self, obj, unused_default=None):
-        if ICourseInstance.providedBy(obj):
+        if ICourseInstance.providedBy(obj) or ICourseCatalogEntry.providedBy(obj):
             entry = ICourseCatalogEntry(obj, None)
             self.tags = getattr(entry, 'tags', None)
 
