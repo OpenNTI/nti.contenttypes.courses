@@ -190,6 +190,8 @@ class ValidatingCatalogEntryID(object):
 
     def __init__(self, obj, unused_default=None):
         # See site index notes.
+        # Because IndexRecord points to a course int id 
+        # we want always to index the course
         if isinstance(obj, IndexRecord):
             self.ntiid = text_(obj.ntiid)
         elif   ICourseInstanceEnrollmentRecord.providedBy(obj) \
