@@ -190,7 +190,7 @@ class ValidatingCatalogEntryID(object):
 
     def __init__(self, obj, unused_default=None):
         # See site index notes.
-        # Because IndexRecord points to a course int id 
+        # Because IndexRecord points to a course int id
         # we want always to index the course
         if isinstance(obj, IndexRecord):
             self.ntiid = text_(obj.ntiid)
@@ -292,7 +292,8 @@ class ValidatingCourseSiteName(object):
     __slots__ = ('site',)
 
     def __init__(self, obj, unused_default=None):
-        if ICourseInstance.providedBy(obj):
+        if     ICourseInstance.providedBy(obj) \
+            or ICourseCatalogEntry.providedBy(obj):
             self.site = text_(get_course_site(obj) or '')
 
     def __reduce__(self):
