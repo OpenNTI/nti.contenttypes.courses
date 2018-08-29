@@ -164,7 +164,8 @@ class MappingAssessmentMixin(PersistentCreatedAndModifiedTimeObject, Contained):
             return self.__parent__
 
     def toExternalObject(self, **kwargs):
-        REMOVAL = getattr(StandardExternalFields, 'ALL')
+        REMOVAL = StandardExternalFields.EXTERNAL_KEYS
+
         def _remover(result):
             if isinstance(result, Mapping):
                 for key, value in tuple(result.items()):  # mutating

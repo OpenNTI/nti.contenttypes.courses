@@ -596,7 +596,7 @@ class CourseExporter(object):
                             name, time.time() - current)
             except Exception as e:
                 logger.exception("Error while processing %s", name)
-                raise e
+                raise
             filer.default_bucket = None  # restore
         notify(CourseInstanceExportedEvent(course))
         for subinstance in get_course_subinstances(course):
