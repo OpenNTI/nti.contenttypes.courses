@@ -82,8 +82,8 @@ class _CourseContentBundleIO(ContentBundleIO):
 
     _ext_iface_upper_bound = ICourseContentPackageBundle
 
-    _excluded_in_ivars_ = getattr(ContentBundleIO, '_excluded_in_ivars_').union(
-        {'ntiid'}
+    _excluded_in_ivars_ = frozenset(
+        getattr(ContentBundleIO, '_excluded_in_ivars_').union({'ntiid'})
     )
 
     validate_packages = True
