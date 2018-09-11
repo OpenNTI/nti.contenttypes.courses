@@ -104,8 +104,6 @@ from nti.contenttypes.courses.utils import get_content_unit_courses
 
 from nti.dataserver.interfaces import IUser
 
-from nti.dataserver.users.interfaces import IWillDeleteEntityEvent
-
 from nti.intid.common import addIntId
 from nti.intid.common import removeIntId
 
@@ -277,7 +275,7 @@ def on_course_vendor_info_synced(course, unused_event=None):
     update_deny_open_enrollment(course)
 
 
-@component.adapter(IUser, IWillDeleteEntityEvent)
+@component.adapter(IUser, IObjectRemovedEvent)
 def on_user_removed(user, unused_event=None):
     logger.info('Removing enrollment records for %s', user.username)
     catalog = get_enrollment_catalog()
