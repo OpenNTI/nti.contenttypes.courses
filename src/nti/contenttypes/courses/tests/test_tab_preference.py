@@ -16,6 +16,8 @@ from hamcrest import has_entries
 from hamcrest import assert_that
 from hamcrest import has_items
 from hamcrest import instance_of
+from hamcrest import raises
+from hamcrest import calling
 
 from persistent.list import PersistentList
 from persistent.mapping import PersistentMapping
@@ -88,3 +90,17 @@ class TestCourseTabPreferences(CourseLayerTest):
 		assert_that(external, has_entries({'MimeType': 'application/vnd.nextthought.courses.coursetabpreferences',
 										   'names': has_entries({'1': 'a', '2': 'b'}),
 										   'order': contains('2', '3')}))
+
+	def test_update_order(self):
+		obj = CourseTabPreferences()
+		obj.update_order(['2', '3'])
+		assert_that(obj._order, instance_of(PersistentList))
+		assert_that(obj._order, contains('2', '3'))
+
+		obj.update_order(('2', '1'))
+		assert_that(obj._order, instance_of(PersistentList))
+		assert_that(obj._order, contains('2', '1'))
+
+		assert_that(calling(obj.update_order).with_args(False), raises(TypeError, pattern="order must be a tuple or a list."))
+		assert_that(calling(obj.update_order).with_args(None), raises(TypeError, pattern="order must be a tuple or a list."))
+		assert_that(calling(obj.update_order).with_args("abc"), raises(TypeError, pattern="order must be a tuple or a list."))

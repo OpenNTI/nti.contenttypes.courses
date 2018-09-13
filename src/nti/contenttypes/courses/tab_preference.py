@@ -38,8 +38,7 @@ class CourseTabPreferences(PersistentCreatedAndModifiedTimeObject):
         self._names.update(names)
 
     def update_order(self, order):
-        if not isinstance(order, list) and \
-            not isinstance(order, tuple):
+        if not isinstance(order, (tuple, list)):
             raise TypeError('order must be a tuple or a list.')
 
         self._order = PersistentList()
