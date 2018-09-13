@@ -37,16 +37,10 @@ class CourseTabPreferences(PersistentCreatedAndModifiedTimeObject):
         self._names = PersistentMapping()
         self._names.update(names)
 
-        self._order = PersistentList()
-        self._order.extend(self._names.keys())
-
     def update_order(self, order):
         if not isinstance(order, list) and \
             not isinstance(order, tuple):
             raise TypeError('order must be a tuple or a list.')
-
-        if len(order) != len(self._order) or set(order) != set(self._order):
-            raise ValueError("Incompatible order.")
 
         self._order = PersistentList()
         self._order.extend(order)
