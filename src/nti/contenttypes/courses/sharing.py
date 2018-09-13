@@ -335,6 +335,7 @@ def update_package_permissions(course, added=None, removed=None):
         enrollments = ICourseEnrollments(course)
         entry = ICourseCatalogEntry(course)
         logger.info('Updating package permissions for course (%s)', entry.ntiid)
+        # pylint: disable=too-many-function-args
         for principal in chain(enrollments.iter_principals(),
                                get_course_instructors(course),
                                get_course_editors(course)):
@@ -362,6 +363,7 @@ def _course_bundle_updated(course, event):
 @component.adapter(ICourseInstance, ICourseInstanceImportedEvent)
 def on_course_instance_imported(course, unused_event):
     enrollments = ICourseEnrollments(course)
+    # pylint: disable=too-many-function-args
     for principal in chain(enrollments.iter_principals(),
                            get_course_instructors(course),
                            get_course_editors(course)):
@@ -396,7 +398,7 @@ def get_default_sharing_scope(context):
                 scope = parts[1]
                 assert ICourseSubInstance.providedBy(context), \
                        "DefaultSharingScope referencing parent of top-level course."
-                # TODO Is this correct, or only correct for Public?
+                # Is this correct, or only correct for Public?
                 course = context.__parent__.__parent__
             result = course.SharingScopes[scope]
     return result

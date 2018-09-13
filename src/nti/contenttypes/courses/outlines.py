@@ -15,8 +15,6 @@ from functools import total_ordering
 
 from Acquisition import Explicit
 
-from Acquisition.interfaces import IAcquirer
-
 from ZODB.interfaces import IConnection
 
 from zope import component
@@ -24,9 +22,9 @@ from zope import interface
 
 from zope.annotation.interfaces import IAttributeAnnotatable
 
-from zope.container.contained import Contained
-from zope.container.contained import uncontained
 from zope.container.constraints import checkObject
+
+from zope.container.contained import Contained
 
 from zope.container.ordered import OrderedContainer  # this is persistent
 
@@ -50,10 +48,11 @@ from nti.publishing.mixins import CalendarPublishableMixin
 
 from nti.recorder.mixins import RecordableContainerMixin
 
-from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import AdaptingFieldProperty
 from nti.schema.fieldproperty import createFieldProperties
 from nti.schema.fieldproperty import createDirectFieldProperties
+
+from nti.schema.schema import SchemaConfigured
 
 # We eqhash based on identity here, since we do not
 # use these things as keys in maps and we are not
@@ -97,6 +96,7 @@ class _AbstractCourseOutlineNode(Contained,
             # add to connection to avoid NoYet errors
             # this may happen during course imports
             if connection is not None:
+                # pylint: disable=too-many-function-args
                 connection.add(node)
                 return True
         return False
