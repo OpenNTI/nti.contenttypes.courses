@@ -40,6 +40,7 @@
 						 .interfaces.ICourseInstance
 						 .interfaces.ICourseOutlineNode
 						 .interfaces.ICourseCatalogEntry
+						 .interfaces.ICourseTabPreferences
 						 .interfaces.IJoinCourseInvitation
 						 .interfaces.ICourseAwardedCredit
 						 .interfaces.ICourseAwardableCredit
@@ -47,7 +48,7 @@
 						 .interfaces.ICourseCatalogInstructorInfo
 						 .interfaces.ICourseSynchronizationResults
 						 .interfaces.ICourseInstanceAdministrativeRole"
-		modules=".administered .catalog .courses .credit .outlines .sharing ._synchronize .invitation" />
+		modules=".administered .catalog .courses .credit .outlines .sharing ._synchronize .invitation .tab_preference" />
 
 	<ext:registerAutoPackageIO
 		root_interfaces=".legacy_catalog.ICourseCatalogLegacyEntry
@@ -90,6 +91,10 @@
 			 for=".interfaces.ICourseInstanceVendorInfo"
 			 name="exporter" />
 
+	<adapter factory=".externalization._CourseTabPreferencesExternalizer"
+			 provides="nti.externalization.interfaces.IInternalObjectExternalizer"
+			 for=".interfaces.ICourseTabPreferences" />
+
 	<adapter factory=".internalization._CourseOutlineNodeUpdater"
 			 for=".interfaces.ICourseOutlineNode"
 			 provides="nti.externalization.interfaces.IInternalObjectUpdater" />
@@ -107,6 +112,10 @@
              provides="nti.externalization.interfaces.IInternalObjectUpdater" />
 
 	<adapter factory="._bundle._CourseContentBundleIO" />
+
+	<adapter factory=".internalization._CourseTabPreferencesUpdater"
+			 provides="nti.externalization.interfaces.IInternalObjectUpdater"
+			 for=".interfaces.ICourseTabPreferences" />
 
 	<!-- Decorators -->
 	<subscriber factory=".decorators._CourseOutlineNodeDecorator"
@@ -473,6 +482,9 @@
 	<utility factory=".importer.RoleInfoImporter" name="006:Role_Info" />
 	<!-- 100 -->
 	<utility factory=".importer.AssignmentPoliciesImporter" name="100:Assignment_Policies" />
+
+	<!-- Tab/string preferences -->
+	<adapter factory=".tab_preference._CourseTabPreferencesFactory" />
 
 	<!-- Grading -->
 	<include package=".grading" />

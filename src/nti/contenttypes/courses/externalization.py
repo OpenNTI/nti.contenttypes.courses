@@ -19,6 +19,7 @@ from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseTabPreferences
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
@@ -28,6 +29,8 @@ from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInst
 
 from nti.dataserver.interfaces import ILinkExternalHrefOnly
 from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
+
+from nti.externalization.datastructures import InterfaceObjectIO
 
 from nti.externalization.externalization import to_external_object
 
@@ -291,4 +294,17 @@ class _AdminLevelExternalizer(object):
         items = list(self.obj)
         if items:
             result[ITEMS] = items
+        return result
+
+
+@component.adapter(ICourseTabPreferences)
+@interface.implementer(IInternalObjectExternalizer)
+class _CourseTabPreferencesExternalizer(InterfaceObjectIO):
+
+    _ext_iface_upper_bound = ICourseTabPreferences
+
+    def toExternalObject(self, *unused_args, **kwargs):
+        result = super(_CourseTabPreferencesExternalizer, self).toExternalObject(**kwargs)
+        result['names'] = self._ext_self._names.data
+        result['order'] = self._ext_self._order
         return result

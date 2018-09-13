@@ -30,6 +30,7 @@ from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseTabPreferences
 from nti.contenttypes.courses.interfaces import ICourseAwardableCredit
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import IAnonymouslyAccessibleCourseInstance
@@ -336,3 +337,26 @@ class CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
 class _CourseAwardableCreditUpdater(CreditDefinitionNormalizationUpdater):
 
     _ext_iface_upper_bound = ICourseAwardableCredit
+
+
+@component.adapter(ICourseTabPreferences)
+@interface.implementer(IInternalObjectUpdater)
+class _CourseTabPreferencesUpdater(InterfaceObjectIO):
+
+    _ext_iface_upper_bound = ICourseTabPreferences
+
+    def updateFromExternalObject(self, parsed, *args, **kwargs):
+        """
+        Make sure we store these objects in the type we choose.
+        """
+        result = super(_CourseTabPreferencesUpdater, self).updateFromExternalObject(parsed, *args, **kwargs)
+
+        if 'names' in parsed:
+            self._ext_self.update_names(parsed['names'] or {})
+            result = True
+
+        if 'order' in parsed:
+            self._ext_self.update_order(parsed['order'] or ())
+            result = True
+
+        return result
