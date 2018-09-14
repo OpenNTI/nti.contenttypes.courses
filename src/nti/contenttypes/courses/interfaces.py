@@ -2002,7 +2002,7 @@ class ICourseImportMetadata(interface.Interface):
     last_import_time = interface.Attribute("The last date time this course was imported onto.")
 
 
-class ICourseTabPreferences(interface.Interface):
+class ICourseTabPreferences(IContained):
     """
     Contains course tab/string information.
     """

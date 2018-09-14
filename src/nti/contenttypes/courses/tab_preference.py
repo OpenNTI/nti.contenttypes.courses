@@ -16,6 +16,8 @@ from zope.annotation.factory import factory as an_factory
 from zope import component
 from zope import interface
 
+from zope.container.contained import Contained
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseTabPreferences
 
@@ -24,9 +26,11 @@ from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseTabPreferences)
-class CourseTabPreferences(PersistentCreatedAndModifiedTimeObject):
+class CourseTabPreferences(PersistentCreatedAndModifiedTimeObject, Contained):
 
     mimeType = mime_type = "application/vnd.nextthought.courses.coursetabpreferences"
+
+    creator = None
 
     def __init__(self):
         self._names = PersistentMapping()
@@ -45,5 +49,5 @@ class CourseTabPreferences(PersistentCreatedAndModifiedTimeObject):
         self._order.extend(order)
 
 
-COURSE_TAB_PREFERENCES_KEY = "CourseTabPreferences"
+COURSE_TAB_PREFERENCES_KEY = u"CourseTabPreferences"
 _CourseTabPreferencesFactory = an_factory(CourseTabPreferences, key=COURSE_TAB_PREFERENCES_KEY)

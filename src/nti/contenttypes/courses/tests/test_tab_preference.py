@@ -27,6 +27,10 @@ from nti.externalization.externalization import to_external_object
 from nti.externalization.internalization import find_factory_for
 from nti.externalization.internalization import update_from_external_object
 
+from nti.contenttypes.courses.courses import CourseInstance
+
+from nti.contenttypes.courses.interfaces import ICourseTabPreferences
+
 from nti.contenttypes.courses.tab_preference import CourseTabPreferences
 
 from nti.contenttypes.courses.tests import CourseLayerTest
@@ -104,3 +108,10 @@ class TestCourseTabPreferences(CourseLayerTest):
 		assert_that(calling(obj.update_order).with_args(False), raises(TypeError, pattern="order must be a tuple or a list."))
 		assert_that(calling(obj.update_order).with_args(None), raises(TypeError, pattern="order must be a tuple or a list."))
 		assert_that(calling(obj.update_order).with_args("abc"), raises(TypeError, pattern="order must be a tuple or a list."))
+
+	def test_annotation(self):
+		course = CourseInstance()
+		obj = ICourseTabPreferences(course)
+		assert_that(obj, instance_of(CourseTabPreferences))
+		assert_that(obj.__name__, is_("CourseTabPreferences"))
+		assert_that(obj.__parent__, is_(course))
