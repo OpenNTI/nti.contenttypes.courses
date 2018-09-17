@@ -2007,6 +2007,15 @@ class ICourseTabPreferences(IContained):
     Contains course tab/string information.
     """
 
+    def update_names(names):
+        pass
+
+    def update_order(order):
+        pass
+
+    def clear():
+        pass
+
 
 # removal
 

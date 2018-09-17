@@ -43,8 +43,9 @@ from nti.dataserver.authorization_acl import has_permission
 
 from nti.dataserver.interfaces import IUser
 
-from nti.schema.field import SchemaConfigured
 from nti.schema.fieldproperty import createDirectFieldProperties
+
+from nti.schema.schema import SchemaConfigured
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -68,6 +69,7 @@ class IterableAdminCourses(object):
         for entry in catalog.iterCatalogEntries():
             instance = ICourseInstance(entry)
             instructors = instance.instructors or ()
+            # pylint: disable=unsupported-membership-test
             if     principal in instructors \
                 or principal in get_course_editors(instance):
                 yield instance
@@ -93,7 +95,7 @@ class CourseInstanceAdministrativeRole(SchemaConfigured,
         AbstractInstanceWrapper.__init__(self, CourseInstance)
 
 
-def get_course_admin_role(course, user, is_admin=False):
+def get_course_admin_role(course, user, is_admin=False):  # pylint: disable=redefined-outer-name
     """
     Given a user and course, return the `ICourseInstanceAdministrativeRole` that
     maps to that user's administrative capability.
