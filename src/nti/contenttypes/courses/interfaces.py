@@ -35,7 +35,6 @@ from zope.container.interfaces import IContentContainer
 from zope.container.interfaces import IOrderedContainer
 from zope.container.interfaces import IContainerNamesContainer
 
-from zope.interface.common.mapping import IMapping
 from zope.interface.common.mapping import IEnumerableMapping
 from zope.interface.common.mapping import IExtendedWriteMapping
 
