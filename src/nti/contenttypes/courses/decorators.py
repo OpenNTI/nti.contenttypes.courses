@@ -69,7 +69,7 @@ class _InstructorLegacyInfoDecorator(Singleton):
 class _CourseInstanceSharingScopeDecorator(Singleton):
 
     def decorateExternalObject(self, unused_original, external):
-        # XXX: For BWC w/ clients
+        # Warning !!! For BWC w/ clients
         external[MIMETYPE] = 'application/vnd.nextthought.community'
 
 
