@@ -8,11 +8,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-import six
-
 from collections import Mapping
 
 from datetime import datetime
+
+import six
 
 from zope import component
 from zope import interface
@@ -20,6 +20,8 @@ from zope import interface
 from zope.annotation.factory import factory as an_factory
 
 from zope.traversing.api import traverse
+
+from nti.common.iterables import is_nonstr_iterable
 
 from nti.contenttypes.completion.interfaces import ICompletionContext
 
@@ -89,7 +91,7 @@ def _keyword_gatherer(data):
     result = set()
     if isinstance(data, six.string_types):
         result.update(data.split())
-    elif isinstance(data, (list, tuple)):
+    elif is_nonstr_iterable(data):
         for value in data:
             result.update(_keyword_gatherer(value))
     elif isinstance(data, Mapping):
@@ -106,7 +108,7 @@ def _invitation_gatherer(data):
     result = set()
     if isinstance(data, six.string_types):
         result.update(data.split())
-    elif isinstance(data, (list, tuple)):
+    elif is_nonstr_iterable(data):
         for value in data:
             if isinstance(value, six.string_types):
                 result.add(value)
