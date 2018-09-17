@@ -222,12 +222,13 @@ class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
         if not key:
             raise ValueError("The entry has no NTIID or name", entry)
 
-        __traceback_info__ = key, entry
+        __traceback_info__ = key, entry  # pylint: disable=unused-variable
         if not event:
             l = self._BTreeContainer__len
             try:
                 entry = self._SampleContainer__data[key]
                 del self._SampleContainer__data[key]
+                # pylint: disable=no-member
                 l.change(-1)
                 entry.__parent__ = None
             except KeyError:
@@ -304,7 +305,7 @@ class CourseCatalogEntry(CatalogFamily,
     __name__ = alias('ntiid')
     __parent__ = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # pylint: disable=super-init-not-called
         CatalogFamily.__init__(self, *args, **kwargs)
         CreatedAndModifiedTimeMixin.__init__(self)
 
@@ -336,7 +337,7 @@ class CourseCatalogEntry(CatalogFamily,
         them. This should simplify things for the clients.
         """
         ours = super(CourseCatalogEntry, self).PlatformPresentationResources
-        if ours:
+        if ours: # pylint: disable=using-constant-test 
             return ours
 
         # Ok, do we have a course, and if so, does it have
@@ -375,6 +376,7 @@ class CourseCatalogEntry(CatalogFamily,
     @readproperty
     def InstructorsSignature(self):
         sig_lines = []
+        # pylint: disable=no-member
         for inst in self.Instructors or ():
             sig_lines.append(inst.Name)
             if inst.JobTitle:
@@ -438,6 +440,7 @@ class CourseCatalogFolder(_AbstractCourseCatalogMixin,
             if course:
                 entry = self._record(entries, course)
                 if entry is not None:
+                    # pylint: disable=no-member
                     for subinstance in course.SubInstances.values():
                         self._record(entries, subinstance)
                 # We don't need to go any deeper than two levels
@@ -496,6 +499,7 @@ def _clear_catalog_cache_when_course_updated(course, event):
     catalogs.update(component.getAllUtilitiesRegisteredFor(ICourseCatalog))
     catalogs.discard(None)
     for catalog in catalogs:
+        # pylint: disable=protected-access
         try:
             catalog._get_all_my_entries.invalidate(catalog)
             logger.info("Invalidated catalog entry cache (%s)", catalog)
