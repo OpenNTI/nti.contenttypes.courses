@@ -9,10 +9,13 @@
 	<include package="zope.component" />
 
 	<!-- Adapters -->
-	<adapter factory=".model._discussions_for_course" />	
+	<adapter factory=".model.discussions_for_course" />	
 
 	<adapter factory=".adapters._course_discussion_to_course" />
 	<adapter factory=".adapters._course_discussions_to_course" />
+
+	<!-- subscribers -->
+	<subscriber handler=".subscribers._on_course_removed" />
 			 
 	<!-- ACL -->
 	<adapter factory=".acl.CourseDiscussionACLProvider" />

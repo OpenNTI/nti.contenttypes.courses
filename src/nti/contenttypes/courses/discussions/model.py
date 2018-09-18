@@ -102,7 +102,7 @@ class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseDiscussions)
-def _discussions_for_course(course, create=True):
+def discussions_for_course(course, create=True):
     result = None
     KEY = u'CourseDiscussions'
     annotations = IAnnotations(course)
@@ -120,3 +120,4 @@ def _discussions_for_course(course, create=True):
             # pylint: disable=too-many-function-args
             IConnection(course).add(result)
     return result
+_discussions_for_course = discussions_for_course
