@@ -5,8 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-# disable: accessing protected members, too many methods
-# pylint: disable=W0212,R0904
+# pylint: disable=protected-access,too-many-public-methods,arguments-differ
 
 from hamcrest import is_
 from hamcrest import none
@@ -18,6 +17,7 @@ from hamcrest import has_property
 from nti.testing.matchers import verifiably_provides
 
 import os
+
 import simplejson
 
 from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussion
