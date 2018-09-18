@@ -96,9 +96,9 @@ from nti.intid.common import addIntId
 
 from nti.schema.eqhash import EqHash
 
-from nti.schema.field import SchemaConfigured
-
 from nti.schema.fieldproperty import createDirectFieldProperties
+
+from nti.schema.schema import SchemaConfigured
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -177,6 +177,7 @@ class _GenericFolderSynchronizer(object):
 
         # Create anything the folder is missing if we have a factory for it
         for bucket_child_name in child_buckets:
+            # pylint: disable=unused-variable
             __traceback_info__ = folder, bucket, bucket_child_name
             child_bucket = child_buckets[bucket_child_name]
             factory = self._get_factory_for(child_bucket)
@@ -224,6 +225,7 @@ class _ContentCourseSynchronizer(object):
         pass
 
     def synchronize(self, course, bucket, force=False, **kwargs):
+        # pylint: disable=unused-variable
         __traceback_info__ = course, bucket
         entry = ICourseCatalogEntry(course)
 
@@ -260,6 +262,7 @@ class _ContentCourseSynchronizer(object):
             added_packages = new_packages - old_packages
             removed_packages = old_packages - new_packages
             notify(CourseBundleWillUpdateEvent(course, added_packages, removed_packages))
+            # pylint: disable=attribute-defined-outside-init
             sync_results.ContentBundleUpdated = True
 
         if created_bundle:
@@ -353,6 +356,7 @@ class _ContentCourseSynchronizer(object):
         sync_results = _get_course_sync_results(course, sync_results)
         scopes = update_sharing_scopes_friendly_names(course)
         if scopes:
+            # pylint: disable=attribute-defined-outside-init
             sync_results.SharingScopesUpdated = True
 
     @classmethod
@@ -361,7 +365,7 @@ class _ContentCourseSynchronizer(object):
         vendor_json_key = bucket.getChildNamed(VENDOR_INFO_NAME)
         vendor_info = ICourseInstanceVendorInfo(course)
         not_empty = bool(vendor_info)
-
+        # pylint: disable=attribute-defined-outside-init,too-many-function-args
         if not vendor_json_key:
             vendor_info.clear()
             vendor_info.createdTime = 0
@@ -395,6 +399,7 @@ class _ContentCourseSynchronizer(object):
                     outline_xml_node = u'course'
                     break
 
+        # pylint: disable=attribute-defined-outside-init,protected-access
         # We actually want to delete anything it has
         # in case it's a subinstance so the parent can come through again
         if not outline_xml_key:
@@ -443,6 +448,7 @@ class _ContentCourseSynchronizer(object):
                                                     catalog_json_key,
                                                     bucket=bucket)
         if modified:
+            # pylint: disable=attribute-defined-outside-init
             notify(CatalogEntrySynchronized(catalog_entry))
             sync_results.CatalogEntryUpdated = True
 
@@ -452,6 +458,7 @@ class _ContentCourseSynchronizer(object):
         role_json_key = bucket.getChildNamed(ROLE_INFO_NAME)
         if role_json_key:
             if fill_roles_from_key(course, role_json_key):
+                # pylint: disable=attribute-defined-outside-init
                 notify(CourseRolesSynchronized(course))
                 sync_results.InstructorRolesUpdated = True
 
@@ -459,6 +466,7 @@ class _ContentCourseSynchronizer(object):
     def update_assignment_policies(cls, course, bucket, sync_results=None):
         sync_results = _get_course_sync_results(course, sync_results)
         key = bucket.getChildNamed(ASSIGNMENT_DATES_NAME)
+        # pylint: disable=attribute-defined-outside-init
         if key is not None:
             if fill_asg_from_key(course, key):
                 sync_results.AssignmentPoliciesUpdated = True
@@ -471,6 +479,7 @@ class _ContentCourseSynchronizer(object):
         key = bucket.getChildNamed(EVALUATION_INDEX)
         if key is not None:
             if fill_evaluations_from_key(course, key):
+                # pylint: disable=attribute-defined-outside-init
                 sync_results.EvaluationsUpdated = True
 
     @classmethod
@@ -480,6 +489,7 @@ class _ContentCourseSynchronizer(object):
         key = bucket.getChildNamed(GRADING_POLICY_NAME)
         if      key is not None \
             and fill_grading_policy_from_key(course, key):
+            # pylint: disable=attribute-defined-outside-init
             sync_results.GradingPolicyUpdated = True
 
     @classmethod
@@ -507,6 +517,7 @@ class _ContentCourseSynchronizer(object):
         key = bucket.getChildNamed(DISCUSSION_FOLDER_NAME)
         if key is not None and IDelimitedHierarchyBucket.providedBy(key):
             result = parse_discussions(course, key)
+            # pylint: disable=attribute-defined-outside-init
             sync_results.CourseDiscussionsUpdated = result
 
     @classmethod
@@ -554,6 +565,7 @@ class _ContentCourseSubInstanceSynchronizer(object):
         pass
 
     def synchronize(self, subcourse, bucket, force=False, **kwargs):
+        # pylint: disable=unused-variable
         __traceback_info__ = subcourse, bucket
 
         course_sync_results = _get_course_sync_results(subcourse, **kwargs)
