@@ -13,6 +13,8 @@ from nti.coremetadata.schema import ExtendedCompoundModeledContentBody
 
 from nti.schema.field import ValidText
 
+logger = __import__('logging').getLogger(__name__)
+
 
 def discussionModeledContentBodyTypes():
     result = legacyModeledContentBodyTypes()

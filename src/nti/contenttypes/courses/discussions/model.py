@@ -10,6 +10,10 @@ from __future__ import absolute_import
 
 from functools import total_ordering
 
+from ZODB.interfaces import IConnection
+
+from ZODB.POSException import ConnectionStateError
+
 from zope import component
 from zope import interface
 
@@ -18,10 +22,6 @@ from zope.annotation.interfaces import IAnnotations
 from zope.container.contained import Contained
 
 from zope.mimetype.interfaces import IContentTypeAware
-
-from ZODB.interfaces import IConnection
-
-from ZODB.POSException import ConnectionStateError
 
 from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
@@ -36,9 +36,9 @@ from nti.dublincore.datastructures import PersistentCreatedModDateTrackingObject
 
 from nti.schema.eqhash import EqHash
 
-from nti.schema.field import SchemaConfigured
-
 from nti.schema.fieldproperty import createDirectFieldProperties
+
+from nti.schema.schema import SchemaConfigured
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -99,9 +99,6 @@ class DefaultCourseDiscussions(CaseInsensitiveCheckingLastModifiedBTreeContainer
     __name__ = None
     __parent__ = None
 
-    def __init__(self):
-        super(DefaultCourseDiscussions, self).__init__()
-
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseDiscussions)
@@ -120,5 +117,6 @@ def _discussions_for_course(course, create=True):
             # Deterministically add to our course db.
             # Sectioned courses would give us multiple
             # db error for some reason.
+            # pylint: disable=too-many-function-args
             IConnection(course).add(result)
     return result
