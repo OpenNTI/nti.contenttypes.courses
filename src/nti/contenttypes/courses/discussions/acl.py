@@ -52,6 +52,7 @@ class CourseDiscussionACLProvider(object):
 
         course = ICourseInstance(self.context, None)
         if course is not None:
+            # pylint: disable=not-an-iterable
             for i in course.instructors or ():
                 aces.append(ace_allowing(i, ACT_READ, type(self)))
 

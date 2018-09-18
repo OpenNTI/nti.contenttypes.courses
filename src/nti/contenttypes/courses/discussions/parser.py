@@ -75,6 +75,7 @@ def load_discussion(name, source, discussions, path, discussion=None):
     else:
         new_discussion.id = json['id']
 
+    # pylint: disable=protected-access
     if discussion is None:
         lifecycleevent.created(new_discussion)
         discussions[name] = new_discussion
@@ -86,6 +87,7 @@ def load_discussion(name, source, discussions, path, discussion=None):
 
 
 def parse_discussions(course, bucket, force=False):
+    # pylint: disable=unused-variable
     __traceback_info__ = bucket, course
     discussions = ICourseDiscussions(course)
 

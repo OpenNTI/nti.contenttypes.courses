@@ -9,6 +9,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import os
+
 import six
 from six.moves import urllib_parse
 
@@ -127,6 +128,7 @@ def get_discussion_for_path(path, context):
 
 
 def get_topic_key(discussion):
+    # pylint: disable=unused-variable
     __traceback_info__ = discussion
     if is_nti_course_bundle(discussion):
         name = get_discussion_path(discussion)
@@ -185,14 +187,16 @@ def get_forum_scopes(forum):
     course = find_interface(forum, ICourseInstance, strict=False)
     m = {v.NTIID: k for k, v in course.SharingScopes.items()} if course else {}
     if hasattr(forum, '__entities__'):
-        logger.warn("Falling back to __entities__ based scope resolution for %s", getattr(forum, 'NTIID', forum))
+        logger.warning("Falling back to __entities__ based scope resolution for %s",
+                       getattr(forum, 'NTIID', forum))
         result = {m[k] for k, v in m.items() if k in forum.__entities__}
     elif hasattr(forum, '__acl__'):
-        logger.warn("Falling back to __acl__ based scope resolution for %s", getattr(forum, 'NTIID', forum))
+        logger.warning("Falling back to __acl__ based scope resolution for %s",
+                       getattr(forum, 'NTIID', forum))
         result = set()
         for ace in forum.__acl__:
-            if      IPrincipal(ace.actor).id in m \
-                and ace.action == ACE_ACT_ALLOW:
+            k = IPrincipal(ace.actor).id
+            if k in m and ace.action == ACE_ACT_ALLOW:
                 result.add(m[k])
     return result or ()
 
@@ -211,7 +215,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
     if record is None:
         record = get_user_or_instructor_enrollment_record(context, user)
     if record is None:
-        logger.warn("No enrollment record for user %s under %s", user, context)
+        logger.warning("No enrollment record for user %s under %s", user, context)
         return None
 
     # enrollment scope. When scope is equals to 'All' it means user is an
@@ -221,7 +225,7 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
     # get course pointed by the discussion ref
     course = get_course_for_discussion(item, context=record.CourseInstance)
     if course is None:
-        logger.warn("No course found for discussion %s", item)
+        logger.warning("No course found for discussion %s", item)
         return None
 
     # if course is a subinstance, make sure we are enrolled in it and
@@ -245,8 +249,8 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
     if     (not scope) \
         or (not scopes) \
         or (scope != ES_ALL and ES_ALL not in scopes and scope not in scopes):
-        logger.warn("User scope %s did not match implied scopes %s",
-                    scope, scopes)
+        logger.warning("User scope %s did not match implied scopes %s",
+                       scope, scopes)
         return None
     else:
         topic = None
