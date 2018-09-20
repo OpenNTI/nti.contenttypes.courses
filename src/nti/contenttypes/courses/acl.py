@@ -257,6 +257,7 @@ class CourseBoardACLProvider(CommunityBoardACLProvider):
         super(CourseBoardACLProvider, self)._extend_acl_after_creator_and_sharing(acl)
         course = find_interface(self.context, ICourseInstance, strict=False)
         if course is None:
+            # pylint: disable=unused-variable
             __traceback_info__ = self.context
             raise TypeError("Not enough context information to get all parents")
 
@@ -308,7 +309,7 @@ class AbstractCourseForumACLProvider(_ACLCommunityForumACLProvider):
 
         course = find_interface(self.context, ICourseInstance)
         if course is None:
-            return #Legacy community based courses
+            return  # Legacy community based courses
 
         for inst in get_course_instructors(course):
             self._adjust_acl_for_inst(acl, inst)
@@ -317,6 +318,7 @@ class AbstractCourseForumACLProvider(_ACLCommunityForumACLProvider):
         # Make sure content admins behave like course editors
         self._adjust_acl_for_editor(acl, ROLE_CONTENT_ADMIN)
         self._extend_with_admin_privs(acl)
+
 
 @component.adapter(ICourseInstanceForum)
 @interface.implementer(IACLProvider)
@@ -358,10 +360,10 @@ class CourseScopeForumACLProvider(AbstractCourseForumACLProvider):
         return get_forum_scopes(self.context)
 
     def _adjust_acl_for_editor(self, acl, editor):
-         acl.append(ace_allowing(editor, (ACT_READ, ACT_CREATE, ), type(self)))
+        acl.append(ace_allowing(editor, (ACT_READ, ACT_CREATE, ), type(self)))
 
     def _adjust_acl_for_inst(self, acl, inst):
-         acl.append(ace_allowing(inst, (ACT_READ, ACT_CREATE, ), type(self)))
+        acl.append(ace_allowing(inst, (ACT_READ, ACT_CREATE, ), type(self)))
 
 
 @component.adapter(IRenderableContentPackage)
@@ -385,10 +387,10 @@ class RenderableContentPackageSupplementalACLProvider(object):
         courses = get_content_unit_courses(package)
         for course in courses or ():
             course_tree = get_course_hierarchy(course)
-            for course in course_tree or ():
-                course_packages = get_course_packages(course)
+            for instance in course_tree or ():
+                course_packages = get_course_packages(instance)
                 if package in course_packages:
-                    result.add(course)
+                    result.add(instance)
         return result
 
     @Lazy
@@ -399,7 +401,7 @@ class RenderableContentPackageSupplementalACLProvider(object):
         for course in courses:
             if is_published:
                 # If published, we want the whole ACL
-                # XXX: Eliminate dupes?
+                # Shoudl we eliminate dupes?
                 course_acl = IACLProvider(course).__acl__
                 result.extend(course_acl)
             else:
