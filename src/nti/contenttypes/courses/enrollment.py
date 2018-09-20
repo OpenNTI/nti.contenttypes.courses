@@ -10,11 +10,20 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-import six
 import sys
 import random
 from collections import Mapping
 from functools import total_ordering
+
+import BTrees
+
+from persistent import Persistent
+
+import six
+
+from zc.intid.interfaces import IBeforeIdRemovedEvent
+
+from ZODB.interfaces import IConnection
 
 from zope import component
 from zope import interface
@@ -43,12 +52,6 @@ from zope.mimetype.interfaces import IContentTypeAware
 from zope.security.interfaces import IPrincipal
 from zope.security.management import endInteraction
 from zope.security.management import restoreInteraction
-
-from ZODB.interfaces import IConnection
-
-import BTrees
-
-from persistent import Persistent
 
 from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeContainer
 
@@ -81,6 +84,7 @@ from nti.dataserver.users.users import User
 from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
 
 from nti.externalization.persistence import NoPickle
+
 from nti.externalization.representation import WithRepr
 
 from nti.property.property import alias
@@ -100,6 +104,7 @@ ICourseInstanceEnrollmentRecordContainer = ICourseInstanceEnrollmentRecordContai
 
 
 def save_in_container(container, key, value, event=False):
+    # pylint: disable=protected-access,too-many-function-args
     if event:
         container[key] = value
     else:
@@ -116,6 +121,7 @@ def save_in_container(container, key, value, event=False):
 
 
 def remove_from_container(container, key, event=False):
+    # pylint: disable=protected-access
     if event:
         del container[key]
     else:
@@ -143,9 +149,10 @@ _DefaultCourseInstanceEnrollmentStorageFactory = an_factory(DefaultCourseInstanc
 @component.adapter(ICourseInstance)
 @interface.implementer(IDefaultCourseInstanceEnrollmentStorage)
 def DefaultCourseInstanceEnrollmentStorageFactory(course):
+    # pylint: disable=protected-access,too-many-function-args
     result = _DefaultCourseInstanceEnrollmentStorageFactory(course)
     if result._p_jar is None:
-        # XXX despite the write-time code below that attempts to determine
+        # Despite the write-time code below that attempts to determine
         # a certain connection for this object, we sometimes still get
         # invalid obj ref; it's not clear where we're still reachable from
         # (the intid catalog?)
@@ -176,7 +183,7 @@ class CourseEnrollmentList(Persistent):
         self._set_data = BTrees.OOBTree.TreeSet()
 
     @Lazy
-    def _set_data(self):  # pylint:disable=I0011,E0202
+    def _set_data(self):  # pylint: disable=method-hidden
         # We used to be a subclass of PersistentList, which
         # stores its contents in a value called `data`, which is-a
         # list object directly holding references to the CourseEnrollmentRecord
@@ -186,6 +193,7 @@ class CourseEnrollmentList(Persistent):
         # few of them, and they are likely to be written in many of the scenarios
         # that they are read
         data = BTrees.OOBTree.TreeSet(IKeyReference(x) for x in data_list)
+        # pylint: disable=attribute-defined-outside-init
         self._p_changed = True
         return data
 
@@ -202,9 +210,9 @@ class CourseEnrollmentList(Persistent):
         except NotYet:
             # The record MUST be in a connection at this time
             # so we can get an IKeyReference to it
+            # pylint: disable=too-many-function-args
             IConnection(self).add(record)  # may raise TypeError/AttributeError
             ref = IKeyReference(record)
-
         return self._set_data.add(ref)
 
     def remove(self, record):
@@ -229,6 +237,7 @@ class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedB
             jar = IConnection(principal, None)
             if jar is not None:
                 # store with the principal, not with us
+                # pylint: disable=too-many-function-args
                 jar.add(result)
             # CS/JZ 20141026
             # We manually add the item and fire the ObjectAddedEvent to
@@ -245,6 +254,7 @@ class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedB
             if self._p_jar is None:
                 jar = IConnection(self, jar)
                 if jar is not None:
+                    # pylint: disable=too-many-function-args
                     jar.add(self)
             return result
 
@@ -279,6 +289,7 @@ def global_course_catalog_enrollment_storage(unused_catalog):
         # principal's database), so give it a home
         jar = IConnection(storage, None)
         if jar is not None:
+            # pylint: disable=too-many-function-args
             jar.add(storage)
         return storage
 
@@ -364,6 +375,7 @@ class DefaultCourseEnrollmentManager(object):
 
     def _enrollments_for_id(self, principal_id, principal):
         storage = self._cat_enrollment_storage
+        # pylint: disable=no-member
         return storage.enrollments_for_id(principal_id, principal)
 
     def _new_enrollment_record(self, principal, scope):
@@ -371,6 +383,7 @@ class DefaultCourseEnrollmentManager(object):
 
     def enroll(self, principal, scope=ES_PUBLIC, context=None):
         principal_id = IPrincipal(principal).id
+        # pylint: disable=unsupported-membership-test
         if principal_id in self._inst_enrollment_storage:
             # DO NOT readCurrent of this, until we determine that we won't actually
             # change it; if we are going to change it, then the normal conflict
@@ -383,8 +396,8 @@ class DefaultCourseEnrollmentManager(object):
         user = User.get_user(principal_id)
         if is_instructor_in_hierarchy(self.context, user):
             entry_ntiid = ICourseCatalogEntry(self.context).ntiid
-            logger.warn('Cannot enroll instructor in course (%s) (%s)',
-                        principal_id, entry_ntiid)
+            logger.warning('Cannot enroll instructor in course (%s) (%s)',
+                           principal_id, entry_ntiid)
             raise InstructorEnrolledException()
 
         record = self._new_enrollment_record(principal, scope)
@@ -405,6 +418,7 @@ class DefaultCourseEnrollmentManager(object):
         return record
 
     def _drop_record_for_principal_id(self, record, principal_id):
+        # pylint: disable=no-member
         enrollments = self._cat_enrollment_storage.get(principal_id, ())
         if record in enrollments:
             enrollments.remove(record)
@@ -413,7 +427,7 @@ class DefaultCourseEnrollmentManager(object):
             # principal, but we have it in the course instance storage.
             # This is probably that migration problem, so look up the tree to see
             # if we can find the record.
-            # FIXME: Unittests for this code path
+            # Unittests for this code path
             for site_manager in ro.ro(component.getSiteManager()):
                 storage = _global_course_catalog_storage(site_manager)
                 if storage is not None and principal_id in storage:
@@ -426,6 +440,7 @@ class DefaultCourseEnrollmentManager(object):
                         break
 
     def drop(self, principal):
+        # pylint: disable=unsupported-membership-test,unsubscriptable-object
         principal_id = IPrincipal(principal).id
         if principal_id not in self._inst_enrollment_storage_rc:
             # Note that we always begin with a readCurrent of this,
@@ -444,6 +459,7 @@ class DefaultCourseEnrollmentManager(object):
         return record
 
     def drop_all(self):
+        # pylint: disable=unsubscriptable-object,unsupported-delete-operation
         storage = self._inst_enrollment_storage_rc
         principal_ids = list(storage)
         # watch the order; see drop
@@ -509,6 +525,7 @@ def check_enrollment_mapped(context):
             # we better get a mapping
             assert isinstance(data, Mapping)
             # validate section and seat count
+            # pylint: disable=unsupported-membership-test
             for sec_name, seat_count in data.items():
                 if sec_name not in course.SubInstances:
                     raise KeyError("Unknown section", sec_name)
@@ -561,6 +578,7 @@ def _find_mapped_course_for_scope(course, scope):
         for section_name in section_data.keys():
             # fail loudly rather than silently enroll in the wrong place
             section = course.SubInstances[section_name]
+            # pylint: disable=too-many-function-args
             enrollment_count = ICourseEnrollments(section).count_enrollments()
             items.append(SectionSeat(section_name, enrollment_count))
         # sort by lowest section name, seat count
@@ -577,7 +595,8 @@ def _find_mapped_course_for_scope(course, scope):
         index = random.randint(0, len(items) - 1)
         section_name = items[index].section_name
         section = course.SubInstances[section_name]
-        logger.warn("Seat count exceed for section %s", section_name)
+        logger.warning("Seat count exceed for section %s",
+                       section_name)
         return section
 
     return course
@@ -666,21 +685,26 @@ class DefaultCourseEnrollments(object):
         return IDefaultCourseInstanceEnrollmentStorage(self.context)
 
     def iter_principals(self):
+        # pylint: disable=no-member
         return self._inst_enrollment_storage.keys()
 
     def iter_enrollments(self):
+        # pylint: disable=no-member
         return self._inst_enrollment_storage.values()
 
     def count_enrollments(self):
+        # pylint: disable=no-member
         # Only return enrollment record count with non-deleted principals.
         return len([x for x in self._inst_enrollment_storage.values()
                     if x.Principal is not None])
 
     def is_principal_enrolled(self, principal):
         principal_id = IPrincipal(principal).id
+        # pylint: disable=unsupported-membership-test
         return principal_id in self._inst_enrollment_storage
 
     def get_enrollment_for_principal(self, principal):
+        # pylint: disable=no-member
         principal_id = IPrincipal(principal).id
         return self._inst_enrollment_storage.get(principal_id)
 
@@ -702,6 +726,7 @@ class DefaultCourseEnrollments(object):
 
     @cachedIn('_v_count_scope_enrollments')
     def count_scope_enrollments(self, scope):
+        # pylint: disable=no-member
         instructor_usernames = {x.id.lower() for x in self.context.instructors}
         # This might not be very performant
         def include_record(record):
@@ -796,9 +821,9 @@ class DefaultPrincipalEnrollments(object):
                     try:
                         ICourseInstance(record)
                     except TypeError:
-                        logger.warn("Course for enrollment %r of user %s in storage %s missing. "
-                                    "Database consistency issue.",
-                                    record, principal_id, storage)
+                        logger.warning("Course for enrollment %r of user %s in storage %s missing. "
+                                       "Database consistency issue.",
+                                       record, principal_id, storage)
                     else:
                         yield record
 
@@ -899,17 +924,22 @@ def remove_user_enroll_data(principal):
     logger.info("Removing enrollment records for %s", username)
     catalog = get_enrollment_catalog()
     intids = component.getUtility(IIntIds)
-    query = {IX_USERNAME: {'any_of': (username,)}}
+    query = {
+        IX_USERNAME: {'any_of': (username,)}
+    }
     for uid in tuple(catalog.apply(query) or ()):  # mutating
         context = intids.queryObject(uid)
         if ICourseInstanceEnrollmentRecord.providedBy(context):
             course = ICourseInstance(context, None)
             manager = ICourseEnrollmentManager(course, None)
             if manager is not None:
+                # pylint: disable=too-many-function-args
                 manager.drop(principal)
 
 
-def on_principal_deletion_unenroll(principal, _):
+@component.adapter(IUser, IBeforeIdRemovedEvent)
+@component.adapter(IPrincipal, IBeforeIdRemovedEvent)
+def on_principal_deletion_unenroll(principal, unused_event=None):
     endInteraction()
     try:
         remove_user_enroll_data(principal)
@@ -917,9 +947,11 @@ def on_principal_deletion_unenroll(principal, _):
         restoreInteraction()
 
 
+@component.adapter(ICourseInstance, IBeforeIdRemovedEvent)
 def on_course_deletion_unenroll(course, event):
+    # pylint: disable=unused-variable
     __traceback_info__ = course, event
-
+    # pylint: disable=too-many-function-args
     manager = ICourseEnrollmentManager(course)
     dropped_records = manager.drop_all()
     logger.info("Dropped %d enrollment records on deletion of %r",
