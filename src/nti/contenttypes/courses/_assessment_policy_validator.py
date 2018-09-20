@@ -53,6 +53,7 @@ class DefaultAssessmentPolicyValidator(object):
         auto_grade = policy.get('auto_grade')
         if not auto_grade:
             return
+
         total_points = auto_grade.get('total_points')
         if total_points is not None:
             try:
@@ -64,8 +65,8 @@ class DefaultAssessmentPolicyValidator(object):
         disable = auto_grade.get('disable')
         if disable is not None:
             if not (is_true(disable) or is_false(disable)):
-                msg = "Invalid disable flag in policy for %s (%s)"
-                raise ValueError(msg % (ntiid, total_points))
+                msg = "Invalid disable flag in policy for %s"
+                raise ValueError(msg % (ntiid,))
             elif is_true(disable):
                 auto_grade['disable'] = True
             elif is_false(disable):
@@ -105,12 +106,47 @@ class DefaultAssessmentPolicyValidator(object):
             logger.warn("Don't know how to validate policy %s in assignment %s",
                         name, ntiid)
 
+    def validate_submissions(self, auto_grade, policy, assignment, ntiid):
+        if assignment is None:
+            return
+        max_submissions = policy.get('max_submissions')
+        if max_submissions is not None:
+            try:
+                max_submissions = int(max_submissions)
+                assert max_submissions >= 0
+            except (AssertionError, TypeError, ValueError):
+                msg = "Invalid max_submissions in policy for %s (%s)"
+                raise ValueError(msg % (ntiid, max_submissions))
+
+        if not max_submissions or max_submissions == 1:
+            # No need to validate anything else
+            return
+
+        submission_priority = policy.get('submission_priority')
+        if submission_priority:
+            submission_priority = submission_priority.lower()
+            if submission_priority not in ('most_recent', 'highest_grade'):
+                msg = "Invalid submission_priority in policy for %s (%s)"
+                raise ValueError(msg % (ntiid, submission_priority))
+
+            if      submission_priority == 'highest_grade' \
+                and auto_grade is not None \
+                and ('disable' not in auto_grade or not auto_grade['disable']):
+                # Cannot take the highest graded submission without autograde
+                msg = "Invalid submission_priority for non auto-graded policy for %s (%s)"
+                raise ValueError(msg % (ntiid, submission_priority))
+        else:
+            # Default to 'most_recent'; we could do something based on
+            # auto-grade here too.
+            policy['submission_priority'] = 'most_recent'
+
     def validate(self, ntiid, policy):
         if not is_valid_ntiid_string(ntiid):
             return  # pragma no cover
         assignment = check_assessment(ntiid)
         auto_grade = self.valid_auto_grade(policy, assignment, ntiid)
         self.validate_pointbased_policy(auto_grade, assignment, ntiid)
+        self.validate_submissions(auto_grade, policy, assignment, ntiid)
 DefaultAssignmentPolicyValidator = DefaultAssessmentPolicyValidator  # BWC
 
 
