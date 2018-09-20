@@ -20,7 +20,7 @@ logger = __import__('logging').getLogger(__name__)
 
 
 @interface.implementer(IPathAdapter)
-def CourseCatalogEntryTraverser(instance, _):
+def CourseCatalogEntryTraverser(instance, unused_obj=None):
     """
     Courses can be traversed to their catalog entry.
     """

@@ -221,8 +221,7 @@ class CourseSubInstanceSharingScopes(CourseInstanceSharingScopes):
             pass
         else:
             if parent_course is not None:
-                scopes = parent_course.SharingScopes.getAllScopesImpliedbyScope(
-                    scope_name)
+                scopes = parent_course.SharingScopes.getAllScopesImpliedbyScope(scope_name)
                 for i in scopes:
                     yield i
 

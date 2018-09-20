@@ -10,12 +10,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from persistent.mapping import PersistentMapping
+
 from zope import component
 from zope import interface
 
 from zope.annotation.factory import factory as an_factory
-
-from persistent.mapping import PersistentMapping
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
@@ -40,7 +40,7 @@ class DefaultCourseInstanceVendorInfo(PersistentMapping,
     # Leave these at 0 until they get set externally
     _SET_CREATED_MODTIME_ON_INIT = False
 
-    def __init__(self):
+    def __init__(self):  # pylint: disable=useless-super-delegation
         super(DefaultCourseInstanceVendorInfo, self).__init__()
 
 

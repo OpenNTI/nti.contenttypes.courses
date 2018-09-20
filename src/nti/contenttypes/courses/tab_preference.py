@@ -47,7 +47,7 @@ class CourseTabPreferences(PersistentCreatedAndModifiedTimeObject, Contained):
     @property
     def order(self):
         return list(self._order)
-    
+
     def update_names(self, names):
         self._names = PersistentMapping()
         self._names.update(names)
@@ -63,5 +63,7 @@ class CourseTabPreferences(PersistentCreatedAndModifiedTimeObject, Contained):
         self._names.clear()
         del self._order[:]
 
+
 COURSE_TAB_PREFERENCES_KEY = u"CourseTabPreferences"
-_CourseTabPreferencesFactory = an_factory(CourseTabPreferences, key=COURSE_TAB_PREFERENCES_KEY)
+_CourseTabPreferencesFactory = an_factory(
+    CourseTabPreferences, key=COURSE_TAB_PREFERENCES_KEY)
