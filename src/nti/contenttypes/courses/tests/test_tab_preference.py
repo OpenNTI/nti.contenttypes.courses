@@ -78,11 +78,13 @@ class TestCourseTabPreferences(CourseLayerTest):
         new_io.clear()
         assert_that(new_io, has_properties('_names', has_length(0),
                                            '_order', has_length(0)))
+        assert_that(bool(new_io), is_(False))
         
         new_io.names = {"5": "ok"}
         new_io.order = ['3']
         assert_that(new_io, has_properties('names', has_length(1),
                                            'order', has_length(1)))
+        assert_that(bool(new_io), is_(True))
 
     def test_externalize(self):
         obj = CourseTabPreferences()

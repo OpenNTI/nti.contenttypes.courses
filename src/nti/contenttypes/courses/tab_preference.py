@@ -77,6 +77,10 @@ class CourseTabPreferences(PersistentCreatedAndModifiedTimeObject, Contained):
         self._names.clear()
         del self._order[:]
 
+    def __nonzero__(self):
+        return bool(self._names or self._order)
+    __bool__ = __nonzero__
+
 
 @component.adapter(ICourseInstance)
 @interface.implementer(ICourseTabPreferences)
