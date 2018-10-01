@@ -531,6 +531,10 @@ class CourseTabPreferencesImporter(BaseSectionImporter):
             ext_obj = self.load(source)
             update_from_external_object(prefs, ext_obj, notify=False)
 
+        # process subinstances
+        for sub_instance in get_course_subinstances(course):
+            self.process(sub_instance, filer, writeout=writeout)
+
 
 @interface.implementer(ICourseImporter)
 class CourseImporter(object):

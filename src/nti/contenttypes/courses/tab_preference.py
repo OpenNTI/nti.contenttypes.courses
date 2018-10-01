@@ -79,3 +79,9 @@ class CourseTabPreferences(PersistentCreatedAndModifiedTimeObject, Contained):
 COURSE_TAB_PREFERENCES_KEY = u"CourseTabPreferences"
 CourseTabPreferencesFactory = _CourseTabPreferencesFactory = an_factory(CourseTabPreferences,
                                                                         COURSE_TAB_PREFERENCES_KEY)
+
+
+def get_tab_preferences(course):
+    # this method should be used when we don't want to
+    # return the parent's course tab names.
+    return CourseTabPreferencesFactory(course)

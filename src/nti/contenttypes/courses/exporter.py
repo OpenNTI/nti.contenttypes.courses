@@ -82,6 +82,8 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
 from nti.contenttypes.courses.interfaces import CourseInstanceExportedEvent
 from nti.contenttypes.courses.interfaces import CourseSectionExporterExecutedEvent
 
+from nti.contenttypes.courses.tab_preference import get_tab_preferences
+
 from nti.contenttypes.courses.utils import get_course_vendor_info
 from nti.contenttypes.courses.utils import get_course_subinstances
 
@@ -568,12 +570,15 @@ class CourseTabPreferencesExporter(BaseSectionExporter):
 
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
-        pref = ICourseTabPreferences(course)
+        pref = get_tab_preferences(course)
         ext_obj = to_external_object(pref)
         source = self.dump(ext_obj)
         filer.default_bucket = bucket = self.course_bucket(course)
         filer.save(COURSE_TAB_PREFERENCES_INFO_NAME, source, bucket=bucket,
                    contentType="application/json", overwrite=True)
+
+        for sub_instance in get_course_subinstances(course):
+            self.export(sub_instance, filer, backup, salt)
 
 
 @interface.implementer(ICourseSectionExporter)
