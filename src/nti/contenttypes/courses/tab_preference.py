@@ -12,10 +12,12 @@ from persistent.list import PersistentList
 
 from persistent.mapping import PersistentMapping
 
-from zope.annotation.factory import factory as an_factory
+from ZODB.interfaces import IConnection
 
 from zope import component
 from zope import interface
+
+from zope.annotation.interfaces import IAnnotations
 
 from zope.container.contained import Contained
 
@@ -76,6 +78,23 @@ class CourseTabPreferences(PersistentCreatedAndModifiedTimeObject, Contained):
         del self._order[:]
 
 
-COURSE_TAB_PREFERENCES_KEY = u"CourseTabPreferences"
-CourseTabPreferencesFactory = _CourseTabPreferencesFactory = an_factory(CourseTabPreferences,
-                                                                        COURSE_TAB_PREFERENCES_KEY)
+@component.adapter(ICourseInstance)
+@interface.implementer(ICourseTabPreferences)
+def tab_prefereneces_for_course(course, create=True):
+    result = None
+    KEY = u"CourseTabPreferences"
+    annotations = IAnnotations(course)
+    try:
+        result = annotations[KEY]
+    except KeyError:
+        if create:
+            result = CourseTabPreferences()
+            annotations[KEY] = result
+            result.__name__ = KEY
+            result.__parent__ = course
+            connection = IConnection(course, None)
+            if connection is not None:
+                # pylint: disable=too-many-function-args
+                connection.add(result)
+    return result
+CourseTabPreferencesFactory = tab_prefereneces_for_course

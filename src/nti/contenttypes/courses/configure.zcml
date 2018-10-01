@@ -484,7 +484,7 @@
 	<utility factory=".importer.AssignmentPoliciesImporter" name="100:Assignment_Policies" />
 
 	<!-- Tab/string preferences -->
-	<adapter factory=".tab_preference._CourseTabPreferencesFactory" />
+	<adapter factory=".tab_preference.tab_prefereneces_for_course" />
 
 	<!-- Grading -->
 	<include package=".grading" />
