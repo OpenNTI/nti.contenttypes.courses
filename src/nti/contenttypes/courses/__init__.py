@@ -51,3 +51,6 @@ EVALUATION_INDEX_LAST_MODIFIED = EVALUATION_INDEX + '.lastModified'
 #: Export a seed to validate an export is only used once per environment
 COURSE_EXPORT_HASH_FILE = 'course_export_hash.txt'
 
+#: Course Tab Preferences info file name
+COURSE_TAB_PREFERENCES_INFO_NAME = 'course_tab_preferences.json'
+

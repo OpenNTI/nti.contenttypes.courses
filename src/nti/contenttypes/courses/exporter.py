@@ -61,6 +61,7 @@ from nti.contenttypes.courses import VENDOR_INFO_NAME
 from nti.contenttypes.courses import CATALOG_INFO_NAME
 from nti.contenttypes.courses import COURSE_OUTLINE_NAME
 from nti.contenttypes.courses import ASSIGNMENT_POLICIES_NAME
+from nti.contenttypes.courses import COURSE_TAB_PREFERENCES_INFO_NAME
 
 from nti.contenttypes.courses.common import get_course_packages
 
@@ -74,6 +75,7 @@ from nti.contenttypes.courses.interfaces import ICourseExporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseTabPreferences
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
 from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
 
@@ -559,6 +561,19 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
                        overwrite=True)
         for sub_instance in get_course_subinstances(course):
             self.export(sub_instance, filer, backup, salt)
+
+
+@interface.implementer(ICourseSectionExporter)
+class CourseTabPreferencesExporter(BaseSectionExporter):
+
+    def export(self, context, filer, backup=True, salt=None):
+        course = ICourseInstance(context)
+        pref = ICourseTabPreferences(course)
+        ext_obj = to_external_object(pref)
+        source = self.dump(ext_obj)
+        filer.default_bucket = bucket = self.course_bucket(course)
+        filer.save(COURSE_TAB_PREFERENCES_INFO_NAME, source, bucket=bucket,
+                   contentType="application/json", overwrite=True)
 
 
 @interface.implementer(ICourseSectionExporter)

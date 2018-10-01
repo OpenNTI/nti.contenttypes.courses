@@ -462,6 +462,7 @@
 	<utility factory=".exporter.BundleMetaInfoExporter" name="001:Bundle_Metainfo" />
 	<utility factory=".exporter.BundleDCMetadataExporter" name="002:Bundle_DC_Metadata" />
 	<utility factory=".exporter.AssignmentPoliciesExporter" name="100:Assignment_Policies" />
+	<utility factory=".exporter.CourseTabPreferencesExporter" name="200:Course_Tab_Preferences" />
 	<utility factory=".exporter.BundlePresentationAssetsExporter" name="003:Presentation_Assets" />
 
 	<!-- Importer -->
@@ -482,6 +483,8 @@
 	<utility factory=".importer.RoleInfoImporter" name="006:Role_Info" />
 	<!-- 100 -->
 	<utility factory=".importer.AssignmentPoliciesImporter" name="100:Assignment_Policies" />
+	<!-- 200. -->
+	<utility factory=".importer.CourseTabPreferencesImporter" name="200:Course_Tab_Preferences" />
 
 	<!-- Tab/string preferences -->
 	<adapter factory=".tab_preference._CourseTabPreferencesFactory" />

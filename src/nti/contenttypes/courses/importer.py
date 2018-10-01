@@ -60,6 +60,7 @@ from nti.contenttypes.courses import VENDOR_INFO_NAME
 from nti.contenttypes.courses import CATALOG_INFO_NAME
 from nti.contenttypes.courses import COURSE_OUTLINE_NAME
 from nti.contenttypes.courses import ASSIGNMENT_POLICIES_NAME
+from nti.contenttypes.courses import COURSE_TAB_PREFERENCES_INFO_NAME
 
 from nti.contenttypes.courses.common import get_course_site_registry
 
@@ -73,6 +74,7 @@ from nti.contenttypes.courses.interfaces import ICourseImporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseTabPreferences
 from nti.contenttypes.courses.interfaces import IContentCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSectionImporter
 
@@ -515,6 +517,19 @@ class BundleMetaInfoImporter(BaseSectionImporter):
         finally:
             if tmp_dir is not None:  # clean up
                 shutil.rmtree(tmp_dir)
+
+
+@interface.implementer(ICourseSectionImporter)
+class CourseTabPreferencesImporter(BaseSectionImporter):
+
+    def process(self, context, filer, writeout=True):
+        course = ICourseInstance(context)
+        path = self.course_bucket_path(course) + COURSE_TAB_PREFERENCES_INFO_NAME
+        source = self.safe_get(filer, path)
+        if source is not None:
+            prefs = ICourseTabPreferences(course)
+            ext_obj = self.load(source)
+            update_from_external_object(prefs, ext_obj, notify=False)
 
 
 @interface.implementer(ICourseImporter)
