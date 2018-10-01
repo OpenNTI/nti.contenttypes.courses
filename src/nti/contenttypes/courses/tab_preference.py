@@ -36,26 +36,38 @@ class CourseTabPreferences(PersistentCreatedAndModifiedTimeObject, Contained):
     creator = None
 
     def __init__(self):
-        self._names = PersistentMapping()
-        self._order = PersistentList()
+        self.reset()
         super(CourseTabPreferences, self).__init__()
+
+    def reset(self):
+        self._order = PersistentList()
+        self._names = PersistentMapping()
 
     @property
     def names(self):
         return dict(self._names)
+    
+    @names.setter
+    def names(self, values):
+        self.update_names(values)
 
     @property
     def order(self):
         return list(self._order)
 
+    @order.setter
+    def order(self, values):
+        self.update_order(values)
+    
     def update_names(self, names):
+        # pylint: disable=attribute-defined-outside-init
         self._names = PersistentMapping()
         self._names.update(names)
 
     def update_order(self, order):
         if not isinstance(order, (tuple, list)):
             raise TypeError('order must be a tuple or a list.')
-
+        # pylint: disable=attribute-defined-outside-init
         self._order = PersistentList()
         self._order.extend(order)
 
@@ -65,8 +77,5 @@ class CourseTabPreferences(PersistentCreatedAndModifiedTimeObject, Contained):
 
 
 COURSE_TAB_PREFERENCES_KEY = u"CourseTabPreferences"
-_CourseTabPreferencesFactory = an_factory(
-    CourseTabPreferences, key=COURSE_TAB_PREFERENCES_KEY)
-
-
-CourseTabPreferencesFactory = _CourseTabPreferencesFactory
+CourseTabPreferencesFactory = _CourseTabPreferencesFactory = an_factory(CourseTabPreferences,
+                                                                        COURSE_TAB_PREFERENCES_KEY)
