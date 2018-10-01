@@ -67,3 +67,6 @@ class CourseTabPreferences(PersistentCreatedAndModifiedTimeObject, Contained):
 COURSE_TAB_PREFERENCES_KEY = u"CourseTabPreferences"
 _CourseTabPreferencesFactory = an_factory(
     CourseTabPreferences, key=COURSE_TAB_PREFERENCES_KEY)
+
+
+CourseTabPreferencesFactory = _CourseTabPreferencesFactory
