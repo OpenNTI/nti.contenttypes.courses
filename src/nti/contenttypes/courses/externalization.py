@@ -306,6 +306,6 @@ class _CourseTabPreferencesExternalizer(InterfaceObjectIO):
     def toExternalObject(self, *unused_args, **kwargs):  # pylint: disable=arguments-differ
         result = super(_CourseTabPreferencesExternalizer, self).toExternalObject(**kwargs)
         # pylint: disable=protected-access
-        result['names'] = self._ext_self._names.data
-        result['order'] = self._ext_self._order
+        result['names'] = self._ext_self.names
+        result['order'] = self._ext_self.order
         return result
