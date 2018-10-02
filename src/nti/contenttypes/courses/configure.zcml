@@ -487,7 +487,7 @@
 	<utility factory=".importer.CourseTabPreferencesImporter" name="200:Course_Tab_Preferences" />
 
 	<!-- Tab/string preferences -->
-	<adapter factory=".tab_preference._CourseTabPreferencesFactory" />
+	<adapter factory=".tab_preference.tab_prefereneces_for_course" />
 
 	<!-- Grading -->
 	<include package=".grading" />
