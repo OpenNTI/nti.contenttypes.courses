@@ -17,11 +17,11 @@ from datetime import datetime
 from collections import Mapping
 from collections import Iterable
 
-from six.moves import cStringIO
-
 from xml.dom import minidom
 
 import simplejson
+
+from six import StringIO
 
 from zope import component
 from zope import interface
@@ -75,7 +75,6 @@ from nti.contenttypes.courses.interfaces import ICourseExporter
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-from nti.contenttypes.courses.interfaces import ICourseTabPreferences
 from nti.contenttypes.courses.interfaces import ICourseSectionExporter
 from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
 
@@ -110,6 +109,8 @@ logger = __import__('logging').getLogger(__name__)
 
 class ExportObjectProxy(ProxyBase):
 
+    # pylint: disable=property-on-old-class
+
     filer = property(
         lambda s: s.__dict__.get('_v_filer'),
         lambda s, v: s.__dict__.__setitem__('_v_filer', v))
@@ -126,14 +127,14 @@ class ExportObjectProxy(ProxyBase):
         return ProxyBase.__new__(cls, base)
 
     def __init__(self, base, filer=None, backup=True, salt=None):
-        ProxyBase.__init__(self, base)
+        ProxyBase.__init__(self, base)  # pylint: disable=non-parent-init-called
         self.salt = salt
         self.filer = filer
         self.backup = backup
 
 
 def export_proxy(obj, filer=None, backup=False, salt=None):
-    if not isinstance(obj,_primitives):
+    if not isinstance(obj, _primitives):
         return ExportObjectProxy(obj, filer, backup, salt)
     return obj
 
@@ -179,7 +180,7 @@ class BaseSectionExporter(object):
         return root + ext
 
     def dump(self, ext_obj):
-        source = cStringIO()
+        source = StringIO()
         simplejson.dump(ext_obj,
                         source,
                         indent='\t',
@@ -270,6 +271,7 @@ class CourseOutlineExporter(BaseSectionExporter):
 
     def _export_remover(self, ext_obj, salt):
         if isinstance(ext_obj, Mapping):
+            # pylint: disable=expression-not-assigned 
             [ext_obj.pop(x, None) for x in (ID, OID, NTIID, INTERNAL_NTIID)]
             ContentNTIID = ext_obj.get('ContentNTIID', None)
             LessonOverviewNTIID = ext_obj.get('LessonOverviewNTIID', None)
@@ -358,6 +360,7 @@ class BundleMetaInfoExporter(BaseSectionExporter):
                 yield package.ntiid
 
     def export(self, context, filer, backup=True, salt=None):
+        # pylint: disable=unused-variable
         __traceback_info__ = context, backup, salt
         filer.default_bucket = None
         course = ICourseInstance(context)
@@ -406,6 +409,7 @@ class BundleDCMetadataExporter(BaseSectionExporter):
         doc_root.setAttributeNS(None, "xmlns:dc",
                                 "http://purl.org/dc/elements/1.1/")
 
+        # pylint: disable=no-value-for-parameter
         for k, v in IWriteZopeDublinCore.namesAndDescriptions(all=True):
             if IMethod.providedBy(v):
                 continue
@@ -475,6 +479,7 @@ class BundlePresentationAssetsExporter(BaseSectionExporter):
         bucket = '' if not bucket else bucket + '/'
         presentation_resources = getattr(course, 'PlatformPresentationResources', None) \
                               or ICourseCatalogEntry(course).PlatformPresentationResources
+        # pylint: disable=not-an-iterable
         for resource in presentation_resources or ():
             self._process_root(resource.root, bucket, filer)
 
@@ -482,8 +487,8 @@ class BundlePresentationAssetsExporter(BaseSectionExporter):
 @interface.implementer(ICourseSectionExporter)
 class RoleInfoExporter(BaseSectionExporter):
 
-    def _role_interface_export(self, result, course, interface, *keys):
-        roles = interface(course, None)
+    def _role_interface_export(self, result, course, role_interface, *keys):
+        roles = role_interface(course, None)
         if not roles:
             return
         for name in keys:
@@ -495,9 +500,9 @@ class RoleInfoExporter(BaseSectionExporter):
                 container.append(pid)
             if allow or deny:
                 role_data = result[name] = {}
-                for name, users in (('allow', allow), ('deny', deny)):
+                for perm, users in (('allow', allow), ('deny', deny)):
                     if users:
-                        role_data[name] = users
+                        role_data[perm] = users
 
     def _role_export_map(self, course):
         result = {}
@@ -570,8 +575,8 @@ class CourseTabPreferencesExporter(BaseSectionExporter):
 
     def export(self, context, filer, backup=True, salt=None):
         course = ICourseInstance(context)
-        pref = get_tab_preferences(course)
-        ext_obj = to_external_object(pref)
+        preferences = get_tab_preferences(course)
+        ext_obj = to_external_object(preferences)
         source = self.dump(ext_obj)
         filer.default_bucket = bucket = self.course_bucket(course)
         filer.save(COURSE_TAB_PREFERENCES_INFO_NAME, source, bucket=bucket,
@@ -614,7 +619,7 @@ class CourseExporter(object):
                 notify(CourseSectionExporterExecutedEvent(course, exporter, filer, backup, salt))
                 logger.info("%s processed in %s(s)",
                             name, time.time() - current)
-            except Exception as e:
+            except Exception:  # pylint: disable=broad-except
                 logger.exception("Error while processing %s", name)
                 raise
             filer.default_bucket = None  # restore
