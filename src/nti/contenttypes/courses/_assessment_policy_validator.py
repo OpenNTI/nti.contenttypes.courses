@@ -16,6 +16,7 @@ from nti.assessment.common import can_be_auto_graded
 from nti.assessment.interfaces import IQAssignment
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentPolicyValidator
+from nti.assessment.interfaces import AssessmentPolicyValidationError
 
 from nti.common.string import is_true
 from nti.common.string import is_false
@@ -35,7 +36,7 @@ def check_assessment(ntiid, warning=True, provided=IQAssignment):
         if warning:
             logger.warn("Could not find assessment (%s)", ntiid)
         else:
-            raise AssertionError("Cannot find assessment %s", ntiid)
+            raise AssessmentPolicyValidationError("Cannot find assessment %s", ntiid)
     return result
 
 
@@ -60,13 +61,13 @@ class DefaultAssessmentPolicyValidator(object):
                 assert int(total_points) >= 0
             except (AssertionError, TypeError, ValueError):
                 msg = "Invalid total points in policy for %s (%s)"
-                raise ValueError(msg % (ntiid, total_points))
+                raise AssessmentPolicyValidationError(msg % (ntiid, total_points))
 
         disable = auto_grade.get('disable')
         if disable is not None:
             if not (is_true(disable) or is_false(disable)):
                 msg = "Invalid disable flag in policy for %s"
-                raise ValueError(msg % (ntiid,))
+                raise AssessmentPolicyValidationError(msg % (ntiid,))
             elif is_true(disable):
                 auto_grade['disable'] = True
             elif is_false(disable):
@@ -94,14 +95,14 @@ class DefaultAssessmentPolicyValidator(object):
             return
         if name.lower() in ('pointbased',):
             if assignment is None:
-                raise AssertionError('Could not find assignment %s' % ntiid)
+                raise AssessmentPolicyValidationError('Could not find assignment %s' % ntiid)
             for part in assignment.parts:
                 for question in part.question_set.questions:
                     q_ntiid = question.ntiid
                     points = self.question_points(auto_grade, ntiid)
                     if not points or int(points) <= 0:
                         msg = "Invalid points in policy for question %s"
-                        raise ValueError(msg % q_ntiid)
+                        raise AssessmentPolicyValidationError(msg % q_ntiid)
         else:
             logger.warn("Don't know how to validate policy %s in assignment %s",
                         name, ntiid)
@@ -116,7 +117,7 @@ class DefaultAssessmentPolicyValidator(object):
                 assert max_submissions >= 0
             except (AssertionError, TypeError, ValueError):
                 msg = "Invalid max_submissions in policy for %s (%s)"
-                raise ValueError(msg % (ntiid, max_submissions))
+                raise AssessmentPolicyValidationError(msg % (ntiid, max_submissions))
 
         if not max_submissions or max_submissions == 1:
             # No need to validate anything else
@@ -127,14 +128,15 @@ class DefaultAssessmentPolicyValidator(object):
             submission_priority = submission_priority.lower()
             if submission_priority not in ('most_recent', 'highest_grade'):
                 msg = "Invalid submission_priority in policy for %s (%s)"
-                raise ValueError(msg % (ntiid, submission_priority))
+                raise AssessmentPolicyValidationError(msg % (ntiid, submission_priority))
 
             if      submission_priority == 'highest_grade' \
-                and auto_grade is not None \
-                and ('disable' not in auto_grade or not auto_grade['disable']):
+                and (   auto_grade is None \
+                     or ('disable' in auto_grade and auto_grade['disable'])):
                 # Cannot take the highest graded submission without autograde
+                # XXX: Is this correct?
                 msg = "Invalid submission_priority for non auto-graded policy for %s (%s)"
-                raise ValueError(msg % (ntiid, submission_priority))
+                raise AssessmentPolicyValidationError(msg % (ntiid, submission_priority))
         else:
             # Default to 'most_recent'; we could do something based on
             # auto-grade here too.
