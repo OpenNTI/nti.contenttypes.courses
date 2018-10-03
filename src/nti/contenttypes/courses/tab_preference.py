@@ -104,7 +104,10 @@ def tab_prefereneces_for_course(course, create=True):
 CourseTabPreferencesFactory = tab_prefereneces_for_course
 
 
-def get_tab_preferences(course):
-    # this method should be used when we don't want to
-    # return the parent's course tab names.
-    return tab_prefereneces_for_course(course)
+def get_tab_preferences(course, inherit=False):
+    """
+    A utility that coudl be used to return an ICourseTabPreferences, which includes
+    the parent's course tab names if the course is a child course and inherit is True.
+    """
+    return ICourseTabPreferences(course) if inherit is True \
+                else tab_prefereneces_for_course(course)
