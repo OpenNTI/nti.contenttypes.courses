@@ -2015,6 +2015,11 @@ class ICourseTabPreferences(IContained):
     def clear():
         pass
 
+    def __nonzero__():
+        """
+        implement truth value testing
+        """
+    __bool__ = __nonzero__
 
 # removal
 
