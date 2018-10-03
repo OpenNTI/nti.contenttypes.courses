@@ -102,3 +102,12 @@ def tab_prefereneces_for_course(course, create=True):
                 connection.add(result)
     return result
 CourseTabPreferencesFactory = tab_prefereneces_for_course
+
+
+def get_tab_preferences(course, inherit=False):
+    """
+    A utility that could be used to return an ICourseTabPreferences,
+    which may include the parent course tab names if inherit is True.
+    """
+    return ICourseTabPreferences(course) if inherit is True \
+                else tab_prefereneces_for_course(course)

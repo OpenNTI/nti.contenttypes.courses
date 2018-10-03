@@ -1,0 +1,14 @@
+{
+	"Class": "CourseTabPreferences",
+	"CreatedTime": 1538423951.688181,
+	"Last Modified": 1538423951.690767,
+	"MimeType": "application/vnd.nextthought.courses.coursetabpreferences",
+	"NTIID": "tag:nextthought.com,2011-10:system-OID-0xfae8:5573657273",
+	"OID": "tag:nextthought.com,2011-10:system-OID-0xfae8:5573657273",
+	"names": {
+		"activity": "Activity1",
+		"info": "Course Info1",
+		"lessons": "Lessons1"
+	},
+	"order": ["info", "lessons", "activity"]
+}
