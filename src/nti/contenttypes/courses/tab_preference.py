@@ -21,6 +21,8 @@ from zope.annotation.interfaces import IAnnotations
 
 from zope.container.contained import Contained
 
+from zope.lifecycleevent.interfaces import IObjectRemovedEvent
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseTabPreferences
 
@@ -110,3 +112,10 @@ def get_tab_preferences(course, inherit=False):
     which may include the parent course tab names if inherit is True.
     """
     return ICourseTabPreferences(course) if inherit else tab_prefereneces_for_course(course)
+
+
+@component.adapter(ICourseInstance, IObjectRemovedEvent)
+def on_course_instance_removed(course, unused_event=None):
+    prefs = tab_prefereneces_for_course(course, False)
+    if prefs is not None:
+        prefs.clear()

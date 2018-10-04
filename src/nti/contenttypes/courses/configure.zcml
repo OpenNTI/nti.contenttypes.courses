@@ -488,6 +488,7 @@
 
 	<!-- Tab/string preferences -->
 	<adapter factory=".tab_preference.tab_prefereneces_for_course" />
+	<subscriber handler=".tab_preference.on_course_instance_removed" />
 
 	<!-- Grading -->
 	<include package=".grading" />
