@@ -509,7 +509,7 @@ class TestFunctionalEnrollment(CourseLayerTest):
         interface.alsoProvides(course, interfaces.IDenyOpenEnrollment)
 
         manager = interfaces.ICourseEnrollmentManager(course)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(interfaces.OpenEnrollmentNotAllowedException):
             manager.enroll(principal, scope=ES_PUBLIC)
 
     def test_es_lineage(self):
