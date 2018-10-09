@@ -1270,6 +1270,11 @@ class CourseAlreadyExistsException(ValidationError):
     i18n_message = __doc__
 
 
+class OpenEnrollmentNotAllowedException(ValidationError):
+    __doc__ = _(u"Open Enrollment is not allowed.")
+    i18n_message = __doc__
+
+
 class ICourseInstanceAvailableEvent(IObjectEvent):
     """
     An event that is sent, usually during startup or synchronization,

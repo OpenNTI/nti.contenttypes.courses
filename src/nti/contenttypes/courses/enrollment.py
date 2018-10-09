@@ -73,6 +73,7 @@ from nti.contenttypes.courses.interfaces import IPrincipalEnrollments
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import InstructorEnrolledException
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
+from nti.contenttypes.courses.interfaces import OpenEnrollmentNotAllowedException
 from nti.contenttypes.courses.interfaces import IDefaultCourseCatalogEnrollmentStorage
 from nti.contenttypes.courses.interfaces import IDefaultCourseInstanceEnrollmentStorage
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecordContainer
@@ -661,7 +662,7 @@ def check_open_enrollment_record_added(record, unused_event):
     """
     course = record.CourseInstance
     if record.Scope == ES_PUBLIC and IDenyOpenEnrollment.providedBy(course):
-        raise ValueError(_("Open enrollment is not allowed."))
+        raise OpenEnrollmentNotAllowedException(_("Open enrollment is not allowed."))
 
 
 from nti.dataserver.interfaces import IEntity
