@@ -52,7 +52,6 @@ class TestPermissions(CourseLayerTest):
 
         interface.alsoProvides(forum, ICourseInstanceForCreditScopedForum)
 
-        # Why is this not hitting?
         rpm = IRolePermissionManager(forum)
         can_delete = rpm.getSetting(ACT_DELETE.id, ROLE_SITE_ADMIN.id)
 
