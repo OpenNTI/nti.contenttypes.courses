@@ -19,6 +19,9 @@ from zope.cachedescriptors.property import Lazy
 
 from zope.security.interfaces import IPrincipal
 
+from zope.securitypolicy.interfaces import IRolePermissionManager
+from zope.securitypolicy.rolepermission import RolePermissionManager
+
 from nti.contentlibrary.interfaces import IRenderableContentPackage
 
 from nti.contenttypes.courses.common import get_course_packages
@@ -65,6 +68,8 @@ from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 
 from nti.dataserver.interfaces import IACLProvider
 from nti.dataserver.interfaces import ISupplementalACLProvider
+
+from nti.externalization.persistence import NoPickle
 
 from nti.traversal.traversal import find_interface
 
@@ -364,6 +369,22 @@ class CourseScopeForumACLProvider(AbstractCourseForumACLProvider):
 
     def _adjust_acl_for_inst(self, acl, inst):
         acl.append(ace_allowing(inst, (ACT_READ, ACT_CREATE, ), type(self)))
+
+
+@component.adapter(ICourseInstanceScopedForum)
+@interface.implementer(IRolePermissionManager)
+@NoPickle
+class CourseScopeForumRolePermissionManager(RolePermissionManager):
+    """
+    A zope security policy role permission manager that denies DELETE
+    for the site admin role.  site admin role has all permissions on the
+    root site folder so we must deny that here to prevent them from
+    deleting course managed discussions.
+    """
+
+    def __init__(self, forum):
+        super(CourseScopeForumRolePermissionManager, self).__init__()
+        self.denyPermissionToRole(ACT_DELETE.id, ROLE_SITE_ADMIN.id)
 
 
 @component.adapter(IRenderableContentPackage)
