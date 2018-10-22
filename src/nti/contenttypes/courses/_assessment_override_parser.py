@@ -14,6 +14,7 @@ from collections import Mapping
 
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQAssessmentDateContext
+from nti.assessment.interfaces import AssessmentPolicyValidationError
 
 from nti.contenttypes.courses.interfaces import SUPPORTED_DATE_KEYS
 from nti.contenttypes.courses.interfaces import SUPPORTED_PVE_INT_KEYS
@@ -61,7 +62,7 @@ def fill_asg_from_json(course, index, lastModified=0, force=False):
             continue
         validate_ntiid_string(ntiid)
         if not isinstance(values, Mapping):
-            raise ValueError("Expected a mapping object")
+            raise AssessmentPolicyValidationError("Expected a mapping object")
         elif not values:
             continue
         # save locked value
@@ -89,7 +90,7 @@ def fill_asg_from_json(course, index, lastModified=0, force=False):
                 int_val = int(int_val)
                 assert int_val > 0
             except (AssertionError, TypeError, ValueError):
-                raise ValueError("Bad positive integer value: %r" % int_val)
+                raise AssessmentPolicyValidationError("Bad positive integer value: %r" % int_val)
             values[k] = int_val
         # store values directly, with the exception
         # of things we know we don't want/need
