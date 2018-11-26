@@ -63,13 +63,14 @@ from nti.dataserver.contenttypes.forums.acl import _ACLCommunityForumACLProvider
 
 from nti.dataserver.interfaces import ACE_DENY_ALL
 from nti.dataserver.interfaces import ALL_PERMISSIONS
-from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
 from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 
 from nti.dataserver.interfaces import IACLProvider
 from nti.dataserver.interfaces import ISupplementalACLProvider
 
 from nti.externalization.persistence import NoPickle
+
+from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.traversal.traversal import find_interface
 
@@ -185,39 +186,34 @@ class CourseCatalogEntryACLProvider(object):
                 # we actually want to be public and not inherit this.
                 non_public = False
         acl = []
-        if non_public:
-            # Although it might be be nice to inherit from the non-public
-            # course in our lineage, we actually need to be a bit stricter
-            # than that...the course cannot forbid creation or do a deny-all
-            # (?)
-            course = find_interface(cce, ICourseInstance, strict=False)
-            # Do we have a course instance? If it's not in our lineage its the legacy
-            # case
-            course = course or ICourseInstance(cce, None)
-            if course is not None:
-                # Use our course ACL to give enrolled students access.
-                acl.extend(IACLProvider(course).__acl__)
-                acl.append(
-                    # Nobody can 'create' (enroll)
-                    # Nobody else can view it either
-                    ace_denying(IPrincipal(AUTHENTICATED_GROUP_NAME),
-                                (ACT_CREATE, ACT_READ),
-                                CourseCatalogEntryACLProvider),
-                )
-                acl.append(
-                    # use both everyone and authenticated for
-                    # belt-and-suspenders
-                    ace_denying(IPrincipal(EVERYONE_GROUP_NAME),
-                                (ACT_CREATE, ACT_READ),
-                                CourseCatalogEntryACLProvider),
-                )
-            else:
-                # Hmm.
-                acl.append(ACE_DENY_ALL)
-        else:
-            acl.append(ace_allowing(IPrincipal(AUTHENTICATED_GROUP_NAME),
-                                    (ACT_CREATE, ACT_READ),
-                                    CourseCatalogEntryACLProvider))
+
+        # Although it might be be nice to inherit from the non-public
+        # course in our lineage, we actually need to be a bit stricter
+        # than that...the course cannot forbid creation or do a deny-all
+        # (?)
+        course = find_interface(cce, ICourseInstance, strict=False)
+        # Do we have a course instance? If it's not in our lineage its the legacy
+        # case
+        course = course or ICourseInstance(cce, None)
+        if course is not None:
+            # Use our course ACL to give enrolled students access.
+            acl.extend(IACLProvider(course).__acl__)
+            if not non_public:
+                if not cce.AvailableToEntityNTIIDs:
+                    acl.append(ace_allowing(IPrincipal(AUTHENTICATED_GROUP_NAME),
+                                            (ACT_CREATE, ACT_READ),
+                                            CourseCatalogEntryACLProvider))
+                else:
+                    # This catalog entry is setup to restrict enrollment visibility to
+                    # a set of entities.
+                    # Set to non_public restricts access for this field too.
+                    for enrollment_entity_ntiid in cce.AvailableToEntityNTIIDs:
+                        entity = find_object_with_ntiid(enrollment_entity_ntiid)
+                        if entity is not None:
+                            acl.append(ace_allowing(IPrincipal(entity),
+                                                    (ACT_CREATE, ACT_READ),
+                                                    CourseCatalogEntryACLProvider))
+        acl.append(ACE_DENY_ALL)
         acl = acl_from_aces(acl)
         return acl
 

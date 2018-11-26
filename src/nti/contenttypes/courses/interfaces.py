@@ -951,6 +951,12 @@ class ICourseCatalogEntry(ICatalogFamily,
                            unique=True,
                            default=())
 
+    AvailableToEntityNTIIDs = ListOrTuple(title=u"Available to entity ntiids",
+                                          description=u"""Entities who have access (e.g. enrollment) to this entry.""",
+                                          value_type=ValidTextLine(title=u'The entity ntiid'),
+                                          required=False,
+                                          default=())
+
     def isCourseCurrentlyActive():
         """
         Return a boolean value answering whether the course
