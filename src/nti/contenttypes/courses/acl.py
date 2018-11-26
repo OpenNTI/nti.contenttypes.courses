@@ -63,7 +63,6 @@ from nti.dataserver.contenttypes.forums.acl import _ACLCommunityForumACLProvider
 
 from nti.dataserver.interfaces import ACE_DENY_ALL
 from nti.dataserver.interfaces import ALL_PERMISSIONS
-from nti.dataserver.interfaces import EVERYONE_GROUP_NAME
 from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
 
 from nti.dataserver.interfaces import IACLProvider
@@ -214,24 +213,7 @@ class CourseCatalogEntryACLProvider(object):
                             acl.append(ace_allowing(IPrincipal(entity),
                                                     (ACT_CREATE, ACT_READ),
                                                     CourseCatalogEntryACLProvider))
-
-            acl.append(
-                # Nobody can 'create' (enroll)
-                # Nobody else can view it either
-                ace_denying(IPrincipal(AUTHENTICATED_GROUP_NAME),
-                            (ACT_CREATE, ACT_READ),
-                            CourseCatalogEntryACLProvider),
-            )
-            acl.append(
-                # use both everyone and authenticated for
-                # belt-and-suspenders
-                ace_denying(IPrincipal(EVERYONE_GROUP_NAME),
-                            (ACT_CREATE, ACT_READ),
-                            CourseCatalogEntryACLProvider),
-            )
-        else:
-            # Hmm.
-            acl.append(ACE_DENY_ALL)
+        acl.append(ACE_DENY_ALL)
         acl = acl_from_aces(acl)
         return acl
 
