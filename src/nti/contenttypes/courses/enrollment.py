@@ -57,8 +57,6 @@ from nti.containers.containers import CaseInsensitiveCheckingLastModifiedBTreeCo
 
 from nti.contentlibrary.bundle import _readCurrent
 
-from nti.contenttypes.courses import MessageFactory as _
-
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ES_CREDIT
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_VOCABULARY
@@ -67,13 +65,11 @@ from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseEnrollments
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
-from nti.contenttypes.courses.interfaces import IDenyOpenEnrollment
 from nti.contenttypes.courses.interfaces import IGlobalCourseCatalog
 from nti.contenttypes.courses.interfaces import IPrincipalEnrollments
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import InstructorEnrolledException
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
-from nti.contenttypes.courses.interfaces import OpenEnrollmentNotAllowedException
 from nti.contenttypes.courses.interfaces import IDefaultCourseCatalogEnrollmentStorage
 from nti.contenttypes.courses.interfaces import IDefaultCourseInstanceEnrollmentStorage
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecordContainer
@@ -652,17 +648,6 @@ def on_modified_potentially_move_courses(record, _):
         dest_enrollments = IDefaultCourseInstanceEnrollmentStorage(mapped_course)
         mover = IObjectMover(record)
         mover.moveTo(dest_enrollments)
-
-
-@component.adapter(ICourseInstanceEnrollmentRecord, IObjectAddedEvent)
-def check_open_enrollment_record_added(record, unused_event):
-    """
-    If a user moves between scopes in an enrollment-mapped course,
-    we may need to transfer them to a different section too.
-    """
-    course = record.CourseInstance
-    if record.Scope == ES_PUBLIC and IDenyOpenEnrollment.providedBy(course):
-        raise OpenEnrollmentNotAllowedException(_("Open enrollment is not allowed."))
 
 
 from nti.dataserver.interfaces import IEntity
