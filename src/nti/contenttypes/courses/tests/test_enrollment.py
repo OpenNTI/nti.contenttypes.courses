@@ -501,17 +501,6 @@ class TestFunctionalEnrollment(CourseLayerTest):
         assert_that(ICourseEnrollments(new_course).count_enrollments(),
                     is_(1))
 
-    @WithMockDSTrans
-    def test_check_open_enrolments(self):
-        self._shared_setup()
-        course = self.course
-        principal = self.principal
-        interface.alsoProvides(course, interfaces.IDenyOpenEnrollment)
-
-        manager = interfaces.ICourseEnrollmentManager(course)
-        with self.assertRaises(interfaces.OpenEnrollmentNotAllowedException):
-            manager.enroll(principal, scope=ES_PUBLIC)
-
     def test_es_lineage(self):
         assert_that(ENROLLMENT_LINEAGE_MAP, has_length(6))
         assert_that(ENROLLMENT_LINEAGE_MAP,
