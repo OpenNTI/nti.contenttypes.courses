@@ -30,8 +30,9 @@ from nti.contenttypes.courses.interfaces import IPrincipalAdministrativeRoleCata
 from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
 
 from nti.contenttypes.courses.utils import get_course_editors
-from nti.contenttypes.courses.utils import get_instructed_and_edited_courses
 from nti.contenttypes.courses.utils import AbstractInstanceWrapper
+from nti.contenttypes.courses.utils import is_course_instructor_or_editor
+from nti.contenttypes.courses.utils import get_instructed_and_edited_courses
 
 from nti.dataserver.authorization import is_admin
 from nti.dataserver.authorization import is_site_admin
@@ -148,12 +149,14 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
         catalog = component.queryUtility(ICourseCatalog)
         # NT admins can see all
         # site admins/content admins can view any courses they can edit
-        # (courses in site for site admins)
+        # (courses in site for site admins). Site admins may also be
+        # added as instructors/assistants/editors on parent site courses.
         for entry in catalog.iterCatalogEntries():
             course = ICourseInstance(entry, None)
             if      course is not None \
                 and not ILegacyCourseInstance.providedBy(course) \
                 and (   self._is_admin
+                     or is_course_instructor_or_editor(course, self.user) \
                      or has_permission(ACT_CONTENT_EDIT, entry, self.user)):
                 yield course
 
