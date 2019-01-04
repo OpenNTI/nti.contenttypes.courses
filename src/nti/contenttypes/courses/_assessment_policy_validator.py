@@ -110,6 +110,7 @@ class DefaultAssessmentPolicyValidator(object):
     def validate_submissions(self, auto_grade, policy, assignment, ntiid):
         if assignment is None:
             return
+
         max_submissions = policy.get('max_submissions')
         if max_submissions is not None:
             try:
@@ -142,6 +143,20 @@ class DefaultAssessmentPolicyValidator(object):
             # auto-grade here too.
             policy['submission_priority'] = 'most_recent'
 
+    def validate_completion(self, unused_auto_grade, policy, assignment, ntiid):
+        if assignment is None:
+            return
+
+        passing_perc = policy.get('completion_passing_percent')
+        if passing_perc is not None:
+            try:
+                passing_perc = float(passing_perc)
+                assert passing_perc >= 0
+                assert passing_perc <= 1
+            except (AssertionError, TypeError, ValueError):
+                msg = "Invalid completion_passing_percent in policy for %s (%s)"
+                raise AssessmentPolicyValidationError(msg % (ntiid, passing_perc))
+
     def validate(self, ntiid, policy):
         if not is_valid_ntiid_string(ntiid):
             return  # pragma no cover
@@ -149,6 +164,7 @@ class DefaultAssessmentPolicyValidator(object):
         auto_grade = self.valid_auto_grade(policy, assignment, ntiid)
         self.validate_pointbased_policy(auto_grade, assignment, ntiid)
         self.validate_submissions(auto_grade, policy, assignment, ntiid)
+        self.validate_completion(auto_grade, policy, assignment, ntiid)
 DefaultAssignmentPolicyValidator = DefaultAssessmentPolicyValidator  # BWC
 
 

@@ -182,6 +182,9 @@ SUPPORTED_BOOL_KEYS = (u'excluded',)
 #: Supported positive integer keys
 SUPPORTED_PVE_INT_KEYS = (u'maximum_time_allowed', u'max_submissions')
 
+#: Supported float keys
+SUPPORTED_PVE_FLOAT_KEYS = (u'completion_passing_percent',)
+
 #: Supported date keys
 SUPPORTED_DATE_KEYS = (u'available_for_submission_beginning',
                        u'available_for_submission_ending')
