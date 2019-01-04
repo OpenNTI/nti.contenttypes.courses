@@ -18,6 +18,7 @@ from nti.assessment.interfaces import AssessmentPolicyValidationError
 
 from nti.contenttypes.courses.interfaces import SUPPORTED_DATE_KEYS
 from nti.contenttypes.courses.interfaces import SUPPORTED_PVE_INT_KEYS
+from nti.contenttypes.courses.interfaces import SUPPORTED_PVE_FLOAT_KEYS
 
 from nti.externalization.datetime import datetime_from_string
 
@@ -92,6 +93,22 @@ def fill_asg_from_json(course, index, lastModified=0, force=False):
             except (AssertionError, TypeError, ValueError):
                 raise AssessmentPolicyValidationError("Bad positive integer value: %r" % int_val)
             values[k] = int_val
+
+        # validate positive integer keys in policy
+        for k in SUPPORTED_PVE_FLOAT_KEYS:
+            if k not in values:
+                continue
+            float_val = values.get(k)
+            if float_val is None:
+                continue
+            try:
+                float_val = float(float_val)
+                assert float_val > 0
+                assert float_val <= 1
+            except (AssertionError, TypeError, ValueError):
+                raise AssessmentPolicyValidationError("Bad float value: %r" % float_val)
+            values[k] = float_val
+
         # store values directly, with the exception
         # of things we know we don't want/need
         for k, v in values.items():
