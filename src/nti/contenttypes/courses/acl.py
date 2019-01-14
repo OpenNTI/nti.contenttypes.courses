@@ -401,10 +401,17 @@ class RenderableContentPackageSupplementalACLProvider(object):
         """
         result = set()
         package = self.context
+        seen_set = set()
         courses = get_content_unit_courses(package)
         for course in courses or ():
+            if course in seen_set:
+                continue
+            seen_set.add(course)
             course_tree = get_course_hierarchy(course)
             for instance in course_tree or ():
+                if instance in seen_set:
+                    continue
+                seen_set.add(instance)
                 course_packages = get_course_packages(instance)
                 if package in course_packages:
                     result.add(instance)
