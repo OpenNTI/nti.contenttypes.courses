@@ -73,7 +73,6 @@ from nti.externalization.persistence import NoPickle
 from nti.ntiids.ntiids import find_object_with_ntiid
 
 from nti.traversal.traversal import find_interface
-from nti.app.authentication import get_remote_user
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -403,9 +402,6 @@ class RenderableContentPackageSupplementalACLProvider(object):
         result = set()
         package = self.context
         seen_set = set()
-        remote_user = get_remote_user()
-        if getattr(remote_user, 'username', '') == 'student1':
-            from IPython.terminal.debugger import set_trace;set_trace()
         courses = get_content_unit_courses(package)
         for course in courses or ():
             if course in seen_set:
