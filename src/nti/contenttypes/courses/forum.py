@@ -20,7 +20,6 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceBoard
 from nti.contenttypes.courses.interfaces import ICourseInstanceForum
 
 from nti.dataserver.contenttypes.forums.board import NoDefaultForumCommunityBoard
-from nti.dataserver.contenttypes.forums.forum import CommunityForum
 
 from nti.ntiids.ntiids import TYPE_OID
 

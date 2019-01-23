@@ -118,6 +118,8 @@ def discussions_for_course(course, create=True):
             # Sectioned courses would give us multiple
             # db error for some reason.
             # pylint: disable=too-many-function-args
-            IConnection(course).add(result)
+            connection = IConnection(course, None)
+            if connection is not None:
+                connection.add(result)
     return result
 _discussions_for_course = discussions_for_course

@@ -845,6 +845,8 @@ def _content_roles_for_course_instance(course, packages=None):
         packages = get_course_packages(course)
     roles = []
     for pack in packages:
+        if pack is None:
+            continue
         # Editable content packages may have fluxuating permissible
         # state; so we handle those elsewhere.
         if IEditableContentPackage.providedBy(pack):
