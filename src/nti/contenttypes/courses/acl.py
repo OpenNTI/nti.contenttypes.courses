@@ -404,12 +404,14 @@ class RenderableContentPackageSupplementalACLProvider(object):
         all_courses = set()
         courses = get_content_unit_courses(package)
         for course in courses or ():
-            course_tree = get_course_hierarchy(course)
-            all_courses.update(course_tree)
-        for course_instance in all_courses:
-            course_packages = get_course_packages(course_instance)
-            if package in course_packages:
-                result.add(course_instance)
+            if course in all_courses:
+                continue
+            course_hierarchy = get_course_hierarchy(course)
+            all_courses.update(course_hierarchy)
+            for course_instance in course_hierarchy:
+                course_packages = get_course_packages(course_instance)
+                if package in course_packages:
+                    result.add(course_instance)
         return result
 
     @Lazy
