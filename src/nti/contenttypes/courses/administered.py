@@ -77,8 +77,7 @@ class IterableAdminCourses(object):
 
 
 @interface.implementer(ICourseInstanceAdministrativeRole)
-class CourseInstanceAdministrativeRole(SchemaConfigured,
-                                       AbstractInstanceWrapper):
+class CourseInstanceAdministrativeRole(AbstractInstanceWrapper):
     createDirectFieldProperties(ICourseInstanceAdministrativeRole,
                                 # Be flexible about what this is,
                                 # the
@@ -91,8 +90,8 @@ class CourseInstanceAdministrativeRole(SchemaConfigured,
     mime_type = mimeType = "application/vnd.nextthought.courseware.courseinstanceadministrativerole"
 
     def __init__(self, CourseInstance=None, RoleName=None):
-        # SchemaConfigured is not cooperative
-        SchemaConfigured.__init__(self, RoleName=RoleName)
+        self.CourseInstance = CourseInstance
+        self.RoleName = RoleName
         AbstractInstanceWrapper.__init__(self, CourseInstance)
 
 

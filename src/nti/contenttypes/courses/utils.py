@@ -1187,11 +1187,14 @@ class CourseCatalogEntryFilterUtility(object):
                 or entry in tagged_entries
         return result
 
-    def filter_entries(self, entries, filter_str):
+    def filter_entries(self, entries, filter_str, selector=lambda x: x):
         """
         Returns a filtered sequence of included :class:`ICourseCatalogEntry`
         matches the given filter str. `entry` may be a single instance
         or a sequence. The given order is maintained.
+
+        An optional selector can be given here in order to efficiently
+        parse a collection/dict/iter only once when filtering.
         """
         if isinstance(entries, ICourseCatalogEntry):
             entries = (entries,)
@@ -1199,7 +1202,7 @@ class CourseCatalogEntryFilterUtility(object):
         if filter_str:
             tagged_entries = self.get_tagged_entries(filter_str)
             entries = [x for x in entries
-                       if self._include_entry(x, filter_str, tagged_entries)]
+                       if self._include_entry(selector(x), filter_str, tagged_entries)]
         return entries
 
 
