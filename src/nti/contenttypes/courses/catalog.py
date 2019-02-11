@@ -337,7 +337,7 @@ class CourseCatalogEntry(CatalogFamily,
         them. This should simplify things for the clients.
         """
         ours = super(CourseCatalogEntry, self).PlatformPresentationResources
-        if ours: # pylint: disable=using-constant-test 
+        if ours: # pylint: disable=using-constant-test
             return ours
 
         # Ok, do we have a course, and if so, does it have
@@ -432,7 +432,7 @@ class CourseCatalogFolder(_AbstractCourseCatalogMixin,
 
     @cachedIn('_v_all_my_entries')
     def _get_all_my_entries(self):
-        logger.debug("Building catalog entry cache (%s)", self)
+        logger.info("Building catalog entry cache (%s)", self)
         entries = dict()
 
         def _recur(folder):
