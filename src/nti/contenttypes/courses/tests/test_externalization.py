@@ -26,7 +26,7 @@ from nti.contenttypes.credit.credit import CreditDefinitionContainer
 from nti.contenttypes.credit.interfaces import ICreditDefinitionContainer
 
 from nti.externalization.externalization import to_external_object
-from nti.externalization.externalization import StandardExternalFields
+from nti.externalization.interfaces import StandardExternalFields
 
 from nti.contenttypes.courses.tests import CourseLayerTest
 
