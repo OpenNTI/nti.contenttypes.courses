@@ -89,7 +89,8 @@ def fill_asg_from_json(course, index, lastModified=0, force=False):
                 continue
             try:
                 int_val = int(int_val)
-                assert int_val > 0
+                if k != u'max_submissions':
+                    assert int_val > 0
             except (AssertionError, TypeError, ValueError):
                 raise AssessmentPolicyValidationError("Bad positive integer value: %r" % int_val)
             values[k] = int_val
