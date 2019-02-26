@@ -116,7 +116,7 @@ class DefaultAssessmentPolicyValidator(object):
             try:
                 max_submissions = int(max_submissions)
                 # -1 is unlimited
-                assert max_submissions == -1 or max_submissions >= 0
+                assert max_submissions == -1 or max_submissions > 0
             except (AssertionError, TypeError, ValueError):
                 msg = "Invalid max_submissions in policy for %s (%s)"
                 raise AssessmentPolicyValidationError(msg % (ntiid, max_submissions))
