@@ -47,6 +47,7 @@ from nti.contenttypes.courses.common import get_course_packages
 from nti.contenttypes.courses.index import IX_TAGS
 from nti.contenttypes.courses.index import IX_SITE
 from nti.contenttypes.courses.index import IX_SCOPE
+from nti.contenttypes.courses.index import IX_ENTRY
 from nti.contenttypes.courses.index import IX_COURSE
 from nti.contenttypes.courses.index import IX_PACKAGES
 from nti.contenttypes.courses.index import IX_USERNAME
@@ -715,6 +716,29 @@ def get_instructed_course_in_hierarchy(context, user):
 def is_course_instructor_or_editor(context, user):
     result = is_course_instructor(context, user) \
           or is_course_editor(context, user)
+    return result
+
+
+def get_enrollment_records(usernames, entry_ntiids=None, sites=None, intids=None):
+    """
+    Fetch the enrollment records for the given usernames, and the given course catalog entry ntiids.
+    """
+    result = []
+    intids = component.getUtility(IIntIds) if intids is None else intids
+    catalog = get_enrollment_catalog()
+    sites = (getSite().__name__,) if sites is None and getSite() is not None else None
+    query = {
+        IX_SCOPE: {'any_of': ENROLLMENT_SCOPE_NAMES},
+        IX_USERNAME: {'any_of': usernames},
+    }
+    if entry_ntiids:
+        query[IX_ENTRY] = {'any_of': entry_ntiids}
+    if sites:
+        query[IX_SITE] = {'any_of': sites}
+    for doc_id in catalog.apply(query) or ():
+        obj = intids.queryObject(doc_id)
+        if ICourseInstanceEnrollmentRecord.providedBy(obj):
+            result.append(obj)
     return result
 
 
