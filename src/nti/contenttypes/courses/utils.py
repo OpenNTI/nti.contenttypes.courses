@@ -719,18 +719,19 @@ def is_course_instructor_or_editor(context, user):
     return result
 
 
-def get_enrollment_records(usernames, entry_ntiids=None, sites=None, intids=None):
+def get_enrollment_records(usernames=None, entry_ntiids=None, sites=None, intids=None):
     """
     Fetch the enrollment records for the given usernames, and the given course catalog entry ntiids.
     """
     result = []
     intids = component.getUtility(IIntIds) if intids is None else intids
     catalog = get_enrollment_catalog()
-    sites = (getSite().__name__,) if sites is None and getSite() is not None else None
+    sites = (getSite().__name__,) if sites is None and getSite() is not None else sites
     query = {
         IX_SCOPE: {'any_of': ENROLLMENT_SCOPE_NAMES},
-        IX_USERNAME: {'any_of': usernames},
     }
+    if usernames:
+        query[IX_USERNAME] = {'any_of': usernames}
     if entry_ntiids:
         query[IX_ENTRY] = {'any_of': entry_ntiids}
     if sites:

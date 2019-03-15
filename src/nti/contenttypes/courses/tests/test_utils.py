@@ -40,6 +40,7 @@ from nti.contenttypes.courses.utils import index_course_roles
 from nti.contenttypes.courses.utils import get_courses_for_tag
 from nti.contenttypes.courses.utils import ProxyEnrollmentRecord
 from nti.contenttypes.courses.utils import get_context_enrollment_records
+from nti.contenttypes.courses.utils import get_enrollment_records
 
 from nti.dataserver.users import User
 
@@ -257,3 +258,86 @@ class TestContextEnrollments(CourseLayerTest):
         records = get_context_enrollment_records(student_user, student_user)
         assert_that(records, has_length(2))
         assert_that(records, contains_inanyorder(record, record2))
+
+    def _add_course(self, course_title, ds_folder):
+        course = ContentCourseInstance()
+        entry = ICourseCatalogEntry(course)
+        entry.title = course_title
+        entry.ntiid = u'tag:nextthought.com,2011-10:NTI-CourseInfo-%s' % course_title
+        ds_folder._p_jar.add(course)
+        addIntId(course)
+        return (course, entry)
+
+    def _enroll(self, user, course, enrollment_catalog, intids):
+        enrollments = ICourseEnrollmentManager(course)
+        record = enrollments.enroll(user)
+        enrollment_catalog.index_doc(intids.getId(record), record)
+        return record
+
+    @WithMockDSTrans
+    def test_get_enrollment_records(self):
+        ds_folder = self.ds.dataserver_folder
+        intids = component.queryUtility(IIntIds)
+        enrollment_catalog = get_enrollment_catalog()
+
+        user1 = User.create_user(username=u'user001')
+        user2 = User.create_user(username=u'user002')
+        user3 = User.create_user(username=u'user003')
+
+        result = get_enrollment_records(usernames=())
+        assert_that(result, has_length(0))
+        result = get_enrollment_records(usernames=('user001',))
+        assert_that(result, has_length(0))
+        result = get_enrollment_records(usernames=('user001', 'user002'))
+        assert_that(result, has_length(0))
+
+        course1, entry1 = self._add_course(u'course1', ds_folder)
+        course2, entry2 = self._add_course(u'course2', ds_folder)
+        course3, entry3 = self._add_course(u'course3', ds_folder)
+
+        record11 = self._enroll(user1, course1, enrollment_catalog, intids)
+        record12 = self._enroll(user1, course2, enrollment_catalog, intids)
+        record22 = self._enroll(user2, course2, enrollment_catalog, intids)
+
+        # return all enrollments in the current site.
+        result = get_enrollment_records()
+        assert_that(result, has_length(3))
+
+        # return user's all enrollments in the current site.
+        result = get_enrollment_records(usernames=('user001',))
+        assert_that(result, contains_inanyorder(record11, record12))
+        result = get_enrollment_records(usernames=('user002',))
+        assert_that(result, contains_inanyorder(record22))
+        result = get_enrollment_records(usernames=('user003',))
+        assert_that(result, has_length(0))
+
+        result = get_enrollment_records(usernames=('user001', 'user002'))
+        assert_that(result, contains_inanyorder(record11, record12, record22))
+        result = get_enrollment_records(usernames=('user001', 'user002', 'user003'))
+        assert_that(result, contains_inanyorder(record11, record12, record22))
+
+        # return user's enrollments for specified courses in the current site.
+        result = get_enrollment_records(usernames=('user001',), entry_ntiids=(entry1.ntiid,))
+        assert_that(result, contains_inanyorder(record11))
+        result = get_enrollment_records(usernames=('user001',), entry_ntiids=(entry2.ntiid,))
+        assert_that(result, contains_inanyorder(record12))
+        result = get_enrollment_records(usernames=('user001',), entry_ntiids=(entry1.ntiid, entry2.ntiid))
+        assert_that(result, contains_inanyorder(record11, record12))
+        result = get_enrollment_records(usernames=('user001',), entry_ntiids=(entry3.ntiid,))
+        assert_that(result, has_length(0))
+
+        result = get_enrollment_records(usernames=('user001', 'user003'), entry_ntiids=(entry1.ntiid, entry2.ntiid))
+        assert_that(result, contains_inanyorder(record11, record12))
+        result = get_enrollment_records(usernames=('user001','user002'), entry_ntiids=(entry1.ntiid, entry2.ntiid))
+        assert_that(result, contains_inanyorder(record11, record12, record22))
+
+        # return course's all enrollments in the current site.
+        assert_that(get_enrollment_records(entry_ntiids=(entry1.ntiid,)), contains_inanyorder(record11))
+        assert_that(get_enrollment_records(entry_ntiids=(entry2.ntiid,)), contains_inanyorder(record12, record22))
+        assert_that(get_enrollment_records(entry_ntiids=(entry3.ntiid,)), has_length(0))
+
+        assert_that(get_enrollment_records(entry_ntiids=(entry1.ntiid, entry2.ntiid)), contains_inanyorder(record11, record12, record22))
+        assert_that(get_enrollment_records(entry_ntiids=(entry1.ntiid, entry3.ntiid)), contains_inanyorder(record11))
+
+		# sites
+        assert_that(get_enrollment_records(sites=(u'xxx',)), has_length(0))
