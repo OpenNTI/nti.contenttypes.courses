@@ -59,6 +59,7 @@ from nti.contenttypes.courses.index import IX_PACKAGES
 
 from nti.contenttypes.courses.index import IndexRecord
 
+from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import COURSE_CATALOG_NAME
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_NAMES
 from nti.contenttypes.courses.interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
@@ -101,6 +102,7 @@ from nti.contenttypes.courses.utils import unindex_course_roles
 from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.courses.utils import index_course_instructor
 from nti.contenttypes.courses.utils import get_content_unit_courses
+from nti.contenttypes.courses.utils import remove_principal_from_course_content_roles
 
 from nti.dataserver.interfaces import IUser
 
@@ -348,6 +350,20 @@ def on_course_instance_removed(course, unused_event=None):
     if     not ICourseSubInstance.providedBy(course) \
         or course.Outline != get_parent_course(course).Outline:
         clear_course_outline(course)
+    # For section course instructors, remove access to the parent
+    # course if they are not also a parent course instructor.
+    if ICourseSubInstance.providedBy(course):
+        parent_course = get_parent_course(course)
+        parent_course_instructors = parent_course.instructors or ()
+        for section_inst in course.instructors or ():
+            if section_inst not in parent_course_instructors:
+                section_inst = IUser(section_inst, None)
+                if section_inst is None:
+                    continue
+                remove_principal_from_course_content_roles(section_inst, course, unenroll=True)
+                public_scope = parent_course.SharingScopes[ES_PUBLIC]
+                section_inst.record_no_longer_dynamic_member(public_scope)
+                section_inst.stop_following(public_scope)
     # remove bundle
     if      not ICourseSubInstance.providedBy(course) \
         and IContentCourseInstance.providedBy(course) \

@@ -14,8 +14,6 @@ from zope import interface
 
 from zope.cachedescriptors.property import cachedIn
 
-from nti.contenttypes.courses import MessageFactory as _
-
 from nti.contenttypes.courses.interfaces import ICourseInstanceBoard
 from nti.contenttypes.courses.interfaces import ICourseInstanceForum
 
@@ -47,6 +45,6 @@ class CourseInstanceBoard(NoDefaultForumCommunityBoard):
     NTIID = cachedIn('_v_ntiid')(to_external_ntiid_oid)
 
 
-def _forum_added_to_course_board(forum, event):
+def _forum_added_to_course_board(forum, unused_event):
     if ICourseInstanceBoard.providedBy(forum.__parent__) and not ICourseInstanceForum.providedBy(forum):
         interface.alsoProvides(forum, ICourseInstanceForum)
