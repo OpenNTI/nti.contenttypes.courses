@@ -46,8 +46,6 @@ from nti.dataserver.interfaces import IUser
 
 from nti.schema.fieldproperty import createDirectFieldProperties
 
-from nti.schema.schema import SchemaConfigured
-
 logger = __import__('logging').getLogger(__name__)
 
 
