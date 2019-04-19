@@ -81,6 +81,7 @@ from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
 from nti.contenttypes.courses.interfaces import IContentCourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseInstanceVendorInfo
 from nti.contenttypes.courses.interfaces import ICourseSynchronizationResults
+from nti.contenttypes.courses.interfaces import IDoNotCreateDefaultOutlineCourseInstance
 
 from nti.contenttypes.courses.interfaces import CourseRolesSynchronized
 from nti.contenttypes.courses.interfaces import CatalogEntrySynchronized
@@ -203,6 +204,9 @@ class _GenericFolderSynchronizer(object):
                 new_child_object.root = child_bucket
                 # Fire the added event
                 __traceback_info__ = folder, child_bucket, new_child_object
+                if ICourseInstance.providedBy(new_child_object):
+                    interface.alsoProvides(new_child_object,
+                                           IDoNotCreateDefaultOutlineCourseInstance)
                 folder[bucket_child_name] = new_child_object
 
         # Synchronize everything

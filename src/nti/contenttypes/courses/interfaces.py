@@ -497,6 +497,17 @@ class ISynchronizable(interface.Interface):
     lastSynchronized.setTaggedValue('_ext_excluded_out', True)
 
 
+
+class IDoNotCreateDefaultOutlineCourseInstance(interface.Interface):
+    """
+    A marker interface for designating a course as not viable for
+    creating a default outline.
+    """
+
+IDoNotCreateDefaultOutlineCourseInstance.setTaggedValue('_ext_is_marker_interface',
+                                                        True)
+
+
 class ICourseInstance(IFolder,
                       IShouldHaveTraversablePath,
                       _ICourseOutlineNodeContainer,
