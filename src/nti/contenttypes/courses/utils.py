@@ -541,9 +541,11 @@ def get_instructed_courses(user, **kwargs):
     Returns an iterable containing all the courses
     in which this user is an instructor
     """
-    return get_courses_for_scope(user,
-                                 scopes=(INSTRUCTOR,),
-                                 **kwargs)
+    result = get_courses_for_scope(user,
+                                   scopes=(INSTRUCTOR,),
+                                   **kwargs)
+    return [x for x in result
+            if ICourseInstance.providedBy(x) and user in x.instructors]
 
 
 def get_instructed_and_edited_courses(user, **kwargs):

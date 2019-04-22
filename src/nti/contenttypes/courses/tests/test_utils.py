@@ -20,6 +20,8 @@ from zope import component
 
 from zope.intid.interfaces import IIntIds
 
+from zope.securitypolicy.interfaces import IPrincipalRoleManager
+
 from nti.testing.matchers import verifiably_provides
 
 from nti.contentfragments.interfaces import IPlainTextContentFragment
@@ -31,6 +33,8 @@ from nti.contenttypes.courses.index import get_enrollment_catalog
 from nti.contenttypes.courses.index import install_courses_catalog
 from nti.contenttypes.courses.index import install_enrollment_catalog
 
+from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
+
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
@@ -39,8 +43,10 @@ from nti.contenttypes.courses.utils import get_course_tags
 from nti.contenttypes.courses.utils import index_course_roles
 from nti.contenttypes.courses.utils import get_courses_for_tag
 from nti.contenttypes.courses.utils import ProxyEnrollmentRecord
-from nti.contenttypes.courses.utils import get_context_enrollment_records
+from nti.contenttypes.courses.utils import get_instructed_courses
 from nti.contenttypes.courses.utils import get_enrollment_records
+from nti.contenttypes.courses.utils import get_context_enrollment_records
+from nti.contenttypes.courses.utils import get_instructed_and_edited_courses
 
 from nti.dataserver.users import User
 
@@ -196,6 +202,7 @@ class TestContextEnrollments(CourseLayerTest):
         # Base/empty cases
         admin_user = User.create_user(username='sjohnson@nextthought.com')
         instructor_user = User.create_user(username='instructor_user')
+        editor_user = User.create_user(username='editor_user')
         student_user = User.create_user(username='student_user')
         fudge_admin.is_callable().returns(True)
         records = get_context_enrollment_records(None, None)
@@ -212,14 +219,19 @@ class TestContextEnrollments(CourseLayerTest):
         inst1 = ContentCourseInstance()
         entry1 = ICourseCatalogEntry(inst1)
         entry1.title = u'course1'
+        entry1.ntiid = u'ntiid1'
         ds_folder._p_jar.add(inst1)
         addIntId(inst1)
         inst1.instructors = (instructor_user,)
+        inst1.editors = (editor_user,)
+        prm = IPrincipalRoleManager(inst1)
+        prm.assignRoleToPrincipal(RID_CONTENT_EDITOR, editor_user.username)
         index_course_roles(inst1, catalog=enrollment_catalog, intids=intids)
 
         inst2 = ContentCourseInstance()
         entry2 = ICourseCatalogEntry(inst2)
         entry2.title = u'course2'
+        entry2.ntiid = u'ntiid2'
         ds_folder._p_jar.add(inst2)
         addIntId(inst2)
 
@@ -258,6 +270,24 @@ class TestContextEnrollments(CourseLayerTest):
         records = get_context_enrollment_records(student_user, student_user)
         assert_that(records, has_length(2))
         assert_that(records, contains_inanyorder(record, record2))
+
+        # Validate inst catalog queries (including if a user is an editor in
+        # one course, but an instructor in another).
+        inst2.instructors = (editor_user,)
+        index_course_roles(inst2, catalog=enrollment_catalog, intids=intids)
+        instructed_courses = get_instructed_courses(instructor_user)
+        assert_that(instructed_courses, contains(inst1))
+        instructed_courses = get_instructed_courses(editor_user)
+        assert_that(instructed_courses, contains(inst2))
+        instructed_courses = get_instructed_courses(student_user)
+        assert_that(instructed_courses, has_length(0))
+
+        instructed_courses = get_instructed_and_edited_courses(instructor_user)
+        assert_that(instructed_courses, contains(inst1))
+        instructed_courses = get_instructed_and_edited_courses(editor_user)
+        assert_that(instructed_courses, contains_inanyorder(inst1, inst2))
+        instructed_courses = get_instructed_and_edited_courses(student_user)
+        assert_that(instructed_courses, has_length(0))
 
     def _add_course(self, course_title, ds_folder):
         course = ContentCourseInstance()
@@ -339,5 +369,5 @@ class TestContextEnrollments(CourseLayerTest):
         assert_that(get_enrollment_records(entry_ntiids=(entry1.ntiid, entry2.ntiid)), contains_inanyorder(record11, record12, record22))
         assert_that(get_enrollment_records(entry_ntiids=(entry1.ntiid, entry3.ntiid)), contains_inanyorder(record11))
 
-		# sites
+        # sites
         assert_that(get_enrollment_records(sites=(u'xxx',)), has_length(0))
