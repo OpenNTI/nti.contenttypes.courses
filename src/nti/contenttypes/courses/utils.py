@@ -489,6 +489,21 @@ def get_enrollments(user, **kwargs):
                                  **kwargs)
 
 
+def get_non_preview_enrollments(user, **kwargs):
+    """
+    Returns an iterable containing all the non-preview enrollment records
+    for this user.
+    """
+    records = get_enrollments(user, **kwargs)
+    result = []
+    for record in records:
+        course = ICourseInstance(record, None)
+        entry = ICourseCatalogEntry(course, None)
+        if entry is not None and not entry.Preview:
+            result.append(record)
+    return result
+
+
 def has_enrollments(user, intids=None):
     for obj in get_enrollments(user, intids=intids):
         if ICourseInstanceEnrollmentRecord.providedBy(obj):
