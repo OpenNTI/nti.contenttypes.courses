@@ -780,7 +780,7 @@ def get_content_outline_nodes(ntiid, intids=None):
 def unregister_outline_nodes(course, registry=None):
     if registry is None:
         site = get_course_site(course)
-        site = get_host_site(site) if site else None
+        site = get_host_site(site, safe=True) if site else None
         registry = site.getSiteManager() if site is not None else None
 
     def recur(node):
