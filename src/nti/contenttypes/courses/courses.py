@@ -165,6 +165,23 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder, Base):
         """
         return ()
 
+    def sublocations(self):
+        """
+        The order of SubInstances and SharingScopes matters, we have an ObjectRemovedEvent subscriber in which when
+        a parent course is being removed and its child course has different instructors, it would remove access to the
+        parent course for the instructors of child course which requires the intid of the SharingScopes of parent course.
+        See subscriber 'on_course_instance_removed' in nti/contenttypes/courses/subscribers.py
+        """
+        _order_matters = (u'SubInstances', u'SharingScopes')
+        for key in _order_matters:
+            if key in self:
+                yield self[key]
+
+        for key in self:
+            if key not in set(_order_matters):
+                yield self[key]
+
+
 from Acquisition import aq_acquire
 
 from nti.contentlibrary.presentationresource import DisplayableContentMixin

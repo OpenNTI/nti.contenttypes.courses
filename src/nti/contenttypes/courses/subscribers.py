@@ -106,6 +106,8 @@ from nti.contenttypes.courses.utils import remove_principal_from_course_content_
 
 from nti.dataserver.interfaces import IUser
 
+from nti.dataserver.users import User
+
 from nti.intid.common import addIntId
 from nti.intid.common import removeIntId
 
@@ -358,6 +360,10 @@ def on_course_instance_removed(course, unused_event=None):
         for section_inst in course.instructors or ():
             if section_inst not in parent_course_instructors:
                 section_inst = IUser(section_inst, None)
+                # Check if the instructor was deleted.
+                if section_inst is not None:
+                    section_inst = User.get_user(section_inst.username)
+
                 if section_inst is None:
                     continue
                 remove_principal_from_course_content_roles(section_inst, course, unenroll=True)
