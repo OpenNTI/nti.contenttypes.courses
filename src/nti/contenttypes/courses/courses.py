@@ -178,7 +178,7 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder, Base):
                 yield self[key]
 
         for key in self:
-            if key not in set(_order_matters):
+            if key not in _order_matters:
                 yield self[key]
 
 
