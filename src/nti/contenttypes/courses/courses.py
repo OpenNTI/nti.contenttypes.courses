@@ -167,12 +167,13 @@ class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder, Base):
 
     def sublocations(self):
         """
-        The order of SubInstances and SharingScopes matters, we have an ObjectRemovedEvent subscriber in which when
+        The order of <SubInstances, SharingScopes> and <Discussions, SharingScopes> matters, we have an ObjectRemovedEvent subscriber in which when
         a parent course is being removed and its child course has different instructors, it would remove access to the
         parent course for the instructors of child course which requires the intid of the SharingScopes of parent course.
-        See subscriber 'on_course_instance_removed' in nti/contenttypes/courses/subscribers.py
+        See subscriber 'on_course_instance_removed' in nti/contenttypes/courses/subscribers.py,
+        and 'stream_willRemoveIntIdForContainedObject' in nti/dataserver/activitysteam.py where the creator of community is the course sharingscope.
         """
-        _order_matters = (u'SubInstances', u'SharingScopes')
+        _order_matters = (u'Discussions', u'Outline', u'SubInstances', u'SharingScopes')
         for key in _order_matters:
             if key in self:
                 yield self[key]
