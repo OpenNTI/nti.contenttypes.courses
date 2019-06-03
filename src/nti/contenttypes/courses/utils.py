@@ -1147,7 +1147,7 @@ def filter_hidden_tags(tags):
     return [x for x in tags if not is_hidden_tag(x)]
 
 
-def get_course_tags(filter_str=None, filter_hidden=True):
+def get_course_tags(filter_str=None, filter_hidden=True, sites=()):
     """
     Get all course tags. Optionally filtering by the given `filter_str` param
     and by default, removing all hidden tags.
@@ -1155,8 +1155,18 @@ def get_course_tags(filter_str=None, filter_hidden=True):
     # NOTE: do we want cardinality or any sort order here?
     catalog = get_courses_catalog()
     tag_index = catalog[IX_TAGS]
-    # These will be all in lower case
-    tags = set(tag_index.words() or ())
+    sites = get_sites_4_index(sites)
+    if sites:
+        query = {IX_SITE: {'any_of': sites}}
+        course_ids = catalog.apply(query)
+        tags = set()
+        for course_id in course_ids:
+            course_tags = tag_index._rev_index.get(course_id)
+            if course_tags:
+                tags.update(course_tags)
+    else:
+        # Outside of a site (tests)
+        tags = set(tag_index.words() or ())
     if filter_hidden:
         tags = filter_hidden_tags(tags)
     if filter_str:
