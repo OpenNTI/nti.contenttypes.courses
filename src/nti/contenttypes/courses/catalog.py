@@ -13,6 +13,8 @@ from __future__ import absolute_import
 from datetime import datetime
 from functools import total_ordering
 
+from perfmetrics import metricmethod
+
 from zope import component
 from zope import interface
 
@@ -431,6 +433,7 @@ class CourseCatalogFolder(_AbstractCourseCatalogMixin,
         return entry
 
     @cachedIn('_v_all_my_entries')
+    @metricmethod
     def _get_all_my_entries(self):
         logger.info("Building catalog entry cache (%s)", self)
         entries = dict()

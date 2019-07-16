@@ -681,8 +681,8 @@ class DefaultCourseEnrollments(object):
     def count_enrollments(self):
         # pylint: disable=no-member
         # Only return enrollment record count with non-deleted principals.
-        return len([x for x in self._inst_enrollment_storage.values()
-                    if x.Principal is not None])
+        # We should be clearing that up on user deletion; remove weak ref resolving
+        return len(self._inst_enrollment_storage)
 
     def is_principal_enrolled(self, principal):
         principal_id = IPrincipal(principal).id
