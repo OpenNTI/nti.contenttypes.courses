@@ -1946,7 +1946,13 @@ class ICourseCompletionSectionImporter(ICourseSectionImporter):
     pass
 
 
-class DuplicateImportFromExportException(ValidationError):
+class CourseImportException(ValidationError):
+    """
+    A generic course import exception.
+    """
+
+
+class DuplicateImportFromExportException(CourseImportException):
     """
     We prevent courses from being imported with the same export zip since we do
     not want ntiids to collide.
