@@ -584,7 +584,14 @@ class ICourseInstance(IFolder,
     instructors.setTaggedValue('_ext_excluded_out', True)
 
 
-class ICourseSubInstance(ICourseInstance):
+class INonExportable(interface.Interface):
+    """
+    Marker interface for those :class:`ICourseInstance` objects which may not
+    be exportable.
+    """
+
+
+class ICourseSubInstance(ICourseInstance, INonExportable):
     """
     A portion or section of a course instance that lives within a
     containing course instance. The containing course instance will
@@ -1763,13 +1770,6 @@ class IUserAdministeredCourses(interface.Interface):
         """
 
 
-class INonExportable(interface.Interface):
-    """
-    Marker interface for those :class:`ICourseInstance` objects which may not
-    be exportable.
-    """
-
-
 def get_course_assessment_predicate_for_user(user, course):
     """
     Given a user and an :class:`.ICourseInstance` the user is enrolled in, return a
@@ -2100,6 +2100,29 @@ class ICourseAwardableCredit(IAwardableCredit):
                    vocabulary=ENROLLMENT_SCOPE_VOCABULARY,
                    default=ES_PUBLIC,
                    required=False)
+
+
+class ICourseContentLibraryProvider(interface.Interface):
+    """
+    An intended subscriber provider of course content mimetypes that can be added to
+    lessons based on a user and course.
+    """
+
+    def get_item_mime_types():
+        """
+        Returns the collection of mimetypes that may be available (either
+        they exist or can exist) in this course.
+        """
+
+    def has_items():
+        """
+        Returns a bool if this provider has items.
+        """
+
+    def iter_items():
+        """
+        A generator of course content items.
+        """
 
 
 #: All course outline node interfaces
