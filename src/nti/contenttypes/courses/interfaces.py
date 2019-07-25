@@ -2114,16 +2114,6 @@ class ICourseContentLibraryProvider(interface.Interface):
         they exist or can exist) in this course.
         """
 
-    def has_items():
-        """
-        Returns a bool if this provider has items.
-        """
-
-    def iter_items():
-        """
-        A generator of course content items.
-        """
-
 
 #: All course outline node interfaces
 ALL_COURSE_OUTLINE_INTERFACES = (ICourseOutlineContentNode,
