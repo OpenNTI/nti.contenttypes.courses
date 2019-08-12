@@ -19,8 +19,11 @@ from nti.contenttypes.courses import MessageFactory as _
 from nti.contenttypes.courses.interfaces import ICourseInstanceBoard
 from nti.contenttypes.courses.interfaces import ICourseInstanceForum
 
-from nti.dataserver.contenttypes.forums.forum import CommunityForum
 from nti.dataserver.contenttypes.forums.board import CommunityBoard
+
+from nti.dataserver.contenttypes.forums.forum import CommunityForum
+
+from nti.dataserver.contenttypes.forums.interfaces import IDefaultForum
 
 from nti.ntiids.ntiids import TYPE_OID
 
@@ -53,6 +56,7 @@ class CourseInstanceBoard(CommunityBoard):
         forum = CommunityForum()
         forum.creator = self.creator
         self[forum.__default_name__] = forum
+        interface.alsoProvides(forum, IDefaultForum)
         forum.title = _(u'Forum')
         return forum
 
