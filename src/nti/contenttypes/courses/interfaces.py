@@ -88,6 +88,7 @@ from nti.dataserver.interfaces import IShouldHaveTraversablePath
 from nti.dataserver.interfaces import IUseNTIIDAsExternalUsername
 
 from nti.dataserver.contenttypes.forums.interfaces import IBoard
+from nti.dataserver.contenttypes.forums.interfaces import IDefaultForumBoard
 
 from nti.dataserver.users.interfaces import IDisallowMembershipOperations
 
@@ -444,7 +445,7 @@ from nti.dataserver.contenttypes.forums.interfaces import ICommunityForum
 from nti.dataserver.contenttypes.forums.interfaces import IUseOIDForNTIID
 
 
-class ICourseInstanceBoard(IUseOIDForNTIID, ICommunityBoard):
+class ICourseInstanceBoard(IUseOIDForNTIID, ICommunityBoard, IDefaultForumBoard):
     """
     Specialization of boards for courses.
 
