@@ -9,6 +9,7 @@ from __future__ import absolute_import
 # pylint: disable=W0212,R0904
 
 from hamcrest import is_
+from hamcrest import is_not
 from hamcrest import assert_that
 
 from zope import interface
@@ -40,7 +41,7 @@ class TestForum(CourseLayerTest):
 
     def test_course_board_no_default(self):
         board = CourseInstanceBoard()
-        assert_that(IDefaultForumBoard(board, None), is_(None))
+        assert_that(IDefaultForumBoard(board, None), is_not(None))
 
 
 class TestPermissions(CourseLayerTest):
@@ -57,4 +58,4 @@ class TestPermissions(CourseLayerTest):
 
         assert_that(can_delete, is_(Deny))
 
-        
+

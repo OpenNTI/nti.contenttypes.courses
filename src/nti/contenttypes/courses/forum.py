@@ -14,10 +14,13 @@ from zope import interface
 
 from zope.cachedescriptors.property import cachedIn
 
+from nti.contenttypes.courses import MessageFactory as _
+
 from nti.contenttypes.courses.interfaces import ICourseInstanceBoard
 from nti.contenttypes.courses.interfaces import ICourseInstanceForum
 
-from nti.dataserver.contenttypes.forums.board import NoDefaultForumCommunityBoard
+from nti.dataserver.contenttypes.forums.forum import CommunityForum
+from nti.dataserver.contenttypes.forums.board import CommunityBoard
 
 from nti.ntiids.ntiids import TYPE_OID
 
@@ -27,7 +30,7 @@ logger = __import__('logging').getLogger(__name__)
 
 
 @interface.implementer(ICourseInstanceBoard)
-class CourseInstanceBoard(NoDefaultForumCommunityBoard):
+class CourseInstanceBoard(CommunityBoard):
     """
     The board for a course.
     """
@@ -43,6 +46,15 @@ class CourseInstanceBoard(NoDefaultForumCommunityBoard):
     # by OID
     NTIID_TYPE = _ntiid_type = TYPE_OID
     NTIID = cachedIn('_v_ntiid')(to_external_ntiid_oid)
+
+    def createDefaultForum(self):
+        if CommunityForum.__default_name__ in self:
+            return self[CommunityForum.__default_name__]
+        forum = CommunityForum()
+        forum.creator = self.creator
+        self[forum.__default_name__] = forum
+        forum.title = _(u'Forum')
+        return forum
 
 
 def _forum_added_to_course_board(forum, unused_event):
