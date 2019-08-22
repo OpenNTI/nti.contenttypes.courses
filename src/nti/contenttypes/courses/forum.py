@@ -21,6 +21,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceForum
 
 from nti.dataserver.contenttypes.forums.board import CommunityBoard
 
+from nti.dataserver.contenttypes.forums.forum import DEFAULT_FORUM_NAME
+
 from nti.dataserver.contenttypes.forums.forum import CommunityForum
 
 from nti.dataserver.contenttypes.forums.interfaces import IDefaultForum
@@ -57,7 +59,7 @@ class CourseInstanceBoard(CommunityBoard):
         forum.creator = self.creator
         self[forum.__default_name__] = forum
         interface.alsoProvides(forum, IDefaultForum)
-        forum.title = _(u'Forum')
+        forum.title = _(DEFAULT_FORUM_NAME)
         return forum
 
 
