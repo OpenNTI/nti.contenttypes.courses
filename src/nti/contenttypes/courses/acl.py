@@ -26,6 +26,8 @@ from nti.contentlibrary.interfaces import IRenderableContentPackage
 
 from nti.contenttypes.courses.common import get_course_packages
 
+from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussionTopic
+
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -60,6 +62,8 @@ from nti.dataserver.authorization_acl import acl_from_aces
 
 from nti.dataserver.contenttypes.forums.acl import CommunityBoardACLProvider
 from nti.dataserver.contenttypes.forums.acl import _ACLCommunityForumACLProvider
+
+from nti.dataserver.contenttypes.forums.interfaces import ICommunityHeadlineTopic
 
 from nti.dataserver.interfaces import ACE_DENY_ALL
 from nti.dataserver.interfaces import ALL_PERMISSIONS
@@ -381,6 +385,26 @@ class CourseScopeForumRolePermissionManager(RolePermissionManager):
     def __init__(self, forum):
         super(CourseScopeForumRolePermissionManager, self).__init__()
         self.denyPermissionToRole(ACT_DELETE.id, ROLE_SITE_ADMIN.id)
+
+
+@component.adapter(ICommunityHeadlineTopic)
+@interface.implementer(IRolePermissionManager)
+@NoPickle
+class TopicRolePermissionManager(RolePermissionManager):
+    """
+    Not sure if this is what we want, since this affects topics
+    outside of courses.
+
+    This allows site admins to delete non-course discussion topics
+    within course scoped forums.
+    """
+
+    def __init__(self, topic):
+        super(TopicRolePermissionManager, self).__init__()
+        if ICourseDiscussionTopic.providedBy(topic):
+            self.denyPermissionToRole(ACT_DELETE.id, ROLE_SITE_ADMIN.id)
+        else:
+            self.grantPermissionToRole(ACT_DELETE.id, ROLE_SITE_ADMIN.id)
 
 
 @component.adapter(IRenderableContentPackage)
