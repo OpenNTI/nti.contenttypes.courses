@@ -223,7 +223,6 @@
 	<!-- ACLs -->
 	<adapter factory=".acl.CourseBoardACLProvider" />
 	<adapter factory=".acl.CourseForumACLProvider" />
-	<adapter factory=".acl.TopicRolePermissionManager" />
 	<adapter factory=".acl.CourseScopeForumACLProvider" />
 	<adapter factory=".acl.CourseInstanceACLProvider" />
 	<adapter factory=".acl.CourseOutlineNodeACLProvider" />

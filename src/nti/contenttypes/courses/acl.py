@@ -26,8 +26,6 @@ from nti.contentlibrary.interfaces import IRenderableContentPackage
 
 from nti.contenttypes.courses.common import get_course_packages
 
-from nti.contenttypes.courses.discussions.interfaces import ICourseDiscussionTopic
-
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -62,8 +60,6 @@ from nti.dataserver.authorization_acl import acl_from_aces
 
 from nti.dataserver.contenttypes.forums.acl import CommunityBoardACLProvider
 from nti.dataserver.contenttypes.forums.acl import _ACLCommunityForumACLProvider
-
-from nti.dataserver.contenttypes.forums.interfaces import ICommunityHeadlineTopic
 
 from nti.dataserver.interfaces import ACE_DENY_ALL
 from nti.dataserver.interfaces import ALL_PERMISSIONS
@@ -380,31 +376,14 @@ class CourseScopeForumRolePermissionManager(RolePermissionManager):
     for the site admin role.  site admin role has all permissions on the
     root site folder so we must deny that here to prevent them from
     deleting course managed discussions.
+
+    This will also prevent site admins from deleting any topic
+    created within these forums (unless we add a grant on those topics).
     """
 
     def __init__(self, forum):
         super(CourseScopeForumRolePermissionManager, self).__init__()
         self.denyPermissionToRole(ACT_DELETE.id, ROLE_SITE_ADMIN.id)
-
-
-@component.adapter(ICommunityHeadlineTopic)
-@interface.implementer(IRolePermissionManager)
-@NoPickle
-class TopicRolePermissionManager(RolePermissionManager):
-    """
-    Not sure if this is what we want, since this affects topics
-    outside of courses.
-
-    This allows site admins to delete non-course discussion topics
-    within course scoped forums.
-    """
-
-    def __init__(self, topic):
-        super(TopicRolePermissionManager, self).__init__()
-        if ICourseDiscussionTopic.providedBy(topic):
-            self.denyPermissionToRole(ACT_DELETE.id, ROLE_SITE_ADMIN.id)
-        else:
-            self.grantPermissionToRole(ACT_DELETE.id, ROLE_SITE_ADMIN.id)
 
 
 @component.adapter(IRenderableContentPackage)
