@@ -54,29 +54,27 @@ class TestImporter(CourseLayerTest):
         with open(path, "r") as fp:
             source = fp.read().decode("utf-8")
             ext_obj = simplejson.loads(source)
-
-        with mock_dataserver.mock_db_trans(self.ds):
-            # create course and add to connection
-            inst = ContentCourseInstance()
-            connection = mock_dataserver.current_transaction
-            connection.add(inst)
-            # initialize entry
-            entry = ICourseCatalogEntry(inst)
-            entry.ntiid = u'tag:nextthought.com,2011-10:NTI-CourseInfo-XYZ'
-            # initialize outline
-            getattr(inst, 'Outline')
-            # do import
-            try:
-                importer = CourseOutlineImporter()
-                importer.load_external(inst, ext_obj)
-                # check import
-                assert_that(inst.Outline, has_length(14))
-                for node in inst.Outline.values():
-                    assert_that(node,
-                                has_property('ntiid',
-                                             starts_with('tag:nextthought.com,2011-10:NTI-NTICourseOutlineNode-XYZ')))
-            finally:
-                self._cleanup()
+        # create course and add to connection
+        inst = ContentCourseInstance()
+        connection = mock_dataserver.current_transaction
+        connection.add(inst)
+        # initialize entry
+        entry = ICourseCatalogEntry(inst)
+        entry.ntiid = u'tag:nextthought.com,2011-10:NTI-CourseInfo-XYZ'
+        # initialize outline
+        getattr(inst, 'Outline')
+        # do import
+        try:
+            importer = CourseOutlineImporter()
+            importer.load_external(inst, ext_obj)
+            # check import
+            assert_that(inst.Outline, has_length(14))
+            for node in inst.Outline.values():
+                assert_that(node,
+                            has_property('ntiid',
+                                         starts_with('tag:nextthought.com,2011-10:NTI-NTICourseOutlineNode-XYZ')))
+        finally:
+            self._cleanup()
 
     def test_import_course_tab_preferences(self):
         tmp_dir = tempfile.mkdtemp(dir="/tmp")

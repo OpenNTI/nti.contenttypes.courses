@@ -107,33 +107,32 @@ class TestImportExport(CourseCreditLayerTest):
         export_path = os.path.join(tmp_dir, 'course_info.json')
         export_filer = DirectoryFiler(tmp_dir)
 
-        with mock_dataserver.mock_db_trans(self.ds):
-            # Create course and add to connection
-            course = ContentCourseInstance()
-            connection = mock_dataserver.current_transaction
-            connection.add(course)
-            connection.add(self.container)
-            course.root = FilesystemBucket(name=u"Gateway")
-            course.root.absolute_path = root_path
-            # Set up the credit definition
-            credit_definition = CreditDefinition(credit_type=u'Credit',
-                                                 credit_units=u'Hours')
-            credit_definition = self.container.add_credit_definition(credit_definition)
-            addIntId(credit_definition)
-            try:
-                export_filer.save(export_path, json_io, overwrite=True)
-                importer = CourseInfoImporter()
-                importer.process(course, export_filer)
-                catalog_entry = ICourseCatalogEntry(course)
-                assert_that(catalog_entry.awardable_credits, has_length(1))
-                awardable_credit = catalog_entry.awardable_credits[0]
-                assert_that(awardable_credit.ntiid, is_not("tag:nextthought.com,2011-10:NTI-AwardableCredit-system_20180521202001_561678_1175851886"))
-                credit_def = awardable_credit.credit_definition
-                assert_that(credit_def, is_not(none()))
-                assert_that(credit_def.ntiid, is_not("tag:nextthought.com,2011-10:NTI-CreditDefinition-system_20180521201902_781279_2616385502"))
-                assert_that(credit_def, has_properties(u'credit_type', u'Credit',
-                                                       u'credit_units', u'Hours'))
-            finally:
-                shutil.rmtree(tmp_dir)
-                # Restore the file we overwrote
-                transfer_to_native_file(old_source, course_info_path)
+        # Create course and add to connection
+        course = ContentCourseInstance()
+        connection = mock_dataserver.current_transaction
+        connection.add(course)
+        connection.add(self.container)
+        course.root = FilesystemBucket(name=u"Gateway")
+        course.root.absolute_path = root_path
+        # Set up the credit definition
+        credit_definition = CreditDefinition(credit_type=u'Credit',
+                                             credit_units=u'Hours')
+        credit_definition = self.container.add_credit_definition(credit_definition)
+        addIntId(credit_definition)
+        try:
+            export_filer.save(export_path, json_io, overwrite=True)
+            importer = CourseInfoImporter()
+            importer.process(course, export_filer)
+            catalog_entry = ICourseCatalogEntry(course)
+            assert_that(catalog_entry.awardable_credits, has_length(1))
+            awardable_credit = catalog_entry.awardable_credits[0]
+            assert_that(awardable_credit.ntiid, is_not("tag:nextthought.com,2011-10:NTI-AwardableCredit-system_20180521202001_561678_1175851886"))
+            credit_def = awardable_credit.credit_definition
+            assert_that(credit_def, is_not(none()))
+            assert_that(credit_def.ntiid, is_not("tag:nextthought.com,2011-10:NTI-CreditDefinition-system_20180521201902_781279_2616385502"))
+            assert_that(credit_def, has_properties(u'credit_type', u'Credit',
+                                                   u'credit_units', u'Hours'))
+        finally:
+            shutil.rmtree(tmp_dir)
+            # Restore the file we overwrote
+            transfer_to_native_file(old_source, course_info_path)
