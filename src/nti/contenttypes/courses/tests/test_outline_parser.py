@@ -56,8 +56,6 @@ class TestOutlineParser(CourseLayerTest):
         key = FilesystemKey()
         key.absolute_path = path
 
-        assert_that(self._as_utils(), has_length(0))
-
         outline = CourseOutline()
         fill_outline_from_key(outline, key)
         assert_that(outline, validly_provides(ICourseOutline))
@@ -65,19 +63,19 @@ class TestOutlineParser(CourseLayerTest):
 
         unit_1 = outline['tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.1']
         assert_that(unit_1, has_property('title', 'Introduction'))
-        assert_that(unit_1, 
+        assert_that(unit_1,
 					has_property('ntiid', 'tag:nextthought.com,2011-10:OU-NTICourseUnit-CLC3403_LawAndJustice.course.unit.1'))
 
         lesson_1 = unit_1['tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.0']
         assert_that(lesson_1.AvailableBeginning, is_(not_none()))
         assert_that(lesson_1.AvailableEnding, is_(not_none()))
-        assert_that(lesson_1, 
+        assert_that(lesson_1,
 					has_property('title', '1. Defining Law and Justice'))
-        assert_that(lesson_1, 
+        assert_that(lesson_1,
 					has_property('AvailableEnding', has_property('tzinfo', none())))
-        assert_that(lesson_1, 
+        assert_that(lesson_1,
 					has_property('ntiid', 'tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.0'))
-        assert_that(lesson_1, 
+        assert_that(lesson_1,
 					externalizes(has_entries('AvailableEnding', '2013-08-22T04:59:59Z',
                                              'title', '1. Defining Law and Justice',
                                              'NTIID', 'tag:nextthought.com,2011-10:OU-NTICourseOutlineNode-CLC3403_LawAndJustice.course.unit.1.0',
