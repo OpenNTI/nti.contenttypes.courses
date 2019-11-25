@@ -70,6 +70,8 @@ from nti.contentlibrary.interfaces import IGenericSynchronizationResults
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
 from nti.contenttypes.completion.interfaces import ICompletionContext
+from nti.contenttypes.completion.interfaces import CompletionContextCompletedEvent
+from nti.contenttypes.completion.interfaces import ICompletionContextCompletedEvent
 
 from nti.contenttypes.courses import MessageFactory as _
 
@@ -1937,6 +1939,14 @@ class ICourseEvaluationImporter(interface.Interface):
         :param source Source to process
         :param filer: External source filer
         """
+
+
+class ICourseCompletedEvent(ICompletionContextCompletedEvent):
+    pass
+
+
+class CourseCompletedEvent(CompletionContextCompletedEvent):
+    pass
 
 
 class ICourseCompletionSectionExporter(ICourseSectionExporter):
