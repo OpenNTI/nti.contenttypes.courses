@@ -1945,6 +1945,7 @@ class ICourseCompletedEvent(ICompletionContextCompletedEvent):
     pass
 
 
+@interface.implementer(ICourseCompletedEvent)
 class CourseCompletedEvent(CompletionContextCompletedEvent):
     pass
 
