@@ -38,6 +38,7 @@ from nti.contenttypes.courses.utils import get_user_or_instructor_enrollment_rec
 from nti.dataserver.interfaces import ACE_ACT_ALLOW
 
 from nti.ntiids.ntiids import make_specific_safe
+from nti.ntiids.ntiids import ImpossibleToMakeSpecificPartSafe
 
 from nti.schema.interfaces import find_most_derived_interface
 
@@ -183,7 +184,7 @@ def get_forum_scopes(forum):
 
     if result:
         return result
- 
+
     course = find_interface(forum, ICourseInstance, strict=False)
     m = {v.NTIID: k for k, v in course.SharingScopes.items()} if course else {}
     if hasattr(forum, '__entities__'):
@@ -256,7 +257,11 @@ def resolve_discussion_course_bundle(user, item, context=None, record=None):
         topic = None
         m_scope = ES_ALL
         topic_key = get_topic_key(discussion)
-        topic_title = make_specific_safe(discussion.title)
+        try:
+            topic_title = make_specific_safe(discussion.title)
+        except ImpossibleToMakeSpecificPartSafe:
+            topic_title = ''
+
         if scope != ES_ALL:
             m_scope = ENROLLMENT_LINEAGE_MAP.get(scope)[0]
         m_scope_term = get_scope_term(m_scope) if m_scope != ES_ALL else None
