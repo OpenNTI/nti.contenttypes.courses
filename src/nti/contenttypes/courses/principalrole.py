@@ -22,6 +22,7 @@ from zope.securitypolicy.interfaces import IPrincipalRoleMap
 
 from zope.securitypolicy.rolepermission import AnnotationRolePermissionManager
 
+from nti.dataserver.authorization import ACT_PIN
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ACT_UPDATE
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
@@ -100,3 +101,11 @@ class CourseRolePermissionManager(AnnotationRolePermissionManager):
             # Initialize with perms for our global content admin.
             for perm in (ACT_READ, ACT_CONTENT_EDIT, ACT_UPDATE):
                 self.grantPermissionToRole(perm.id, ROLE_CONTENT_ADMIN.id)
+
+    def getRolesForPermission(self, perm):
+        #: Ensure our instructors/TAs have PIN access under this context
+        result = super(CourseRolePermissionManager, self).getRolesForPermission(perm)
+        if perm == ACT_PIN.id:
+            for role_id in (RID_INSTRUCTOR, RID_TA):
+                result.append((role_id, Allow))
+        return result
