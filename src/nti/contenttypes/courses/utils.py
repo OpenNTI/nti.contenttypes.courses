@@ -760,6 +760,36 @@ def get_enrollment_records(usernames=None, entry_ntiids=None, sites=None, intids
     return result
 
 
+def get_instructors(site=None, username=None, entry_ntiid=None):
+    """
+    Fetch all course instructors for the given site, username, and course entry ntiid.
+    """
+    result = set()
+    intids = component.getUtility(IIntIds)
+    catalog = get_enrollment_catalog()
+    site = get_current_site() if site is None else site
+    query = {
+        IX_SCOPE: {'any_of': (INSTRUCTOR,)},
+    }
+    for idx, val in ((IX_SITE, site),
+                     (IX_USERNAME, username),
+                     (IX_ENTRY, entry_ntiid)):
+        if val:
+            query[idx] = {'any_of': (val,)}
+
+    for doc_id in catalog.apply(query) or ():
+        obj = intids.queryObject(doc_id)
+        if not ICourseInstance.providedBy(obj):
+            continue
+
+        for principal in obj.instructors or ():
+            pid = getattr(principal, 'id', str(principal))
+            user = User.get_user(pid)
+            if user is not None and user not in result:
+                result.add(user)
+    return result
+
+
 # outlines
 
 
