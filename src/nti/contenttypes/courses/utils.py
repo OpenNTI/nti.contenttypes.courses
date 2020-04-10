@@ -53,6 +53,8 @@ from nti.contenttypes.courses.index import IX_PACKAGES
 from nti.contenttypes.courses.index import IX_USERNAME
 from nti.contenttypes.courses.index import IX_IMPORT_HASH
 from nti.contenttypes.courses.index import IX_CONTENT_UNIT
+from nti.contenttypes.courses.index import IX_INSTRUCTORS
+from nti.contenttypes.courses.index import IX_EDITORS
 
 from nti.contenttypes.courses.index import IndexRecord
 from nti.contenttypes.courses.index import get_courses_catalog
@@ -549,6 +551,51 @@ def get_user_or_instructor_enrollment_record(context, user):
 
 
 # instructors & editors
+
+
+def _get_instructors_or_editors(site, idx, scope=None):
+    """
+    Fetch all course instructors or all course editors for the given site.
+    """
+    result = set()
+    intids = component.getUtility(IIntIds)
+    catalog = get_enrollment_catalog()
+    site = get_current_site() if site is None else site
+    query = {
+        IX_SITE: {'any_of': (site, )},
+        IX_SCOPE: {'any_of': (scope, )}
+    }
+
+    index = catalog[idx]
+
+    usernames= set()
+    for doc_id in catalog.apply(query) or ():
+        obj = intids.queryObject(doc_id)
+        if not ICourseInstance.providedBy(obj):
+            continue
+
+        tmp = set(index.values(doc_id=doc_id))
+        if tmp:
+            usernames = usernames.union(tmp)
+
+    result = set()
+    for username in usernames:
+        user = User.get_user(username)
+        if user is not None:
+            result.add(user)
+    return result
+
+
+def get_instructors(site=None):
+    return _get_instructors_or_editors(site=site,
+                                       idx=IX_INSTRUCTORS,
+                                       scope=INSTRUCTOR)
+
+
+def get_editors(site=None):
+    return _get_instructors_or_editors(site=site,
+                                       idx=IX_EDITORS,
+                                       scope=EDITOR)
 
 
 def get_instructed_courses(user, **kwargs):

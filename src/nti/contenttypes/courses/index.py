@@ -30,6 +30,8 @@ from nti.base._compat import text_
 from nti.contenttypes.courses.common import get_course_site
 from nti.contenttypes.courses.common import get_course_packages
 
+from nti.contenttypes.courses.interfaces import EDITOR
+from nti.contenttypes.courses.interfaces import INSTRUCTOR
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseKeywords
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -131,6 +133,8 @@ IX_CREATEDTIME = 'createdTime'
 IX_ENTRY = IX_COURSE = 'course'
 IX_LASTMODIFIED = 'lastModified'
 IX_USERNAME = IX_STUDENT = IX_INSTRUCTOR = 'username'
+IX_INSTRUCTORS = 'instructors'
+IX_EDITORS = 'editors'
 
 
 class ValidatingSiteName(object):
@@ -179,6 +183,26 @@ class ScopeSetIndex(KeepSetIndex):
             result = (text_(value.Scope),)
         elif ICourseInstanceEnrollmentRecord.providedBy(value):
             result = (text_(value.Scope),)
+        else:
+            result = ()
+        return result
+
+
+class InstructorSetIndex(KeepSetIndex):
+
+    def to_iterable(self, value):
+        if isinstance(value, IndexRecord) and value.scope == INSTRUCTOR:
+            result = (text_(value.username),)
+        else:
+            result = ()
+        return result
+
+
+class EditorSetIndex(KeepSetIndex):
+
+    def to_iterable(self, value):
+        if isinstance(value, IndexRecord) and value.scope == EDITOR:
+            result = (text_(value.username),)
         else:
             result = ()
         return result
@@ -248,6 +272,8 @@ def create_enrollment_catalog(catalog=None, family=BTrees.family64):
     for name, clazz in ((IX_SCOPE, ScopeSetIndex),
                         (IX_SITE, SingleSiteIndex),
                         (IX_USERNAME, UsernameIndex),
+                        (IX_INSTRUCTORS, InstructorSetIndex),
+                        (IX_EDITORS, EditorSetIndex),
                         (IX_ENTRY, CatalogEntryIDIndex),
                         (IX_CREATEDTIME, RecordCreatedTimeIndex),
                         (IX_LASTMODIFIED, RecordLastModifiedIndex)):
