@@ -621,6 +621,16 @@ def get_instructed_and_edited_courses(user, **kwargs):
                                  **kwargs)
 
 
+def get_editable_courses(user, **kwargs):
+    """
+    Returns an iterable containing all the courses
+    in which this user is an editor.
+    """
+    return get_courses_for_scope(user,
+                                 scopes=(EDITOR,),
+                                 **kwargs)
+
+
 def get_instructors_in_roles(roles, setting=Allow):
     """
     return the instructor principal ids for the specified roles with
