@@ -21,6 +21,8 @@ from zope import component
 
 from zope.intid.interfaces import IIntIds
 
+from zope.security.interfaces import IPrincipal
+
 from zope.securitypolicy.interfaces import IPrincipalRoleManager
 
 from nti.testing.matchers import verifiably_provides
@@ -44,7 +46,6 @@ from nti.contenttypes.courses.utils import get_editors
 from nti.contenttypes.courses.utils import get_instructors
 from nti.contenttypes.courses.utils import get_course_tags
 from nti.contenttypes.courses.utils import index_course_roles
-from nti.contenttypes.courses.utils import unindex_course_roles
 from nti.contenttypes.courses.utils import get_courses_for_tag
 from nti.contenttypes.courses.utils import ProxyEnrollmentRecord
 from nti.contenttypes.courses.utils import get_instructed_courses
@@ -379,30 +380,40 @@ class TestContextEnrollments(CourseLayerTest):
 
 class TestUtils(CourseLayerTest):
 
+    def _get_courses_catalog(self):
+        if getattr(self, '_courses_catalog', None) is None:
+            ds_folder = self.ds.dataserver_folder
+            self._courses_catalog = install_courses_catalog(ds_folder)
+        return self._courses_catalog
+
     def _create_course(self, title=u'course1', ntiid=u'ntiid1', instructors=(), editors=()):
         ds_folder = self.ds.dataserver_folder
         intids = component.queryUtility(IIntIds)
-        enrollment_catalog = get_enrollment_catalog()
+        courses_catalog = install_courses_catalog(ds_folder)
 
-        inst1 = ContentCourseInstance()
-        entry1 = ICourseCatalogEntry(inst1)
-        entry1.title = title
-        entry1.ntiid = ntiid
-        ds_folder._p_jar.add(inst1)
-        addIntId(inst1)
-        inst1.instructors = instructors
-        inst1.editors = editors
-        prm = IPrincipalRoleManager(inst1)
+        inst = ContentCourseInstance()
+        entry = ICourseCatalogEntry(inst)
+        entry.title = title
+        entry.ntiid = ntiid
+        ds_folder._p_jar.add(inst)
+        addIntId(inst)
+
+        inst.instructors = [IPrincipal(x) for x in instructors];
+
+        prm = IPrincipalRoleManager(inst)
         for editor in editors:
             prm.assignRoleToPrincipal(RID_CONTENT_EDITOR, editor.username)
-        index_course_roles(inst1, catalog=enrollment_catalog, intids=intids)
-        return inst1
+
+        doc_id = intids.getId(inst)
+        courses_catalog.index_doc(doc_id, inst)
+        return doc_id
 
     @WithMockDSTrans
-    def test_instructors_editors(self):
+    @fudge.patch('nti.contenttypes.courses.index.get_course_site')
+    def test_instructors_editors(self, mock_course_site):
         ds_folder = self.ds.dataserver_folder
-        install_enrollment_catalog(ds_folder)
-        install_courses_catalog(ds_folder)
+        courses_catalog = install_courses_catalog(ds_folder)
+        mock_course_site.is_callable().returns('alpha.dev')
 
         instructor_user1 = User.create_user(username='instructor_user1')
         instructor_user2 = User.create_user(username='instructor_user2')
@@ -411,71 +422,71 @@ class TestUtils(CourseLayerTest):
         editor_user2 = User.create_user(username='editor_user2')
 
         # Empty cases
-        result = get_instructors(site="dataserver2")
+        result = get_instructors(site='alpha.dev')
         assert_that(result, has_length(0))
-        result = get_editors(site="dataserver2")
+        result = get_editors(site='alpha.dev')
         assert_that(result, has_length(0))
 
         # course with instructors and editors
         course1 = self._create_course(instructors=(instructor_user1, instructor_user2),
-                            editors=(editor_user1,),
-                            ntiid=u'ntiid1')
+                                      editors=(editor_user1,),
+                                      ntiid=u'ntiid1')
 
-        result = get_instructors()
+        result = get_instructors(site='alpha.dev')
         assert_that(result, has_length(2))
         assert_that([x.username for x in result],
                     has_items('instructor_user1', 'instructor_user2'))
-        result = get_editors()
+        result = get_editors(site='alpha.dev')
         assert_that(result, has_length(1))
         assert_that([x.username for x in result],
                     has_items('editor_user1'))
 
         # course without editors
         course2 = self._create_course(instructors=(instructor_user3,),
-                            ntiid=u'ntiid2')
-        result = get_instructors()
+                                      ntiid=u'ntiid2')
+        result = get_instructors(site='alpha.dev')
         assert_that(result, has_length(3))
         assert_that([x.username for x in result],
                     has_items('instructor_user1', 'instructor_user2', 'instructor_user3'))
-        result = get_editors()
+        result = get_editors(site='alpha.dev')
         assert_that(result, has_length(1))
         assert_that([x.username for x in result], has_items('editor_user1'))
 
         # course without instructors
         course3 = self._create_course(editors=(editor_user2,),
-                            ntiid=u'ntiid3')
-        result = get_instructors()
+                                      ntiid=u'ntiid3')
+        result = get_instructors(site='alpha.dev')
         assert_that(result, has_length(3))
         assert_that([x.username for x in result],
                     has_items('instructor_user1', 'instructor_user2', 'instructor_user3'))
-        result = get_editors()
+        result = get_editors(site='alpha.dev')
         assert_that(result, has_length(2))
         assert_that([x.username for x in result],
                     has_items('editor_user1', 'editor_user2'))
 
         # course without instructors and editors.
         course4 = self._create_course(ntiid=u'ntiid4')
-        result = get_instructors()
+        result = get_instructors(site='alpha.dev')
         assert_that(result, has_length(3))
         assert_that([x.username for x in result],
                     has_items('instructor_user1', 'instructor_user2', 'instructor_user3'))
-        result = get_editors()
+        result = get_editors(site='alpha.dev')
         assert_that(result, has_length(2))
         assert_that([x.username for x in result],
                     has_items('editor_user1', 'editor_user2'))
 
-        unindex_course_roles(course4)
-        assert_that(get_instructors(), has_length(3))
-        assert_that(get_editors(), has_length(2))
+        courses_catalog.unindex_doc(course4)
+        assert_that(get_instructors(site='alpha.dev'), has_length(3))
+        assert_that(get_editors(site='alpha.dev'), has_length(2))
 
-        unindex_course_roles(course3)
-        assert_that(get_instructors(), has_length(3))
-        assert_that(get_editors(), has_length(1))
+        courses_catalog.unindex_doc(course3)
+        assert_that(get_instructors(site='alpha.dev'), has_length(3))
+        assert_that(get_editors(site='alpha.dev'), has_length(1))
 
-        unindex_course_roles(course2)
-        assert_that(get_instructors(), has_length(2))
-        assert_that(get_editors(), has_length(1))
+        courses_catalog.unindex_doc(course2)
+        assert_that(get_instructors(site='alpha.dev'), has_length(2))
+        assert_that(get_editors(site='alpha.dev'), has_length(1))
 
-        unindex_course_roles(course1)
-        assert_that(get_instructors(), has_length(0))
-        assert_that(get_editors(), has_length(0))
+        courses_catalog.unindex_doc(course1)
+        assert_that(get_instructors(site='alpha.dev'), has_length(0))
+        assert_that(get_editors(site='alpha.dev'), has_length(0))

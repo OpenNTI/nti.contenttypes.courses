@@ -29,9 +29,9 @@ from nti.base._compat import text_
 
 from nti.contenttypes.courses.common import get_course_site
 from nti.contenttypes.courses.common import get_course_packages
+from nti.contenttypes.courses.common import get_course_editors
+from nti.contenttypes.courses.common import get_course_instructors
 
-from nti.contenttypes.courses.interfaces import EDITOR
-from nti.contenttypes.courses.interfaces import INSTRUCTOR
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseKeywords
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -133,8 +133,6 @@ IX_CREATEDTIME = 'createdTime'
 IX_ENTRY = IX_COURSE = 'course'
 IX_LASTMODIFIED = 'lastModified'
 IX_USERNAME = IX_STUDENT = IX_INSTRUCTOR = 'username'
-IX_INSTRUCTORS = 'instructors'
-IX_EDITORS = 'editors'
 
 
 class ValidatingSiteName(object):
@@ -183,26 +181,6 @@ class ScopeSetIndex(KeepSetIndex):
             result = (text_(value.Scope),)
         elif ICourseInstanceEnrollmentRecord.providedBy(value):
             result = (text_(value.Scope),)
-        else:
-            result = ()
-        return result
-
-
-class InstructorSetIndex(KeepSetIndex):
-
-    def to_iterable(self, value):
-        if isinstance(value, IndexRecord) and value.scope == INSTRUCTOR:
-            result = (text_(value.username),)
-        else:
-            result = ()
-        return result
-
-
-class EditorSetIndex(KeepSetIndex):
-
-    def to_iterable(self, value):
-        if isinstance(value, IndexRecord) and value.scope == EDITOR:
-            result = (text_(value.username),)
         else:
             result = ()
         return result
@@ -272,8 +250,6 @@ def create_enrollment_catalog(catalog=None, family=BTrees.family64):
     for name, clazz in ((IX_SCOPE, ScopeSetIndex),
                         (IX_SITE, SingleSiteIndex),
                         (IX_USERNAME, UsernameIndex),
-                        (IX_INSTRUCTORS, InstructorSetIndex),
-                        (IX_EDITORS, EditorSetIndex),
                         (IX_ENTRY, CatalogEntryIDIndex),
                         (IX_CREATEDTIME, RecordCreatedTimeIndex),
                         (IX_LASTMODIFIED, RecordLastModifiedIndex)):
@@ -310,7 +286,41 @@ IX_TAGS = 'tags'
 IX_KEYWORDS = 'keywords'
 IX_PACKAGES = 'packages'
 IX_IMPORT_HASH = 'import_hash'
+IX_COURSE_INSTRUCTOR = 'instructor'
+IX_COURSE_EDITOR = 'editor'
 COURSES_CATALOG_NAME = 'nti.dataserver.++etc++courses-catalog'
+
+
+class InstructorSetIndex(RawSetIndex):
+
+    def to_iterable(self, value):
+        result = []
+        if ICourseInstance.providedBy(value):
+            for x in get_course_instructors(value) or ():
+                principal_id = getattr(x, 'id', x)
+                if principal_id is not None:
+                    result.append(principal_id)
+        return result
+
+    def index_doc(self, doc_id, value):
+        value = self.to_iterable(value)
+        super(InstructorSetIndex, self).index_doc(doc_id, value)
+
+
+class EditorSetIndex(RawSetIndex):
+
+    def to_iterable(self, value):
+        result = []
+        if ICourseInstance.providedBy(value):
+            for x in get_course_editors(value) or ():
+                principal_id = getattr(x, 'id', x)
+                if principal_id is not None:
+                    result.append(principal_id)
+        return result
+
+    def index_doc(self, doc_id, value):
+        value = self.to_iterable(value)
+        super(EditorSetIndex, self).index_doc(doc_id, value)
 
 
 class ValidatingCourseSiteName(object):
@@ -433,7 +443,9 @@ def create_courses_catalog(catalog=None, family=BTrees.family64):
                         (IX_PACKAGES, CoursePackagesIndex),
                         (IX_KEYWORDS, CourseKeywordsIndex),
                         (IX_ENTRY, CourseCatalogEntryIndex),
-                        (IX_IMPORT_HASH, CourseImportHashIndex)):
+                        (IX_IMPORT_HASH, CourseImportHashIndex),
+                        (IX_COURSE_INSTRUCTOR, InstructorSetIndex),
+                        (IX_COURSE_EDITOR, EditorSetIndex)):
         index = clazz(family=family)
         locate(index, catalog, name)
         catalog[name] = index
