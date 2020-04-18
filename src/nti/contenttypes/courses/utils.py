@@ -176,6 +176,14 @@ def get_current_site():
 # index
 
 
+def index_course_instance(course):
+    catalog = get_courses_catalog()
+    intids = component.getUtility(IIntIds)
+    doc_id = intids.queryId(course)
+    if doc_id is not None:
+        catalog.index_doc(doc_id, course)
+
+
 def get_courses_for_packages(packages=(), sites=(), intids=None):
     result = set()
     catalog = get_courses_catalog()
