@@ -406,7 +406,7 @@ class TestUtils(CourseLayerTest):
 
         doc_id = intids.getId(inst)
         courses_catalog.index_doc(doc_id, inst)
-        return doc_id
+        return (doc_id, inst)
 
     @WithMockDSTrans
     @fudge.patch('nti.contenttypes.courses.index.get_course_site')
@@ -475,18 +475,26 @@ class TestUtils(CourseLayerTest):
         assert_that([x.username for x in result],
                     has_items('editor_user1', 'editor_user2'))
 
-        courses_catalog.unindex_doc(course4)
+
+        result = get_instructors(site='alpha.dev', excludedCourse=course1[1])
+        assert_that(result, has_length(1))
+        assert_that([x.username for x in result], has_items('instructor_user3'))
+        result = get_editors(site='alpha.dev', excludedCourse=course1[1])
+        assert_that(result, has_length(1))
+        assert_that([x.username for x in result], has_items('editor_user2'))
+
+        courses_catalog.unindex_doc(course4[0])
         assert_that(get_instructors(site='alpha.dev'), has_length(3))
         assert_that(get_editors(site='alpha.dev'), has_length(2))
 
-        courses_catalog.unindex_doc(course3)
+        courses_catalog.unindex_doc(course3[0])
         assert_that(get_instructors(site='alpha.dev'), has_length(3))
         assert_that(get_editors(site='alpha.dev'), has_length(1))
 
-        courses_catalog.unindex_doc(course2)
+        courses_catalog.unindex_doc(course2[0])
         assert_that(get_instructors(site='alpha.dev'), has_length(2))
         assert_that(get_editors(site='alpha.dev'), has_length(1))
 
-        courses_catalog.unindex_doc(course1)
+        courses_catalog.unindex_doc(course1[0])
         assert_that(get_instructors(site='alpha.dev'), has_length(0))
         assert_that(get_editors(site='alpha.dev'), has_length(0))

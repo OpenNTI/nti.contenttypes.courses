@@ -178,10 +178,11 @@ def get_current_site():
 
 def index_course_instance(course):
     catalog = get_courses_catalog()
-    intids = component.getUtility(IIntIds)
-    doc_id = intids.queryId(course)
-    if doc_id is not None:
-        catalog.index_doc(doc_id, course)
+    intids = component.queryUtility(IIntIds)
+    if catalog is not None and intids is not None:
+        doc_id = intids.queryId(course)
+        if doc_id is not None:
+            catalog.index_doc(doc_id, course)
 
 
 def get_courses_for_packages(packages=(), sites=(), intids=None):
@@ -567,9 +568,10 @@ def get_user_or_instructor_enrollment_record(context, user):
 # instructors & editors
 
 
-def _get_instructors_or_editors(site, idx):
+def _get_instructors_or_editors(site, idx, excludedCourse=None):
     """
-    Fetch all course instructors or all course editors for the given site.
+    Fetch all course instructors or all course editors for the given site,
+    If excludedCourse is provided, it won't return instructors/editors for that course.
     """
     result = set()
     intids = component.getUtility(IIntIds)
@@ -584,7 +586,7 @@ def _get_instructors_or_editors(site, idx):
     usernames= set()
     for doc_id in catalog.apply(query) or ():
         obj = intids.queryObject(doc_id)
-        if not ICourseInstance.providedBy(obj):
+        if not ICourseInstance.providedBy(obj) or obj == excludedCourse:
             continue
 
         tmp = set(index.values(doc_id=doc_id))
@@ -599,12 +601,16 @@ def _get_instructors_or_editors(site, idx):
     return result
 
 
-def get_instructors(site=None):
-    return _get_instructors_or_editors(site=site, idx=IX_COURSE_INSTRUCTOR)
+def get_instructors(site=None, excludedCourse=None):
+    return _get_instructors_or_editors(site=site,
+                                       idx=IX_COURSE_INSTRUCTOR,
+                                       excludedCourse=excludedCourse)
 
 
-def get_editors(site=None):
-    return _get_instructors_or_editors(site=site, idx=IX_COURSE_EDITOR)
+def get_editors(site=None, excludedCourse=None):
+    return _get_instructors_or_editors(site=site,
+                                       idx=IX_COURSE_EDITOR,
+                                       excludedCourse=excludedCourse)
 
 
 def get_instructed_courses(user, **kwargs):
