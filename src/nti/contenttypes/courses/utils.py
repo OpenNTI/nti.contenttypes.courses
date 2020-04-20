@@ -583,10 +583,11 @@ def _get_instructors_or_editors(site, idx, excludedCourse=None):
 
     index = catalog[idx]
 
+    excludedIntid = intids.queryId(excludedCourse) if excludedCourse is not None else None
+
     usernames= set()
     for doc_id in catalog.apply(query) or ():
-        obj = intids.queryObject(doc_id)
-        if not ICourseInstance.providedBy(obj) or obj == excludedCourse:
+        if excludedIntid is not None and doc_id == excludedIntid:
             continue
 
         tmp = set(index.values(doc_id=doc_id))
