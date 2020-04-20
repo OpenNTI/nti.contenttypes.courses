@@ -54,15 +54,14 @@ class MockDataserver(object):
         return None
 
 
-def index_courses(index, course_catalog, intids):
-    result = 0
+def index_courses(index, course_catalog, intids, seen):
     for entry in course_catalog.iterCatalogEntries():
         course = ICourseInstance(entry, None)
         doc_id = intids.queryId(course)
-        if doc_id is not None:
-            index.index_doc(doc_id, course)
-            result += 0
-    return result
+        if doc_id is None or doc_id in seen:
+            continue
+        seen.add(doc_id)
+        index.index_doc(doc_id, course)
 
 
 def do_evolve(context, generation=generation):
@@ -95,11 +94,12 @@ def do_evolve(context, generation=generation):
                 locate(index, catalog, name)
                 catalog[name] = index
 
+        seen = set()
         for site in get_all_host_sites():
             with current_site(site):
                 course_catalog = component.queryUtility(ICourseCatalog)
                 if course_catalog is not None:
-                    index_courses(catalog, course_catalog, intids)
+                    index_courses(catalog, course_catalog, intids, seen)
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
     logger.info('Evolution %s done', generation)
