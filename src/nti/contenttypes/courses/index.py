@@ -29,6 +29,8 @@ from nti.base._compat import text_
 
 from nti.contenttypes.courses.common import get_course_site
 from nti.contenttypes.courses.common import get_course_packages
+from nti.contenttypes.courses.common import get_course_editors
+from nti.contenttypes.courses.common import get_course_instructors
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseKeywords
@@ -284,7 +286,41 @@ IX_TAGS = 'tags'
 IX_KEYWORDS = 'keywords'
 IX_PACKAGES = 'packages'
 IX_IMPORT_HASH = 'import_hash'
+IX_COURSE_INSTRUCTOR = 'instructor'
+IX_COURSE_EDITOR = 'editor'
 COURSES_CATALOG_NAME = 'nti.dataserver.++etc++courses-catalog'
+
+
+class InstructorSetIndex(RawSetIndex):
+
+    def to_iterable(self, value):
+        result = []
+        if ICourseInstance.providedBy(value):
+            for x in get_course_instructors(value) or ():
+                principal_id = getattr(x, 'id', x)
+                if principal_id is not None:
+                    result.append(principal_id)
+        return result
+
+    def index_doc(self, doc_id, value):
+        value = self.to_iterable(value)
+        super(InstructorSetIndex, self).index_doc(doc_id, value)
+
+
+class EditorSetIndex(RawSetIndex):
+
+    def to_iterable(self, value):
+        result = []
+        if ICourseInstance.providedBy(value):
+            for x in get_course_editors(value) or ():
+                principal_id = getattr(x, 'id', x)
+                if principal_id is not None:
+                    result.append(principal_id)
+        return result
+
+    def index_doc(self, doc_id, value):
+        value = self.to_iterable(value)
+        super(EditorSetIndex, self).index_doc(doc_id, value)
 
 
 class ValidatingCourseSiteName(object):
@@ -407,7 +443,9 @@ def create_courses_catalog(catalog=None, family=BTrees.family64):
                         (IX_PACKAGES, CoursePackagesIndex),
                         (IX_KEYWORDS, CourseKeywordsIndex),
                         (IX_ENTRY, CourseCatalogEntryIndex),
-                        (IX_IMPORT_HASH, CourseImportHashIndex)):
+                        (IX_IMPORT_HASH, CourseImportHashIndex),
+                        (IX_COURSE_INSTRUCTOR, InstructorSetIndex),
+                        (IX_COURSE_EDITOR, EditorSetIndex)):
         index = clazz(family=family)
         locate(index, catalog, name)
         catalog[name] = index

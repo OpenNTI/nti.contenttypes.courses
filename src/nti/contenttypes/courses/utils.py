@@ -43,6 +43,9 @@ from nti.contentlibrary.interfaces import IEditableContentPackage
 
 from nti.contenttypes.courses.common import get_course_site
 from nti.contenttypes.courses.common import get_course_packages
+from nti.contenttypes.courses.common import get_course_editors
+from nti.contenttypes.courses.common import get_course_instructors
+from nti.contenttypes.courses.common import get_instructors_in_roles
 
 from nti.contenttypes.courses.index import IX_TAGS
 from nti.contenttypes.courses.index import IX_SITE
@@ -53,6 +56,8 @@ from nti.contenttypes.courses.index import IX_PACKAGES
 from nti.contenttypes.courses.index import IX_USERNAME
 from nti.contenttypes.courses.index import IX_IMPORT_HASH
 from nti.contenttypes.courses.index import IX_CONTENT_UNIT
+from nti.contenttypes.courses.index import IX_COURSE_INSTRUCTOR
+from nti.contenttypes.courses.index import IX_COURSE_EDITOR
 
 from nti.contenttypes.courses.index import IndexRecord
 from nti.contenttypes.courses.index import get_courses_catalog
@@ -107,6 +112,9 @@ from nti.site.utils import unregisterUtility
 from nti.traversal.traversal import find_interface
 
 logger = __import__('logging').getLogger(__name__)
+
+get_instructors_in_roles = get_instructors_in_roles
+get_course_instructors = get_course_instructors
 
 
 class AbstractInstanceWrapper(Contained):
@@ -166,6 +174,15 @@ def get_current_site():
 
 
 # index
+
+
+def index_course_instance(course):
+    catalog = get_courses_catalog()
+    intids = component.queryUtility(IIntIds)
+    if catalog is not None and intids is not None:
+        doc_id = intids.queryId(course)
+        if doc_id is not None:
+            catalog.index_doc(doc_id, course)
 
 
 def get_courses_for_packages(packages=(), sites=(), intids=None):
@@ -551,6 +568,52 @@ def get_user_or_instructor_enrollment_record(context, user):
 # instructors & editors
 
 
+def _get_instructors_or_editors(site, idx, excludedCourse=None):
+    """
+    Fetch all course instructors or all course editors for the given site,
+    If excludedCourse is provided, it won't return instructors/editors for that course.
+    """
+    result = set()
+    intids = component.getUtility(IIntIds)
+    catalog = get_courses_catalog()
+    site = get_current_site() if site is None else site
+    query = {
+        IX_SITE: {'any_of': (site, )}
+    }
+
+    index = catalog[idx]
+
+    excludedIntid = intids.queryId(excludedCourse) if excludedCourse is not None else None
+
+    usernames= set()
+    for doc_id in catalog.apply(query) or ():
+        if excludedIntid is not None and doc_id == excludedIntid:
+            continue
+
+        tmp = set(index.values(doc_id=doc_id))
+        if tmp:
+            usernames = usernames.union(tmp)
+
+    result = set()
+    for username in usernames:
+        user = User.get_user(username)
+        if user is not None:
+            result.add(user)
+    return result
+
+
+def get_instructors(site=None, excludedCourse=None):
+    return _get_instructors_or_editors(site=site,
+                                       idx=IX_COURSE_INSTRUCTOR,
+                                       excludedCourse=excludedCourse)
+
+
+def get_editors(site=None, excludedCourse=None):
+    return _get_instructors_or_editors(site=site,
+                                       idx=IX_COURSE_EDITOR,
+                                       excludedCourse=excludedCourse)
+
+
 def get_instructed_courses(user, **kwargs):
     """
     Returns an iterable containing all the courses
@@ -572,62 +635,6 @@ def get_instructed_and_edited_courses(user, **kwargs):
     return get_courses_for_scope(user,
                                  scopes=(INSTRUCTOR, EDITOR),
                                  **kwargs)
-
-
-def get_instructors_in_roles(roles, setting=Allow):
-    """
-    return the instructor principal ids for the specified roles with
-    the specified setting
-    """
-    result = set()
-    instructors = chain(roles.getPrincipalsForRole(RID_TA) or (),
-                        roles.getPrincipalsForRole(RID_INSTRUCTOR) or ())
-    for principal, stored in instructors:
-        if stored == setting:
-            pid = getattr(principal, 'id', str(principal))
-            try:
-                user = User.get_user(pid)
-            except (LookupError, TypeError):
-                # lookuperror if we're not in a ds context,
-                result.add(pid)
-            else:
-                if user is not None:
-                    result.add(pid)
-    return result
-
-
-def get_course_editors(context, permission=Allow):
-    """
-    return the principals for the specified course with the specified setting
-    """
-    result = []
-    course = ICourseInstance(context, None)
-    role_manager = IPrincipalRoleManager(course, None)
-    if role_manager is not None:
-        # pylint: disable=too-many-function-args
-        for prin, setting in role_manager.getPrincipalsForRole(RID_CONTENT_EDITOR):
-            if setting is permission:
-                try:
-                    user = User.get_user(prin)
-                    principal = IPrincipal(user, None)
-                except (LookupError, TypeError):
-                    # lookuperror if we're not in a ds context,
-                    pass
-                else:
-                    if principal is not None:
-                        result.append(principal)
-    return result
-
-
-def get_course_instructors(context, setting=Allow):
-    """
-    return the instructor principal ids for the specified course with
-    the specified setting
-    """
-    course = ICourseInstance(context, None)
-    roles = IPrincipalRoleMap(course, None)
-    result = get_instructors_in_roles(roles, setting) if roles else ()
-    return result
 
 
 def is_course_instructor(context, user):

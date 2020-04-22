@@ -100,6 +100,7 @@ from nti.contenttypes.courses.utils import get_courses_catalog
 from nti.contenttypes.courses.utils import clear_course_outline
 from nti.contenttypes.courses.utils import unindex_course_roles
 from nti.contenttypes.courses.utils import get_course_hierarchy
+from nti.contenttypes.courses.utils import index_course_instance
 from nti.contenttypes.courses.utils import index_course_instructor
 from nti.contenttypes.courses.utils import get_content_unit_courses
 from nti.contenttypes.courses.utils import remove_principal_from_course_content_roles
@@ -267,6 +268,11 @@ def roles_sync_on_course_instance(course, unused_event=None):
         entry_ntiid = entry.ntiid if entry is not None else ''
         logger.info('Indexed %s roles for %s',
                     indexed_count, entry_ntiid)
+
+@component.adapter(ICourseInstance, ICourseRolesSynchronized)
+def index_course_on_course_roles_synced(course, unused_event):
+    # After role synchronized, indexing instructors/editors in the courses catalog.
+    index_course_instance(course)
 
 
 @component.adapter(ICourseInstance, ICourseVendorInfoSynchronized)
