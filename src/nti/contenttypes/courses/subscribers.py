@@ -59,7 +59,8 @@ from nti.contenttypes.courses.index import IX_PACKAGES
 
 from nti.contenttypes.courses.index import IndexRecord
 
-from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import ES_PUBLIC,\
+    ICourseRolesUpdatedEvent
 from nti.contenttypes.courses.interfaces import COURSE_CATALOG_NAME
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_NAMES
 from nti.contenttypes.courses.interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
@@ -554,6 +555,12 @@ def on_course_instructor_added(user, event):
 @component.adapter(IUser, ICourseEditorAddedEvent)
 def on_course_editor_added(user, event):
     index_course_editor(user, event.course)
+
+
+@component.adapter(ICourseRolesUpdatedEvent)
+def on_course_roles_updated(event):
+    unindex_course_roles(event.object)
+    index_course_roles(event.object)
 
 
 @component.adapter(IUser, ICourseRoleRemovedEvent)

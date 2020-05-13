@@ -188,6 +188,7 @@
 
     <subscriber handler=".subscribers.on_course_role_removed" />
     <subscriber handler=".subscribers.on_course_editor_added" />
+    <subscriber handler=".subscribers.on_course_roles_updated" />
     <subscriber handler=".subscribers.on_course_instructor_added" />
 
     <subscriber handler=".forum._forum_added_to_course_board"

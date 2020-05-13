@@ -1533,6 +1533,19 @@ class CourseRolesSynchronized(ObjectEvent):
     pass
 
 
+class ICourseRolesUpdatedEvent(IObjectEvent):
+    """
+    Indicates this course has updated its roles.
+    """
+    pass
+
+
+@interface.implementer(ICourseRolesUpdatedEvent)
+class CourseRolesUpdatedEvent(ObjectEvent):
+    pass
+
+
+
 class ICourseRoleUpdatedEvent(IObjectEvent):
     """
     Event to indicate a course role has been updated.
