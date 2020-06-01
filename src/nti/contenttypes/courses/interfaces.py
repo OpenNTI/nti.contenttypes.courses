@@ -592,6 +592,7 @@ class INonExportable(interface.Interface):
     Marker interface for those :class:`ICourseInstance` objects which may not
     be exportable.
     """
+INonExportable.setTaggedValue('_ext_is_marker_interface', True)
 
 
 class ICourseSubInstance(ICourseInstance, INonExportable):
