@@ -953,12 +953,21 @@ def remove_principal_from_course_content_roles(principal, course, packages=None,
     if not packages:
         packages = get_course_packages(course)
 
+    if not packages:
+        return
+
+    # Only these are viable package roles, because editable packages
+    # are not shared between courses currently.
+    role_packages = [x for x in packages if not IEditableContentPackage.providedBy(x)]
+    if not role_packages:
+        return
+
     courses_to_exclude = (course,) if unenroll else ()
 
     # Get the minimal set of packages to remove roles for.
     allowed_packages = _get_principal_visible_packages(principal,
                                                        courses_to_exclude=courses_to_exclude)
-    to_remove = set(packages) - allowed_packages
+    to_remove = set(role_packages) - allowed_packages
 
     roles_to_remove = _content_roles_for_course_instance(course, to_remove)
     membership = component.getAdapter(principal, IMutableGroupMember,
