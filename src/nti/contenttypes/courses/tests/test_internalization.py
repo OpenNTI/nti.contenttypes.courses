@@ -58,6 +58,7 @@ class TestInternalization(CourseLayerTest):
         component.getGlobalSiteManager().registerUtility(self.container,
                                                          ICreditDefinitionContainer)
 
+    @WithMockDSTrans
     def tearDown(self):
         component.getGlobalSiteManager().unregisterUtility(self.container,
                                                            ICreditDefinitionContainer)
@@ -157,6 +158,14 @@ class TestInternalization(CourseLayerTest):
         assert_that(entry.StartDate, is_not(none()))
         assert_that(entry.Preview, is_(True))
 
+
+class TestAwardableCreditsInternalization(CourseLayerTest):
+
+    def setUp(self):
+        path = os.path.join(os.path.dirname(__file__),
+                            'course_info.json')
+        self.path = path
+
     @WithMockDSTrans
     def test_awardable_credits(self):
         with codecs.open(self.path, "r", "utf-8") as fp:
@@ -180,27 +189,34 @@ class TestInternalization(CourseLayerTest):
                                 "title", "Human Physiology",
                                 "Video", "kaltura://1500101/0_gpczmps5/"))
 
-        credit_definition = CreditDefinition(credit_type=u'Credit',
-                                             credit_units=u'Hours')
-        # Add to connection for weak refs
-        connection = mock_dataserver.current_transaction
-        connection.add(self.container)
-        self.container[credit_definition.ntiid] = credit_definition
+        container = CreditDefinitionContainer()
+        component.getGlobalSiteManager().registerUtility(container,
+                                                         ICreditDefinitionContainer)
+        try:
+            credit_definition = CreditDefinition(credit_type=u'Credit',
+                                                 credit_units=u'Hours')
+            # Add to connection for weak refs
+            connection = mock_dataserver.current_transaction
+            connection.add(container)
+            container[credit_definition.ntiid] = credit_definition
 
-        awardable_credit_ext = {'MimeType': CourseAwardableCredit.mime_type,
-                                'amount': 13,
-                                'scope': 'Public',
-                                'credit_definition': credit_definition.ntiid}
-        xx = dict(awardable_credit_ext)
+            awardable_credit_ext = {'MimeType': CourseAwardableCredit.mime_type,
+                                    'amount': 13,
+                                    'scope': 'Public',
+                                    'credit_definition': credit_definition.ntiid}
+            xx = dict(awardable_credit_ext)
 
-        factory = find_factory_for(awardable_credit_ext)
-        assert_that(factory, not_none())
-        new_io = factory()
-        update_from_external_object(new_io, awardable_credit_ext, require_updater=True)
+            factory = find_factory_for(awardable_credit_ext)
+            assert_that(factory, not_none())
+            new_io = factory()
+            update_from_external_object(new_io, awardable_credit_ext, require_updater=True)
 
-        update_from_external_object(entry, {'awardable_credits': [xx,]})
-        assert_that(entry.awardable_credits, has_length(1))
-        credit = entry.awardable_credits[0]
-        assert_that(credit.scope, is_('Public'))
-        assert_that(credit.amount, is_(13))
-        assert_that(credit.credit_definition.ntiid, is_(credit_definition.ntiid))
+            update_from_external_object(entry, {'awardable_credits': [xx,]})
+            assert_that(entry.awardable_credits, has_length(1))
+            credit = entry.awardable_credits[0]
+            assert_that(credit.scope, is_('Public'))
+            assert_that(credit.amount, is_(13))
+            assert_that(credit.credit_definition.ntiid, is_(credit_definition.ntiid))
+        finally:
+            component.getGlobalSiteManager().unregisterUtility(container,
+                                                               ICreditDefinitionContainer)

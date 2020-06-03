@@ -50,17 +50,6 @@ from nti.intid.common import addIntId
 
 class TestImportExport(CourseCreditLayerTest):
 
-    def setUp(self):
-        self.container = CreditDefinitionContainer()
-        gsm = component.getGlobalSiteManager()
-        gsm.registerUtility(self.container,
-                            ICreditDefinitionContainer)
-
-    def tearDown(self):
-        gsm = component.getGlobalSiteManager()
-        gsm.unregisterUtility(self.container,
-                              ICreditDefinitionContainer)
-
     @WithMockDSTrans
     def test_import_export(self):
         path = os.path.join(os.path.dirname(__file__),
@@ -107,17 +96,23 @@ class TestImportExport(CourseCreditLayerTest):
         export_path = os.path.join(tmp_dir, 'course_info.json')
         export_filer = DirectoryFiler(tmp_dir)
 
+        # Container
+        container = CreditDefinitionContainer()
+        gsm = component.getGlobalSiteManager()
+        gsm.registerUtility(container,
+                            ICreditDefinitionContainer)
+
         # Create course and add to connection
         course = ContentCourseInstance()
         connection = mock_dataserver.current_transaction
         connection.add(course)
-        connection.add(self.container)
+        connection.add(container)
         course.root = FilesystemBucket(name=u"Gateway")
         course.root.absolute_path = root_path
         # Set up the credit definition
         credit_definition = CreditDefinition(credit_type=u'Credit',
                                              credit_units=u'Hours')
-        credit_definition = self.container.add_credit_definition(credit_definition)
+        credit_definition = container.add_credit_definition(credit_definition)
         addIntId(credit_definition)
         try:
             export_filer.save(export_path, json_io, overwrite=True)
@@ -136,3 +131,5 @@ class TestImportExport(CourseCreditLayerTest):
             shutil.rmtree(tmp_dir)
             # Restore the file we overwrote
             transfer_to_native_file(old_source, course_info_path)
+            component.getGlobalSiteManager().unregisterUtility(container,
+                                                               ICreditDefinitionContainer)
