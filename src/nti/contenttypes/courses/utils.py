@@ -1088,6 +1088,7 @@ def deny_instructor_access_to_course(user, course):
             user.stop_following(scope)
 
         # And remove access to the parent public scope.
+        # FIXME: this needs to check parent course instructor access right?
         if ICourseSubInstance.providedBy(course):
             parent_course = get_parent_course(course)
             # pylint: disable=unsubscriptable-object

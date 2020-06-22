@@ -81,6 +81,8 @@ from nti.contenttypes.credit.interfaces import IAwardableCreditContext
 
 from nti.contenttypes.reports.interfaces import IReportContext
 
+from nti.coremetadata.interfaces import IDeletedObjectPlaceholder
+
 from nti.dataserver.interfaces import ICommunity
 from nti.dataserver.interfaces import InvalidData
 from nti.dataserver.interfaces import ILastModified
@@ -1867,6 +1869,13 @@ class ICreatedCourse(interface.Interface):
     """
     creator = interface.Attribute(u"The creator of this object.")
 ICreatedCourse.setTaggedValue('_ext_is_marker_interface', True)
+
+
+class IDeletedCourse(IDeletedObjectPlaceholder):
+    """
+    A marker interface indicating that a course is deleted.
+    """
+IDeletedCourse.setTaggedValue('_ext_is_marker_interface', True)
 
 
 class ICourseExportFiler(ISourceFiler):

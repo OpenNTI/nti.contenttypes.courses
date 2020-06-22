@@ -315,7 +315,7 @@ def on_user_removed(user, unused_event=None):
 def remove_enrollment_records(course):
     # pylint: disable=too-many-function-args
     manager = ICourseEnrollmentManager(course)
-    manager.drop_all()
+    return manager.drop_all()
 
 
 def unindex_enrollment_records(course):
@@ -352,7 +352,7 @@ def on_course_instance_created(course, unused_event=None):
 
 @component.adapter(ICourseInstance, IObjectRemovedEvent)
 def on_course_instance_removed(course, unused_event=None):
-    # remove enrollment recordss
+    # remove enrollment records
     remove_enrollment_records(course)
     unindex_enrollment_records(course)
     # clear outline
@@ -361,6 +361,9 @@ def on_course_instance_removed(course, unused_event=None):
         clear_course_outline(course)
     # For section course instructors, remove access to the parent
     # course if they are not also a parent course instructor.
+    # XXX: It is possible this logic is duplicated and handled
+    # in the util functions we call below which gather other
+    # courses the user is an instructor in.
     if ICourseSubInstance.providedBy(course):
         parent_course = get_parent_course(course)
         parent_course_instructors = parent_course.instructors or ()
