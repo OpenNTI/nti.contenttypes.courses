@@ -155,7 +155,7 @@ class TestCourseOutline(CourseLayerTest):
 
         for node in new_outline.values():
             assert_that(node, has_property('ntiid', is_not(none())))
-            assert_that(is_valid_ntiid_string(node.ntiid), is_(True))
+            self.assertTrue(is_valid_ntiid_string(node.ntiid))
 
     def test_outline_container(self):
         course = courses.CourseInstance()
@@ -165,7 +165,7 @@ class TestCourseOutline(CourseLayerTest):
         subcourse = courses.ContentCourseSubInstance()
         subcourse.__name__ = 'subcourse'
         course.SubInstances[subcourse.__name__] = subcourse
-        
+
         assert_that(subcourse.Outline, is_(course.Outline))
         assert_that(subcourse.Outline.__parent__, is_(subcourse))
 
@@ -179,10 +179,10 @@ class TestCourseOutline(CourseLayerTest):
         course.Outline['0'] = child_node
 
         assert_that(child_node.__parent__, is_(course.Outline))
-        assert_that(course.Outline['0'].__parent__.__parent__, is_(course)) 
+        assert_that(course.Outline['0'].__parent__.__parent__, is_(course))
 
         assert_that(subcourse.Outline['0'].__parent__.__parent__, is_(subcourse))
         assert_that(subcourse.Outline.values().next().__parent__.__parent__, is_(subcourse))
 
         assert_that(subcourse.Outline.items().next()[1].__parent__.__parent__, is_(subcourse))
-        
+
