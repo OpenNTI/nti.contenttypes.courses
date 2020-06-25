@@ -568,49 +568,61 @@ def get_user_or_instructor_enrollment_record(context, user):
 # instructors & editors
 
 
-def _get_instructors_or_editors(site, idx, excludedCourse=None):
+def _get_instructors_or_editors(site, indexes, excludedCourse=None):
     """
     Fetch all course instructors or all course editors for the given site,
     If excludedCourse is provided, it won't return instructors/editors for that course.
     """
-    result = set()
     intids = component.getUtility(IIntIds)
     catalog = get_courses_catalog()
     site = get_current_site() if site is None else site
     query = {
-        IX_SITE: {'any_of': (site, )}
+        IX_SITE: {'any_of': (site,)}
     }
-
-    index = catalog[idx]
+    admin_indexes = list()
+    for idx in indexes:
+        admin_index = catalog[idx]
+        admin_indexes.append(admin_index)
 
     excludedIntid = intids.queryId(excludedCourse) if excludedCourse is not None else None
 
-    usernames= set()
+    usernames = set()
+    # First gather all courses for our site, then get the
+    # set of usernames for the index(es) for each course.
     for doc_id in catalog.apply(query) or ():
         if excludedIntid is not None and doc_id == excludedIntid:
             continue
+        for idx in admin_indexes:
+            admin_usernames = idx.values(doc_id=doc_id)
+            if admin_usernames:
+                usernames.update(admin_usernames)
 
-        tmp = set(index.values(doc_id=doc_id))
-        if tmp:
-            usernames = usernames.union(tmp)
-
-    result = set()
+    result = list()
     for username in usernames:
         user = User.get_user(username)
         if user is not None:
-            result.add(user)
+            result.append(user)
     return result
+
+
+def get_instructors_and_editors(site=None):
+    """
+    Return an iterable of unique instructor and editor users
+    for the current site.
+    """
+    return _get_instructors_or_editors(site=site,
+                                       indexes=(IX_COURSE_INSTRUCTOR, IX_COURSE_EDITOR))
 
 
 def get_instructors(site=None, excludedCourse=None):
     return _get_instructors_or_editors(site=site,
-                                       idx=IX_COURSE_INSTRUCTOR,
+                                       indexes=(IX_COURSE_INSTRUCTOR,),
                                        excludedCourse=excludedCourse)
 
 
 def get_editors(site=None, excludedCourse=None):
     return _get_instructors_or_editors(site=site,
-                                       idx=IX_COURSE_EDITOR,
+                                       indexes=(IX_COURSE_EDITOR,),
                                        excludedCourse=excludedCourse)
 
 
