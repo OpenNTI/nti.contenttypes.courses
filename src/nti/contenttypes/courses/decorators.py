@@ -11,6 +11,8 @@ from __future__ import absolute_import
 from zope import component
 from zope import interface
 
+from nti.contenttypes.courses.interfaces import ES_PUBLIC
+
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -21,6 +23,8 @@ from nti.contenttypes.courses.interfaces import ICourseContentPackageBundle
 from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
 
 from nti.contenttypes.courses.legacy_catalog import ICourseCatalogInstructorLegacyInfo
+
+from nti.dataserver.users.interfaces import IFriendlyNamed
 
 from nti.externalization.interfaces import StandardExternalFields
 from nti.externalization.interfaces import IExternalObjectDecorator
@@ -68,9 +72,20 @@ class _InstructorLegacyInfoDecorator(Singleton):
 @interface.implementer(IExternalObjectDecorator)
 class _CourseInstanceSharingScopeDecorator(Singleton):
 
-    def decorateExternalObject(self, unused_original, external):
+    def decorateExternalObject(self, scope, external):
         # Warning !!! For BWC w/ clients
         external[MIMETYPE] = 'application/vnd.nextthought.community'
+        # Update scope realname with entry title
+        friendly_named = IFriendlyNamed(scope)
+        if friendly_named.realname is None:
+            # Override our realname with our course title
+            course = find_interface(scope, ICourseInstance, strict=False)
+            entry = ICourseCatalogEntry(course, None)
+            title = getattr(entry, 'title', None)
+            if title:
+                scope_name = scope.__name__
+                realname = title if scope_name == ES_PUBLIC else '%s (%s)' % (title, scope_name)
+                external['realname'] = realname
 
 
 @interface.implementer(IExternalObjectDecorator)
