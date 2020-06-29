@@ -571,7 +571,11 @@ def get_user_or_instructor_enrollment_record(context, user):
 def _get_instructors_or_editors(site, indexes, excludedCourse=None):
     """
     Fetch all course instructors or all course editors for the given site,
-    If excludedCourse is provided, it won't return instructors/editors for that course.
+
+    If no site is provided, courses for the site hierarchy will be checked.
+
+    If excludedCourse is provided, it won't return instructors/editors for
+    that course.
     """
     intids = component.getUtility(IIntIds)
     catalog = get_courses_catalog()
