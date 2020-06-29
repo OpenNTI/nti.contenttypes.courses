@@ -580,7 +580,7 @@ def _get_instructors_or_editors(site, indexes, excludedCourse=None):
     """
     intids = component.getUtility(IIntIds)
     catalog = get_courses_catalog()
-    if site:
+    if site is not None:
         sites = (getattr(site, '__name__', site),)
     else:
         sites = get_sites_4_index(site)
