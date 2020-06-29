@@ -298,6 +298,7 @@ def index_course_roles(context, catalog=None, intids=None):
     result = 0
     result += index_course_editors(course, catalog, entry, doc_id)
     result += index_course_instructors(course, catalog, entry, doc_id)
+    index_course_instance(course)
     return result
 
 

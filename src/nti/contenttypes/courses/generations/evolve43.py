@@ -28,7 +28,6 @@ from nti.contenttypes.courses.index import install_courses_catalog
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver

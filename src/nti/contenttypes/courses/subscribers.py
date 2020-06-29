@@ -310,6 +310,7 @@ def on_user_removed(user, unused_event=None):
         for uid in catalog.apply(query) or ():
             record = IndexRecord(user.username)
             index.remove(uid, record)  # KeepSet index
+    # TODO: update course catalog
 
 
 def remove_enrollment_records(course):
