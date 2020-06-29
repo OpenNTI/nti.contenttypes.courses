@@ -575,9 +575,12 @@ def _get_instructors_or_editors(site, indexes, excludedCourse=None):
     """
     intids = component.getUtility(IIntIds)
     catalog = get_courses_catalog()
-    site = get_current_site() if site is None else site
+    if site:
+        sites = (site,)
+    else:
+        sites = get_sites_4_index(site)
     query = {
-        IX_SITE: {'any_of': (site,)}
+        IX_SITE: {'any_of': sites}
     }
     admin_indexes = list()
     for idx in indexes:
