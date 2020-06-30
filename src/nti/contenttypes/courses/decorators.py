@@ -75,17 +75,19 @@ class _CourseInstanceSharingScopeDecorator(Singleton):
     def decorateExternalObject(self, scope, external):
         # Warning !!! For BWC w/ clients
         external[MIMETYPE] = 'application/vnd.nextthought.community'
-        # Update scope realname with entry title
+        # Update scope alias with entry title
         friendly_named = IFriendlyNamed(scope)
-        if friendly_named.realname is None:
-            # Override our realname with our course title
+        if friendly_named.alias is None:
+            # Override our externalized alias with our course title
+            # All entity objects default this via the alias or realname or
+            # username.
             course = find_interface(scope, ICourseInstance, strict=False)
             entry = ICourseCatalogEntry(course, None)
             title = getattr(entry, 'title', None)
             if title:
                 scope_name = scope.__name__
-                realname = title if scope_name == ES_PUBLIC else '%s (%s)' % (title, scope_name)
-                external['realname'] = realname
+                alias = title if scope_name == ES_PUBLIC else '%s (%s)' % (title, scope_name)
+                external['alias'] = alias
 
 
 @interface.implementer(IExternalObjectDecorator)
