@@ -17,8 +17,10 @@ from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
+from nti.contenttypes.courses.interfaces import ICourseInstanceForum
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseAdministrativeLevel
+from nti.contenttypes.courses.interfaces import ICourseInstanceScopedForum
 from nti.contenttypes.courses.interfaces import ICourseContentPackageBundle
 from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
 
@@ -49,6 +51,18 @@ class _CourseOutlineNodeDecorator(Singleton):
             external.pop('LessonOverviewNTIID', None)
         if 'ntiid' not in external and getattr(original, 'ntiid', None):
             external['ntiid'] = original.ntiid
+
+
+@component.adapter(ICourseInstanceForum)
+@interface.implementer(IExternalObjectDecorator)
+class _CourseInstanceForumDecorator(Singleton):
+
+    def decorateExternalObject(self, original, external):
+        if not ICourseInstanceScopedForum.providedBy(original):
+            course = find_interface(original, ICourseInstance, strict=False)
+            if course is not None:
+                public_scope = course.SharingScopes[ES_PUBLIC]
+                external['DefaultSharedToNTIIDs'] = [public_scope.NTIID]
 
 
 @component.adapter(ICourseOutline)

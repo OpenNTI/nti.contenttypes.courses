@@ -118,6 +118,10 @@
 			 for=".interfaces.ICourseTabPreferences" />
 
 	<!-- Decorators -->
+	<subscriber factory=".decorators._CourseInstanceForumDecorator"
+                for=".interfaces.ICourseInstanceForum"
+                provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
+
 	<subscriber factory=".decorators._CourseOutlineNodeDecorator"
 				for=".interfaces.ICourseOutlineNode"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
