@@ -352,6 +352,7 @@
 	<subscriber handler=".subscribers._update_course_bundle" />
 	<subscriber handler=".subscribers._update_course_packages" />
 	<subscriber handler=".subscribers._on_course_bundle_updated" />
+	<subscriber handler=".subscribers._update_scopes_on_course_title_change" />
 	<subscriber handler=".subscribers._update_course_bundle_on_package_removal" />
 
 	<!-- weak references -->

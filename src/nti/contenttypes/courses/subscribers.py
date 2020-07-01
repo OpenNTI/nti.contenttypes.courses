@@ -25,6 +25,8 @@ from zope.intid.interfaces import IIntIdAddedEvent
 from zope.interface.interfaces import IRegistered
 from zope.interface.interfaces import IUnregistered
 
+from zope.lifecycleevent import ObjectModifiedEvent
+
 from zope.lifecycleevent.interfaces import IObjectCreatedEvent
 from zope.lifecycleevent.interfaces import IObjectRemovedEvent
 
@@ -59,8 +61,7 @@ from nti.contenttypes.courses.index import IX_PACKAGES
 
 from nti.contenttypes.courses.index import IndexRecord
 
-from nti.contenttypes.courses.interfaces import ES_PUBLIC,\
-    ICourseRolesUpdatedEvent
+from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import COURSE_CATALOG_NAME
 from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_NAMES
 from nti.contenttypes.courses.interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
@@ -74,6 +75,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IContentCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseRoleRemovedEvent
 from nti.contenttypes.courses.interfaces import ICourseEditorAddedEvent
+from nti.contenttypes.courses.interfaces import ICourseRolesUpdatedEvent
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import IObjectEntrySynchronizer
 from nti.contenttypes.courses.interfaces import ICourseRolesSynchronized
@@ -109,6 +111,10 @@ from nti.contenttypes.courses.utils import remove_principal_from_course_content_
 from nti.dataserver.interfaces import IUser
 
 from nti.dataserver.users import User
+
+from nti.dataserver.users.interfaces import IFriendlyNamed
+
+from nti.externalization.interfaces import IObjectModifiedFromExternalEvent
 
 from nti.intid.common import addIntId
 from nti.intid.common import removeIntId
@@ -572,3 +578,25 @@ def on_course_role_removed(unused_user, event):
     # On role removed, we need to re-index our course.
     unindex_course_roles(event.course)
     index_course_roles(event.course)
+
+
+@component.adapter(ICourseCatalogEntry, IObjectModifiedFromExternalEvent)
+def _update_scopes_on_course_title_change(entry, event):
+    """
+    We can always update the scopes realname here. We should
+    not allow any API changes to these realnames.
+    """
+    # TODO: test this
+    if event.external_value and 'title' in event.external_value:
+        if not entry.title:
+            return
+        course = ICourseInstance(entry)
+        course_title = entry.title
+        for scope in course.SharingScopes.values():
+            friendly_named = IFriendlyNamed(scope, None)
+            if friendly_named is None:
+                continue
+            scope_name = scope.__name__
+            new_name = course_title if scope_name == ES_PUBLIC else '%s (%s)' % (course_title, scope_name)
+            friendly_named.realname = new_name
+            notify(ObjectModifiedEvent(scope))
