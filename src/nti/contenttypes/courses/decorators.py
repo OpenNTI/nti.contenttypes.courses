@@ -37,6 +37,8 @@ from nti.site.interfaces import IHostPolicyFolder
 
 from nti.traversal.traversal import find_interface
 
+from nti.dataserver.contenttypes.forums.interfaces import ITopic
+
 MIMETYPE = StandardExternalFields.MIMETYPE
 
 logger = __import__('logging').getLogger(__name__)
@@ -63,6 +65,19 @@ class _CourseInstanceForumDecorator(Singleton):
             if course is not None:
                 public_scope = course.SharingScopes[ES_PUBLIC]
                 external['DefaultSharedToNTIIDs'] = [public_scope.NTIID]
+
+
+@component.adapter(ITopic)
+@interface.implementer(IExternalObjectDecorator)
+class _CourseInstanceForumTopicDecorator(Singleton):
+
+    def decorateExternalObject(self, original, external):
+        forum = original.__parent__
+        if not ICourseInstanceScopedForum.providedBy(forum):
+            course = find_interface(original, ICourseInstance, strict=False)
+            if course is not None:
+                public_scope = course.SharingScopes[ES_PUBLIC]
+                external['ContainerDefaultSharedToNTIIDs'] = [public_scope.NTIID]
 
 
 @component.adapter(ICourseOutline)

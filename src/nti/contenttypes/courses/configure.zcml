@@ -122,6 +122,10 @@
                 for=".interfaces.ICourseInstanceForum"
                 provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
 
+    <subscriber factory=".decorators._CourseInstanceForumTopicDecorator"
+                for="nti.dataserver.contenttypes.forums.interfaces.ITopic"
+                provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
+
 	<subscriber factory=".decorators._CourseOutlineNodeDecorator"
 				for=".interfaces.ICourseOutlineNode"
 				provides="nti.externalization.interfaces.IExternalObjectDecorator"/>
