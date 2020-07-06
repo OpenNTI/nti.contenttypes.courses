@@ -11,6 +11,8 @@ from __future__ import absolute_import
 from zope import component
 from zope import interface
 
+from zope.location.interfaces import ILocation
+
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 
 from nti.contenttypes.courses.interfaces import ICourseOutline
@@ -26,6 +28,8 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceSharingScope
 
 from nti.contenttypes.courses.legacy_catalog import ICourseCatalogInstructorLegacyInfo
 
+from nti.dataserver.contenttypes.forums.interfaces import ITopic
+
 from nti.dataserver.users.interfaces import IFriendlyNamed
 
 from nti.externalization.interfaces import StandardExternalFields
@@ -33,12 +37,14 @@ from nti.externalization.interfaces import IExternalObjectDecorator
 
 from nti.externalization.singleton import Singleton
 
+from nti.links.links import Link
+
 from nti.site.interfaces import IHostPolicyFolder
 
 from nti.traversal.traversal import find_interface
 
-from nti.dataserver.contenttypes.forums.interfaces import ITopic
 
+LINKS = StandardExternalFields.LINKS
 MIMETYPE = StandardExternalFields.MIMETYPE
 
 logger = __import__('logging').getLogger(__name__)
@@ -104,13 +110,24 @@ class _CourseInstanceSharingScopeDecorator(Singleton):
     def decorateExternalObject(self, scope, external):
         # Warning !!! For BWC w/ clients
         external[MIMETYPE] = 'application/vnd.nextthought.community'
+
+        course = find_interface(scope, ICourseInstance, strict=False)
+        if course is None:
+            return
+        _links = external.setdefault(LINKS, [])
+        link = Link(course,
+                    rel='CourseInstance')
+        interface.alsoProvides(link, ILocation)
+        link.__name__ = ''
+        link.__parent__ = scope
+        _links.append(link)
+
         # Update scope alias with entry title
         friendly_named = IFriendlyNamed(scope)
         if friendly_named.alias is None:
             # Override our externalized alias with our course title
             # All entity objects default this via the alias or realname or
             # username.
-            course = find_interface(scope, ICourseInstance, strict=False)
             entry = ICourseCatalogEntry(course, None)
             title = getattr(entry, 'title', None)
             if title:
