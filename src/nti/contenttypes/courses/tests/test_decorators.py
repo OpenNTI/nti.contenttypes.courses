@@ -14,6 +14,8 @@ from hamcrest import has_entries
 
 from zope import interface
 
+from zope.event import notify
+
 from nti.contentlibrary.filesystem import FilesystemBucket
 
 from nti.contenttypes.courses.catalog import CourseCatalogFolder
@@ -32,6 +34,8 @@ from nti.contenttypes.courses.tests import CourseLayerTest
 from nti.dataserver.users.interfaces import IFriendlyNamed
 
 from nti.externalization.externalization import to_external_object
+
+from nti.externalization.interfaces import ObjectModifiedFromExternalEvent
 
 from nti.site.folder import HostPolicyFolder
 
@@ -67,13 +71,9 @@ class TestDecorators(CourseLayerTest):
 
         # With course title
         entry = ICourseCatalogEntry(course)
-        entry.title = u'my course title'
-        ext_scopes = to_external_object(course.SharingScopes)
-        ext_public = ext_scopes.get(ES_PUBLIC)
-        assert_that(ext_public, has_entry('realname', entry.title))
-        ext_credit = ext_scopes.get(ES_CREDIT_DEGREE)
-        assert_that(ext_credit, has_entry('realname',
-                                          u'%s (%s)' % (entry.title, ES_CREDIT_DEGREE)))
+        entry.title = u'new course title'
+        notify(ObjectModifiedFromExternalEvent(entry,
+                                               external_value={'title': entry.title}))
 
         # If realname set we use that
         public_scope = course.SharingScopes.get(ES_PUBLIC)
@@ -82,6 +82,8 @@ class TestDecorators(CourseLayerTest):
         ext_scopes = to_external_object(course.SharingScopes)
         ext_public = ext_scopes.get(ES_PUBLIC)
         assert_that(ext_public, has_entry('realname', fn.realname))
+
+        # But our name change affects other scopes
         ext_credit = ext_scopes.get(ES_CREDIT_DEGREE)
-        assert_that(ext_credit, has_entry('realname',
+        assert_that(ext_credit, has_entry('alias',
                                           u'%s (%s)' % (entry.title, ES_CREDIT_DEGREE)))

@@ -590,7 +590,9 @@ def _update_scopes_on_course_title_change(entry, event):
     if event.external_value and 'title' in event.external_value:
         if not entry.title:
             return
-        course = ICourseInstance(entry)
+        course = ICourseInstance(entry, None)
+        if course is None:
+            return
         course_title = entry.title
         for scope in course.SharingScopes.values():
             friendly_named = IFriendlyNamed(scope, None)
