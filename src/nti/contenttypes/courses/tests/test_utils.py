@@ -95,7 +95,9 @@ class TestTags(CourseLayerTest):
         entry1.title = u'course1'
         ds_folder._p_jar.add(inst1)
         addIntId(inst1)
-        catalog.index_doc(intids.getId(inst1), inst1)
+        ds_folder._p_jar.add(entry1)
+        addIntId(entry1)
+        catalog.index_doc(intids.getId(entry1), entry1)
 
         inst2 = ContentCourseInstance()
         entry2 = ICourseCatalogEntry(inst2)
@@ -103,7 +105,9 @@ class TestTags(CourseLayerTest):
         entry2.tags = (IPlainTextContentFragment(u'duplicate_tag'),)
         ds_folder._p_jar.add(inst2)
         addIntId(inst2)
-        catalog.index_doc(intids.getId(inst2), inst2)
+        ds_folder._p_jar.add(entry2)
+        addIntId(entry2)
+        catalog.index_doc(intids.getId(entry2), entry2)
 
         inst3 = ContentCourseInstance()
         entry3 = ICourseCatalogEntry(inst3)
@@ -112,7 +116,9 @@ class TestTags(CourseLayerTest):
                        IPlainTextContentFragment(u'DUPLICATE_TAG'))
         ds_folder._p_jar.add(inst3)
         addIntId(inst3)
-        catalog.index_doc(intids.getId(inst3), inst3)
+        ds_folder._p_jar.add(entry3)
+        addIntId(entry3)
+        catalog.index_doc(intids.getId(entry3), entry3)
 
         # Fetch tags
         all_tags = get_course_tags()
@@ -154,8 +160,17 @@ class TestTags(CourseLayerTest):
         assert_that(_get_titles(courses), contains_inanyorder('course2',
                                                               'course3'))
 
+        # Remove tag from course and it does not come back
+        # Indexing the course does not affect anything
+        catalog.index_doc(intids.getId(inst3), inst3)
+        entry3.tags = (IPlainTextContentFragment(u'entry3 tag'),)
+        catalog.index_doc(intids.getId(entry3), entry3)
+        courses = get_courses_for_tag(u'DUPLICATE_TAG')
+        assert_that(courses, has_length(1))
+        assert_that(_get_titles(courses), contains_inanyorder('course2'))
+
         # Unindex third course
-        catalog.unindex_doc(intids.getId(inst3))
+        catalog.unindex_doc(intids.getId(entry3))
 
         all_tags = get_course_tags()
         assert_that(all_tags, has_length(1))
@@ -172,7 +187,7 @@ class TestTags(CourseLayerTest):
         assert_that(_get_titles(courses), contains('course2'))
 
         # No courses with tags
-        catalog.unindex_doc(intids.getId(inst2))
+        catalog.unindex_doc(intids.getId(entry2))
 
         all_tags = get_course_tags()
         assert_that(all_tags, has_length(0))
@@ -189,8 +204,7 @@ class TestTags(CourseLayerTest):
         # External tags
         ext_obj = to_external_object(entry3)
         assert_that(ext_obj, has_entry('tags',
-                                       contains_inanyorder(u'entry3 tag',
-                                                           u'DUPLICATE_TAG')))
+                                       contains_inanyorder(u'entry3 tag',)))
 
 
 class TestContextEnrollments(CourseLayerTest):

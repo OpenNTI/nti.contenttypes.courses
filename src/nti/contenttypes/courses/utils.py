@@ -1148,8 +1148,7 @@ def get_courses_for_tag(tag, sites=(), intids=None):
     intids = component.getUtility(IIntIds) if intids is None else intids
     for uid in catalog.apply(query) or ():
         obj = intids.queryObject(uid)
-        if     ICourseInstance.providedBy(obj) \
-            or ICourseCatalogEntry.providedBy(obj):
+        if ICourseCatalogEntry.providedBy(obj):
             courses.add(ICourseInstance(obj, None))
     courses.discard(None)
     result = set()
