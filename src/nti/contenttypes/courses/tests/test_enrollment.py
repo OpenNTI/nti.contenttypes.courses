@@ -34,6 +34,8 @@ from zope import component
 from zope import interface
 from zope import lifecycleevent
 
+from zope.dublincore.interfaces import IWriteZopeDublinCore
+
 from zope.schema.interfaces import ConstraintNotSatisfied
 
 from nti.contenttypes.courses import courses
@@ -46,6 +48,10 @@ from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 
 
 class TestEnrollment(unittest.TestCase):
+
+    def test_zdc_adapter(self):
+        storage = enrollment.DefaultCourseInstanceEnrollmentStorage()
+        assert_that(IWriteZopeDublinCore(storage, None), none())
 
     def test_provides(self):
         assert_that(enrollment.DefaultCourseEnrollmentManager(None),
