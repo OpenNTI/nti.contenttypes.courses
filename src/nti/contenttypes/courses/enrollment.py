@@ -100,35 +100,6 @@ logger = __import__('logging').getLogger(__name__)
 ICourseInstanceEnrollmentRecordContainer = ICourseInstanceEnrollmentRecordContainer
 
 
-def save_in_container(container, key, value, event=False):
-    # pylint: disable=protected-access,too-many-function-args
-    if event:
-        container[key] = value
-    else:
-        container._setitemf(key, value)
-        locate(value, parent=container, name=key)
-        if IConnection(value, None) is None:
-            IConnection(container).add(value)
-        lifecycleevent.added(value, container, key)
-        try:
-            container.updateLastMod()
-        except AttributeError:
-            pass
-        container._p_changed = True
-
-
-def remove_from_container(container, key, event=False):
-    # pylint: disable=protected-access
-    if event:
-        del container[key]
-    else:
-        container._delitemf(key)
-        try:
-            container.updateLastMod()
-        except AttributeError:
-            pass
-        container._p_changed = True
-
 # Recall that everything that's keyed by username/principalid must be
 # case-insensitive
 
@@ -231,17 +202,12 @@ class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedB
             return self[principalid]
         except KeyError:
             result = CourseEnrollmentList()
+            self[principalid] = result
             jar = IConnection(principal, None)
             if jar is not None:
                 # store with the principal, not with us
                 # pylint: disable=too-many-function-args
                 jar.add(result)
-            # CS/JZ 20141026
-            # We manually add the item and fire the ObjectAddedEvent to
-            # avoid contention in an underlying zope dublincore annotation data structure.
-            # A modified event on the container calls zope.dublincore.creatorannotator
-            # whose data modifications, we currently do not use.
-            save_in_container(self, principalid, result)
             # result.__parent__ is self; but depending
             # on where we are and when we got created, our
             # self.__parent__ (the course catalog, typically, through which we are reachable)
@@ -405,13 +371,7 @@ class DefaultCourseEnrollmentManager(object):
         # now install and fire the ObjectAdded event, after
         # it's in the IPrincipalEnrollments; that way
         # event listeners will see consistent data.
-
-        # CS/JZ 20141025
-        # We manually add the item and fire the ObjectAddedEvent to
-        # avoid contention in an underlying zope dublincore annotation data structure.
-        # A modified event on the container calls zope.dublincore.creatorannotator
-        # whose data modifications, we currently do not use.
-        save_in_container(self._inst_enrollment_storage, principal_id, record)
+        self._inst_enrollment_storage[principal_id] = record
         return record
 
     def _drop_record_for_principal_id(self, record, principal_id):
@@ -447,12 +407,7 @@ class DefaultCourseEnrollmentManager(object):
         # again be consistent with the order: remove from the
         # enrollment list then fire the event
         self._drop_record_for_principal_id(record, principal_id)
-        # CS/JZ 201410256
-        # We manually remove the item and fire the ObjectRemovedEvent to
-        # avoid contention in an underlying zope dublincore annotation data structure.
-        # A modified event on the container calls zope.dublincore.creatorannotator
-        # whose data modifications, we currently do not use.
-        remove_from_container(self._inst_enrollment_storage, principal_id)
+        del self._inst_enrollment_storage[principal_id]
         return record
 
     def drop_all(self):
