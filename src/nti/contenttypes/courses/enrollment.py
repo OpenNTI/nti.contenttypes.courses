@@ -27,7 +27,6 @@ from ZODB.interfaces import IConnection
 
 from zope import component
 from zope import interface
-from zope import lifecycleevent
 
 from zope.annotation.factory import factory as an_factory
 
@@ -44,8 +43,6 @@ from zope.interface import ro
 
 from zope.keyreference.interfaces import NotYet
 from zope.keyreference.interfaces import IKeyReference
-
-from zope.location.location import locate
 
 from zope.mimetype.interfaces import IContentTypeAware
 
