@@ -634,27 +634,100 @@ def get_editors(site=None, excludedCourse=None):
                                        excludedCourse=excludedCourse)
 
 
-def get_instructed_courses(user, **kwargs):
+def _get_course_admin_intids_for_user(user, idx, site=None):
     """
-    Returns an iterable containing all the courses
-    in which this user is an instructor
+    Return the set of course intids the given user administers
+    (instructor or editor).
     """
-    result = get_courses_for_scope(user,
-                                   scopes=(INSTRUCTOR,),
-                                   **kwargs)
-    return [x for x in result
-            if ICourseInstance.providedBy(x) and user in x.instructors]
+    catalog = get_courses_catalog()
+    username = getattr(user, 'username', user)
+    if site is not None:
+        sites = (getattr(site, '__name__', site),)
+    else:
+        sites = get_sites_4_index(site)
+    query = {
+        idx: {'any_of': (username,)}
+    }
+    if sites:
+        query[IX_SITE] = {'any_of': sites}
+    return catalog.apply(query)
 
 
-def get_instructed_and_edited_courses(user, **kwargs):
+def get_instructed_courses_intids(user, site=None):
+    """
+    Returns an iterable containing all the course intids
+    in which this user is an instructor.
+    """
+    return _get_course_admin_intids_for_user(user,
+                                             IX_COURSE_INSTRUCTOR,
+                                             site=site)
+
+
+def get_edited_courses_intids(user, site=None):
+    """
+    Returns an iterable containing all the course intids
+    in which this user is an editor.
+    """
+    return _get_course_admin_intids_for_user(user,
+                                             IX_COURSE_EDITOR,
+                                             site=site)
+
+
+def has_instructed_courses(user):
+    """
+    Return a bool if this user instructs any courses.
+    """
+    return bool(get_instructed_courses_intids(user))
+
+
+def has_edited_courses(user):
+    """
+    Return a bool if this user acts as an editor for any courses.
+    """
+    return bool(get_edited_courses_intids(user))
+
+
+def get_instructed_courses(user):
     """
     Returns an iterable containing all the courses
-    in which this user is either an instructor
-    or an editor.
+    in which this user is an instructor.
     """
-    return get_courses_for_scope(user,
-                                 scopes=(INSTRUCTOR, EDITOR),
-                                 **kwargs)
+    intids = component.getUtility(IIntIds)
+    rs = get_instructed_courses_intids(user)
+    result = []
+    for intid in rs:
+        obj = intids.queryObject(intid)
+        if ICourseInstance.providedBy(obj):
+            result.append(obj)
+    return result
+
+
+def get_edited_courses(user):
+    """
+    Returns an iterable containing all the courses
+    in which this user is an editor.
+    """
+    intids = component.getUtility(IIntIds)
+    rs = get_edited_courses_intids(user)
+    result = []
+    for intid in rs:
+        obj = intids.queryObject(intid)
+        if ICourseInstance.providedBy(obj):
+            result.append(obj)
+    return result
+
+
+def get_instructed_and_edited_courses(user):
+    """
+    Returns an iterable containing all the courses in which this user is
+    either an instructor or an editor.
+    """
+    result = set()
+    instructed_courses = get_instructed_courses(user)
+    result.update(instructed_courses)
+    edited_courses = get_edited_courses(user)
+    result.update(edited_courses)
+    return result
 
 
 def is_course_instructor(context, user):
@@ -1213,16 +1286,16 @@ def get_course_tags(filter_str=None, filter_hidden=True, sites=()):
 
 def get_context_enrollment_records(user, requesting_user):
     """
-    For a requesting_user, fetch all relevant enrollment records.
+    For a requesting_user, fetch all relevant enrollment records for the
+    given user.
     """
-    enrollments = get_enrollments(user)
+    result = []
     if is_admin_or_site_admin(requesting_user) or user == requesting_user:
         # Admins get everything
-        result = enrollments
-    else:
+        result = get_enrollments(user)
+    elif has_instructed_courses(requesting_user):
         # Instructors get enrollment records for the courses they teach.
-        result = []
-        enrolled_courses_to_records = {x.CourseInstance:x for x in enrollments}
+        enrolled_courses_to_records = {x.CourseInstance:x for x in get_enrollments(user)}
         instructed_courses = get_instructed_courses(requesting_user)
         for course in instructed_courses or ():
             try:
