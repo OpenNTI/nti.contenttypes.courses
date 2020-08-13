@@ -55,8 +55,7 @@ class IndexAdminCourses(object):
     def iter_admin(self, user):
         results = get_instructed_and_edited_courses(user)
         for result in results:
-            if ICourseInstance.providedBy(result):  # extra check
-                yield result
+            yield result
 
 
 @interface.implementer(IUserAdministeredCourses)
