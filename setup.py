@@ -12,6 +12,7 @@ TESTS_REQUIRE = [
     'nti.testing',
     'zope.dottedname',
     'zope.testrunner',
+    'nti.dataserver[test]'
 ]
 
 
@@ -58,6 +59,7 @@ setup(
         'nti.contenttypes.credit',
         'nti.contenttypes.reports',
         'nti.coremetadata',
+        'nti.dataserver',
         'nti.dublincore',
         'nti.externalization',
         'nti.invitations',
