@@ -59,7 +59,7 @@ setup(
         'nti.contenttypes.credit',
         'nti.contenttypes.reports',
         'nti.coremetadata',
-        'nti.dataserver', #Needs nti.cabinet
+        'nti.dataserver',
         'nti.dublincore',
         'nti.externalization',
         'nti.invitations',
