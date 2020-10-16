@@ -43,6 +43,7 @@ from nti.assessment.interfaces import IQAssessment
 from nti.assessment.interfaces import IQAssessmentPolicies
 from nti.assessment.interfaces import IQEditableEvaluation
 from nti.assessment.interfaces import IQAssessmentDateContext
+from nti.assessment.interfaces import IQInquiry
 
 from nti.base._compat import text_
 
@@ -524,7 +525,15 @@ class RoleInfoExporter(BaseSectionExporter):
 
 
 @interface.implementer(ICourseSectionExporter)
-class AssignmentPoliciesExporter(BaseSectionExporter):
+class AssessmentPoliciesExporter(BaseSectionExporter):
+
+    def get_registered_obj(self, key):
+        result = component.queryUtility(IQAssessment, name=key)
+
+        if result is not None:
+            return result
+
+        return component.queryUtility(IQInquiry, name=key)
 
     def _process(self, course, backup=True, salt=None):
         result = {}
@@ -544,7 +553,7 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
         # If not backing up, hash the ntiids if needed, as we export them
         if not backup:
             for key, value in assignments.items():
-                assessment = component.queryUtility(IQAssessment, name=key)
+                assessment = self.get_registered_obj(key)
                 if IQEditableEvaluation.providedBy(assessment):
                     hashed_ntiid = self.hash_ntiid(key, salt)
                     result[hashed_ntiid] = value
@@ -568,6 +577,9 @@ class AssignmentPoliciesExporter(BaseSectionExporter):
                        overwrite=True)
         for sub_instance in get_course_subinstances(course):
             self.export(sub_instance, filer, backup, salt)
+
+
+AssignmentPoliciesExporter = AssessmentPoliciesExporter
 
 
 @interface.implementer(ICourseSectionExporter)
