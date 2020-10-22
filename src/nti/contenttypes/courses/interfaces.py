@@ -70,6 +70,7 @@ from nti.contentlibrary.interfaces import IGenericSynchronizationResults
 from nti.contentlibrary.interfaces import IEnumerableDelimitedHierarchyBucket
 
 from nti.contenttypes.completion.interfaces import ICompletionContext
+from nti.contenttypes.completion.interfaces import ICompletionSubContext
 from nti.contenttypes.completion.interfaces import CompletionContextCompletedEvent
 from nti.contenttypes.completion.interfaces import ICompletionContextCompletedEvent
 
@@ -597,7 +598,7 @@ class INonExportable(interface.Interface):
 INonExportable.setTaggedValue('_ext_is_marker_interface', True)
 
 
-class ICourseSubInstance(ICourseInstance, INonExportable):
+class ICourseSubInstance(ICourseInstance, ICompletionSubContext, INonExportable):
     """
     A portion or section of a course instance that lives within a
     containing course instance. The containing course instance will
