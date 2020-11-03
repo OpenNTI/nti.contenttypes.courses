@@ -1116,7 +1116,8 @@ class ICourseInstanceEnrollmentRecordContainer(IContainer):
     """
 
 
-class ICourseInstanceEnrollmentRecord(ILastModified,
+class ICourseInstanceEnrollmentRecord(IAttributeAnnotatable,
+                                      ILastModified,
                                       IContained):
     """
     A record of enrollment in a particular course instance.
