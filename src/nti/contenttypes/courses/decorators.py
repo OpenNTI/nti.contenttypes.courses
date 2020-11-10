@@ -8,6 +8,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from zc.displayname.interfaces import IDisplayNameGenerator
+
 from zope import component
 from zope import interface
 
@@ -71,6 +73,7 @@ class _CourseInstanceForumDecorator(Singleton):
             if course is not None:
                 public_scope = course.SharingScopes[ES_PUBLIC]
                 external['DefaultSharedToNTIIDs'] = [public_scope.NTIID]
+                external['DefaultSharedToDisplayNames'] = [IDisplayNameGenerator(public_scope)()]
 
 
 @component.adapter(ITopic)
@@ -84,6 +87,7 @@ class _CourseInstanceForumTopicDecorator(Singleton):
             if course is not None:
                 public_scope = course.SharingScopes[ES_PUBLIC]
                 external['ContainerDefaultSharedToNTIIDs'] = [public_scope.NTIID]
+                external['ContainerDefaultSharedToDisplayNames'] = [IDisplayNameGenerator(public_scope)()]
 
 
 @component.adapter(ICourseOutline)
