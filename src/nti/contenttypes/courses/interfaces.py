@@ -1695,7 +1695,7 @@ class ICourseAssignmentCatalog(interface.Interface):
     from the :class:`.ICourseInstance`.
     """
 
-    def iter_assignments(course_lineage=False):
+    def iter_assignments(course_lineage=False, require_published=False):
         """
         Return the assignments.
 
@@ -1704,6 +1704,8 @@ class ICourseAssignmentCatalog(interface.Interface):
 
         if `course_lineage`, we also include the assignments defined
         in the parent course (if available).
+
+        if `require_published`, we check if the asisgnment is published.
         """
 
 

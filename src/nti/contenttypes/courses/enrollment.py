@@ -200,22 +200,6 @@ class DefaultCourseCatalogEnrollmentStorage(CaseInsensitiveCheckingLastModifiedB
         except KeyError:
             result = CourseEnrollmentList()
             self[principalid] = result
-            jar = IConnection(principal, None)
-            if jar is not None:
-                # store with the principal, not with us
-                # pylint: disable=too-many-function-args
-                jar.add(result)
-            # result.__parent__ is self; but depending
-            # on where we are and when we got created, our
-            # self.__parent__ (the course catalog, typically, through which we are reachable)
-            # may be a different db, which could yield InvalidObjectReference
-            # if we're not specifically set to a place. Since we know
-            # we are writing here, now is a good time to pick one.
-            if self._p_jar is None:
-                jar = IConnection(self, jar)
-                if jar is not None:
-                    # pylint: disable=too-many-function-args
-                    jar.add(self)
             return result
 
 
