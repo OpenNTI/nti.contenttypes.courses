@@ -76,6 +76,7 @@ from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_NAMES
 from nti.contenttypes.courses.interfaces import iface_of_node
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseOutline
+from nti.contenttypes.courses.interfaces import IDeletedCourse
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseEnrollments
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -491,7 +492,8 @@ def get_courses_for_scope(user, scopes=(), sites=None, intids=None):
     for doc_id in catalog.apply(query) or ():
         obj = intids.queryObject(doc_id)
         if     ICourseInstanceEnrollmentRecord.providedBy(obj) \
-            or ICourseInstance.providedBy(obj):
+            or (    ICourseInstance.providedBy(obj)
+                and not IDeletedCourse.providedBy(obj)):
             result.append(obj)
     return result
 _get_courses_for_scope = get_courses_for_scope
