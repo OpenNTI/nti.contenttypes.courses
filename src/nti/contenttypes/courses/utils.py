@@ -1350,22 +1350,36 @@ class CourseCatalogEntryFilterUtility(object):
                 or entry in tagged_entries
         return result
 
-    def filter_entries(self, entries, filter_str, selector=lambda x: x):
+    def filter_entries(self, entries, filter_strs, selector=lambda x: x, operator=set.union):
         """
         Returns a filtered sequence of included :class:`ICourseCatalogEntry`
-        matches the given filter str. `entry` may be a single instance
-        or a sequence. The given order is maintained.
+        matches the given filter str(s). `entry` may be a single instance
+        or a sequence.
+
+        If multiple filters are given, we will use the given set operator,
+        defaulting to union.
 
         An optional selector can be given here in order to efficiently
         parse a collection/dict/iter only once when filtering.
         """
         if isinstance(entries, ICourseCatalogEntry):
             entries = (entries,)
-        entries = entries or ()
-        if filter_str:
+        if filter_strs and len(filter_strs) == 1:
+            # Special case the single filter - since this is used by UI
+            filter_str = filter_strs[0]
             tagged_entries = self.get_tagged_entries(filter_str)
-            entries = [x for x in entries
-                       if self._include_entry(selector(x), filter_str, tagged_entries)]
+            entries = set(x for x in entries
+                          if self._include_entry(selector(x), filter_str, tagged_entries))
+        elif filter_strs:
+            rs = []
+            # Go ahead and get a list in case they gave us an iterator
+            all_entries = list(entries)
+            for filter_str in filter_strs:
+                tagged_entries = self.get_tagged_entries(filter_str)
+                entries = set(x for x in all_entries
+                              if self._include_entry(selector(x), filter_str, tagged_entries))
+                rs.append(entries)
+            entries = reduce(operator, rs)
         return entries
 
 

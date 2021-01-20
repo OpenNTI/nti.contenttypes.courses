@@ -1819,11 +1819,14 @@ class ICourseCatalogEntryFilterUtility(interface.Interface):
     A utility to fetch filter :class:`ICourseCatalogEntry` objects.
     """
 
-    def filter_entries(entries, filter_str):
+    def filter_entries(entries, filter_str, operator=set.union):
         """
         Returns a filtered sequence of included :class:`ICourseCatalogEntry`
-        matches the given filter str. `entry` may be a single instance
-        or a sequence. The given order is maintained.
+        matches the given filter str(s). `entry` may be a single instance
+        or a sequence.
+
+        If multiple filters are given, we will use the given set operator,
+        defaulting to union.
         """
 
 
