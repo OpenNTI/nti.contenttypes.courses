@@ -335,6 +335,8 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
     __PA__ = 'presentation-assets'
 
     def _transfer(self, filer, filer_path, disk_path):
+        logger.debug('Copying course presentation-assets (%s)',
+                     disk_path)
         self.makedirs(disk_path)
         for path in filer.list(filer_path):
             name = filer.key_name(path)
@@ -347,6 +349,8 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
 
     def _do_import(self, course, filer):
         path = self.course_bucket_path(course) + self.__PA__
+        logger.debug('Importing course presentation-assets (%s)',
+                     path)
         if filer.is_bucket(path):
             root = course.root
             root_path = os.path.join(root.absolute_path, self.__PA__)
@@ -375,7 +379,7 @@ class BundlePresentationAssetsImporter(BaseSectionImporter):
 
 @interface.implementer(ICourseSectionImporter)
 class CourseInfoImporter(BaseSectionImporter):
-    
+
     def preprocess_credit_definitions(self, key, path):
         parsed = prepare_json_text(key.readContentsAsYaml())
         awardable_credits = parsed.get('awardableCredits')
