@@ -1260,10 +1260,10 @@ def get_entry_intids_for_title(titles, sites=()):
     Given a set of titles, query the catalog index.
     Note, we do not do any subinstance work here.
     """
-    if isinstance(titles, string_types):
-        titles = (titles,)
+    if not isinstance(titles, string_types):
+        titles = ' or '.join(titles)
     catalog = get_courses_catalog()
-    query = {IX_ENTRY_TITLE: {'any_of': titles}}
+    query = {IX_ENTRY_TITLE: titles}
     sites = get_sites_4_index(sites)
     if sites:
         query[IX_SITE] = {'any_of': sites}

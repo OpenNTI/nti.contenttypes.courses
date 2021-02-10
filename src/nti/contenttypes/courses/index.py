@@ -45,6 +45,7 @@ from nti.zope_catalog.catalog import Catalog
 from nti.zope_catalog.datetime import TimestampToNormalized64BitIntNormalizer
 
 from nti.zope_catalog.index import AttributeSetIndex
+from nti.zope_catalog.index import AttributeTextIndex
 from nti.zope_catalog.index import NormalizationWrapper
 from nti.zope_catalog.index import AttributeKeywordIndex
 from nti.zope_catalog.index import SetIndex as RawSetIndex
@@ -403,10 +404,13 @@ class ValidatingCourseCatalogEntryTitle(object):
         raise TypeError()
 
 
-class CourseCatalogEntryTitleIndex(ValueIndex):
+class CourseCatalogEntryTitleIndex(AttributeTextIndex):
     default_field_name = 'title'
     default_interface = ValidatingCourseCatalogEntryTitle
 
+    def __init__(self, family=None, *args, **kwargs):
+        super(CourseCatalogEntryTitleIndex, self).__init__(*args, **kwargs)
+        self.family = family
 
 class ValidatingCourseCatalogEntryDescription(object):
 
@@ -419,10 +423,17 @@ class ValidatingCourseCatalogEntryDescription(object):
     def __reduce__(self):
         raise TypeError()
 
+# FIXME JZ
+from zope.index.text.baseindex import BaseIndex
+BaseIndex.family = BTrees.family64
 
-class CourseCatalogEntryDescriptionIndex(ValueIndex):
+class CourseCatalogEntryDescriptionIndex(AttributeTextIndex):
     default_field_name = 'description'
     default_interface = ValidatingCourseCatalogEntryDescription
+
+    def __init__(self, family=None, *args, **kwargs):
+        super(CourseCatalogEntryDescriptionIndex, self).__init__(*args, **kwargs)
+        self.family = family
 
 
 class ValidatingCourseCatalogEntryPUID(object):
@@ -437,9 +448,13 @@ class ValidatingCourseCatalogEntryPUID(object):
         raise TypeError()
 
 
-class CourseCatalogEntryPUIDIndex(ValueIndex):
+class CourseCatalogEntryPUIDIndex(AttributeTextIndex):
     default_field_name = 'ProviderUniqueID'
     default_interface = ValidatingCourseCatalogEntryPUID
+
+    def __init__(self, family=None, *args, **kwargs):
+        super(CourseCatalogEntryPUIDIndex, self).__init__(*args, **kwargs)
+        self.family = family
 
 
 class StartDateAdapter(object):
