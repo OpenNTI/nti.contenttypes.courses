@@ -1498,7 +1498,7 @@ class CourseCatalogEntryFilterUtility(object):
         rs = []
         for func in (get_entry_intids_for_puid,
                      get_entry_intids_for_tag,
-                     get_entry_intids_for_desc):
+                     get_entry_intids_for_title):
             rs.append(func(filter_strs, sites=sites))
         return reduce(set.union, rs)
 
@@ -1508,13 +1508,12 @@ class CourseCatalogEntryFilterUtility(object):
         intids.
         """
         sites = get_sites_4_index()
-        # FIXME revamp this - this isnt correct
-        if isinstance(filter_strs, string_types):
-            filter_strs = filter_strs.split()
         if union:
             # Simple - any hits
             result = self._query_index_fields(filter_strs, sites)
         else:
+            if isinstance(filter_strs, string_types):
+                filter_strs = (filter_strs,)
             # Need hit on all filter_str values
             rs = []
             for filter_str in filter_strs:
