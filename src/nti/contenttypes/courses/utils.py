@@ -1496,8 +1496,7 @@ class CourseCatalogEntryFilterUtility(object):
         Query our index fields for any hits on the list of filter_strs.
         """
         rs = []
-        for func in (get_entry_intids_for_desc,
-                     get_entry_intids_for_puid,
+        for func in (get_entry_intids_for_puid,
                      get_entry_intids_for_tag,
                      get_entry_intids_for_desc):
             rs.append(func(filter_strs, sites=sites))
@@ -1509,6 +1508,7 @@ class CourseCatalogEntryFilterUtility(object):
         intids.
         """
         sites = get_sites_4_index()
+        # FIXME revamp this - this isnt correct
         if isinstance(filter_strs, string_types):
             filter_strs = filter_strs.split()
         if union:

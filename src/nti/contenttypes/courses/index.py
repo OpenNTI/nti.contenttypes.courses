@@ -418,7 +418,8 @@ class ValidatingCourseCatalogEntryDescription(object):
 
     def __init__(self, obj, unused_default=None):
         if ICourseCatalogEntry.providedBy(obj):
-            self.description = getattr(obj, 'description', None)
+            self.description = getattr(obj, 'description', None) \
+                            or getattr(obj, 'RichDescription', None)
 
     def __reduce__(self):
         raise TypeError()
