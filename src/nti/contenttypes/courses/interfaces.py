@@ -1827,7 +1827,7 @@ def get_course_assessment_predicate_for_user(user, course):
 
 class ICourseCatalogEntryFilterUtility(interface.Interface):
     """
-    A utility to fetch filter :class:`ICourseCatalogEntry` objects.
+    A utility to fetch and filter :class:`ICourseCatalogEntry` objects.
     """
 
     def filter_entries(entries, filter_str, operator=set.union):
@@ -1844,6 +1844,19 @@ class ICourseCatalogEntryFilterUtility(interface.Interface):
         """
         Check if a given entry is included in the given filter.
         """
+
+    def get_entry_intids_for_filters(filter_strs, union=True):
+        """
+        For the given iterable of filter_strs, fetch the given set of intids
+        corresponding to the :class:`ICourseCatalogEntry` objects.
+
+        If `union`, we will union the results of all the filters; otherwise,
+        we'll require all filter str values be cantained by each entry in the
+        result set.
+
+        returns - a set of intids
+        """
+
 
 # Invitations
 

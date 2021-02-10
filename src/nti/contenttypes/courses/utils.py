@@ -55,7 +55,10 @@ from nti.contenttypes.courses.index import IX_ENTRY
 from nti.contenttypes.courses.index import IX_COURSE
 from nti.contenttypes.courses.index import IX_PACKAGES
 from nti.contenttypes.courses.index import IX_USERNAME
+from nti.contenttypes.courses.index import IX_ENTRY_PUID
+from nti.contenttypes.courses.index import IX_ENTRY_DESC
 from nti.contenttypes.courses.index import IX_IMPORT_HASH
+from nti.contenttypes.courses.index import IX_ENTRY_TITLE
 from nti.contenttypes.courses.index import IX_CONTENT_UNIT
 from nti.contenttypes.courses.index import IX_COURSE_INSTRUCTOR
 from nti.contenttypes.courses.index import IX_COURSE_EDITOR
@@ -1252,22 +1255,78 @@ def path_for_entry(context):
     return result
 
 
+def get_entry_intids_for_title(titles, sites=()):
+    """
+    Given a set of titles, query the catalog index.
+    Note, we do not do any subinstance work here.
+    """
+    if isinstance(titles, string_types):
+        titles = (titles,)
+    catalog = get_courses_catalog()
+    query = {IX_ENTRY_TITLE: {'any_of': titles}}
+    sites = get_sites_4_index(sites)
+    if sites:
+        query[IX_SITE] = {'any_of': sites}
+    return catalog.apply(query)
+
+
+def get_entry_intids_for_desc(descriptions, sites=()):
+    """
+    Given a set of descriptions, query the catalog index.
+    Note, we do not do any subinstance work here.
+    """
+    if isinstance(descriptions, string_types):
+        descriptions = (descriptions,)
+    catalog = get_courses_catalog()
+    query = {IX_ENTRY_DESC: {'any_of': descriptions}}
+    sites = get_sites_4_index(sites)
+    if sites:
+        query[IX_SITE] = {'any_of': sites}
+    return catalog.apply(query)
+
+
+def get_entry_intids_for_puid(puids, sites=()):
+    """
+    Given a set of puids, query the catalog index.
+    Note, we do not do any subinstance work here.
+    """
+    if isinstance(puids, string_types):
+        puids = (puids,)
+    catalog = get_courses_catalog()
+    query = {IX_ENTRY_PUID: {'any_of': puids}}
+    sites = get_sites_4_index(sites)
+    if sites:
+        query[IX_SITE] = {'any_of': sites}
+    return catalog.apply(query)
+
+
+def get_entry_intids_for_tag(tags, sites=()):
+    """
+    Given a set of tags, get all entries with that tag.
+    Note, we do not do any subinstance work here.
+    """
+    if isinstance(tags, string_types):
+        tags = (tags,)
+    catalog = get_courses_catalog()
+    query = {IX_TAGS: {'any_of': tags}}
+    sites = get_sites_4_index(sites)
+    if sites:
+        query[IX_SITE] = {'any_of': sites}
+    return catalog.apply(query)
+
+
 def get_courses_for_tag(tag, sites=(), intids=None):
     """
     Given a tag, get all courses with that tag.
     """
     courses = set()
-    catalog = get_courses_catalog()
-    query = {IX_TAGS: {'any_of': (tag,)}}
-    sites = get_sites_4_index(sites)
-    if sites:
-        query[IX_SITE] = {'any_of': sites}
     intids = component.getUtility(IIntIds) if intids is None else intids
-    for uid in catalog.apply(query) or ():
+    rs = get_entry_intids_for_tag(tag, sites=sites)
+    for uid in rs or ():
         obj = intids.queryObject(uid)
-        if ICourseCatalogEntry.providedBy(obj):
-            courses.add(ICourseInstance(obj, None))
-    courses.discard(None)
+        course = ICourseInstance(obj, None)
+        if course is not None:
+            courses.add(course)
     result = set()
     # CourseSubinstances will inherit the parent's tags unless they are
     # explicitly set; therefore, we mimic that behavior here.
@@ -1431,6 +1490,38 @@ class CourseCatalogEntryFilterUtility(object):
                 rs.append(entries)
             entries = reduce(operator, rs)
         return entries
+
+    def _query_index_fields(self, filter_strs, sites):
+        """
+        Query our index fields for any hits on the list of filter_strs.
+        """
+        rs = []
+        for func in (get_entry_intids_for_desc,
+                     get_entry_intids_for_puid,
+                     get_entry_intids_for_tag,
+                     get_entry_intids_for_desc):
+            rs.append(func(filter_strs, sites=sites))
+        return reduce(set.union, rs)
+
+    def get_entry_intids_for_filters(self, filter_strs, union=True):
+        """
+        For a set of filter strs, filter our course catalog, returning a set of appropriate
+        intids.
+        """
+        sites = get_sites_4_index()
+        if isinstance(filter_strs, string_types):
+            filter_strs = filter_strs.split()
+        if union:
+            # Simple - any hits
+            result = self._query_index_fields(filter_strs, sites)
+        else:
+            # Need hit on all filter_str values
+            rs = []
+            for filter_str in filter_strs:
+                filter_rs = self._query_index_fields(filter_str, sites)
+                rs.append(filter_rs)
+            result = reduce(set.intersection, rs)
+        return result
 
 
 import zope.deferredimport
