@@ -17,6 +17,13 @@ from hamcrest import assert_that
 from hamcrest import has_property
 from hamcrest import same_instance
 from hamcrest import contains_inanyorder
+from hamcrest import calling
+from hamcrest import raises
+from hamcrest import equal_to
+from hamcrest import starts_with
+
+from nti.dataserver.tests.mock_dataserver import DataserverLayerTest
+from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 
 from nti.testing.matchers import is_empty
 from nti.testing.matchers import validly_provides
@@ -26,6 +33,8 @@ import unittest
 
 from nti.contenttypes.courses import sharing
 from nti.contenttypes.courses import interfaces
+
+from ZODB.interfaces import IConnection
 
 
 class TestSharing(unittest.TestCase):
@@ -50,6 +59,54 @@ class TestSharing(unittest.TestCase):
                         has_property('__name__', interfaces.ES_PURCHASED),
                         has_property('__name__', interfaces.ES_CREDIT_NONDEGREE)
                     ))
+
+    def test_scope_eq_hash(self):
+        # Scopes are equal and hash based on their ntiid
+        # which is an oid based ntiid and not set until persistent
+
+        scope = sharing.CourseInstanceSharingScope('foo')
+        other_scope = sharing.CourseInstanceSharingScope('foo')
+
+        # Scopes are equal to themselves regardless of state
+        assert_that(scope, equal_to(scope))
+
+        # We have not ntiid yet
+        assert_that(calling(getattr).with_args(scope, 'NTIID'), raises(AttributeError))
+
+        # With no NTIID scopes aren't equal
+        assert_that(scope, is_not(equal_to(other_scope)))
+        assert_that(scope.__eq__(other_scope), is_(NotImplemented))
+
+        # Scopes without NTIID also can't be hashed
+        assert_that(calling(hash).with_args(scope), raises(TypeError))
+
+        # Once a scope has an NTIID it can be hashed, and we do so by ntiid
+        scope._v_ntiid = 'tag:nextthought.com'
+        assert_that(scope.NTIID, is_('tag:nextthought.com'))
+        assert_that(hash(scope), equal_to(hash(scope.NTIID)))
+
+        # scopes with ntiids are equal if their ntiids are equal
+        other_scope._v_ntiid = 'tag:foo.com'
+        assert_that(scope, is_not(other_scope))
+
+        other_scope._v_ntiid = scope._v_ntiid
+        assert_that(scope, is_(other_scope))
+        assert_that(scope.NTIID, is_(other_scope.NTIID))
+
+
+class TestSharingScopePersistence(DataserverLayerTest):
+
+    @WithMockDSTrans
+    def test_scope_ntiid(self):
+        scope = sharing.CourseInstanceSharingScope('foo')
+
+        # We can't get an ntiid if we aren't in a connection
+        assert_that(calling(getattr).with_args(scope, 'NTIID'), raises(AttributeError))
+
+        # Now if we are added to a connection we do have an ntiid
+        connection = IConnection(self.ds.root)
+        connection.add(scope)
+        assert_that(scope.NTIID, starts_with('tag:nextthought.com,2011-10:system-OID'))
 
 
 import functools
@@ -95,8 +152,6 @@ from nti.schema.eqhash import EqHash
 from nti.wref.interfaces import IWeakRef
 
 from nti.contenttypes.courses.tests import CourseLayerTest
-
-from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 
 
 @functools.total_ordering
