@@ -8,18 +8,18 @@ from __future__ import absolute_import
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
+from hamcrest import assert_that
+from hamcrest import calling
+from hamcrest import contains
+from hamcrest import contains_inanyorder
+from hamcrest import equal_to
+from hamcrest import has_length
+from hamcrest import has_property
 from hamcrest import is_
 from hamcrest import is_in
 from hamcrest import is_not
-from hamcrest import contains
-from hamcrest import has_length
-from hamcrest import assert_that
-from hamcrest import has_property
-from hamcrest import same_instance
-from hamcrest import contains_inanyorder
-from hamcrest import calling
 from hamcrest import raises
-from hamcrest import equal_to
+from hamcrest import same_instance
 from hamcrest import starts_with
 
 from nti.dataserver.tests.mock_dataserver import DataserverLayerTest
