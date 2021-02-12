@@ -137,7 +137,7 @@ class CourseInstanceSharingScope(Community):
 
     def __hash__(self):
         # Note we use an oid based ntiid to hash by, which means
-        # we can't be hashed until
+        # we can't be hashed until we are added to a connection
         try:
             return hash(self.NTIID)
         except AttributeError:
