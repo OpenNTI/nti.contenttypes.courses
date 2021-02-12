@@ -17,6 +17,8 @@ from hamcrest import has_entries
 from hamcrest import assert_that
 from hamcrest import has_property
 
+from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
+
 from nti.testing.matchers import validly_provides
 from nti.testing.matchers import verifiably_provides
 
@@ -49,6 +51,8 @@ from nti.recorder.interfaces import IRecordable
 from nti.recorder.interfaces import ITransactionRecordHistory
 
 from nti.contenttypes.courses.tests import CourseLayerTest
+
+from ZODB.interfaces import IConnection
 
 
 class TestCourseOutline(CourseLayerTest):
@@ -102,8 +106,11 @@ class TestCourseOutline(CourseLayerTest):
         assert_that(outline, validly_provides(interfaces.ICourseOutline))
         assert_that(inst, validly_provides(interfaces.ICourseInstance))
 
+    @WithMockDSTrans
     def test_outline_externalizes(self):
         inst = courses.CourseInstance()
+        IConnection(self.ds.root).add(inst)
+        
         outline = inst.Outline
         node = outlines.CourseOutlineNode()
         outline.append(node)

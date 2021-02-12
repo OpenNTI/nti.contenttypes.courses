@@ -12,6 +12,8 @@ from hamcrest import has_entry
 from hamcrest import assert_that
 from hamcrest import has_entries
 
+from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
+
 from zope import interface
 
 from zope.event import notify
@@ -39,9 +41,12 @@ from nti.externalization.interfaces import ObjectModifiedFromExternalEvent
 
 from nti.site.folder import HostPolicyFolder
 
+from ZODB.interfaces import IConnection
+
 
 class TestDecorators(CourseLayerTest):
 
+    @WithMockDSTrans
     @mock.patch('nti.contenttypes.courses.creator.library_root')
     def test_decorators(self, mock_lr):
         root = FilesystemBucket(name=u"root")
@@ -49,6 +54,7 @@ class TestDecorators(CourseLayerTest):
         mock_lr.return_value = root
 
         folder = HostPolicyFolder()
+        IConnection(self.ds.root).add(folder)
         folder.__name__ = u'bleach.org'
         catalog = CourseCatalogFolder()
         catalog.__name__ = u'Courses'

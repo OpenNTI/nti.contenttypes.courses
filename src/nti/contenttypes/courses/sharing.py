@@ -95,7 +95,22 @@ class CourseInstanceSharingScope(Community):
     # These don't have global names, so they must be referenced
     # by OID
     NTIID_TYPE = TYPE_OID
-    NTIID = cachedIn('_v_ntiid')(to_external_ntiid_oid)
+
+    @property
+    def NTIID(self):
+        """
+        Our NTIID is oid based. we cache this in a volatile attribute for speed.
+        If we aren't yet in a connection, to_external_ntiid_oid returns None,
+        we don't want to cache or return that, instead raising an AttributeError
+        """
+        try:
+            return self._v_ntiid
+        except AttributeError:
+            ntiid = to_external_ntiid_oid(self)
+            if ntiid is None:
+                raise AttributeError('Object not yet added into connection')
+            self._v_ntiid = ntiid
+            return ntiid
 
     # Likewise, externalization sometimes wants to spit out unicode(creator),
     # so we need to override that
@@ -119,6 +134,14 @@ class CourseInstanceSharingScope(Community):
             return self.NTIID == other.NTIID
         except AttributeError:
             return NotImplemented
+
+    def __hash__(self):
+        # Note we use an oid based ntiid to hash by, which means
+        # we can't be hashed until we are added to a connection
+        try:
+            return hash(self.NTIID)
+        except AttributeError:
+            raise TypeError()
 
     def __lt__(self, other):
         try:
