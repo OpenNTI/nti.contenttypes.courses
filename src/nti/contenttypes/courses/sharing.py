@@ -121,10 +121,9 @@ class CourseInstanceSharingScope(Community):
             return NotImplemented
 
     def __hash__(self):
-        try:
-            return hash(self.NTIID)
-        except AttributeError:
-            return NotImplemented
+        # Note we use an oid based ntiid to hash by, which means
+        # we can't be hashed until we have an oid
+        return hash(self.NTIID)
 
     def __lt__(self, other):
         try:
