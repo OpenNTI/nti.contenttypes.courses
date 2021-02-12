@@ -120,6 +120,12 @@ class CourseInstanceSharingScope(Community):
         except AttributeError:
             return NotImplemented
 
+    def __hash__(self):
+        try:
+            return hash(self.NTIID)
+        except AttributeError:
+            return NotImplemented
+
     def __lt__(self, other):
         try:
             return self.NTIID < other.NTIID
