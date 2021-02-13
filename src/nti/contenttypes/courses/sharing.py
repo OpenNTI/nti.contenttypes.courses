@@ -108,7 +108,7 @@ class CourseInstanceSharingScope(Community):
         except AttributeError:
             ntiid = to_external_ntiid_oid(self)
             if ntiid is None:
-                raise AttributeError('Object not yet added into connection')
+                raise AttributeError('%s missing attribute NTIID. Not yet added to connection?' % type(self))
             self._v_ntiid = ntiid
             return ntiid
 
@@ -141,7 +141,7 @@ class CourseInstanceSharingScope(Community):
         try:
             return hash(self.NTIID)
         except AttributeError:
-            raise TypeError()
+            raise TypeError
 
     def __lt__(self, other):
         try:
