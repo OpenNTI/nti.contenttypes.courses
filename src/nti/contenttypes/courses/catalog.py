@@ -13,22 +13,25 @@ from __future__ import absolute_import
 from datetime import datetime
 from functools import total_ordering
 
-from perfmetrics import metricmethod
-
 from zope import component
 from zope import interface
 
 from zope.annotation.interfaces import IAttributeAnnotatable
 
-from zope.cachedescriptors.method import cachedIn
-
 from zope.cachedescriptors.property import readproperty
 from zope.cachedescriptors.property import CachedProperty
+
+from zope.intid.interfaces import IIntIds
 
 from nti.containers.containers import CheckingLastModifiedBTreeFolder
 from nti.containers.containers import CheckingLastModifiedBTreeContainer
 
 from nti.contentlibrary.presentationresource import DisplayableContentMixin
+
+from nti.contenttypes.courses.index import IX_SITE
+from nti.contenttypes.courses.index import IX_ENTRY
+
+from nti.contenttypes.courses.index import get_courses_catalog
 
 from nti.contenttypes.courses.interfaces import ICatalogFamily
 from nti.contenttypes.courses.interfaces import ICourseCatalog
@@ -47,6 +50,8 @@ from nti.dataserver.authorization_acl import ace_allowing
 from nti.dataserver.authorization_acl import acl_from_aces
 
 from nti.dataserver.interfaces import AUTHENTICATED_GROUP_NAME
+
+from nti.dataserver.interfaces import IHostPolicyFolder
 
 from nti.dublincore.time_mixins import CreatedAndModifiedTimeMixin
 
@@ -103,40 +108,32 @@ class _AbstractCourseCatalogMixin(object):
     def _next_catalog(self):
         return _queryNextCatalog(self)
 
-    def _get_all_my_entries(self):
+    def isEmpty(self):
+        raise NotImplementedError()
+
+    def _iter_entries(self):
         """
-        Return all the entries at this level
+        Iterate over course catalog entries.
         """
         raise NotImplementedError()
 
-    def isEmpty(self):
-        # TODO: should this be in the hierarchy?
-        return not self._get_all_my_entries()
-
-    # TODO: A protocol for caching _get_all_my_entries
-    # and handling queries in a cached way, plus caching
-    # the iterator
-
     def iterCatalogEntries(self):
         seen = set()
-        entry_map = self._get_all_my_entries()
-        for ntiid, entry in entry_map.items():
-            if ntiid is None or ntiid in seen:
+        for entry in self._iter_entries():
+            if entry.ntiid is None or entry.ntiid in seen:
                 continue
-            seen.add(ntiid)
+            seen.add(entry.ntiid)
             yield entry
 
         parent = self._next_catalog
         if parent is not None:
             for e in parent.iterCatalogEntries():
-                ntiid = e.ntiid
-                if ntiid not in seen:
-                    seen.add(ntiid)
+                if e.ntiid not in seen:
+                    seen.add(e.ntiid)
                     yield e
 
     def _primary_query_my_entry(self, name):
-        entry_map = self._get_all_my_entries()
-        return entry_map.get(name)
+        raise NotImplementedError()
 
     def _query_my_entry(self, name):
         entry = self._primary_query_my_entry(name)
@@ -179,8 +176,8 @@ class GlobalCourseCatalog(_AbstractCourseCatalogMixin,
 
     lastModified = 0
 
-    def _get_all_my_entries(self):
-        return {x.ntiid: x for x in self.values()}
+    def _iter_entries(self):
+        return self.values()
 
     def _primary_query_my_entry(self, name):
         try:
@@ -426,87 +423,46 @@ class CourseCatalogFolder(_AbstractCourseCatalogMixin,
             application level).
     """
 
-    def _record(self, entries, context):
-        entry = ICourseCatalogEntry(context, None)
-        if entry:
-            entries[entry.ntiid] = entry
-        return entry
+    def isEmpty(self):
+        return not bool(self._course_intid_iter())
 
-    @cachedIn('_v_all_my_entries')
-    @metricmethod
-    def _get_all_my_entries(self):
-        logger.info("Building catalog entry cache (%s)", self)
-        entries = dict()
+    @property
+    def _catalog_site(self):
+        catalog_site = find_interface(self, IHostPolicyFolder, strict=False)
+        return catalog_site
 
-        def _recur(folder):
-            course = ICourseInstance(folder, None)
-            if course:
-                entry = self._record(entries, course)
-                if entry is not None:
-                    # pylint: disable=no-member
-                    for subinstance in course.SubInstances.values():
-                        self._record(entries, subinstance)
-                # We don't need to go any deeper than two levels
-                # (If we hit the community members in the scope, we
-                # can get infinite recursion)
-                return
-            try:
-                folder_values = folder.values()
-            except AttributeError:
-                pass
-            else:
-                for value in folder_values:
-                    _recur(value)
-        _recur(self)
-        return entries
+    def _get_entry_from_course_intid(self, course_intid):
+        intids = component.getUtility(IIntIds)
+        course = intids.queryObject(course_intid)
+        return ICourseCatalogEntry(course, None)
 
+    def _course_intid_iter(self):
+        """
+        Iterate over course intids.
+        """
+        catalog = get_courses_catalog()
+        current_site = getattr(self._catalog_site, '__name__', None)
+        result = ()
+        if current_site:
+            query = {IX_SITE: {'any_of': (current_site,)}}
+            result = catalog.apply(query)
+        return result
 
-def _clear_catalog_cache_when_course_updated(course, event):
-    """
-    Because course instances can be any level of folders deep under a
-    CourseCatalogFolder, when they change (are added or removed), the
-    CCF may not itself be changed and included in the transaction.
-    This in turn means that it may not be invalidated/ghosted, so if
-    its state was already loaded and non-ghost, and its contents
-    cached (because it had been iterated), that cached object may
-    still be used by some processes.
+    def _iter_entries(self):
+        """
+        Iterate over course catalog entries.
+        """
+        for course_intid in self._course_intid_iter():
+            entry = self._get_entry_from_course_intid(course_intid)
+            if entry is not None:
+                yield entry
 
-    This subscriber watches for any course change event and clears the catalog
-    cache.
-    """
-
-    # We don't use a component.adapter decorator because we need to handle
-    # at least CourseInstanceAvailable events as well as Deleted events.
-
-    # Because the catalogs may be nested to an arbitrary depth and
-    # have other caching, contingent upon what got returned by
-    # superclasses, we want to reset anything we find. Further more,
-    # we can't know what *other* worker instances might have the same
-    # catalog object cached, so we need to actually mark the object as
-    # changed so it gets included in the transaction and invalidates
-    # there (still invalidate locally, though, so it takes effect for
-    # the rest of the transaction). Fortunately these objects are tiny and
-    # have almost no state, so this doesn't bloat the transaction much
-    catalogs = set()
-    # Include the parent, if we have one
-    catalog = find_interface(course, IPersistentCourseCatalog, strict=False)
-    catalogs.add(catalog)
-
-    # If the event has oldParent and/or newParent, include them
-    for n in 'oldParent', 'newParent':
-        context = getattr(event, n, None)
-        catalog = find_interface(context, IPersistentCourseCatalog, strict=False)
-        catalogs.add(catalog)
-
-    # finally, anything else we can find
-    catalogs.update(component.getAllUtilitiesRegisteredFor(ICourseCatalog))
-    catalogs.discard(None)
-    for catalog in catalogs:
-        # pylint: disable=protected-access
-        try:
-            catalog._get_all_my_entries.invalidate(catalog)
-            logger.info("Invalidated catalog entry cache (%s)", catalog)
-        except AttributeError:  # pragma: no cover
-            pass
-        if hasattr(catalog, '_p_changed') and catalog._p_jar:
-            catalog._p_changed = True
+    def _primary_query_my_entry(self, name):
+        catalog = get_courses_catalog()
+        query = {IX_ENTRY: {'any_of': (name,)}}
+        current_site = getattr(self._catalog_site, '__name__', None)
+        if current_site:
+            query[IX_SITE] = {'any_of': (current_site,)}
+        rs = catalog.apply(query)
+        if rs:
+            return self._get_entry_from_course_intid(rs[0])
