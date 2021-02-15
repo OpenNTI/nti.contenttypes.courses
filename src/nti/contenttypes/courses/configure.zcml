@@ -263,26 +263,6 @@
 	<utility factory=".catalog.GlobalCourseCatalog"
 			 provides=".interfaces.IGlobalCourseCatalog" />
 
-	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
-				for=".interfaces.ICourseInstance
-					 zope.lifecycleevent.IObjectAddedEvent" />
-
-	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
-				for=".interfaces.ICourseInstance
-					 .interfaces.ICourseInstanceAvailableEvent" />
-
-	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
-				for=".interfaces.ICourseInstance
-					 zope.lifecycleevent.IObjectRemovedEvent" />
-
-	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
-                for=".interfaces.ICourseInstance
-                     .interfaces.ICourseInstanceRemovedEvent" />
-
-	<subscriber handler=".catalog._clear_catalog_cache_when_course_updated"
-				for=".interfaces.ICourseInstance
-					 .interfaces.ICourseInstanceImportedEvent" />
-
 	<utility factory=".utils.CourseCatalogEntryFilterUtility"
              provides=".interfaces.ICourseCatalogEntryFilterUtility" />
 
