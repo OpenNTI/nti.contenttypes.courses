@@ -1759,6 +1759,17 @@ class IPrincipalAdministrativeRoleCatalog(interface.Interface):
     registered as subscription adapters from the user.
     """
 
+    def get_course_intids():
+        """
+        Return the course intids managed by the user.
+        """
+
+    def iter_admin_roles_for_intids(course_intids):
+        """
+        Iterate across :class:`.ICourseInstanceAdministrativeRole` objects for
+        each valid intid.
+        """
+
     def iter_administrations():
         """
         Iterate across :class:`.ICourseInstanceAdministrativeRole` objects, or at

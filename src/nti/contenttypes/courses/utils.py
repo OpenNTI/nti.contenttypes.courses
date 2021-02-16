@@ -8,6 +8,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from BTrees.LFBTree import union as lfbtree_union
+
 from itertools import chain
 
 from six import string_types
@@ -92,6 +94,7 @@ from nti.contenttypes.courses.vendorinfo import VENDOR_INFO_KEY
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
 from nti.dataserver.authorization import CONTENT_ROLE_PREFIX
 
+from nti.dataserver.authorization import is_site_admin
 from nti.dataserver.authorization import is_admin_or_site_admin
 from nti.dataserver.authorization import role_for_providers_content
 
@@ -106,6 +109,7 @@ from nti.ntiids.ntiids import get_parts
 
 from nti.site.hostpolicy import get_host_site
 
+from nti.site.site import get_site_for_site_names
 from nti.site.site import get_component_hierarchy_names
 
 from nti.site.utils import unregisterUtility
@@ -634,6 +638,36 @@ def get_editors(site=None, excludedCourse=None):
     return _get_instructors_or_editors(site=site,
                                        indexes=(IX_COURSE_EDITOR,),
                                        excludedCourse=excludedCourse)
+
+
+def get_all_site_course_intids(site=None):
+    """
+    Return all course intids for all courses in the site hierachy.
+    """
+    catalog = get_courses_catalog()
+    sites = get_sites_4_index(site)
+    query = {IX_SITE: {'any_of': sites}}
+    return catalog.apply(query)
+
+
+def get_site_course_admin_intids_for_user(user, site=None):
+    """
+    For the given site admin, return all applicable course intids.
+    This will include all courses for the site admin as well as
+    any instructed courses (may be from the parent site).
+    """
+    catalog = get_courses_catalog()
+    sites = get_sites_4_index(site)
+    query_sites = list()
+    for site_name in sites:
+        site_for_site_name = get_site_for_site_names((site_name,))
+        if is_site_admin(user, site_for_site_name):
+            query_sites.append(site_name)
+    query = {IX_SITE: {'any_of': query_sites}}
+    sites_course_intids = catalog.apply(query)
+    instructor_intids = get_instructed_courses_intids(user)
+    editor_intids = get_edited_courses_intids(user)
+    return reduce(lfbtree_union, (sites_course_intids, instructor_intids, editor_intids))
 
 
 def _get_course_admin_intids_for_user(user, idx, site=None):
