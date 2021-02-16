@@ -298,14 +298,6 @@
 
 	<adapter factory=".enrollment.DefaultCourseEnrollments" />
 
-	<!-- Administered Courses -->
-	<configure zcml:condition="not-have testmode">
-		<utility factory=".administered.IndexAdminCourses" />
-	</configure>
-	<configure zcml:condition="have testmode">
-		<utility factory=".administered.IterableAdminCourses" />
-	</configure>
-
 	<!-- A subscriber for getting admin roles -->
 	<subscriber factory=".administered._DefaultPrincipalAdministrativeRoleCatalog"
 				provides=".interfaces.IPrincipalAdministrativeRoleCatalog" />

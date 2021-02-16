@@ -13,6 +13,8 @@ from zope import interface
 
 from zope.cachedescriptors.property import Lazy
 
+from zope.intid.interfaces import IIntIds
+
 from zope.security.interfaces import IPrincipal
 
 from zope.securitypolicy.interfaces import Allow
@@ -21,56 +23,22 @@ from zope.securitypolicy.interfaces import IPrincipalRoleMap
 from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 
-from nti.contenttypes.courses.interfaces import ICourseCatalog
-from nti.contenttypes.courses.interfaces import ICourseInstance
-from nti.contenttypes.courses.interfaces import IUserAdministeredCourses
 from nti.contenttypes.courses.interfaces import ICourseInstanceAdministrativeRole
 from nti.contenttypes.courses.interfaces import IPrincipalAdministrativeRoleCatalog
 
-from nti.contenttypes.courses.legacy_catalog import ILegacyCourseInstance
-
-from nti.contenttypes.courses.utils import get_course_editors
 from nti.contenttypes.courses.utils import AbstractInstanceWrapper
-from nti.contenttypes.courses.utils import is_course_instructor_or_editor
-from nti.contenttypes.courses.utils import get_instructed_and_edited_courses
+from nti.contenttypes.courses.utils import get_all_site_course_intids
+from nti.contenttypes.courses.utils import get_site_course_admin_intids_for_user
 
 from nti.dataserver.authorization import is_admin
 from nti.dataserver.authorization import is_site_admin
 from nti.dataserver.authorization import is_content_admin
-
-from nti.dataserver.authorization import ACT_CONTENT_EDIT
-
-from nti.dataserver.authorization_acl import has_permission
 
 from nti.dataserver.interfaces import IUser
 
 from nti.schema.fieldproperty import createDirectFieldProperties
 
 logger = __import__('logging').getLogger(__name__)
-
-
-@interface.implementer(IUserAdministeredCourses)
-class IndexAdminCourses(object):
-
-    def iter_admin(self, user):
-        results = get_instructed_and_edited_courses(user)
-        for result in results:
-            yield result
-
-
-@interface.implementer(IUserAdministeredCourses)
-class IterableAdminCourses(object):
-
-    def iter_admin(self, user):
-        principal = IPrincipal(user)
-        catalog = component.getUtility(ICourseCatalog)
-        for entry in catalog.iterCatalogEntries():
-            instance = ICourseInstance(entry)
-            instructors = instance.instructors or ()
-            # pylint: disable=unsupported-membership-test
-            if     principal in instructors \
-                or principal in get_course_editors(instance):
-                yield instance
 
 
 @interface.implementer(ICourseInstanceAdministrativeRole)
@@ -134,52 +102,45 @@ class _DefaultPrincipalAdministrativeRoleCatalog(object):
         return is_content_admin(self.user)
 
     @Lazy
-    def _is_global_editor(self):
+    def _is_global_admin(self):
         return self._is_admin \
-            or self._is_site_admin \
             or self._is_content_admin
 
-    def _iter_all_courses(self):
+    @Lazy
+    def _course_intids(self):
         # We do not filter based on enrollment or anything else.
         # This will probably move to its own workspace eventually.
-        catalog = component.queryUtility(ICourseCatalog)
-        # NT admins can see all
-        # site admins/content admins can view any courses they can edit
-        # (courses in site for site admins). Site admins may also be
-        # added as instructors/assistants/editors on parent site courses.
-        for entry in catalog.iterCatalogEntries():
-            course = ICourseInstance(entry, None)
-            if      course is not None \
-                and not ILegacyCourseInstance.providedBy(course) \
-                and (   self._is_admin
-                     or is_course_instructor_or_editor(course, self.user) \
-                     or has_permission(ACT_CONTENT_EDIT, entry, self.user)):
-                yield course
-
-    def _iter_admin_courses(self):
-        util = component.getUtility(IUserAdministeredCourses)
-        for context in util.iter_admin(self.user):
-            yield context
-
-    def _get_course_iterator(self):
-        if self._is_global_editor:
-            result = self._iter_all_courses
+        if self._is_global_admin:
+            result = get_all_site_course_intids()
         else:
-            result = self._iter_admin_courses
+            # Site admins can admin in any course in any of their sites.
+            # This also adds instructed and edited courses.
+            result = get_site_course_admin_intids_for_user(self.user)
         return result
 
+    def get_course_intids(self):
+        return self._course_intids
+
+    def iter_admin_roles_for_intids(self, course_intids):
+        """
+        Reifies and returns admin roles for the given intids.
+        """
+        is_admin = self._is_global_admin or self._is_site_admin
+        intids = component.getUtility(IIntIds)
+        for course_intid in course_intids:
+            course = intids.queryObject(course_intid)
+            if course is not None:
+                admin_role = get_course_admin_role(course,
+                                                   self.user,
+                                                   is_admin=is_admin)
+                yield admin_role
+
     def iter_administrations(self):
-        course_iter_func = self._get_course_iterator()
-        for course in course_iter_func():
-            admin_role = get_course_admin_role(course,
-                                               self.user,
-                                               is_admin=self._is_global_editor)
-            yield admin_role
+        return self.iter_admin_roles_for_intids(self._course_intids)
 
     iter_enrollments = iter_administrations  # for convenience
 
     def count_administrations(self):
-        result = tuple(self._iter_admin_courses())
-        return len(result)
+        return len(self._course_intids)
 
     count_enrollments = count_administrations

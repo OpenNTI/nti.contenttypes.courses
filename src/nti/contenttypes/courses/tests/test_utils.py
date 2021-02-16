@@ -50,8 +50,10 @@ from nti.contenttypes.courses.utils import get_courses_for_tag
 from nti.contenttypes.courses.utils import ProxyEnrollmentRecord
 from nti.contenttypes.courses.utils import get_instructed_courses
 from nti.contenttypes.courses.utils import get_enrollment_records
+from nti.contenttypes.courses.utils import get_all_site_course_intids
 from nti.contenttypes.courses.utils import get_context_enrollment_records
 from nti.contenttypes.courses.utils import get_instructed_and_edited_courses
+from nti.contenttypes.courses.utils import get_site_course_admin_intids_for_user
 
 from nti.dataserver.users import User
 
@@ -423,17 +425,20 @@ class TestUtils(CourseLayerTest):
         return (doc_id, inst)
 
     @WithMockDSTrans
-    @fudge.patch('nti.contenttypes.courses.index.get_course_site')
-    def test_instructors_editors(self, mock_course_site):
+    @fudge.patch('nti.contenttypes.courses.index.get_course_site',
+                 'nti.contenttypes.courses.utils.is_site_admin')
+    def test_instructors_editors(self, mock_course_site, mock_site_admin):
         ds_folder = self.ds.dataserver_folder
         courses_catalog = install_courses_catalog(ds_folder)
         mock_course_site.is_callable().returns('alpha.dev')
+        mock_site_admin.is_callable().returns(False)
 
         instructor_user1 = User.create_user(username='instructor_user1')
         instructor_user2 = User.create_user(username='instructor_user2')
         instructor_user3 = User.create_user(username='instructor_user3')
         editor_user1 = User.create_user(username='editor_user1')
         editor_user2 = User.create_user(username='editor_user2')
+        non_user = User.create_user(username='non_user')
 
         # Empty cases
         result = get_instructors(site='alpha.dev')
@@ -489,13 +494,31 @@ class TestUtils(CourseLayerTest):
         assert_that([x.username for x in result],
                     has_items('editor_user1', 'editor_user2'))
 
-
         result = get_instructors(site='alpha.dev', excludedCourse=course1[1])
         assert_that(result, has_length(1))
         assert_that([x.username for x in result], has_items('instructor_user3'))
         result = get_editors(site='alpha.dev', excludedCourse=course1[1])
         assert_that(result, has_length(1))
         assert_that([x.username for x in result], has_items('editor_user2'))
+
+        result = get_all_site_course_intids(site='alpha.dev')
+        assert_that(result, has_length(4))
+
+        result = get_site_course_admin_intids_for_user(non_user, site='alpha.dev')
+        assert_that(result, has_length(0))
+
+        result = get_site_course_admin_intids_for_user(instructor_user1, site='alpha.dev')
+        assert_that(result, has_length(1))
+
+        result = get_site_course_admin_intids_for_user(editor_user1, site='alpha.dev')
+        assert_that(result, has_length(1))
+
+        mock_site_admin.is_callable().returns(True)
+        result = get_site_course_admin_intids_for_user(non_user, site='alpha.dev')
+        assert_that(result, has_length(4))
+
+        result = get_site_course_admin_intids_for_user(instructor_user1, site='alpha.dev')
+        assert_that(result, has_length(4))
 
         courses_catalog.unindex_doc(course4[0])
         assert_that(get_instructors(site='alpha.dev'), has_length(3))
