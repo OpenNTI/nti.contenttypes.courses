@@ -51,6 +51,7 @@ from nti.contenttypes.courses.common import get_instructors_in_roles
 
 from nti.contenttypes.courses.index import IX_TAGS
 from nti.contenttypes.courses.index import IX_SITE
+from nti.contenttypes.courses.index import IX_NAME
 from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_ENTRY
 from nti.contenttypes.courses.index import IX_COURSE
@@ -109,7 +110,6 @@ from nti.ntiids.ntiids import get_parts
 
 from nti.site.hostpolicy import get_host_site
 
-from nti.site.site import get_site_for_site_names
 from nti.site.site import get_component_hierarchy_names
 
 from nti.site.utils import unregisterUtility
@@ -646,7 +646,10 @@ def get_all_site_course_intids(site=None):
     """
     catalog = get_courses_catalog()
     sites = get_sites_4_index(site)
-    query = {IX_SITE: {'any_of': sites}}
+    # This contains course catalog entries and course instances.
+    # We intersect with name since that contains only courses.
+    query = {IX_SITE: {'any_of': sites},
+             IX_NAME: {'any': None}}
     return catalog.apply(query)
 
 
@@ -656,15 +659,13 @@ def get_site_course_admin_intids_for_user(user, site=None):
     This will include all courses for the site admin as well as
     any instructed courses (may be from the parent site).
     """
-    catalog = get_courses_catalog()
     sites = get_sites_4_index(site)
     query_sites = list()
     for site_name in sites:
-        site_for_site_name = get_site_for_site_names((site_name,))
+        site_for_site_name = get_host_site(site_name)
         if is_site_admin(user, site_for_site_name):
             query_sites.append(site_name)
-    query = {IX_SITE: {'any_of': query_sites}}
-    sites_course_intids = catalog.apply(query)
+    sites_course_intids = get_all_site_course_intids(query_sites)
     instructor_intids = get_instructed_courses_intids(user)
     editor_intids = get_edited_courses_intids(user)
     return reduce(lfbtree_union, (sites_course_intids, instructor_intids, editor_intids))
