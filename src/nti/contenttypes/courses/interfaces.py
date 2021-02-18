@@ -1840,6 +1840,10 @@ class ICourseCatalogEntryFilterUtility(interface.Interface):
         defaulting to union.
         """
 
+    def include_entry(self, entry, filter_str):
+        """
+        Check if a given entry is included in the given filter.
+        """
 
 # Invitations
 

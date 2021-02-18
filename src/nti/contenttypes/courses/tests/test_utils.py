@@ -408,6 +408,7 @@ class TestUtils(CourseLayerTest):
         courses_catalog = install_courses_catalog(ds_folder)
 
         inst = ContentCourseInstance()
+        inst.__name__ = title
         entry = ICourseCatalogEntry(inst)
         entry.title = title
         entry.ntiid = ntiid
@@ -426,12 +427,14 @@ class TestUtils(CourseLayerTest):
 
     @WithMockDSTrans
     @fudge.patch('nti.contenttypes.courses.index.get_course_site',
+                 'nti.contenttypes.courses.utils.get_host_site',
                  'nti.contenttypes.courses.utils.is_site_admin')
-    def test_instructors_editors(self, mock_course_site, mock_site_admin):
+    def test_instructors_editors(self, mock_course_site, mock_host_site, mock_site_admin):
         ds_folder = self.ds.dataserver_folder
         courses_catalog = install_courses_catalog(ds_folder)
         mock_course_site.is_callable().returns('alpha.dev')
         mock_site_admin.is_callable().returns(False)
+        mock_host_site.is_callable().returns(object())
 
         instructor_user1 = User.create_user(username='instructor_user1')
         instructor_user2 = User.create_user(username='instructor_user2')

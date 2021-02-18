@@ -1378,9 +1378,17 @@ class CourseCatalogEntryFilterUtility(object):
         tagged_entries.discard(None)
         return tagged_entries
 
+    def include_entry(self, entry, filter_str):
+        """
+        Check if a given entry is included in the given filter.
+        """
+        result =   (entry.title and filter_str in entry.title.lower()) \
+                or (entry.ProviderUniqueID and filter_str in entry.ProviderUniqueID.lower()) \
+                or (entry.tags and filter_str in set(x.lower() for x in entry.tags))
+        return result
+
     def _include_entry(self, entry, filter_str, tagged_entries):
         result =   (entry.title and filter_str in entry.title.lower()) \
-                or (entry.description and filter_str in entry.description.lower()) \
                 or (entry.ProviderUniqueID and filter_str in entry.ProviderUniqueID.lower()) \
                 or entry in tagged_entries
         return result
