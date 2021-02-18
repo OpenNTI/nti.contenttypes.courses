@@ -1459,7 +1459,7 @@ class CourseCatalogEntryFilterUtility(object):
                 or entry in tagged_entries
         return result
 
-    def filter_entries(self, entries, filter_strs, selector=lambda x: x, operator=set.union):
+    def filter_entries(self, entries, filter_strs, selector=lambda x: x, union=True):
         """
         Returns a filtered sequence of included :class:`ICourseCatalogEntry`
         matches the given filter str(s). `entry` may be a single instance
@@ -1488,6 +1488,7 @@ class CourseCatalogEntryFilterUtility(object):
                 entries = set(x for x in all_entries
                               if self._include_entry(selector(x), filter_str, tagged_entries))
                 rs.append(entries)
+            operator = set.union if union else set.intersection
             entries = reduce(operator, rs)
         return entries
 
