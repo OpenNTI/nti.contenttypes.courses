@@ -8,8 +8,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-from BTrees.LFBTree import union as lfbtree_union
-
 from itertools import chain
 
 from six import string_types
@@ -642,12 +640,13 @@ def get_editors(site=None, excludedCourse=None):
 
 def get_all_site_course_intids(site=None):
     """
-    Return all course intids for all courses in the site hierachy.
+    Return all course intids for all courses in the site hierarchy.
     """
     catalog = get_courses_catalog()
     sites = get_sites_4_index(site)
     # This contains course catalog entries and course instances.
-    # We intersect with name since that contains only courses.
+    # We intersect with name since that contains only courses. The `name`
+    # here is `__name__`, which should always be none-null for real courses.
     query = {IX_SITE: {'any_of': sites},
              IX_NAME: {'any': None}}
     return catalog.apply(query)
@@ -659,16 +658,24 @@ def get_site_course_admin_intids_for_user(user, site=None):
     This will include all courses for the site admin as well as
     any instructed courses (may be from the parent site).
     """
+    catalog = get_courses_catalog()
     sites = get_sites_4_index(site)
     query_sites = list()
     for site_name in sites:
         site_for_site_name = get_host_site(site_name)
         if is_site_admin(user, site_for_site_name):
             query_sites.append(site_name)
-    sites_course_intids = get_all_site_course_intids(query_sites)
+    result_sets = []
+    if query_sites:
+        # Do not want to pass in empty list here - since this user is
+        # not a site admin.
+        sites_course_intids = get_all_site_course_intids(query_sites)
+        result_sets.append(sites_course_intids)
     instructor_intids = get_instructed_courses_intids(user)
+    result_sets.append(instructor_intids)
     editor_intids = get_edited_courses_intids(user)
-    return reduce(lfbtree_union, (sites_course_intids, instructor_intids, editor_intids))
+    result_sets.append(editor_intids)
+    return catalog.family.IF.multiunion(result_sets)
 
 
 def _get_course_admin_intids_for_user(user, idx, site=None):
