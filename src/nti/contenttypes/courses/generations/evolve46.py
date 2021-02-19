@@ -22,7 +22,11 @@ from nti.contenttypes.courses.index import IX_ENTRY_DESC
 from nti.contenttypes.courses.index import IX_ENTRY_TITLE
 from nti.contenttypes.courses.index import IX_ENTRY_START_DATE
 from nti.contenttypes.courses.index import IX_ENTRY_END_DATE
+from nti.contenttypes.courses.index import IX_ENTRY_TO_COURSE_INTID
+from nti.contenttypes.courses.index import IX_COURSE_TO_ENTRY_INTID
 
+from nti.contenttypes.courses.index import CourseToEntryIntidIndex
+from nti.contenttypes.courses.index import EntryToCourseIntidIndex
 from nti.contenttypes.courses.index import install_courses_catalog
 from nti.contenttypes.courses.index import CourseCatalogEntryDescriptionIndex
 from nti.contenttypes.courses.index import CourseCatalogEntryPUIDIndex
@@ -31,6 +35,7 @@ from nti.contenttypes.courses.index import CourseCatalogEntryStartDateIndex
 from nti.contenttypes.courses.index import CourseCatalogEntryEndDateIndex
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseInstance
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
@@ -65,6 +70,10 @@ def process_site(intids, seen, catalog):
                 continue
             seen.add(doc_id)
             catalog.index_doc(doc_id, entry)
+            course = ICourseInstance(entry, None)
+            doc_id = intids.queryId(entry)
+            if doc_id is not None:
+                catalog.index_doc(doc_id, course)
 
 
 def do_evolve(context, generation=generation):
@@ -86,6 +95,8 @@ def do_evolve(context, generation=generation):
                          (IX_ENTRY_DESC, CourseCatalogEntryDescriptionIndex),
                          (IX_ENTRY_PUID, CourseCatalogEntryPUIDIndex),
                          (IX_ENTRY_START_DATE, CourseCatalogEntryStartDateIndex),
+                         (IX_ENTRY_TO_COURSE_INTID, EntryToCourseIntidIndex),
+                         (IX_COURSE_TO_ENTRY_INTID, CourseToEntryIntidIndex),
                          (IX_ENTRY_END_DATE, CourseCatalogEntryEndDateIndex)):
             if key not in catalog:
                 new_idx = idx(family=intids.family)
@@ -104,7 +115,7 @@ def do_evolve(context, generation=generation):
 
 def evolve(context):
     """
-    Evolve to generation 44 by updating the scopes realname to reflect the course
-    title.
+    Evolve to generation 46 by indexing more catalog entry attributes. We also
+    index the course-to-entry intids and vice versa.
     """
     do_evolve(context, generation)

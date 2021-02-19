@@ -42,8 +42,7 @@ from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
-from nti.contenttypes.courses.utils import get_editors,\
-    get_entry_intids_for_title
+from nti.contenttypes.courses.utils import get_editors
 from nti.contenttypes.courses.utils import get_instructors
 from nti.contenttypes.courses.utils import get_course_tags
 from nti.contenttypes.courses.utils import index_course_roles
@@ -51,7 +50,10 @@ from nti.contenttypes.courses.utils import get_courses_for_tag
 from nti.contenttypes.courses.utils import ProxyEnrollmentRecord
 from nti.contenttypes.courses.utils import get_instructed_courses
 from nti.contenttypes.courses.utils import get_enrollment_records
+from nti.contenttypes.courses.utils import get_entry_intids_for_title
 from nti.contenttypes.courses.utils import get_all_site_course_intids
+from nti.contenttypes.courses.utils import entry_intids_to_course_intids
+from nti.contenttypes.courses.utils import course_intids_to_entry_intids
 from nti.contenttypes.courses.utils import get_context_enrollment_records
 from nti.contenttypes.courses.utils import get_instructed_and_edited_courses
 from nti.contenttypes.courses.utils import get_site_course_admin_intids_for_user
@@ -497,6 +499,7 @@ class TestUtils(CourseLayerTest):
         entry.ntiid = ntiid
         ds_folder._p_jar.add(inst)
         addIntId(inst)
+        addIntId(entry)
 
         inst.instructors = [IPrincipal(x) for x in instructors];
 
@@ -505,8 +508,44 @@ class TestUtils(CourseLayerTest):
             prm.assignRoleToPrincipal(RID_CONTENT_EDITOR, editor.username)
 
         doc_id = intids.getId(inst)
+        entry_id = intids.getId(entry)
         courses_catalog.index_doc(doc_id, inst)
+        courses_catalog.index_doc(entry_id, entry)
         return (doc_id, inst)
+
+    @WithMockDSTrans
+    def test_intids(self):
+        course1_intid, course1 = self._create_course()
+        entry1 = ICourseCatalogEntry(course1)
+        course2_intid, course2 = self._create_course()
+        entry2 = ICourseCatalogEntry(course2)
+        course3_intid, course3 = self._create_course()
+        entry3 = ICourseCatalogEntry(course3)
+
+        intids = component.getUtility(IIntIds)
+        entry1_intid = intids.getId(entry1)
+        entry2_intid = intids.getId(entry2)
+        entry3_intid = intids.getId(entry3)
+        rs = entry_intids_to_course_intids(())
+        assert_that(rs, has_length(0))
+
+        rs = entry_intids_to_course_intids((course1_intid,))
+        assert_that(rs, has_length(0))
+        rs = entry_intids_to_course_intids((entry1_intid,))
+        assert_that(rs, contains(course1_intid))
+        rs = entry_intids_to_course_intids((entry3_intid,))
+        assert_that(rs, contains(course3_intid))
+        rs = entry_intids_to_course_intids((entry3_intid, entry1_intid, entry2_intid))
+        assert_that(rs, contains_inanyorder(course3_intid, course2_intid, course1_intid))
+
+        rs = course_intids_to_entry_intids((entry1_intid,))
+        assert_that(rs, has_length(0))
+        rs = course_intids_to_entry_intids((course1_intid,))
+        assert_that(rs, contains(entry1_intid))
+        rs = course_intids_to_entry_intids((course2_intid,))
+        assert_that(rs, contains(entry2_intid))
+        rs = course_intids_to_entry_intids((course1_intid, course3_intid, course2_intid))
+        assert_that(rs, contains_inanyorder(entry3_intid, entry2_intid, entry1_intid))
 
     @WithMockDSTrans
     @fudge.patch('nti.contenttypes.courses.index.get_course_site',

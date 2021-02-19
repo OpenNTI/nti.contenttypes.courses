@@ -299,6 +299,8 @@ IX_ENTRY_DESC = 'description'
 IX_ENTRY_PUID = 'provider_unique_id'
 IX_ENTRY_START_DATE = 'StartDate'
 IX_ENTRY_END_DATE = 'EndDate'
+IX_ENTRY_TO_COURSE_INTID = 'course_intid'
+IX_COURSE_TO_ENTRY_INTID = 'entry_intid'
 COURSES_CATALOG_NAME = 'nti.dataserver.++etc++courses-catalog'
 
 
@@ -355,6 +357,44 @@ class CourseSiteIndex(ValueIndex):
 class CourseImportHashIndex(ValueIndex):
     default_field_name = 'import_hash'
     default_interface = ICourseImportMetadata
+
+
+class ValidatingCourseToEntryIntid(object):
+
+    __slots__ = ('entry_intid',)
+
+    def __init__(self, obj, unused_default=None):
+        if ICourseInstance.providedBy(obj):
+            entry = ICourseCatalogEntry(obj, None)
+            intids = component.getUtility(IIntIds)
+            self.entry_intid = intids.queryId(entry)
+
+    def __reduce__(self):
+        raise TypeError()
+
+
+class CourseToEntryIntidIndex(ValueIndex):
+    default_field_name = 'entry_intid'
+    default_interface = ValidatingCourseToEntryIntid
+
+
+class ValidatingEntryToCourseIntid(object):
+
+    __slots__ = ('course_intid',)
+
+    def __init__(self, obj, unused_default=None):
+        if ICourseCatalogEntry.providedBy(obj):
+            course = ICourseInstance(obj, None)
+            intids = component.getUtility(IIntIds)
+            self.course_intid = intids.queryId(course)
+
+    def __reduce__(self):
+        raise TypeError()
+
+
+class EntryToCourseIntidIndex(ValueIndex):
+    default_field_name = 'course_intid'
+    default_interface = ValidatingEntryToCourseIntid
 
 
 class ValidatingCourseName(object):
@@ -566,6 +606,8 @@ def create_courses_catalog(catalog=None, family=BTrees.family64):
                         (IX_ENTRY_PUID, CourseCatalogEntryPUIDIndex),
                         (IX_ENTRY_START_DATE, CourseCatalogEntryStartDateIndex),
                         (IX_ENTRY_END_DATE, CourseCatalogEntryEndDateIndex),
+                        (IX_ENTRY_TO_COURSE_INTID, EntryToCourseIntidIndex),
+                        (IX_COURSE_TO_ENTRY_INTID, CourseToEntryIntidIndex),
                         (IX_IMPORT_HASH, CourseImportHashIndex),
                         (IX_COURSE_INSTRUCTOR, InstructorSetIndex),
                         (IX_COURSE_EDITOR, EditorSetIndex)):

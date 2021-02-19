@@ -62,6 +62,8 @@ from nti.contenttypes.courses.index import IX_ENTRY_TITLE
 from nti.contenttypes.courses.index import IX_CONTENT_UNIT
 from nti.contenttypes.courses.index import IX_COURSE_INSTRUCTOR
 from nti.contenttypes.courses.index import IX_COURSE_EDITOR
+from nti.contenttypes.courses.index import IX_COURSE_TO_ENTRY_INTID
+from nti.contenttypes.courses.index import IX_ENTRY_TO_COURSE_INTID
 
 from nti.contenttypes.courses.index import IndexRecord
 from nti.contenttypes.courses.index import get_courses_catalog
@@ -1425,6 +1427,28 @@ def get_courses_for_export_hash(export_hash):
         result.add(course)
     result.discard(None)
     return tuple(result)
+
+
+def course_intids_to_entry_intids(course_intids):
+    """
+    Transmogrifies course_intids to a set of entry_intids.
+    """
+    catalog = get_courses_catalog()
+    query = {
+        IX_ENTRY_TO_COURSE_INTID: {'any_of': course_intids},
+    }
+    return catalog.apply(query)
+
+
+def entry_intids_to_course_intids(entry_intids):
+    """
+    Transmogrifies entry_intids to a set of course_intids.
+    """
+    catalog = get_courses_catalog()
+    query = {
+        IX_COURSE_TO_ENTRY_INTID: {'any_of': entry_intids},
+    }
+    return catalog.apply(query)
 
 
 @interface.implementer(ICourseCatalogEntryFilterUtility)
