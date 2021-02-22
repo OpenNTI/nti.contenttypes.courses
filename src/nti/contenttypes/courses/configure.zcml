@@ -300,7 +300,7 @@
 
 	<!-- A subscriber for getting admin roles -->
 	<subscriber factory=".administered._DefaultPrincipalAdministrativeRoleCatalog"
-				provides=".interfaces.IPrincipalAdministrativeRoleCatalog" />
+			    provides=".interfaces.IPrincipalAdministrativeRoleCatalog" />
 
 	<!-- anything that can become a Principal... -->
 	<subscriber factory=".enrollment.DefaultPrincipalEnrollments"

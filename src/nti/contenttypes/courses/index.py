@@ -45,9 +45,11 @@ from nti.zope_catalog.catalog import Catalog
 from nti.zope_catalog.datetime import TimestampToNormalized64BitIntNormalizer
 
 from nti.zope_catalog.index import AttributeSetIndex
+from nti.zope_catalog.index import AttributeTextIndex
 from nti.zope_catalog.index import NormalizationWrapper
 from nti.zope_catalog.index import AttributeKeywordIndex
 from nti.zope_catalog.index import SetIndex as RawSetIndex
+from nti.zope_catalog.index import CaseInsensitiveAttributeFieldIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
 from nti.zope_catalog.index import IntegerValueIndex as RawIntegerValueIndex
 
@@ -280,7 +282,12 @@ def install_enrollment_catalog(site_manager_container, intids=None):
 
 # Courses catalog
 
-
+#: Important to only allow course instances in the indexes
+#: for course attributes (instructors, editors) and only
+#: allow catalog entries in for the entry-specific indexes.
+#: Otherwise, we run the risk of having a course indexed to a
+#: set of attributes and its entry indexed to another set of
+#: attributes.
 IX_NAME = 'name'
 IX_TAGS = 'tags'
 IX_KEYWORDS = 'keywords'
@@ -288,6 +295,15 @@ IX_PACKAGES = 'packages'
 IX_IMPORT_HASH = 'import_hash'
 IX_COURSE_INSTRUCTOR = 'instructor'
 IX_COURSE_EDITOR = 'editor'
+IX_ENTRY_TITLE = 'title'
+IX_ENTRY_DESC = 'description'
+IX_ENTRY_PUID = 'provider_unique_id'
+IX_ENTRY_TITLE_SORT = 'title_sort'
+IX_ENTRY_PUID_SORT = 'provider_unique_id_sort'
+IX_ENTRY_START_DATE = 'StartDate'
+IX_ENTRY_END_DATE = 'EndDate'
+IX_ENTRY_TO_COURSE_INTID = 'course_intid'
+IX_COURSE_TO_ENTRY_INTID = 'entry_intid'
 COURSES_CATALOG_NAME = 'nti.dataserver.++etc++courses-catalog'
 
 
@@ -346,6 +362,44 @@ class CourseImportHashIndex(ValueIndex):
     default_interface = ICourseImportMetadata
 
 
+class ValidatingCourseToEntryIntid(object):
+
+    __slots__ = ('entry_intid',)
+
+    def __init__(self, obj, unused_default=None):
+        if ICourseInstance.providedBy(obj):
+            entry = ICourseCatalogEntry(obj, None)
+            intids = component.getUtility(IIntIds)
+            self.entry_intid = intids.queryId(entry)
+
+    def __reduce__(self):
+        raise TypeError()
+
+
+class CourseToEntryIntidIndex(ValueIndex):
+    default_field_name = 'entry_intid'
+    default_interface = ValidatingCourseToEntryIntid
+
+
+class ValidatingEntryToCourseIntid(object):
+
+    __slots__ = ('course_intid',)
+
+    def __init__(self, obj, unused_default=None):
+        if ICourseCatalogEntry.providedBy(obj):
+            course = ICourseInstance(obj, None)
+            intids = component.getUtility(IIntIds)
+            self.course_intid = intids.queryId(course)
+
+    def __reduce__(self):
+        raise TypeError()
+
+
+class EntryToCourseIntidIndex(ValueIndex):
+    default_field_name = 'course_intid'
+    default_interface = ValidatingEntryToCourseIntid
+
+
 class ValidatingCourseName(object):
 
     __slots__ = ('name',)
@@ -379,6 +433,127 @@ class ValidatingCourseCatalogEntry(object):
 class CourseCatalogEntryIndex(ValueIndex):
     default_field_name = 'ntiid'
     default_interface = ValidatingCourseCatalogEntry
+
+
+class ValidatingCourseCatalogEntryTitle(object):
+
+    __slots__ = ('title',)
+
+    def __init__(self, obj, unused_default=None):
+        # FIXME JZ
+        course = ICourseInstance(obj, None)
+        if ICourseCatalogEntry.providedBy(obj):
+            self.title = getattr(obj, 'title', None)
+
+    def __reduce__(self):
+        raise TypeError()
+
+
+class CourseCatalogEntryTitleIndex(AttributeTextIndex):
+    default_field_name = 'title'
+    default_interface = ValidatingCourseCatalogEntryTitle
+
+    def __init__(self, family=None, *args, **kwargs):
+        super(CourseCatalogEntryTitleIndex, self).__init__(*args, **kwargs)
+        self.family = family
+
+# TextIndexes are not sortable - this extra index allows us to sort on title
+class CourseCatalogEntryTitleSortIndex(CaseInsensitiveAttributeFieldIndex):
+    default_field_name = 'title'
+    default_interface = ValidatingCourseCatalogEntryTitle
+
+
+class ValidatingCourseCatalogEntryDescription(object):
+
+    __slots__ = ('description',)
+
+    def __init__(self, obj, unused_default=None):
+        if ICourseCatalogEntry.providedBy(obj):
+            self.description = getattr(obj, 'description', None) \
+                            or getattr(obj, 'RichDescription', None)
+
+    def __reduce__(self):
+        raise TypeError()
+
+# FIXME JZ
+from zope.index.text.baseindex import BaseIndex
+BaseIndex.family = BTrees.family64
+
+class CourseCatalogEntryDescriptionIndex(AttributeTextIndex):
+    default_field_name = 'description'
+    default_interface = ValidatingCourseCatalogEntryDescription
+
+    def __init__(self, family=None, *args, **kwargs):
+        super(CourseCatalogEntryDescriptionIndex, self).__init__(*args, **kwargs)
+        self.family = family
+
+
+class ValidatingCourseCatalogEntryPUID(object):
+
+    __slots__ = ('ProviderUniqueID',)
+
+    def __init__(self, obj, unused_default=None):
+        if ICourseCatalogEntry.providedBy(obj):
+            self.ProviderUniqueID = getattr(obj, 'ProviderUniqueID', None)
+
+    def __reduce__(self):
+        raise TypeError()
+
+
+class CourseCatalogEntryPUIDIndex(AttributeTextIndex):
+    default_field_name = 'ProviderUniqueID'
+    default_interface = ValidatingCourseCatalogEntryPUID
+
+    def __init__(self, family=None, *args, **kwargs):
+        super(CourseCatalogEntryPUIDIndex, self).__init__(*args, **kwargs)
+        self.family = family
+
+
+class CourseCatalogEntryPUIDSortIndex(CaseInsensitiveAttributeFieldIndex):
+    default_field_name = 'ProviderUniqueID'
+    default_interface = ValidatingCourseCatalogEntryPUID
+
+
+class StartDateAdapter(object):
+
+    __slots__ = (b'StartDate',)
+
+    def __init__(self, obj, default=None):
+        if not ICourseCatalogEntry.providedBy(obj):
+            return
+        if obj.StartDate is not None:
+            self.StartDate = obj.StartDate
+
+    def __reduce__(self):
+        raise TypeError()
+
+
+class EndDateAdapter(object):
+
+    __slots__ = (b'EndDate',)
+
+    def __init__(self, obj, default=None):
+        if not ICourseCatalogEntry.providedBy(obj):
+            return
+        if obj.EndDate is not None:
+            self.EndDate = obj.EndDate
+
+    def __reduce__(self):
+        raise TypeError()
+
+
+def CourseCatalogEntryStartDateIndex(family=BTrees.family64):
+    return NormalizationWrapper(field_name=IX_ENTRY_START_DATE,
+                                interface=StartDateAdapter,
+                                index=RawIntegerValueIndex(family=family),
+                                normalizer=TimestampToNormalized64BitIntNormalizer())
+
+
+def CourseCatalogEntryEndDateIndex(family=BTrees.family64):
+    return NormalizationWrapper(field_name=IX_ENTRY_END_DATE,
+                                interface=EndDateAdapter,
+                                index=RawIntegerValueIndex(family=family),
+                                normalizer=TimestampToNormalized64BitIntNormalizer())
 
 
 class ValidatingCoursePackages(object):
@@ -442,6 +617,15 @@ def create_courses_catalog(catalog=None, family=BTrees.family64):
                         (IX_PACKAGES, CoursePackagesIndex),
                         (IX_KEYWORDS, CourseKeywordsIndex),
                         (IX_ENTRY, CourseCatalogEntryIndex),
+                        (IX_ENTRY_TITLE, CourseCatalogEntryTitleIndex),
+                        (IX_ENTRY_DESC, CourseCatalogEntryDescriptionIndex),
+                        (IX_ENTRY_PUID, CourseCatalogEntryPUIDIndex),
+                        (IX_ENTRY_TITLE_SORT, CourseCatalogEntryTitleSortIndex),
+                        (IX_ENTRY_PUID_SORT, CourseCatalogEntryPUIDSortIndex),
+                        (IX_ENTRY_START_DATE, CourseCatalogEntryStartDateIndex),
+                        (IX_ENTRY_END_DATE, CourseCatalogEntryEndDateIndex),
+                        (IX_ENTRY_TO_COURSE_INTID, EntryToCourseIntidIndex),
+                        (IX_COURSE_TO_ENTRY_INTID, CourseToEntryIntidIndex),
                         (IX_IMPORT_HASH, CourseImportHashIndex),
                         (IX_COURSE_INSTRUCTOR, InstructorSetIndex),
                         (IX_COURSE_EDITOR, EditorSetIndex)):

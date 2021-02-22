@@ -8,6 +8,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from datetime import datetime
+
 from itertools import chain
 
 from six import string_types
@@ -55,10 +57,17 @@ from nti.contenttypes.courses.index import IX_ENTRY
 from nti.contenttypes.courses.index import IX_COURSE
 from nti.contenttypes.courses.index import IX_PACKAGES
 from nti.contenttypes.courses.index import IX_USERNAME
+from nti.contenttypes.courses.index import IX_ENTRY_PUID
+from nti.contenttypes.courses.index import IX_ENTRY_DESC
 from nti.contenttypes.courses.index import IX_IMPORT_HASH
+from nti.contenttypes.courses.index import IX_ENTRY_TITLE
 from nti.contenttypes.courses.index import IX_CONTENT_UNIT
 from nti.contenttypes.courses.index import IX_COURSE_INSTRUCTOR
 from nti.contenttypes.courses.index import IX_COURSE_EDITOR
+from nti.contenttypes.courses.index import IX_ENTRY_END_DATE
+from nti.contenttypes.courses.index import IX_ENTRY_START_DATE
+from nti.contenttypes.courses.index import IX_COURSE_TO_ENTRY_INTID
+from nti.contenttypes.courses.index import IX_ENTRY_TO_COURSE_INTID
 
 from nti.contenttypes.courses.index import IndexRecord
 from nti.contenttypes.courses.index import get_courses_catalog
@@ -1252,22 +1261,78 @@ def path_for_entry(context):
     return result
 
 
+def get_entry_intids_for_title(titles, sites=()):
+    """
+    Given a set of titles, query the catalog index.
+    Note, we do not do any subinstance work here.
+    """
+    if not isinstance(titles, string_types):
+        titles = ' or '.join(titles)
+    catalog = get_courses_catalog()
+    query = {IX_ENTRY_TITLE: titles}
+    sites = get_sites_4_index(sites)
+    if sites:
+        query[IX_SITE] = {'any_of': sites}
+    return catalog.apply(query)
+
+
+def get_entry_intids_for_desc(descriptions, sites=()):
+    """
+    Given a set of descriptions, query the catalog index.
+    Note, we do not do any subinstance work here.
+    """
+    if isinstance(descriptions, string_types):
+        descriptions = (descriptions,)
+    catalog = get_courses_catalog()
+    query = {IX_ENTRY_DESC: {'any_of': descriptions}}
+    sites = get_sites_4_index(sites)
+    if sites:
+        query[IX_SITE] = {'any_of': sites}
+    return catalog.apply(query)
+
+
+def get_entry_intids_for_puid(puids, sites=()):
+    """
+    Given a set of puids, query the catalog index.
+    Note, we do not do any subinstance work here.
+    """
+    if isinstance(puids, string_types):
+        puids = (puids,)
+    catalog = get_courses_catalog()
+    query = {IX_ENTRY_PUID: {'any_of': puids}}
+    sites = get_sites_4_index(sites)
+    if sites:
+        query[IX_SITE] = {'any_of': sites}
+    return catalog.apply(query)
+
+
+def get_entry_intids_for_tag(tags, sites=()):
+    """
+    Given a set of tags, get all entries with that tag.
+    Note, we do not do any subinstance work here.
+    """
+    if isinstance(tags, string_types):
+        tags = (tags,)
+    catalog = get_courses_catalog()
+    query = {IX_TAGS: {'any_of': tags}}
+    sites = get_sites_4_index(sites)
+    if sites:
+        query[IX_SITE] = {'any_of': sites}
+    return catalog.apply(query)
+
+
 def get_courses_for_tag(tag, sites=(), intids=None):
     """
     Given a tag, get all courses with that tag.
     """
     courses = set()
-    catalog = get_courses_catalog()
-    query = {IX_TAGS: {'any_of': (tag,)}}
-    sites = get_sites_4_index(sites)
-    if sites:
-        query[IX_SITE] = {'any_of': sites}
     intids = component.getUtility(IIntIds) if intids is None else intids
-    for uid in catalog.apply(query) or ():
+    rs = get_entry_intids_for_tag(tag, sites=sites)
+    for uid in rs or ():
         obj = intids.queryObject(uid)
-        if ICourseCatalogEntry.providedBy(obj):
-            courses.add(ICourseInstance(obj, None))
-    courses.discard(None)
+        course = ICourseInstance(obj, None)
+        if course is not None:
+            courses.add(course)
     result = set()
     # CourseSubinstances will inherit the parent's tags unless they are
     # explicitly set; therefore, we mimic that behavior here.
@@ -1368,6 +1433,28 @@ def get_courses_for_export_hash(export_hash):
     return tuple(result)
 
 
+def course_intids_to_entry_intids(course_intids):
+    """
+    Transmogrifies course_intids to a set of entry_intids.
+    """
+    catalog = get_courses_catalog()
+    query = {
+        IX_ENTRY_TO_COURSE_INTID: {'any_of': course_intids},
+    }
+    return catalog.apply(query)
+
+
+def entry_intids_to_course_intids(entry_intids):
+    """
+    Transmogrifies entry_intids to a set of course_intids.
+    """
+    catalog = get_courses_catalog()
+    query = {
+        IX_COURSE_TO_ENTRY_INTID: {'any_of': entry_intids},
+    }
+    return catalog.apply(query)
+
+
 @interface.implementer(ICourseCatalogEntryFilterUtility)
 class CourseCatalogEntryFilterUtility(object):
     """
@@ -1400,7 +1487,7 @@ class CourseCatalogEntryFilterUtility(object):
                 or entry in tagged_entries
         return result
 
-    def filter_entries(self, entries, filter_strs, selector=lambda x: x, operator=set.union):
+    def filter_entries(self, entries, filter_strs, selector=lambda x: x, union=True):
         """
         Returns a filtered sequence of included :class:`ICourseCatalogEntry`
         matches the given filter str(s). `entry` may be a single instance
@@ -1429,8 +1516,62 @@ class CourseCatalogEntryFilterUtility(object):
                 entries = set(x for x in all_entries
                               if self._include_entry(selector(x), filter_str, tagged_entries))
                 rs.append(entries)
+            operator = set.union if union else set.intersection
             entries = reduce(operator, rs)
         return entries
+
+    def _query_index_fields(self, filter_strs, sites):
+        """
+        Query our index fields for any hits on the list of filter_strs.
+        """
+        rs = []
+        for func in (get_entry_intids_for_puid,
+                     get_entry_intids_for_tag,
+                     get_entry_intids_for_title):
+            rs.append(func(filter_strs, sites=sites))
+        return reduce(set.union, rs)
+
+    def get_entry_intids_for_filters(self, filter_strs, union=True):
+        """
+        For a set of filter strs, filter our course catalog, returning a set of appropriate
+        intids.
+        """
+        sites = get_sites_4_index()
+        if union:
+            # Simple - any hits
+            result = self._query_index_fields(filter_strs, sites)
+        else:
+            if isinstance(filter_strs, string_types):
+                filter_strs = (filter_strs,)
+            # Need hit on all filter_str values
+            rs = []
+            for filter_str in filter_strs:
+                filter_rs = self._query_index_fields(filter_str, sites)
+                rs.append(filter_rs)
+            result = reduce(set.intersection, rs)
+        return result
+
+    def get_current_entry_intids(self, entry_intids=None):
+        """
+        Return catalog entries started *before* now and not yet ended - by catalog dates.
+        """
+        # This logic is reversed. We'll get the universe of entry intids with
+        # start dates *after* now unioned with universe of entry intids with
+        # end dates *before* now. All entry intids in this set will be considered
+        # current, which will include entries without any start or end dates.
+        catalog = get_courses_catalog()
+        if entry_intids is None:
+            # Not given - get the known universe of entry_intids
+            # The caller will be responsible getting the narrow
+            # set of intids (by site perhaps) they want.
+            entry_idx = catalog[IX_ENTRY_TO_COURSE_INTID]
+            entry_intids = entry_idx.ids()
+        now = datetime.utcnow()
+        catalog = get_courses_catalog()
+        start_exclude_set = catalog.apply({IX_ENTRY_START_DATE: {'between': (now, None)}})
+        end_exclude_set = catalog.apply({IX_ENTRY_END_DATE: {'between': (None, now)}})
+        exclude_set = catalog.family.IF.union(start_exclude_set, end_exclude_set)
+        return catalog.family.IF.difference(entry_intids, exclude_set)
 
 
 import zope.deferredimport

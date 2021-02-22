@@ -50,7 +50,10 @@ from nti.contenttypes.courses.utils import get_courses_for_tag
 from nti.contenttypes.courses.utils import ProxyEnrollmentRecord
 from nti.contenttypes.courses.utils import get_instructed_courses
 from nti.contenttypes.courses.utils import get_enrollment_records
+from nti.contenttypes.courses.utils import get_entry_intids_for_title
 from nti.contenttypes.courses.utils import get_all_site_course_intids
+from nti.contenttypes.courses.utils import entry_intids_to_course_intids
+from nti.contenttypes.courses.utils import course_intids_to_entry_intids
 from nti.contenttypes.courses.utils import get_context_enrollment_records
 from nti.contenttypes.courses.utils import get_instructed_and_edited_courses
 from nti.contenttypes.courses.utils import get_site_course_admin_intids_for_user
@@ -74,7 +77,7 @@ class TestCourse(DataserverLayerTest):
         assert_that(p, verifiably_provides(ICourseInstanceEnrollmentRecord))
 
 
-class TestTags(CourseLayerTest):
+class TestEntryFilters(CourseLayerTest):
 
     @WithMockDSTrans
     def test_tags(self):
@@ -207,6 +210,88 @@ class TestTags(CourseLayerTest):
         ext_obj = to_external_object(entry3)
         assert_that(ext_obj, has_entry('tags',
                                        contains_inanyorder(u'entry3 tag',)))
+
+    @WithMockDSTrans
+    def test_titles(self):
+        ds_folder = self.ds.dataserver_folder
+        install_courses_catalog(ds_folder)
+        intids = component.queryUtility(IIntIds)
+        catalog = get_courses_catalog()
+
+        # Base/empty cases
+        result = get_entry_intids_for_title("title")
+        assert_that(result, has_length(0))
+        result = get_entry_intids_for_title(["title",])
+        assert_that(result, has_length(0))
+
+        # Create three courses, some with tags
+        inst1 = ContentCourseInstance()
+        entry1 = ICourseCatalogEntry(inst1)
+        entry1.title = u'course one'
+        ds_folder._p_jar.add(inst1)
+        addIntId(inst1)
+        ds_folder._p_jar.add(entry1)
+        addIntId(entry1)
+        catalog.index_doc(intids.getId(entry1), entry1)
+
+        inst2 = ContentCourseInstance()
+        entry2 = ICourseCatalogEntry(inst2)
+        entry2.title = u'course2'
+        ds_folder._p_jar.add(inst2)
+        addIntId(inst2)
+        ds_folder._p_jar.add(entry2)
+        addIntId(entry2)
+        catalog.index_doc(intids.getId(entry2), entry2)
+
+        inst3 = ContentCourseInstance()
+        entry3 = ICourseCatalogEntry(inst3)
+        entry3.title = u'COURSE three'
+        ds_folder._p_jar.add(inst3)
+        addIntId(inst3)
+        ds_folder._p_jar.add(entry3)
+        addIntId(entry3)
+        catalog.index_doc(intids.getId(entry3), entry3)
+
+        # Fetch entries
+        def _get_entries(rs):
+            return [intids.getObject(x) for x in rs]
+
+        result = get_entry_intids_for_title(u'three')
+        assert_that(result, has_length(1))
+        assert_that(_get_entries(result), contains(entry3))
+
+        result = get_entry_intids_for_title(u'couRSE*')
+        assert_that(result, has_length(3))
+        assert_that(_get_entries(result),
+                     contains_inanyorder(entry1, entry2, entry3))
+
+        catalog.index_doc(intids.getId(entry3), entry3)
+        result = get_entry_intids_for_title(u'course three')
+        assert_that(result, has_length(1))
+        assert_that(_get_entries(result), contains_inanyorder(entry3))
+
+        # Cannot suffix search
+#         result = get_entry_intids_for_title([u'*urse*'])
+#         assert_that(result, has_length(3))
+#         assert_that(_get_entries(result),
+#                      contains_inanyorder(entry1, entry2, entry3))
+
+        result = get_entry_intids_for_title([u'cour*'])
+        assert_that(result, has_length(3))
+        assert_that(_get_entries(result),
+                     contains_inanyorder(entry1, entry2, entry3))
+
+        result = get_entry_intids_for_title([u'one', u'thre*'])
+        assert_that(result, has_length(2))
+        assert_that(_get_entries(result),
+                     contains_inanyorder(entry1, entry3))
+
+        # Unindex third course
+        catalog.unindex_doc(intids.getId(entry3))
+        result = get_entry_intids_for_title([u'one', u'thre*'])
+        assert_that(result, has_length(1))
+        assert_that(_get_entries(result),
+                     contains_inanyorder(entry1))
 
 
 class TestContextEnrollments(CourseLayerTest):
@@ -414,6 +499,7 @@ class TestUtils(CourseLayerTest):
         entry.ntiid = ntiid
         ds_folder._p_jar.add(inst)
         addIntId(inst)
+        addIntId(entry)
 
         inst.instructors = [IPrincipal(x) for x in instructors];
 
@@ -422,8 +508,44 @@ class TestUtils(CourseLayerTest):
             prm.assignRoleToPrincipal(RID_CONTENT_EDITOR, editor.username)
 
         doc_id = intids.getId(inst)
+        entry_id = intids.getId(entry)
         courses_catalog.index_doc(doc_id, inst)
+        courses_catalog.index_doc(entry_id, entry)
         return (doc_id, inst)
+
+    @WithMockDSTrans
+    def test_intids(self):
+        course1_intid, course1 = self._create_course()
+        entry1 = ICourseCatalogEntry(course1)
+        course2_intid, course2 = self._create_course()
+        entry2 = ICourseCatalogEntry(course2)
+        course3_intid, course3 = self._create_course()
+        entry3 = ICourseCatalogEntry(course3)
+
+        intids = component.getUtility(IIntIds)
+        entry1_intid = intids.getId(entry1)
+        entry2_intid = intids.getId(entry2)
+        entry3_intid = intids.getId(entry3)
+        rs = entry_intids_to_course_intids(())
+        assert_that(rs, has_length(0))
+
+        rs = entry_intids_to_course_intids((course1_intid,))
+        assert_that(rs, has_length(0))
+        rs = entry_intids_to_course_intids((entry1_intid,))
+        assert_that(rs, contains(course1_intid))
+        rs = entry_intids_to_course_intids((entry3_intid,))
+        assert_that(rs, contains(course3_intid))
+        rs = entry_intids_to_course_intids((entry3_intid, entry1_intid, entry2_intid))
+        assert_that(rs, contains_inanyorder(course3_intid, course2_intid, course1_intid))
+
+        rs = course_intids_to_entry_intids((entry1_intid,))
+        assert_that(rs, has_length(0))
+        rs = course_intids_to_entry_intids((course1_intid,))
+        assert_that(rs, contains(entry1_intid))
+        rs = course_intids_to_entry_intids((course2_intid,))
+        assert_that(rs, contains(entry2_intid))
+        rs = course_intids_to_entry_intids((course1_intid, course3_intid, course2_intid))
+        assert_that(rs, contains_inanyorder(entry3_intid, entry2_intid, entry1_intid))
 
     @WithMockDSTrans
     @fudge.patch('nti.contenttypes.courses.index.get_course_site',
