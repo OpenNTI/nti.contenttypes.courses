@@ -66,7 +66,14 @@ class MockDataserver(object):
         return None
 
 
-def process_site(intids, seen, catalog):
+def process_site(intids, seen, new_indexes):
+    def do_index_entry(entry, doc_id):
+        course = ICourseInstance(entry, None)
+        course_doc_id = intids.queryId(course)
+        for idx in new_indexes:
+            idx.index_doc(doc_id, entry)
+            idx.index_doc(course_doc_id, course)
+
     course_catalog = component.queryUtility(ICourseCatalog)
     if      course_catalog \
         and not course_catalog.isEmpty() \
@@ -76,11 +83,7 @@ def process_site(intids, seen, catalog):
             if doc_id is None or doc_id in seen:
                 continue
             seen.add(doc_id)
-            catalog.index_doc(doc_id, entry)
-            course = ICourseInstance(entry, None)
-            doc_id = intids.queryId(entry)
-            if doc_id is not None:
-                catalog.index_doc(doc_id, course)
+            do_index_entry(entry, doc_id)
 
 
 def do_evolve(context, generation=generation):
@@ -98,6 +101,7 @@ def do_evolve(context, generation=generation):
         lsm = ds_folder.getSiteManager()
         intids = lsm.getUtility(IIntIds)
         catalog = install_courses_catalog(ds_folder, intids)
+        new_indexes = []
         for key, idx in ((IX_ENTRY_TITLE, CourseCatalogEntryTitleIndex),
                          (IX_ENTRY_DESC, CourseCatalogEntryDescriptionIndex),
                          (IX_ENTRY_PUID, CourseCatalogEntryPUIDIndex),
@@ -112,11 +116,16 @@ def do_evolve(context, generation=generation):
                 intids.register(new_idx)
                 locate(new_idx, catalog, key)
                 catalog[key] = new_idx
+            # Go ahead and reindex anything here
+            # Beware re-indexing courses here in the catalog; the indexes
+            # needing package info will cause syncs.
+            new_indexes.append(catalog[key])
 
         seen = set()
         for site in get_all_host_sites():
             with current_site(site):
-                process_site(intids, seen, catalog)
+                logger.info("Processing site (%s)", site.__name__)
+                process_site(intids, seen, new_indexes)
 
     component.getGlobalSiteManager().unregisterUtility(mock_ds, IDataserver)
     logger.info('Evolution %s done.', generation)
