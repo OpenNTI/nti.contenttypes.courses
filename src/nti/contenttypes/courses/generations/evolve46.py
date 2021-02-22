@@ -40,6 +40,7 @@ from nti.contenttypes.courses.index import CourseCatalogEntryEndDateIndex
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import IGlobalCourseCatalog
 
 from nti.dataserver.interfaces import IDataserver
 from nti.dataserver.interfaces import IOIDResolver
@@ -67,7 +68,9 @@ class MockDataserver(object):
 
 def process_site(intids, seen, catalog):
     course_catalog = component.queryUtility(ICourseCatalog)
-    if course_catalog and not course_catalog.isEmpty():
+    if      course_catalog \
+        and not course_catalog.isEmpty() \
+        and not IGlobalCourseCatalog.providedBy(course_catalog):
         for entry in course_catalog.iterCatalogEntries():
             doc_id = intids.queryId(entry)
             if doc_id is None or doc_id in seen:
