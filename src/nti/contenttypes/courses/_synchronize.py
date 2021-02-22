@@ -23,6 +23,8 @@ from zope.event import notify
 
 from zope.intid.interfaces import IIntIds
 
+from zope.lifecycleevent import ObjectModifiedEvent
+
 from zope.site.interfaces import ILocalSiteManager
 
 from nti.base._compat import text_
@@ -454,6 +456,7 @@ class _ContentCourseSynchronizer(object):
         if modified:
             # pylint: disable=attribute-defined-outside-init
             notify(CatalogEntrySynchronized(catalog_entry))
+            notify(ObjectModifiedEvent(catalog_entry))
             sync_results.CatalogEntryUpdated = True
 
     @classmethod

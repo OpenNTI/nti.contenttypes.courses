@@ -299,8 +299,8 @@
 	<adapter factory=".enrollment.DefaultCourseEnrollments" />
 
 	<!-- A subscriber for getting admin roles -->
-	<adapter factory=".administered._DefaultPrincipalAdministrativeRoleCatalog"
-			 provides=".interfaces.IPrincipalAdministrativeRoleCatalog" />
+	<subscriber factory=".administered._DefaultPrincipalAdministrativeRoleCatalog"
+			    provides=".interfaces.IPrincipalAdministrativeRoleCatalog" />
 
 	<!-- anything that can become a Principal... -->
 	<subscriber factory=".enrollment.DefaultPrincipalEnrollments"

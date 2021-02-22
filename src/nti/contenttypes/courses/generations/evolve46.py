@@ -22,6 +22,8 @@ from nti.contenttypes.courses.index import IX_ENTRY_DESC
 from nti.contenttypes.courses.index import IX_ENTRY_TITLE
 from nti.contenttypes.courses.index import IX_ENTRY_START_DATE
 from nti.contenttypes.courses.index import IX_ENTRY_END_DATE
+from nti.contenttypes.courses.index import IX_ENTRY_TITLE_SORT
+from nti.contenttypes.courses.index import IX_ENTRY_PUID_SORT
 from nti.contenttypes.courses.index import IX_ENTRY_TO_COURSE_INTID
 from nti.contenttypes.courses.index import IX_COURSE_TO_ENTRY_INTID
 
@@ -31,6 +33,8 @@ from nti.contenttypes.courses.index import install_courses_catalog
 from nti.contenttypes.courses.index import CourseCatalogEntryDescriptionIndex
 from nti.contenttypes.courses.index import CourseCatalogEntryPUIDIndex
 from nti.contenttypes.courses.index import CourseCatalogEntryTitleIndex
+from nti.contenttypes.courses.index import CourseCatalogEntryPUIDSortIndex
+from nti.contenttypes.courses.index import CourseCatalogEntryTitleSortIndex
 from nti.contenttypes.courses.index import CourseCatalogEntryStartDateIndex
 from nti.contenttypes.courses.index import CourseCatalogEntryEndDateIndex
 
@@ -94,6 +98,8 @@ def do_evolve(context, generation=generation):
         for key, idx in ((IX_ENTRY_TITLE, CourseCatalogEntryTitleIndex),
                          (IX_ENTRY_DESC, CourseCatalogEntryDescriptionIndex),
                          (IX_ENTRY_PUID, CourseCatalogEntryPUIDIndex),
+                         (IX_ENTRY_TITLE_SORT, CourseCatalogEntryTitleSortIndex),
+                         (IX_ENTRY_PUID_SORT, CourseCatalogEntryPUIDSortIndex),
                          (IX_ENTRY_START_DATE, CourseCatalogEntryStartDateIndex),
                          (IX_ENTRY_TO_COURSE_INTID, EntryToCourseIntidIndex),
                          (IX_COURSE_TO_ENTRY_INTID, CourseToEntryIntidIndex),

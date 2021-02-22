@@ -32,7 +32,8 @@ from nti.contenttypes.courses.common import get_course_packages
 from nti.contenttypes.courses.common import get_course_editors
 from nti.contenttypes.courses.common import get_course_instructors
 
-from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseInstance,\
+    ICourseSubInstance
 from nti.contenttypes.courses.interfaces import ICourseKeywords
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -49,6 +50,7 @@ from nti.zope_catalog.index import AttributeTextIndex
 from nti.zope_catalog.index import NormalizationWrapper
 from nti.zope_catalog.index import AttributeKeywordIndex
 from nti.zope_catalog.index import SetIndex as RawSetIndex
+from nti.zope_catalog.index import CaseInsensitiveAttributeFieldIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
 from nti.zope_catalog.index import IntegerValueIndex as RawIntegerValueIndex
 
@@ -297,6 +299,8 @@ IX_COURSE_EDITOR = 'editor'
 IX_ENTRY_TITLE = 'title'
 IX_ENTRY_DESC = 'description'
 IX_ENTRY_PUID = 'provider_unique_id'
+IX_ENTRY_TITLE_SORT = 'title_sort'
+IX_ENTRY_PUID_SORT = 'provider_unique_id_sort'
 IX_ENTRY_START_DATE = 'StartDate'
 IX_ENTRY_END_DATE = 'EndDate'
 IX_ENTRY_TO_COURSE_INTID = 'course_intid'
@@ -437,6 +441,8 @@ class ValidatingCourseCatalogEntryTitle(object):
     __slots__ = ('title',)
 
     def __init__(self, obj, unused_default=None):
+        # FIXME JZ
+        course = ICourseInstance(obj, None)
         if ICourseCatalogEntry.providedBy(obj):
             self.title = getattr(obj, 'title', None)
 
@@ -451,6 +457,12 @@ class CourseCatalogEntryTitleIndex(AttributeTextIndex):
     def __init__(self, family=None, *args, **kwargs):
         super(CourseCatalogEntryTitleIndex, self).__init__(*args, **kwargs)
         self.family = family
+
+# TextIndexes are not sortable - this extra index allows us to sort on title
+class CourseCatalogEntryTitleSortIndex(CaseInsensitiveAttributeFieldIndex):
+    default_field_name = 'title'
+    default_interface = ValidatingCourseCatalogEntryTitle
+
 
 class ValidatingCourseCatalogEntryDescription(object):
 
@@ -496,6 +508,11 @@ class CourseCatalogEntryPUIDIndex(AttributeTextIndex):
     def __init__(self, family=None, *args, **kwargs):
         super(CourseCatalogEntryPUIDIndex, self).__init__(*args, **kwargs)
         self.family = family
+
+
+class CourseCatalogEntryPUIDSortIndex(CaseInsensitiveAttributeFieldIndex):
+    default_field_name = 'ProviderUniqueID'
+    default_interface = ValidatingCourseCatalogEntryPUID
 
 
 class StartDateAdapter(object):
@@ -604,6 +621,8 @@ def create_courses_catalog(catalog=None, family=BTrees.family64):
                         (IX_ENTRY_TITLE, CourseCatalogEntryTitleIndex),
                         (IX_ENTRY_DESC, CourseCatalogEntryDescriptionIndex),
                         (IX_ENTRY_PUID, CourseCatalogEntryPUIDIndex),
+                        (IX_ENTRY_TITLE_SORT, CourseCatalogEntryTitleSortIndex),
+                        (IX_ENTRY_PUID_SORT, CourseCatalogEntryPUIDSortIndex),
                         (IX_ENTRY_START_DATE, CourseCatalogEntryStartDateIndex),
                         (IX_ENTRY_END_DATE, CourseCatalogEntryEndDateIndex),
                         (IX_ENTRY_TO_COURSE_INTID, EntryToCourseIntidIndex),
