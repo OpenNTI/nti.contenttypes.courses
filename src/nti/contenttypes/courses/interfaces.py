@@ -1858,6 +1858,16 @@ class ICourseCatalogEntryFilterUtility(interface.Interface):
         returns - a set of intids
         """
 
+    def get_current_entry_intids(entry_intids=None):
+        """
+        Return catalog entries started *before* now and not yet ended - by catalog dates.
+
+        The optional entry_intids arg will return only those current entry_intids from
+        that set.
+
+        returns - a set of intids
+        """
+
 
 # Invitations
 

@@ -32,8 +32,7 @@ from nti.contenttypes.courses.common import get_course_packages
 from nti.contenttypes.courses.common import get_course_editors
 from nti.contenttypes.courses.common import get_course_instructors
 
-from nti.contenttypes.courses.interfaces import ICourseInstance,\
-    ICourseSubInstance
+from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseKeywords
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry

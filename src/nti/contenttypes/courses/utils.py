@@ -8,6 +8,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
+from datetime import datetime
+
 from itertools import chain
 
 from six import string_types
@@ -62,6 +64,8 @@ from nti.contenttypes.courses.index import IX_ENTRY_TITLE
 from nti.contenttypes.courses.index import IX_CONTENT_UNIT
 from nti.contenttypes.courses.index import IX_COURSE_INSTRUCTOR
 from nti.contenttypes.courses.index import IX_COURSE_EDITOR
+from nti.contenttypes.courses.index import IX_ENTRY_END_DATE
+from nti.contenttypes.courses.index import IX_ENTRY_START_DATE
 from nti.contenttypes.courses.index import IX_COURSE_TO_ENTRY_INTID
 from nti.contenttypes.courses.index import IX_ENTRY_TO_COURSE_INTID
 
@@ -1546,6 +1550,28 @@ class CourseCatalogEntryFilterUtility(object):
                 rs.append(filter_rs)
             result = reduce(set.intersection, rs)
         return result
+
+    def get_current_entry_intids(self, entry_intids=None):
+        """
+        Return catalog entries started *before* now and not yet ended - by catalog dates.
+        """
+        # This logic is reversed. We'll get the universe of entry intids with
+        # start dates *after* now unioned with universe of entry intids with
+        # end dates *before* now. All entry intids in this set will be considered
+        # current, which will include entries without any start or end dates.
+        catalog = get_courses_catalog()
+        if entry_intids is None:
+            # Not given - get the known universe of entry_intids
+            # The caller will be responsible getting the narrow
+            # set of intids (by site perhaps) they want.
+            entry_idx = catalog[IX_ENTRY_TO_COURSE_INTID]
+            entry_intids = entry_idx.ids()
+        now = datetime.utcnow()
+        catalog = get_courses_catalog()
+        start_exclude_set = catalog.apply({IX_ENTRY_START_DATE: {'between': (now, None)}})
+        end_exclude_set = catalog.apply({IX_ENTRY_END_DATE: {'between': (None, now)}})
+        exclude_set = catalog.family.IF.union(start_exclude_set, end_exclude_set)
+        return catalog.family.IF.difference(entry_intids, exclude_set)
 
 
 import zope.deferredimport
