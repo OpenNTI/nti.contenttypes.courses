@@ -1576,10 +1576,6 @@ class CourseCatalogEntryFilterUtility(object):
         """
         Return catalog entries started *before* now and not yet ended - by catalog dates.
         """
-        # This logic is reversed. We'll get the universe of entry intids with
-        # start dates *after* now unioned with universe of entry intids with
-        # end dates *before* now. All entry intids in this set will be considered
-        # current, which will include entries without any start or end dates.
         catalog = get_courses_catalog()
         if entry_intids is None:
             # Not given - get the known universe of entry_intids
@@ -1588,11 +1584,38 @@ class CourseCatalogEntryFilterUtility(object):
             entry_idx = catalog[IX_ENTRY_TO_COURSE_INTID]
             entry_intids = entry_idx.ids()
         now = datetime.utcnow()
-        catalog = get_courses_catalog()
-        start_exclude_set = catalog.apply({IX_ENTRY_START_DATE: {'between': (now, None)}})
-        end_exclude_set = catalog.apply({IX_ENTRY_END_DATE: {'between': (None, now)}})
-        exclude_set = catalog.family.IF.union(start_exclude_set, end_exclude_set)
+        # This logic is reversed. We'll get the universe of entry intids with
+        # start dates *after* now unioned with universe of entry intids with
+        # end dates *before* now. All entry intids *not* in this set will be
+        # considered for return, which will include entries without any start or end dates.
+        exclude_set = self.get_entry_intids_by_dates(start_not_before=now,
+                                                     end_not_after=now)
         return catalog.family.IF.difference(entry_intids, exclude_set)
+
+    def get_entry_intids_by_dates(self, union=True,
+                                  start_not_before=None, start_not_after=None,
+                                  end_not_before=None, end_not_after=None):
+        """
+        Return catalog entries started *before* not_after and *after* the not_before
+        params.
+        """
+        catalog = get_courses_catalog()
+        start_exclude_set = end_exclude_set = None
+        if     start_not_after is not None \
+            or start_not_before is not None:
+            start_exclude_set = catalog.apply({IX_ENTRY_START_DATE:
+                                              {'between': (start_not_before, start_not_after)}})
+        if     end_not_before is not None \
+            or end_not_after is not None:
+            end_exclude_set = catalog.apply({IX_ENTRY_END_DATE:
+                                            {'between': (end_not_before, end_not_after)}})
+
+        # XXX: What default operator makes sense here?
+        if union:
+            operator = catalog.family.IF.union
+        else:
+            operator = catalog.family.IF.intersection
+        return operator(start_exclude_set, end_exclude_set)
 
 
 import zope.deferredimport

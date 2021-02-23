@@ -1868,6 +1868,12 @@ class ICourseCatalogEntryFilterUtility(interface.Interface):
         returns - a set of intids
         """
 
+    def get_entry_intids_by_dates(self, union=True,
+                                  start_not_before=None, start_not_after=None,
+                                  end_not_before=None, end_not_after=None):
+        """
+        Return catalog entries in the given boundaries.
+        """
 
 # Invitations
 
