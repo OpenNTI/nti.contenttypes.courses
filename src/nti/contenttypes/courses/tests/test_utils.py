@@ -40,6 +40,7 @@ from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
 
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntryFilterUtility
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.utils import get_editors
@@ -221,8 +222,6 @@ class TestEntryFilters(CourseLayerTest):
         # Base/empty cases
         result = get_entry_intids_for_title("title")
         assert_that(result, has_length(0))
-        result = get_entry_intids_for_title(["title",])
-        assert_that(result, has_length(0))
 
         # Create three courses, some with tags
         inst1 = ContentCourseInstance()
@@ -276,19 +275,23 @@ class TestEntryFilters(CourseLayerTest):
 #         assert_that(_get_entries(result),
 #                      contains_inanyorder(entry1, entry2, entry3))
 
-        result = get_entry_intids_for_title([u'cour*'])
+        result = get_entry_intids_for_title(u'cour*')
         assert_that(result, has_length(3))
         assert_that(_get_entries(result),
                      contains_inanyorder(entry1, entry2, entry3))
 
-        result = get_entry_intids_for_title([u'one', u'thre*'])
+        filter_util = component.getUtility(ICourseCatalogEntryFilterUtility)
+        result = filter_util.get_entry_intids_for_filters([u'one', u'thre*'])
         assert_that(result, has_length(2))
         assert_that(_get_entries(result),
                      contains_inanyorder(entry1, entry3))
 
+        result = filter_util.get_entry_intids_for_filters([u'one', u'thre*'], union=False)
+        assert_that(result, has_length(0))
+
         # Unindex third course
         catalog.unindex_doc(intids.getId(entry3))
-        result = get_entry_intids_for_title([u'one', u'thre*'])
+        result = filter_util.get_entry_intids_for_filters([u'one', u'thre*'])
         assert_that(result, has_length(1))
         assert_that(_get_entries(result),
                      contains_inanyorder(entry1))

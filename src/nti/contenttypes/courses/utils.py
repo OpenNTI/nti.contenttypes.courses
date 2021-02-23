@@ -1261,45 +1261,39 @@ def path_for_entry(context):
     return result
 
 
-def get_entry_intids_for_title(titles, sites=()):
+def get_entry_intids_for_title(title, sites=()):
     """
-    Given a set of titles, query the catalog index.
+    Given a single title, query the text index.
     Note, we do not do any subinstance work here.
     """
-    if not isinstance(titles, string_types):
-        titles = ' or '.join(titles)
     catalog = get_courses_catalog()
-    query = {IX_ENTRY_TITLE: titles}
+    query = {IX_ENTRY_TITLE: title}
     sites = get_sites_4_index(sites)
     if sites:
         query[IX_SITE] = {'any_of': sites}
     return catalog.apply(query)
 
 
-def get_entry_intids_for_desc(descriptions, sites=()):
+def get_entry_intids_for_desc(description, sites=()):
     """
-    Given a set of descriptions, query the catalog index.
+    Given a single description, query the text index.
     Note, we do not do any subinstance work here.
     """
-    if isinstance(descriptions, string_types):
-        descriptions = (descriptions,)
     catalog = get_courses_catalog()
-    query = {IX_ENTRY_DESC: {'any_of': descriptions}}
+    query = {IX_ENTRY_DESC: description}
     sites = get_sites_4_index(sites)
     if sites:
         query[IX_SITE] = {'any_of': sites}
     return catalog.apply(query)
 
 
-def get_entry_intids_for_puid(puids, sites=()):
+def get_entry_intids_for_puid(puid, sites=()):
     """
-    Given a set of puids, query the catalog index.
+    Given a single puid, query the text index.
     Note, we do not do any subinstance work here.
     """
-    if isinstance(puids, string_types):
-        puids = (puids,)
     catalog = get_courses_catalog()
-    query = {IX_ENTRY_PUID: {'any_of': puids}}
+    query = {IX_ENTRY_PUID: puid}
     sites = get_sites_4_index(sites)
     if sites:
         query[IX_SITE] = {'any_of': sites}
@@ -1520,16 +1514,17 @@ class CourseCatalogEntryFilterUtility(object):
             entries = reduce(operator, rs)
         return entries
 
-    def _query_index_fields(self, filter_strs, sites):
+    def _query_index_fields(self, filter_str, sites):
         """
         Query our index fields for any hits on the list of filter_strs.
         """
         rs = []
+        courses_catalog = get_courses_catalog()
         for func in (get_entry_intids_for_puid,
                      get_entry_intids_for_tag,
                      get_entry_intids_for_title):
-            rs.append(func(filter_strs, sites=sites))
-        return reduce(set.union, rs)
+            rs.append(func(filter_str, sites=sites))
+        return reduce(courses_catalog.family.IF.union, rs)
 
     def get_entry_intids_for_filters(self, filter_strs, union=True):
         """
@@ -1537,18 +1532,21 @@ class CourseCatalogEntryFilterUtility(object):
         intids.
         """
         sites = get_sites_4_index()
+        courses_catalog = get_courses_catalog()
         if union:
-            # Simple - any hits
-            result = self._query_index_fields(filter_strs, sites)
+            operator = courses_catalog.family.IF.union
         else:
-            if isinstance(filter_strs, string_types):
-                filter_strs = (filter_strs,)
-            # Need hit on all filter_str values
-            rs = []
-            for filter_str in filter_strs:
-                filter_rs = self._query_index_fields(filter_str, sites)
-                rs.append(filter_rs)
-            result = reduce(set.intersection, rs)
+            operator = courses_catalog.family.IF.intersection
+        if isinstance(filter_strs, string_types):
+            filter_strs = (filter_strs,)
+        rs = []
+        for filter_str in filter_strs:
+            filter_rs = self._query_index_fields(filter_str, sites)
+            rs.append(filter_rs)
+        if len(rs) == 1:
+            result = rs[0]
+        else:
+            result = reduce(operator, rs)
         return result
 
     def get_current_entry_intids(self, entry_intids=None):
