@@ -440,8 +440,6 @@ class ValidatingCourseCatalogEntryTitle(object):
     __slots__ = ('title',)
 
     def __init__(self, obj, unused_default=None):
-        # FIXME JZ
-        course = ICourseInstance(obj, None)
         if ICourseCatalogEntry.providedBy(obj):
             self.title = getattr(obj, 'title', None)
 
@@ -476,6 +474,9 @@ class ValidatingCourseCatalogEntryDescription(object):
         raise TypeError()
 
 # FIXME JZ
+# The zope.index OkapiIndex will use a 32 bit int as its family
+# We could do this or we could duplicate the TextIndex constructor in order
+# to pass the family we want intot he constructor.
 from zope.index.text.baseindex import BaseIndex
 BaseIndex.family = BTrees.family64
 
