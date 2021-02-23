@@ -27,6 +27,8 @@ from zope.component.interfaces import ComponentLookupError
 
 from zope.container.contained import Contained
 
+from zope.index.text.parsetree import ParseError
+
 from zope.intid.interfaces import IIntIds
 
 from zope.location import LocationIterator
@@ -1261,43 +1263,64 @@ def path_for_entry(context):
     return result
 
 
-def get_entry_intids_for_title(title, sites=()):
+def get_entry_intids_for_title(title, sites=(), glob=True):
     """
     Given a single title, query the text index.
     Note, we do not do any subinstance work here.
+
+    We return None if the query is invalid.
     """
+    if glob:
+        title = '*%s*' % title
     catalog = get_courses_catalog()
     query = {IX_ENTRY_TITLE: title}
     sites = get_sites_4_index(sites)
     if sites:
         query[IX_SITE] = {'any_of': sites}
-    return catalog.apply(query)
+    try:
+        return catalog.apply(query)
+    except ParseError:
+        logger.warn("Invalid catalog search term (%s)", title)
 
 
-def get_entry_intids_for_desc(description, sites=()):
+def get_entry_intids_for_desc(description, sites=(), glob=True):
     """
     Given a single description, query the text index.
     Note, we do not do any subinstance work here.
+
+    We return None if the query is invalid.
     """
+    if glob:
+        description = '*%s*' % description
     catalog = get_courses_catalog()
     query = {IX_ENTRY_DESC: description}
     sites = get_sites_4_index(sites)
     if sites:
         query[IX_SITE] = {'any_of': sites}
-    return catalog.apply(query)
+    try:
+        return catalog.apply(query)
+    except ParseError:
+        logger.warn("Invalid catalog search term (%s)", description)
 
 
-def get_entry_intids_for_puid(puid, sites=()):
+def get_entry_intids_for_puid(puid, sites=(), glob=True):
     """
     Given a single puid, query the text index.
     Note, we do not do any subinstance work here.
+
+    We return None if the query is invalid.
     """
+    if glob:
+        puid = '*%s*' % puid
     catalog = get_courses_catalog()
     query = {IX_ENTRY_PUID: puid}
     sites = get_sites_4_index(sites)
     if sites:
         query[IX_SITE] = {'any_of': sites}
-    return catalog.apply(query)
+    try:
+        return catalog.apply(query)
+    except ParseError:
+        logger.warn("Invalid catalog search term (%s)", puid)
 
 
 def get_entry_intids_for_tag(tags, sites=()):

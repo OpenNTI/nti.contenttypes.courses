@@ -286,6 +286,13 @@ class TestEntryFilters(CourseLayerTest):
         assert_that(_get_entries(result),
                      contains_inanyorder(entry1, entry3))
 
+        # auto glob
+        filter_util = component.getUtility(ICourseCatalogEntryFilterUtility)
+        result = filter_util.get_entry_intids_for_filters([u'one', u'thre'])
+        assert_that(result, has_length(2))
+        assert_that(_get_entries(result),
+                     contains_inanyorder(entry1, entry3))
+
         result = filter_util.get_entry_intids_for_filters([u'one', u'thre*'], union=False)
         assert_that(result, has_length(0))
 
@@ -295,6 +302,10 @@ class TestEntryFilters(CourseLayerTest):
         assert_that(result, has_length(1))
         assert_that(_get_entries(result),
                      contains_inanyorder(entry1))
+
+        # Invalid search
+        result = filter_util.get_entry_intids_for_filters(u' ')
+        assert_that(result, has_length(0))
 
 
 class TestContextEnrollments(CourseLayerTest):
