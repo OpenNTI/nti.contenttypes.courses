@@ -1392,6 +1392,7 @@ def get_course_tags(filter_str=None, filter_hidden=True, sites=()):
     tag_index = catalog[IX_TAGS]
     sites = get_sites_4_index(sites)
     if sites:
+        # Contains course ane entry intids
         query = {IX_SITE: {'any_of': sites}}
         course_ids = catalog.apply(query)
         tags = set()

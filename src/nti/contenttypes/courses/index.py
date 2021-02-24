@@ -21,6 +21,10 @@ from zope.component.hooks import getSite
 
 from zope.deprecation import deprecated
 
+from zope.index.text import lexicon
+
+from zope.index.text.okapiindex import OkapiIndex
+
 from zope.intid.interfaces import IIntIds
 
 from zope.location import locate
@@ -447,13 +451,24 @@ class ValidatingCourseCatalogEntryTitle(object):
         raise TypeError()
 
 
-class CourseCatalogEntryTitleIndex(AttributeTextIndex):
+class AbstractAttributeTextIndex(AttributeTextIndex):
+
+    def __init__(self, family=None):
+        # The stemmer_lexicon did not seem to work for some test cases (bad tests?)
+        pipeline = [
+            lexicon.Splitter(),
+            lexicon.CaseNormalizer(),
+            lexicon.StopWordRemover()
+        ]
+        lexicon = lexicon.Lexicon(*pipeline)
+        index = OkapiIndex(lexicon=lexicon, family=family)
+        super(AttributeTextIndex, self).__init__(lexicon=lexicon, index=index)
+
+
+class CourseCatalogEntryTitleIndex(AbstractAttributeTextIndex):
     default_field_name = 'title'
     default_interface = ValidatingCourseCatalogEntryTitle
 
-    def __init__(self, family=None, *args, **kwargs):
-        super(CourseCatalogEntryTitleIndex, self).__init__(*args, **kwargs)
-        self.family = family
 
 # TextIndexes are not sortable - this extra index allows us to sort on title
 class CourseCatalogEntryTitleSortIndex(CaseInsensitiveAttributeFieldIndex):
@@ -473,20 +488,10 @@ class ValidatingCourseCatalogEntryDescription(object):
     def __reduce__(self):
         raise TypeError()
 
-# FIXME JZ
-# The zope.index OkapiIndex will use a 32 bit int as its family
-# We could do this or we could duplicate the TextIndex constructor in order
-# to pass the family we want intot he constructor.
-from zope.index.text.baseindex import BaseIndex
-BaseIndex.family = BTrees.family64
 
-class CourseCatalogEntryDescriptionIndex(AttributeTextIndex):
+class CourseCatalogEntryDescriptionIndex(AbstractAttributeTextIndex):
     default_field_name = 'description'
     default_interface = ValidatingCourseCatalogEntryDescription
-
-    def __init__(self, family=None, *args, **kwargs):
-        super(CourseCatalogEntryDescriptionIndex, self).__init__(*args, **kwargs)
-        self.family = family
 
 
 class ValidatingCourseCatalogEntryPUID(object):
@@ -501,13 +506,9 @@ class ValidatingCourseCatalogEntryPUID(object):
         raise TypeError()
 
 
-class CourseCatalogEntryPUIDIndex(AttributeTextIndex):
+class CourseCatalogEntryPUIDIndex(AbstractAttributeTextIndex):
     default_field_name = 'ProviderUniqueID'
     default_interface = ValidatingCourseCatalogEntryPUID
-
-    def __init__(self, family=None, *args, **kwargs):
-        super(CourseCatalogEntryPUIDIndex, self).__init__(*args, **kwargs)
-        self.family = family
 
 
 class CourseCatalogEntryPUIDSortIndex(CaseInsensitiveAttributeFieldIndex):
