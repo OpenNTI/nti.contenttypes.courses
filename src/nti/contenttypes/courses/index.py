@@ -463,7 +463,7 @@ class ValidatingCourseCatalogEntryTitle(object):
 
 class AbstractAttributeTextIndex(AttributeTextIndex):
 
-    def __init__(self, family=None):
+    def __init__(self, family=BTrees.family64):
         # The stemmer_lexicon did not seem to work for some test cases (bad tests?)
         pipeline = [Splitter(), CaseNormalizer(), StopWordRemover()
         ]
