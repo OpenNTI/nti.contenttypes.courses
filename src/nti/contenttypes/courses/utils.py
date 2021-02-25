@@ -1435,7 +1435,6 @@ def get_course_tags(filter_str=None, filter_hidden=True, sites=()):
             if tag not in result:
                 result[tag] = 0
             result[tag] += 1
-    #tags = set(tag_index.words() or ())
     return result
 
 
@@ -1522,6 +1521,7 @@ class CourseCatalogEntryFilterUtility(object):
         """
         Check if a given entry is included in the given filter.
         """
+        filter_str = filter_str.lower()
         result =   (entry.title and filter_str in entry.title.lower()) \
                 or (entry.ProviderUniqueID and filter_str in entry.ProviderUniqueID.lower()) \
                 or (entry.tags and filter_str in set(x.lower() for x in entry.tags))
@@ -1550,6 +1550,7 @@ class CourseCatalogEntryFilterUtility(object):
         if filter_strs and len(filter_strs) == 1:
             # Special case the single filter - since this is used by UI
             filter_str = filter_strs[0]
+            filter_str = filter_str.lower()
             tagged_entries = self.get_tagged_entries(filter_str)
             entries = set(x for x in entries
                           if self._include_entry(selector(x), filter_str, tagged_entries))
@@ -1558,6 +1559,7 @@ class CourseCatalogEntryFilterUtility(object):
             # Go ahead and get a list in case they gave us an iterator
             all_entries = list(entries)
             for filter_str in filter_strs:
+                filter_str = filter_str.lower()
                 tagged_entries = self.get_tagged_entries(filter_str)
                 entries = set(x for x in all_entries
                               if self._include_entry(selector(x), filter_str, tagged_entries))
