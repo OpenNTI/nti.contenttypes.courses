@@ -21,7 +21,10 @@ from zope.component.hooks import getSite
 
 from zope.deprecation import deprecated
 
-from zope.index.text import lexicon
+from zope.index.text.lexicon import Lexicon
+from zope.index.text.lexicon import Splitter
+from zope.index.text.lexicon import CaseNormalizer
+from zope.index.text.lexicon import StopWordRemover
 
 from zope.index.text.okapiindex import OkapiIndex
 
@@ -37,6 +40,8 @@ from nti.contenttypes.courses.common import get_course_editors
 from nti.contenttypes.courses.common import get_course_instructors
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import IDeletedCourse
+from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseKeywords
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -48,6 +53,8 @@ from nti.zope_catalog.catalog import Catalog
 
 from nti.zope_catalog.datetime import TimestampToNormalized64BitIntNormalizer
 
+from nti.zope_catalog.topic import TopicIndex
+from nti.zope_catalog.topic import ExtentFilteredSet
 from nti.zope_catalog.index import AttributeSetIndex
 from nti.zope_catalog.index import AttributeTextIndex
 from nti.zope_catalog.index import NormalizationWrapper
@@ -294,6 +301,7 @@ def install_enrollment_catalog(site_manager_container, intids=None):
 #: attributes.
 IX_NAME = 'name'
 IX_TAGS = 'tags'
+IX_TOPICS = 'topics'
 IX_KEYWORDS = 'keywords'
 IX_PACKAGES = 'packages'
 IX_IMPORT_HASH = 'import_hash'
@@ -308,6 +316,8 @@ IX_ENTRY_START_DATE = 'StartDate'
 IX_ENTRY_END_DATE = 'EndDate'
 IX_ENTRY_TO_COURSE_INTID = 'course_intid'
 IX_COURSE_TO_ENTRY_INTID = 'entry_intid'
+TP_DELETED_COURSES = 'deletedCourses'
+TP_NON_PUBLIC_COURSES = 'nonpublicCourses'
 COURSES_CATALOG_NAME = 'nti.dataserver.++etc++courses-catalog'
 
 
@@ -455,12 +465,9 @@ class AbstractAttributeTextIndex(AttributeTextIndex):
 
     def __init__(self, family=None):
         # The stemmer_lexicon did not seem to work for some test cases (bad tests?)
-        pipeline = [
-            lexicon.Splitter(),
-            lexicon.CaseNormalizer(),
-            lexicon.StopWordRemover()
+        pipeline = [Splitter(), CaseNormalizer(), StopWordRemover()
         ]
-        lexicon = lexicon.Lexicon(*pipeline)
+        lexicon = Lexicon(*pipeline)
         index = OkapiIndex(lexicon=lexicon, family=family)
         super(AttributeTextIndex, self).__init__(lexicon=lexicon, index=index)
 
@@ -601,6 +608,43 @@ class CourseKeywordsIndex(AttributeKeywordIndex):
     default_interface = ICourseKeywords
 
 
+def is_deleted_course(unused_extent, unused_docid, document):
+    # NOTE: This is referenced by persistent objects, must stay.
+    return  (   ICourseInstance.providedBy(document) \
+             or ICourseCatalogEntry.providedBy(document)) \
+        and IDeletedCourse.providedBy(ICourseInstance(document))
+
+
+class DeletedCourseExtentFilteredSet(ExtentFilteredSet):
+    """
+    A filter for a topic index that collects deleted courses.
+    """
+
+    def __init__(self, fid, family=BTrees.family64):
+        super(DeletedCourseExtentFilteredSet, self).__init__(fid,
+                                                             is_deleted_course,
+                                                             family=family)
+
+
+def is_non_public(unused_extent, unused_docid, document):
+    # NOTE: This is referenced by persistent objects, must stay.
+    return  (  ICourseInstance.providedBy(document) \
+            or ICourseCatalogEntry.providedBy(document)) \
+        and INonPublicCourseInstance.providedBy(document)
+
+
+class IsNonPublicCourseExtentFilteredSet(ExtentFilteredSet):
+    """
+    A filter for a topic index that collects nonpublic courses
+    and catalog entries.
+    """
+
+    def __init__(self, fid, family=BTrees.family64):
+        super(IsNonPublicCourseExtentFilteredSet, self).__init__(fid,
+                                                                 is_non_public,
+                                                                 family=family)
+
+
 @interface.implementer(ICatalog)
 class CoursesCatalog(Catalog):
     pass
@@ -613,7 +657,8 @@ def get_courses_catalog(registry=component):
 def create_courses_catalog(catalog=None, family=BTrees.family64):
     if catalog is None:
         catalog = CoursesCatalog(family=family)
-    for name, clazz in ((IX_NAME, CourseNameIndex),
+    for name, clazz in ((IX_TOPICS, TopicIndex),
+                        (IX_NAME, CourseNameIndex),
                         (IX_SITE, CourseSiteIndex),
                         (IX_TAGS, CourseTagsIndex),
                         (IX_PACKAGES, CoursePackagesIndex),
@@ -634,6 +679,11 @@ def create_courses_catalog(catalog=None, family=BTrees.family64):
         index = clazz(family=family)
         locate(index, catalog, name)
         catalog[name] = index
+    topic_index = catalog[IX_TOPICS]
+    for filter_id, factory in ((TP_DELETED_COURSES, DeletedCourseExtentFilteredSet),
+                               (TP_NON_PUBLIC_COURSES, IsNonPublicCourseExtentFilteredSet)):
+        the_filter = factory(filter_id, family=family)
+        topic_index.addFilter(the_filter)
     return catalog
 
 

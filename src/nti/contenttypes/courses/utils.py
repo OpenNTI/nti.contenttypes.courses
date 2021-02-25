@@ -57,6 +57,7 @@ from nti.contenttypes.courses.index import IX_NAME
 from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_ENTRY
 from nti.contenttypes.courses.index import IX_COURSE
+from nti.contenttypes.courses.index import IX_TOPICS
 from nti.contenttypes.courses.index import IX_PACKAGES
 from nti.contenttypes.courses.index import IX_USERNAME
 from nti.contenttypes.courses.index import IX_ENTRY_PUID
@@ -70,6 +71,8 @@ from nti.contenttypes.courses.index import IX_ENTRY_END_DATE
 from nti.contenttypes.courses.index import IX_ENTRY_START_DATE
 from nti.contenttypes.courses.index import IX_COURSE_TO_ENTRY_INTID
 from nti.contenttypes.courses.index import IX_ENTRY_TO_COURSE_INTID
+from nti.contenttypes.courses.index import TP_DELETED_COURSES
+from nti.contenttypes.courses.index import TP_NON_PUBLIC_COURSES
 
 from nti.contenttypes.courses.index import IndexRecord
 from nti.contenttypes.courses.index import get_courses_catalog
@@ -661,6 +664,29 @@ def get_all_site_course_intids(site=None):
     query = {IX_SITE: {'any_of': sites},
              IX_NAME: {'any': None}}
     return catalog.apply(query)
+
+
+def get_all_site_entry_intids(site=None, exclude_non_public=False, exclude_deleted=False):
+    """
+    Return all course catalog entry intids for all courses in the site hierarchy,
+    optionally excluding deleted and/or non_public.
+
+    FIXME: mimic this in course function
+    FIXME: make sure deleted events are broadcast (and for entries).
+    """
+    catalog = get_courses_catalog()
+    query = {IX_ENTRY_TO_COURSE_INTID: {'any': None}}
+    sites = get_sites_4_index(site)
+    if sites:
+        query[IX_SITE] = {'any_of': sites}
+    rs = catalog.apply(query)
+    if exclude_deleted:
+        deleted_intids_extent = catalog[IX_TOPICS][TP_DELETED_COURSES].getExtent()
+        rs = rs - deleted_intids_extent
+    if exclude_non_public:
+        nonpublic_intids_extent = catalog[IX_TOPICS][TP_NON_PUBLIC_COURSES].getExtent()
+        rs = rs - nonpublic_intids_extent
+    return rs
 
 
 def get_site_course_admin_intids_for_user(user, site=None):
@@ -1386,29 +1412,31 @@ def get_course_tags(filter_str=None, filter_hidden=True, sites=()):
     """
     Get all course tags. Optionally filtering by the given `filter_str` param
     and by default, removing all hidden tags.
+
+    Only tags for non-deleted, public courses are returned.
+
+    Returns a dict of tag -> course count.
     """
-    # NOTE: do we want cardinality or any sort order here?
     catalog = get_courses_catalog()
     tag_index = catalog[IX_TAGS]
-    sites = get_sites_4_index(sites)
-    if sites:
-        # Contains course ane entry intids
-        query = {IX_SITE: {'any_of': sites}}
-        course_ids = catalog.apply(query)
-        tags = set()
-        for course_id in course_ids:
-            course_tags = tag_index._rev_index.get(course_id)
-            if course_tags:
-                tags.update(course_tags)
-    else:
-        # Outside of a site (tests)
-        tags = set(tag_index.words() or ())
-    if filter_hidden:
-        tags = filter_hidden_tags(tags)
+    result = dict()
     if filter_str:
         filter_str = filter_str.lower()
-        tags = [x for x in tags if filter_str in x]
-    return tags
+    entry_intids = get_all_site_entry_intids(site=sites,
+                                             exclude_deleted=True,
+                                             exclude_non_public=True)
+    for entry_intid in entry_intids:
+        course_tags = tag_index._rev_index.get(entry_intid)
+        for tag in course_tags or ():
+            if filter_hidden and is_hidden_tag(tag):
+                continue
+            if filter_str and filter_str not in tag:
+                continue
+            if tag not in result:
+                result[tag] = 0
+            result[tag] += 1
+    #tags = set(tag_index.words() or ())
+    return result
 
 
 def get_context_enrollment_records(user, requesting_user):
