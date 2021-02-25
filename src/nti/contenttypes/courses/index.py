@@ -610,8 +610,9 @@ class CourseKeywordsIndex(AttributeKeywordIndex):
 
 def is_deleted_course(unused_extent, unused_docid, document):
     # NOTE: This is referenced by persistent objects, must stay.
-    return  ICourseInstance.providedBy(document) \
-        and IDeletedCourse.providedBy(document)
+    return  (   ICourseInstance.providedBy(document) \
+             or ICourseCatalogEntry.providedBy(document)) \
+        and IDeletedCourse.providedBy(ICourseInstance(document))
 
 
 class DeletedCourseExtentFilteredSet(ExtentFilteredSet):

@@ -13,11 +13,13 @@ from hamcrest import has_items
 from hamcrest import has_entry
 from hamcrest import has_length
 from hamcrest import assert_that
+from hamcrest import has_entries
 from hamcrest import contains_inanyorder
 
 import fudge
 
 from zope import component
+from zope import interface
 
 from zope.intid.interfaces import IIntIds
 
@@ -38,8 +40,10 @@ from nti.contenttypes.courses.index import install_enrollment_catalog
 
 from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
 
+from nti.contenttypes.courses.interfaces import IDeletedCourse
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
+from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntryFilterUtility
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
@@ -103,6 +107,7 @@ class TestEntryFilters(CourseLayerTest):
         addIntId(inst1)
         ds_folder._p_jar.add(entry1)
         addIntId(entry1)
+        catalog.index_doc(intids.getId(inst1), inst1)
         catalog.index_doc(intids.getId(entry1), entry1)
 
         inst2 = ContentCourseInstance()
@@ -113,6 +118,7 @@ class TestEntryFilters(CourseLayerTest):
         addIntId(inst2)
         ds_folder._p_jar.add(entry2)
         addIntId(entry2)
+        catalog.index_doc(intids.getId(inst2), inst2)
         catalog.index_doc(intids.getId(entry2), entry2)
 
         inst3 = ContentCourseInstance()
@@ -124,13 +130,14 @@ class TestEntryFilters(CourseLayerTest):
         addIntId(inst3)
         ds_folder._p_jar.add(entry3)
         addIntId(entry3)
+        catalog.index_doc(intids.getId(inst3), inst3)
         catalog.index_doc(intids.getId(entry3), entry3)
 
         # Fetch tags
         all_tags = get_course_tags()
         assert_that(all_tags, has_length(2))
-        assert_that(all_tags, contains_inanyorder(u'entry3 tag',
-                                                  u'duplicate_tag'))
+        assert_that(all_tags, has_entries(u'entry3 tag', 1,
+                                          u'duplicate_tag', 2))
 
         all_tags = get_course_tags(filter_str=u'entry3')
         assert_that(all_tags, has_length(1))
@@ -142,8 +149,28 @@ class TestEntryFilters(CourseLayerTest):
 
         all_tags = get_course_tags(filter_str=u'taG')
         assert_that(all_tags, has_length(2))
-        assert_that(all_tags, contains_inanyorder(u'entry3 tag',
-                                                  u'duplicate_tag'))
+        assert_that(all_tags, has_entries(u'entry3 tag', 1,
+                                          u'duplicate_tag', 2))
+
+        # Deleted course
+        interface.alsoProvides(inst3, IDeletedCourse)
+        catalog.index_doc(intids.getId(inst3), inst3)
+        catalog.index_doc(intids.getId(entry3), entry3)
+        all_tags = get_course_tags()
+        assert_that(all_tags, has_length(1))
+        assert_that(all_tags, has_entries(u'duplicate_tag', 1))
+
+        interface.noLongerProvides(inst3, IDeletedCourse)
+        catalog.index_doc(intids.getId(inst3), inst3)
+        catalog.index_doc(intids.getId(entry3), entry3)
+        interface.alsoProvides(entry2, INonPublicCourseInstance)
+        catalog.index_doc(intids.getId(entry2), entry2)
+        all_tags = get_course_tags()
+        assert_that(all_tags, has_length(2))
+        assert_that(all_tags, has_entries(u'entry3 tag', 1,
+                                          u'duplicate_tag', 1))
+        interface.noLongerProvides(entry2, INonPublicCourseInstance)
+        catalog.index_doc(intids.getId(entry2), entry2)
 
         all_tags = get_course_tags(filter_str=u'DNE')
         assert_that(all_tags, has_length(0))
