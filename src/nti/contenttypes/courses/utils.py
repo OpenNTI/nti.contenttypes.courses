@@ -1408,7 +1408,8 @@ def filter_hidden_tags(tags):
     return [x for x in tags if not is_hidden_tag(x)]
 
 
-def get_course_tags(filter_str=None, filter_hidden=True, sites=()):
+def get_course_tags(filter_str=None, filter_hidden=True, sites=(),
+                    exclude_non_public=True):
     """
     Get all course tags. Optionally filtering by the given `filter_str` param
     and by default, removing all hidden tags.
@@ -1424,7 +1425,7 @@ def get_course_tags(filter_str=None, filter_hidden=True, sites=()):
         filter_str = filter_str.lower()
     entry_intids = get_all_site_entry_intids(site=sites,
                                              exclude_deleted=True,
-                                             exclude_non_public=True)
+                                             exclude_non_public=exclude_non_public)
     for entry_intid in entry_intids:
         course_tags = tag_index._rev_index.get(entry_intid)
         for tag in course_tags or ():
