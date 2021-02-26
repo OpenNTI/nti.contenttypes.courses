@@ -666,13 +666,12 @@ def get_all_site_course_intids(site=None):
     return catalog.apply(query)
 
 
-def get_all_site_entry_intids(site=None, exclude_non_public=False, exclude_deleted=False):
+def get_all_site_entry_intids(site=None, exclude_non_public=False, exclude_deleted=True):
     """
     Return all course catalog entry intids for all courses in the site hierarchy,
     optionally excluding deleted and/or non_public.
 
     FIXME: mimic this in course function
-    FIXME: make sure deleted events are broadcast (and for entries).
     """
     catalog = get_courses_catalog()
     query = {IX_ENTRY_TO_COURSE_INTID: {'any': None}}
@@ -1362,6 +1361,19 @@ def get_entry_intids_for_tag(tags, sites=()):
     if sites:
         query[IX_SITE] = {'any_of': sites}
     return catalog.apply(query)
+
+
+def get_non_tagged_entry_intids(sites=(), exclude_non_public=True, exclude_deleted=True):
+    """
+    Return all entry intids that *do not* have any tags.
+    """
+    catalog = get_courses_catalog()
+    query = {IX_TAGS: {'any': None}}
+    tagged_intids = catalog.apply(query)
+    all_entry_intids = get_all_site_entry_intids(site=sites,
+                                                 exclude_non_public=exclude_non_public,
+                                                 exclude_deleted=exclude_deleted)
+    return catalog.family.IF.difference(all_entry_intids, tagged_intids)
 
 
 def get_courses_for_tag(tag, sites=(), intids=None):
