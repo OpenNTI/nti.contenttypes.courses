@@ -461,12 +461,16 @@ class ValidatingCourseCatalogEntryTitle(object):
         raise TypeError()
 
 
+# FIXME JZ
+# Some OkapiIndexes out there are using this index
+from zope.index.text.baseindex import BaseIndex
+BaseIndex.family = BTrees.family64
+
 class AbstractAttributeTextIndex(AttributeTextIndex):
 
     def __init__(self, family=BTrees.family64):
         # The stemmer_lexicon did not seem to work for some test cases (bad tests?)
-        pipeline = [Splitter(), CaseNormalizer(), StopWordRemover()
-        ]
+        pipeline = [Splitter(), CaseNormalizer(), StopWordRemover()]
         lexicon = Lexicon(*pipeline)
         index = OkapiIndex(lexicon=lexicon, family=family)
         super(AttributeTextIndex, self).__init__(lexicon=lexicon, index=index)
