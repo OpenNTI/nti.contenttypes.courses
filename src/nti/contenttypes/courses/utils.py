@@ -1591,6 +1591,7 @@ class CourseCatalogEntryFilterUtility(object):
                      get_entry_intids_for_tag,
                      get_entry_intids_for_title):
             rs.append(func(filter_str, sites=sites))
+        __traceback_info__ = rs
         return reduce(courses_catalog.family.IF.union, rs)
 
     def get_entry_intids_for_filters(self, filter_strs, union=True):
