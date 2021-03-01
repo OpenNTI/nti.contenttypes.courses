@@ -461,11 +461,6 @@ class ValidatingCourseCatalogEntryTitle(object):
         raise TypeError()
 
 
-# FIXME JZ
-# Some OkapiIndexes out there are using this index
-from zope.index.text.baseindex import BaseIndex
-BaseIndex.family = BTrees.family64
-
 class AbstractAttributeTextIndex(AttributeTextIndex):
 
     def __init__(self, family=BTrees.family64):
