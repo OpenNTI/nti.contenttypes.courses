@@ -16,9 +16,10 @@ from zope.generations.generations import SchemaManager
 
 from nti.contenttypes.courses.index import install_courses_catalog
 from nti.contenttypes.courses.index import install_enrollment_catalog
+from nti.contenttypes.courses.index import install_enrollment_meta_catalog
 from nti.contenttypes.courses.index import install_course_outline_catalog
 
-generation = 48
+generation = 49
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -43,6 +44,7 @@ def install_catalog(context):
     intids = lsm.getUtility(IIntIds)
     install_courses_catalog(dataserver_folder, intids)
     install_enrollment_catalog(dataserver_folder, intids)
+    install_enrollment_meta_catalog(dataserver_folder, intids)
     install_course_outline_catalog(dataserver_folder, intids)
 
 

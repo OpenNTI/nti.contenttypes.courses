@@ -321,6 +321,9 @@
 				for=".interfaces.ICourseInstance
 					 zc.intid.interfaces.IBeforeIdRemovedEvent"/>
 
+    <subscriber handler=".subscribers._update_meta_on_enrollment_created" />
+    <subscriber handler=".subscribers._update_meta_on_enrollment_removed" />
+
 	<!-- managing enrollment as you change scope -->
 	<subscriber handler=".enrollment.on_modified_potentially_move_courses" />
 

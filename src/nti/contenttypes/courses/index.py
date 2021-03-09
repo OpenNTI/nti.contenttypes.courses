@@ -40,6 +40,7 @@ from nti.contenttypes.courses.common import get_course_editors
 from nti.contenttypes.courses.common import get_course_instructors
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
+from nti.contenttypes.courses.interfaces import ICourseEnrollments
 from nti.contenttypes.courses.interfaces import IDeletedCourse
 from nti.contenttypes.courses.interfaces import INonPublicCourseInstance
 from nti.contenttypes.courses.interfaces import ICourseKeywords
@@ -50,12 +51,14 @@ from nti.contenttypes.courses.interfaces import ICourseOutlineCalendarNode
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.zope_catalog.catalog import Catalog
+from nti.zope_catalog.catalog import DeferredCatalog
 
 from nti.zope_catalog.datetime import TimestampToNormalized64BitIntNormalizer
 
 from nti.zope_catalog.topic import TopicIndex
 from nti.zope_catalog.topic import ExtentFilteredSet
-from nti.zope_catalog.index import AttributeSetIndex
+
+from nti.zope_catalog.index import AttributeSetIndex, IntegerAttributeIndex
 from nti.zope_catalog.index import AttributeTextIndex
 from nti.zope_catalog.index import NormalizationWrapper
 from nti.zope_catalog.index import AttributeKeywordIndex
@@ -63,6 +66,8 @@ from nti.zope_catalog.index import SetIndex as RawSetIndex
 from nti.zope_catalog.index import CaseInsensitiveAttributeFieldIndex
 from nti.zope_catalog.index import AttributeValueIndex as ValueIndex
 from nti.zope_catalog.index import IntegerValueIndex as RawIntegerValueIndex
+
+from nti.zope_catalog.interfaces import IDeferredCatalog
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -817,6 +822,73 @@ def install_course_outline_catalog(site_manager_container, intids=None):
     lsm.registerUtility(catalog,
                         provided=ICatalog,
                         name=COURSE_OUTLINE_CATALOG_NAME)
+
+    for index in catalog.values():
+        intids.register(index)
+    return catalog
+
+
+ENROLLMENT_META_CATALOG_NAME = 'nti.dataserver.++etc++enrollment-meta-catalog'
+
+IX_ENROLLMENT_COUNT = 'count'
+
+
+class ValidatingEnrollmentCount(object):
+
+    __slots__ = ('count',)
+
+    def __init__(self, obj, unused_default=None):
+        if ICourseInstance.providedBy(obj):
+            enrollments = ICourseEnrollments(obj, None)
+            if enrollments:
+                self.count = enrollments.count_enrollments()
+
+    def __reduce__(self):
+        raise TypeError()
+
+
+class EnrollmentCountIndex(IntegerAttributeIndex):
+    default_field_name = 'count'
+    default_interface = ValidatingEnrollmentCount
+
+
+@interface.implementer(ICatalog)
+class EnrollmentMetadataCatalog(DeferredCatalog):
+    pass
+
+
+def get_enrollment_meta_catalog(registry=component):
+    return registry.queryUtility(IDeferredCatalog, name=ENROLLMENT_META_CATALOG_NAME)
+
+
+def create_enrollment_meta_catalog(site_manager_container, intids=None, catalog=None, family=BTrees.family64):
+    if catalog is None:
+        catalog = EnrollmentMetadataCatalog(family=family)
+        locate(catalog, site_manager_container, ENROLLMENT_META_CATALOG_NAME)
+        if intids is None:
+            lsm = site_manager_container.getSiteManager()
+            intids = lsm.getUtility(IIntIds)
+        intids.register(catalog)
+    for name, clazz in ((IX_ENROLLMENT_COUNT, EnrollmentCountIndex),):
+        index = clazz(family=family)
+        locate(index, catalog, name)
+        catalog[name] = index
+    return catalog
+
+
+def install_enrollment_meta_catalog(site_manager_container, intids=None):
+    lsm = site_manager_container.getSiteManager()
+    catalog = get_enrollment_meta_catalog(lsm)
+    if catalog is not None:
+        return catalog
+
+    intids = lsm.getUtility(IIntIds) if intids is None else intids
+    catalog = create_enrollment_meta_catalog(site_manager_container,
+                                             intids=intids,
+                                             family=intids.family)
+    lsm.registerUtility(catalog,
+                        provided=IDeferredCatalog,
+                        name=ENROLLMENT_META_CATALOG_NAME)
 
     for index in catalog.values():
         intids.register(index)
