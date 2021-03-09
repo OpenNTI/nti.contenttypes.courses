@@ -119,6 +119,8 @@ from nti.externalization.interfaces import IObjectModifiedFromExternalEvent
 from nti.intid.common import addIntId
 from nti.intid.common import removeIntId
 
+from nti.metadata import queue_metadata_modififed
+
 from nti.recorder.utils import record_transaction
 
 from nti.site.localutility import install_utility
@@ -602,3 +604,23 @@ def _update_scopes_on_course_title_change(entry, event):
             new_name = course_title if scope_name == ES_PUBLIC else '%s (%s)' % (course_title, scope_name)
             friendly_named.realname = new_name
             notify(ObjectModifiedEvent(scope))
+
+
+def _update_enrollment_meta(record):
+    """
+    On an enrollment added or removed, we want to send our
+    course to update its metadata.
+    We do not want to just notify cause that may cause conflicts
+    on the in process catalog.
+    """
+    queue_metadata_modififed(record.CourseInstance)
+
+
+@component.adapter(ICourseInstanceEnrollmentRecord, IObjectCreatedEvent)
+def _update_meta_on_enrollment_created(record, unused_event):
+    _update_enrollment_meta(record)
+
+
+@component.adapter(ICourseInstanceEnrollmentRecord, IObjectRemovedEvent)
+def _update_meta_on_enrollment_removed(record, unused_event):
+    _update_enrollment_meta(record)
