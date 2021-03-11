@@ -21,6 +21,8 @@ from zope import interface
 
 from zope.cachedescriptors.property import Lazy
 
+from zope.catalog.catalog import ResultSet
+
 from zope.component.hooks import getSite
 
 from zope.component.interfaces import ComponentLookupError
@@ -1331,7 +1333,6 @@ def get_entry_intids_for_desc(description, sites=(), glob=True):
 def get_entry_intids_for_puid(puid, sites=(), glob=True):
     """
     Given a single puid, query the text index.
-    Note, we do not do any subinstance work here.
 
     We return None if the query is invalid.
     """
@@ -1346,6 +1347,28 @@ def get_entry_intids_for_puid(puid, sites=(), glob=True):
         return catalog.apply(query)
     except ParseError:
         logger.warn("Invalid catalog search term (%s)", puid)
+
+
+def get_entries_for_puid(puid, sites, glob=True):
+    """
+    Given a single puid, return all :class:`ICourseCatalogEntry` objects.
+    """
+    entry_intids = get_entry_intids_for_puid(puid, sites=sites, glob=glob)
+    if entry_intids is None:
+        return ()
+    intids = component.getUtility(IIntIds)
+    rs = ResultSet(entry_intids, intids)
+    entries = [x for x in rs if ICourseCatalogEntry.providedBy(x)]
+    return entries
+
+
+def get_courses_for_puid(puid, sites, glob=True):
+    """
+    Given a single puid, return all :class:`ICourseInstance` objects.
+    """
+    entries = get_entries_for_puid(puid, sites, glob=glob)
+    courses = (ICourseInstance(x, None) for x in entries)
+    return [x for x in courses if x is not None]
 
 
 def get_entry_intids_for_tag(tags, sites=()):
