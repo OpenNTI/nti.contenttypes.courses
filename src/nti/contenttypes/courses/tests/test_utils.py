@@ -55,6 +55,9 @@ from nti.contenttypes.courses.utils import get_courses_for_tag
 from nti.contenttypes.courses.utils import ProxyEnrollmentRecord
 from nti.contenttypes.courses.utils import get_instructed_courses
 from nti.contenttypes.courses.utils import get_enrollment_records
+from nti.contenttypes.courses.utils import get_entries_for_puid
+from nti.contenttypes.courses.utils import get_courses_for_puid
+from nti.contenttypes.courses.utils import get_entry_intids_for_puid
 from nti.contenttypes.courses.utils import get_entry_intids_for_title
 from nti.contenttypes.courses.utils import get_all_site_course_intids
 from nti.contenttypes.courses.utils import entry_intids_to_course_intids
@@ -333,6 +336,83 @@ class TestEntryFilters(CourseLayerTest):
         # Invalid search
         result = filter_util.get_entry_intids_for_filters(u' ')
         assert_that(result, has_length(0))
+
+    @WithMockDSTrans
+    def test_puids(self):
+        ds_folder = self.ds.dataserver_folder
+        install_courses_catalog(ds_folder)
+        intids = component.queryUtility(IIntIds)
+        catalog = get_courses_catalog()
+
+        # Base/empty cases
+        result = get_entry_intids_for_puid("puid")
+        assert_that(result, has_length(0))
+
+        # Create three courses, some with tags
+        inst1 = ContentCourseInstance()
+        entry1 = ICourseCatalogEntry(inst1)
+        entry1.title = u'course one'
+        entry1.ProviderUniqueID = u'course1_puid'
+        ds_folder._p_jar.add(inst1)
+        addIntId(inst1)
+        ds_folder._p_jar.add(entry1)
+        addIntId(entry1)
+        catalog.index_doc(intids.getId(entry1), entry1)
+
+        inst2 = ContentCourseInstance()
+        entry2 = ICourseCatalogEntry(inst2)
+        entry2.title = u'course2'
+        entry2.ProviderUniqueID = u'course2 puid'
+        ds_folder._p_jar.add(inst2)
+        addIntId(inst2)
+        ds_folder._p_jar.add(entry2)
+        addIntId(entry2)
+        catalog.index_doc(intids.getId(entry2), entry2)
+
+        inst3 = ContentCourseInstance()
+        entry3 = ICourseCatalogEntry(inst3)
+        entry3.title = u'COURSE three'
+        entry3.ProviderUniqueID = u'course3'
+        ds_folder._p_jar.add(inst3)
+        addIntId(inst3)
+        ds_folder._p_jar.add(entry3)
+        addIntId(entry3)
+        catalog.index_doc(intids.getId(entry3), entry3)
+
+        # Fetch entries
+        def _get_entries(rs):
+            return [intids.getObject(x) for x in rs]
+
+        result = get_entry_intids_for_puid(u'course1_puid')
+        assert_that(result, has_length(1))
+        assert_that(_get_entries(result), contains(entry1))
+
+        result = get_entry_intids_for_puid(u'couRSE*')
+        assert_that(result, has_length(3))
+        assert_that(_get_entries(result),
+                     contains_inanyorder(entry1, entry2, entry3))
+
+        result = get_entry_intids_for_puid(u'course3')
+        assert_that(result, has_length(1))
+        assert_that(_get_entries(result), contains_inanyorder(entry3))
+
+        result = get_entry_intids_for_puid(u'cour*')
+        assert_that(result, has_length(3))
+        assert_that(_get_entries(result),
+                     contains_inanyorder(entry1, entry2, entry3))
+
+        result = get_courses_for_puid(u'cour', glob=True)
+        assert_that(result, has_length(3))
+        assert_that(result,
+                    contains_inanyorder(inst1, inst2, inst3))
+
+        result = get_courses_for_puid(u'cour', glob=False)
+        assert_that(result, has_length(0))
+
+        result = get_entries_for_puid(u'course1', glob=True)
+        assert_that(result, has_length(1))
+        assert_that(result,
+                    contains_inanyorder(entry1))
 
 
 class TestContextEnrollments(CourseLayerTest):

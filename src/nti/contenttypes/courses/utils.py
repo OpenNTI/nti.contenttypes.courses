@@ -1349,7 +1349,7 @@ def get_entry_intids_for_puid(puid, sites=(), glob=True):
         logger.warn("Invalid catalog search term (%s)", puid)
 
 
-def get_entries_for_puid(puid, sites, glob=True):
+def get_entries_for_puid(puid, sites=None, glob=True):
     """
     Given a single puid, return all :class:`ICourseCatalogEntry` objects.
     """
@@ -1362,7 +1362,7 @@ def get_entries_for_puid(puid, sites, glob=True):
     return entries
 
 
-def get_courses_for_puid(puid, sites, glob=True):
+def get_courses_for_puid(puid, sites=None, glob=True):
     """
     Given a single puid, return all :class:`ICourseInstance` objects.
     """
