@@ -583,27 +583,25 @@ def on_course_role_removed(unused_user, event):
 
 
 @component.adapter(ICourseCatalogEntry, IObjectModifiedFromExternalEvent)
-def _update_scopes_on_course_title_change(entry, event):
+def _update_scopes_on_course_title_change(entry, unused_event):
     """
     We can always update the scopes realname here. We should
     not allow any API changes to these realnames.
     """
-    # TODO: test this
-    if event.external_value and 'title' in event.external_value:
-        if not entry.title:
-            return
-        course = ICourseInstance(entry, None)
-        if course is None:
-            return
-        course_title = entry.title
-        for scope in course.SharingScopes.values():
-            friendly_named = IFriendlyNamed(scope, None)
-            if friendly_named is None:
-                continue
-            scope_name = scope.__name__
-            new_name = course_title if scope_name == ES_PUBLIC else '%s (%s)' % (course_title, scope_name)
-            friendly_named.realname = new_name
-            notify(ObjectModifiedEvent(scope))
+    if not entry.title:
+        return
+    course = ICourseInstance(entry, None)
+    if course is None:
+        return
+    course_title = entry.title
+    for scope in course.SharingScopes.values():
+        friendly_named = IFriendlyNamed(scope, None)
+        if friendly_named is None:
+            continue
+        scope_name = scope.__name__
+        new_name = course_title if scope_name == ES_PUBLIC else '%s (%s)' % (course_title, scope_name)
+        friendly_named.realname = new_name
+        notify(ObjectModifiedEvent(scope))
 
 
 def _update_enrollment_meta(record):
