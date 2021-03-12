@@ -78,8 +78,7 @@ class TestDecorators(CourseLayerTest):
         # With course title
         entry = ICourseCatalogEntry(course)
         entry.title = u'new course title'
-        notify(ObjectModifiedFromExternalEvent(entry,
-                                               external_value={'title': entry.title}))
+        notify(ObjectModifiedFromExternalEvent(entry))
 
         # If realname set we use that
         public_scope = course.SharingScopes.get(ES_PUBLIC)
