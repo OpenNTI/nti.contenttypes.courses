@@ -24,8 +24,6 @@ from zope.securitypolicy.rolepermission import RolePermissionManager
 
 from nti.contentlibrary.interfaces import IRenderableContentPackage
 
-from nti.contenttypes.courses.common import get_course_packages
-
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
@@ -38,7 +36,6 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceScopedForum
 
 from nti.contenttypes.courses.utils import get_course_editors
 from nti.contenttypes.courses.utils import get_course_instructors
-from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import get_content_unit_courses
 
@@ -398,30 +395,13 @@ class RenderableContentPackageSupplementalACLProvider(object):
     def __init__(self, context):
         self.context = context
 
-    def _get_courses(self):
-        """
-        Get all courses and subinstances that contain this package.
-        """
-        result = set()
-        package = self.context
-        all_courses = set()
-        courses = get_content_unit_courses(package)
-        for course in courses or ():
-            if course in all_courses:
-                continue
-            course_hierarchy = get_course_hierarchy(course)
-            all_courses.update(course_hierarchy)
-            for course_instance in course_hierarchy:
-                course_packages = get_course_packages(course_instance)
-                if package in course_packages:
-                    result.add(course_instance)
-        return result
-
     @Lazy
     def __acl__(self):
         result = []
         is_published = self.context.is_published()
-        courses = self._get_courses()
+        # The index should include all parent and child courses since
+        # they share the ContentPackageBundle
+        courses = get_content_unit_courses(self.context)
         for course in courses:
             if is_published:
                 # If published, we want the whole ACL
