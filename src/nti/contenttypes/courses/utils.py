@@ -25,7 +25,7 @@ from zope.catalog.catalog import ResultSet
 
 from zope.component.hooks import getSite
 
-from zope.component.interfaces import ComponentLookupError
+from zope.interface.interfaces import ComponentLookupError
 
 from zope.container.contained import Contained
 

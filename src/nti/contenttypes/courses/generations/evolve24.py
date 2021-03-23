@@ -13,7 +13,7 @@ from zope import interface
 
 from zope.component.hooks import site as current_site
 
-from zope.component.interfaces import ISite
+from zope.interface.interfaces import ISite
 
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
