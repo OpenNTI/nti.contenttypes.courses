@@ -40,6 +40,8 @@ logger = __import__('logging').getLogger(__name__)
 @interface.implementer(ICourseContentPackageBundle)
 class CoursePersistentContentPackageBundle(PersistentContentPackageBundle):
 
+    __name__ = u'ContentPackageBundle'
+
     mime_type = mimeType = 'application/vnd.nextthought.coursecontentpackagebundle'
 
     def _is_valid_type(self, obj):
@@ -68,7 +70,7 @@ def created_content_package_bundle(course, bucket=None,
         bundle.createdTime = bundle.lastModified = 0
         # set lineage before ntiid
         bundle.__parent__ = course
-        # pylint: disable=attribute-defined-outside-init 
+        # pylint: disable=attribute-defined-outside-init
         bundle.ntiid = ntiid_factory(bundle, COURSE_BUNDLE_TYPE)
         # register w/ course and notify
         course.ContentPackageBundle = bundle
