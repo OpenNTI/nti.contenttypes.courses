@@ -9,7 +9,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import os
-import shutil
+import zipfile
 import tempfile
 
 from zope import interface
@@ -46,10 +46,25 @@ class CourseExportFiler(DirectoryFiler):
             self.path = super(CourseExportFiler, self).prepare(self.path)
 
     def asZip(self, path=None):
+        """
+        We'd prefer to use `shutil.make_archive`, but with python2.7, we cannot
+        specify the zip64 extensions without doing so manually.
+        """
         base_name = path or tempfile.mkdtemp()
         base_name = os.path.join(base_name,
                                  safe_filename(self.course.__name__))
-        if os.path.exists(base_name + ".zip"):
-            os.remove(base_name + ".zip")
-        result = shutil.make_archive(base_name, 'zip', self.path)
-        return result
+        zip_filename = base_name + ".zip"
+        if os.path.exists(zip_filename):
+            os.remove(zip_filename)
+        with zipfile.ZipFile(zip_filename,
+                             "w",
+                             zipfile.ZIP_DEFLATED,
+                             allowZip64=True) as zf:
+            for root, unused_dirnames, filenames in os.walk(self.path):
+                for name in filenames:
+                    rel_path = os.path.relpath(root, self.path)
+                    target_name = os.path.join(rel_path, name)
+                    target_name = os.path.normpath(target_name)
+                    source_name = os.path.join(root, name)
+                    zf.write(source_name, target_name)
+        return zip_filename
