@@ -113,6 +113,7 @@ from nti.dataserver.interfaces import IUser
 from nti.dataserver.users import User
 
 from nti.dataserver.users.interfaces import IFriendlyNamed
+from nti.dataserver.users.interfaces import RealnameInvalid
 
 from nti.externalization.interfaces import IObjectModifiedFromExternalEvent
 
@@ -600,7 +601,11 @@ def _update_scopes_on_course_title_change(entry, unused_event):
             continue
         scope_name = scope.__name__
         new_name = course_title if scope_name == ES_PUBLIC else '%s (%s)' % (course_title, scope_name)
-        friendly_named.realname = new_name
+        try:
+            friendly_named.realname = new_name
+        except RealnameInvalid:
+            # Most likely a public scope for a symbol-named course
+            friendly_named.realname = '%s-course' % course_title
         notify(ObjectModifiedEvent(scope))
 
 

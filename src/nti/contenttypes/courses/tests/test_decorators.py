@@ -8,6 +8,7 @@ from __future__ import absolute_import
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
 
+from hamcrest import is_
 from hamcrest import has_entry
 from hamcrest import assert_that
 from hamcrest import has_entries
@@ -76,12 +77,14 @@ class TestDecorators(CourseLayerTest):
         assert_that(ext_credit, has_entry('realname', ES_CREDIT_DEGREE))
 
         # With course title
+        public_scope = course.SharingScopes.get(ES_PUBLIC)
         entry = ICourseCatalogEntry(course)
         entry.title = u'new course title'
         notify(ObjectModifiedFromExternalEvent(entry))
+        fn = IFriendlyNamed(public_scope)
+        assert_that(fn.realname, is_(entry.title))
 
         # If realname set we use that
-        public_scope = course.SharingScopes.get(ES_PUBLIC)
         fn = IFriendlyNamed(public_scope)
         fn.realname = u'new realname'
         ext_scopes = to_external_object(course.SharingScopes)
@@ -92,3 +95,10 @@ class TestDecorators(CourseLayerTest):
         ext_credit = ext_scopes.get(ES_CREDIT_DEGREE)
         assert_that(ext_credit, has_entry('alias',
                                           u'%s (%s)' % (entry.title, ES_CREDIT_DEGREE)))
+
+        # A course could have a symbol based name - handle that case by
+        # appending on string with chars
+        entry.title = u'!'
+        notify(ObjectModifiedFromExternalEvent(entry))
+        fn = IFriendlyNamed(public_scope)
+        assert_that(fn.realname, is_('%s-course' % entry.title))
