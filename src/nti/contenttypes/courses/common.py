@@ -113,13 +113,8 @@ def get_course_editors(context, permission=Allow):
         # pylint: disable=too-many-function-args
         for prin, setting in role_manager.getPrincipalsForRole(RID_CONTENT_EDITOR):
             if setting is permission:
-                try:
-                    user = User.get_user(prin)
-                    principal = IPrincipal(user, None)
-                except (LookupError, TypeError):
-                    # lookuperror if we're not in a ds context,
-                    pass
-                else:
-                    if principal is not None:
-                        result.append(principal)
+                # XXX: We used to get the user and then convert that user
+                # into a principal. We reverted to `IPrinicpal(string_id)`
+                # for performance.
+                result.append(IPrincipal(prin))
     return result
