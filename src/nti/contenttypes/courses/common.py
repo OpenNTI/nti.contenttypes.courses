@@ -15,6 +15,8 @@ from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_TA
 
+from nti.dataserver.interfaces import IUser
+
 from nti.dataserver.users.users import User
 
 from nti.site.interfaces import IHostPolicyFolder
@@ -118,3 +120,13 @@ def get_course_editors(context, permission=Allow):
                 # for performance.
                 result.append(IPrincipal(prin))
     return result
+
+
+def get_course_editors_as_users(context, permission=Allow):
+    result = []
+    for prin in get_course_editors(context, permission=permission):
+        user = IUser(prin, None)
+        if user is not None:
+            result.append(user)
+    return result
+    return [IUser(x, None) for x in get_course_editors(context, permission=permission)]
