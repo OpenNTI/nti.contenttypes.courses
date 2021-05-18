@@ -51,6 +51,8 @@ from zope.schema import ValidationError
 
 from zope.security.interfaces import IPrincipal
 
+from zope.security.permission import Permission
+
 from zope.securitypolicy.interfaces import IRolePermissionManager
 
 from zope.site.interfaces import IFolder
@@ -146,6 +148,9 @@ NTI_COURSE_OUTLINE_NODE = u'NTICourseOutlineNode'
 # registered in ZCML:
 # from zope.security.permission import Permission
 # ACT_XXX = Permission('nti.actions.XXX')
+
+#: A permission for viewing detailed analytics on course usage
+ACT_VIEW_DETAILED_CONTENT_USAGE = Permission('nti.actions.view_detailed_content_usage')
 
 # Roles defined and used by this package
 
