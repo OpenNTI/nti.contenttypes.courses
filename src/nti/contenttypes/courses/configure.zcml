@@ -212,6 +212,10 @@
 	<include package="zope.securitypolicy" file="meta.zcml" />
 	<include package="zope.security" file="meta.zcml" />
 
+	<permission
+		id="nti.actions.view_detailed_content_usage"
+		title="View detailed content usage information" />
+	
 	<!--
 		Roles for instructors are defined globally with
 		a set of permissions, and an implementation of IPrincipalRoleMap
@@ -233,7 +237,15 @@
 		id="nti.roles.course_content_editor"
 		title="A course content admin"
 		description="This role should have full edit permissions
-					on course objects." />
+			     on course objects." />
+
+	<grant
+		role="nti.roles.course_instructor"
+		permission="nti.actions.view_detailed_content_usage" />
+
+	<grant
+		role="nti.roles.course_ta"
+		permission="nti.actions.view_detailed_content_usage" />
 
 	<!-- ACLs -->
 	<adapter factory=".acl.CourseBoardACLProvider" />
