@@ -91,6 +91,8 @@ class _AbstractCourseCatalogMixin(object):
 
     __name__ = u'CourseCatalog'
 
+    anonymously_accessible = False
+
     @LazyOnClass
     def __acl__(self):
         # Got to be here after the components are registered
