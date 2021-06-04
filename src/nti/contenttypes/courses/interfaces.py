@@ -742,6 +742,11 @@ class ICourseCatalog(interface.Interface):
     to query up the tree for additional course catalog entries.
     """
 
+    anonymously_accessible = Bool(title=u"Anonymously accessible",
+                                  description=u"Whether the course catalog if available to unauthenticated users",
+                                  required=False,
+                                  default=False)
+
     def isEmpty():
         """
         Return if this catalog is empty. Does not take the site hierarchy into
