@@ -37,6 +37,7 @@
 
 	<ext:registerAutoPackageIO
 		root_interfaces=".interfaces.ICatalogFamily
+						 .interfaces.ICourseCatalog
 						 .interfaces.ICourseInstance
 						 .interfaces.ICourseOutlineNode
 						 .interfaces.ICourseCatalogEntry
@@ -215,7 +216,7 @@
 	<permission
 		id="nti.actions.view_detailed_content_usage"
 		title="View detailed content usage information" />
-	
+
 	<!--
 		Roles for instructors are defined globally with
 		a set of permissions, and an implementation of IPrincipalRoleMap
