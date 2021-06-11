@@ -120,6 +120,7 @@ class TestCatalog(CourseLayerTest):
         assert_that(ext_obj,
                     has_entries('Last Modified', not_none(),
                                 'CreatedTime', not_none(),
+                                'MimeType', 'application/vnd.nextthought.courses.coursecatalogfolder',
                                 'anonymously_accessible', False))
         assert_that(ext_obj,
                     does_not(has_items('level1', 'level2')))

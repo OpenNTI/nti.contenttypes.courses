@@ -90,6 +90,7 @@ class _AbstractCourseCatalogMixin(object):
     """
 
     __name__ = u'CourseCatalog'
+    mime_type = mimeType = 'application/vnd.nextthought.courses.coursecatalogfolder'
 
     anonymously_accessible = False
 
