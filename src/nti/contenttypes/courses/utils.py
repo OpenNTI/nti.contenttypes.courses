@@ -124,6 +124,8 @@ from nti.ntiids.ntiids import get_parts
 
 from nti.site.hostpolicy import get_host_site
 
+from nti.site.localutility import queryNextUtility
+
 from nti.site.site import get_component_hierarchy_names
 
 from nti.site.utils import unregisterUtility
@@ -1684,6 +1686,20 @@ class CourseCatalogEntryFilterUtility(object):
         else:
             operator = catalog.family.IF.intersection
         return operator(start_exclude_set, end_exclude_set)
+
+
+def is_catalog_anonymously_accessible():
+    """
+    Returns whether the current ICourseCatalog or any parent ICourseCatalog
+    is anonymously_accessible. If any catalog is anonymously_accessible, we
+    return True.
+    """
+    catalog_folder = component.getUtility(ICourseCatalog)
+    while catalog_folder is not None:
+        if catalog_folder.anonymously_accessible:
+            return True
+        catalog_folder = queryNextUtility(catalog_folder, ICourseCatalog)
+    return False
 
 
 import zope.deferredimport

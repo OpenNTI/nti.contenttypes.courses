@@ -25,6 +25,7 @@ from zope.securitypolicy.rolepermission import RolePermissionManager
 from nti.contentlibrary.interfaces import IRenderableContentPackage
 
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
+from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseOutlineNode
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -200,6 +201,13 @@ class CourseCatalogEntryACLProvider(object):
                     acl.append(ace_allowing(IPrincipal(AUTHENTICATED_GROUP_NAME),
                                             (ACT_CREATE, ACT_READ),
                                             CourseCatalogEntryACLProvider))
+                    # Anonymously viewable if folder is configured for it
+                    catalog_folder = find_interface(cce, ICourseCatalog, strict=False)
+                    if catalog_folder is not None and catalog_folder.anonymously_accessible:
+                        unauth_prin = component.getUtility(IUnauthenticatedPrincipal)
+                        acl.append(ace_allowing(unauth_prin,
+                                                ACT_READ,
+                                                CourseCatalogEntryACLProvider))
                 else:
                     # This catalog entry is setup to restrict enrollment visibility to
                     # a set of entities.
