@@ -39,6 +39,7 @@
 		root_interfaces=".interfaces.ICatalogFamily
 						 .interfaces.ICourseCatalog
 						 .interfaces.ICourseInstance
+						 .interfaces.ICourseSeatLimit
 						 .interfaces.ICourseOutlineNode
 						 .interfaces.ICourseCatalogEntry
 						 .interfaces.ICourseTabPreferences

@@ -1414,6 +1414,7 @@ def get_courses_for_tag(tag, sites=(), intids=None):
         if course is not None:
             courses.add(course)
     result = set()
+    # FIXME: remove this
     # CourseSubinstances will inherit the parent's tags unless they are
     # explicitly set; therefore, we mimic that behavior here.
     for course in courses:

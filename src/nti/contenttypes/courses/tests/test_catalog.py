@@ -9,6 +9,7 @@ from __future__ import absolute_import
 # pylint: disable=W0212,R0904
 
 from hamcrest import is_
+from hamcrest import none
 from hamcrest import is_not
 from hamcrest import not_none
 from hamcrest import has_items
@@ -28,6 +29,8 @@ from nti.contenttypes.courses.catalog import CourseCatalogEntry
 from nti.contenttypes.courses.catalog import CourseCatalogFolder
 from nti.contenttypes.courses.catalog import GlobalCourseCatalog
 
+from nti.contenttypes.courses.courses import CourseSeatLimit
+from nti.contenttypes.courses.courses import ContentCourseInstance
 from nti.contenttypes.courses.courses import CourseAdministrativeLevel
 
 from nti.contenttypes.courses.legacy_catalog import CourseCatalogLegacyEntry
@@ -42,6 +45,8 @@ from nti.contenttypes.courses.tests import CourseLayerTest
 from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 
 from nti.externalization.externalization import to_external_object
+
+from nti.externalization.internalization import update_from_external_object
 
 
 class TestCatalog(CourseLayerTest):
@@ -124,3 +129,46 @@ class TestCatalog(CourseLayerTest):
                                 'anonymously_accessible', False))
         assert_that(ext_obj,
                     does_not(has_items('level1', 'level2')))
+        
+    def test_entry_ext(self):
+        course = ContentCourseInstance()
+        cce = CourseCatalogLegacyEntry()
+        cce.ProviderUniqueID = u'1234'
+        cce.title = u'course title'
+        cce.__parent__ = course
+        cce_ext = to_external_object(cce)
+        seat_limit_ext = {'MimeType': CourseSeatLimit.mime_type,
+                          'max_seats': 1}
+        
+        source_ext_obj = {}
+        source_ext_obj['MimeType'] = cce_ext['MimeType']
+        source_ext_obj['seat_limit'] = seat_limit_ext
+        
+        ext_obj = dict(source_ext_obj)
+        update_from_external_object(cce, ext_obj, require_updater=True)
+        
+        cce_ext = to_external_object(cce)
+        seat_limit_ext = cce_ext.get('seat_limit')
+        assert_that(seat_limit_ext, has_entries('hard_limit', True,
+                                                'max_seats', 1,
+                                                'used_seats', 0))
+        
+        # Remove limit
+        ext_obj = dict(source_ext_obj)
+        ext_obj['seat_limit']['max_seats'] = None
+        update_from_external_object(cce, ext_obj, require_updater=True)
+        
+        cce_ext = to_external_object(cce)
+        seat_limit_ext = cce_ext.get('seat_limit')
+        assert_that(seat_limit_ext, has_entries('hard_limit', True,
+                                                'max_seats', none(),
+                                                'used_seats', 0))
+
+        # Remove seat limit obj
+        ext_obj = dict(source_ext_obj)
+        ext_obj['seat_limit'] = None
+        update_from_external_object(cce, ext_obj, require_updater=True)
+        
+        cce_ext = to_external_object(cce)
+        seat_limit_ext = cce_ext.get('seat_limit')
+        assert_that(seat_limit_ext, none())
