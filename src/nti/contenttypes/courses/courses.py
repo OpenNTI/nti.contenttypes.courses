@@ -24,6 +24,9 @@ from nti.contenttypes.courses import MessageFactory as _
 
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 
+from nti.contenttypes.courses.interfaces import ICourseSeatLimit
+from nti.contenttypes.courses.interfaces import ICourseEnrollments
+
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstances
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
@@ -38,9 +41,18 @@ from nti.contenttypes.courses.outlines import CourseOutline
 from nti.contenttypes.courses.sharing import CourseInstanceSharingScopes
 from nti.contenttypes.courses.sharing import CourseSubInstanceSharingScopes
 
+from nti.dataserver.seat_limit import AbstractSeatLimit
+
+from nti.dublincore.time_mixins import PersistentCreatedAndModifiedTimeObject
+
+from nti.externalization.representation import WithRepr
+
 from nti.ntiids.oids import to_external_ntiid_oid
 
 from nti.schema.fieldproperty import createDirectFieldProperties
+
+from nti.traversal.traversal import find_interface
+
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -50,9 +62,32 @@ class CourseAdministrativeLevel(CaseInsensitiveCheckingLastModifiedBTreeFolder):
     mime_type = mimeType = 'application/vnd.nextthought.courses.coursedaministrativelevel'
 
 
+@WithRepr
+@interface.implementer(ICourseSeatLimit)
+class CourseSeatLimit(AbstractSeatLimit, 
+                      PersistentCreatedAndModifiedTimeObject):
+    
+    mime_type = mimeType = 'application/vnd.nextthought.courses.seatlimit'
+    
+    hard_limit = True
+    
+    @property
+    def used_seats(self):
+        course = find_interface(self, ICourseInstance, strict=False)
+        enrollments = ICourseEnrollments(course, None)
+        if enrollments is not None:
+            return enrollments.count_enrollments()
+        return 0
+
+    def can_user_enroll(self):
+        return not self.max_seats \
+            or self.used_seats < self.max_seats
+
+
 @interface.implementer(ICourseSubInstances)
 class CourseSubInstances(CaseInsensitiveCheckingLastModifiedBTreeContainer):
     pass
+
 
 @interface.implementer(ICourseInstance)
 class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder, Base):

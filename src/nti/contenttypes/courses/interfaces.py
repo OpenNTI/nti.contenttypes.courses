@@ -87,6 +87,7 @@ from nti.contenttypes.reports.interfaces import IReportContext
 from nti.coremetadata.interfaces import IDeletedObjectPlaceholder
 
 from nti.dataserver.interfaces import ICommunity
+from nti.dataserver.interfaces import ISeatLimit
 from nti.dataserver.interfaces import InvalidData
 from nti.dataserver.interfaces import ILastModified
 from nti.dataserver.interfaces import IGrantAccessException
@@ -929,6 +930,15 @@ class MultiWordTag(PlainTextLine):
         return super(MultiWordTag, self).fromUnicode(value.lower())
 
 
+class ICourseSeatLimit(ISeatLimit):
+    
+    def can_user_enroll():
+        """
+        Returns a bool on whether a user can enroll in this course
+        due to seat limit constraints.
+        """
+
+
 class ICourseCatalogEntry(ICatalogFamily,
                           ILastModified,
                           IShouldHaveTraversablePath,
@@ -994,6 +1004,10 @@ class ICourseCatalogEntry(ICatalogFamily,
                                           value_type=ValidTextLine(title=u'The entity ntiid'),
                                           required=False,
                                           default=())
+    
+    seat_limit = Object(ICourseSeatLimit,  
+                        title=u"The course seat limit",
+                        required=False)
 
     def isCourseCurrentlyActive():
         """
@@ -1317,6 +1331,11 @@ class CourseAlreadyExistsException(ValidationError):
 
 class OpenEnrollmentNotAllowedException(ValidationError):
     __doc__ = _(u"Open Enrollment is not allowed.")
+    i18n_message = __doc__
+    
+    
+class CourseSeatLimitReachedException(ValidationError):
+    __doc__ = _(u'The course enrollment limit has been reached.')
     i18n_message = __doc__
 
 

@@ -49,3 +49,4 @@ class TestExternal(CourseLayerTest):
         assert_that(ext_obj,
                     has_entry(ITEMS,
                               contains_inanyorder('course1', 'course2', 'course3')))
+        
