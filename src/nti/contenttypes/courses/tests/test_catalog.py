@@ -31,6 +31,7 @@ from nti.contenttypes.courses.catalog import GlobalCourseCatalog
 
 from nti.contenttypes.courses.courses import CourseSeatLimit
 from nti.contenttypes.courses.courses import ContentCourseInstance
+from nti.contenttypes.courses.courses import ContentCourseSubInstance
 from nti.contenttypes.courses.courses import CourseAdministrativeLevel
 
 from nti.contenttypes.courses.legacy_catalog import CourseCatalogLegacyEntry
@@ -114,7 +115,7 @@ class TestCatalog(CourseLayerTest):
         assert_that(lcce, has_property('Preview', is_(False)))
 
         del lcce.StartDate
-        assert_that(lcce, has_property('Preview', is_(True)))
+        assert_that(lcce, has_property('Preview', is_(True))) 
 
     @WithMockDSTrans
     def test_ext(self):
@@ -132,14 +133,21 @@ class TestCatalog(CourseLayerTest):
         
     def test_entry_ext(self):
         course = ContentCourseInstance()
-        cce = CourseCatalogLegacyEntry()
+        cce = ICourseCatalogEntry(course)
         cce.ProviderUniqueID = u'1234'
         cce.title = u'course title'
         cce.__parent__ = course
         cce_ext = to_external_object(cce)
+        
+        # Subinstance inherits from parent
+        subinst = ContentCourseSubInstance()
+        course.SubInstances[u'child'] = subinst
+        sub_entry = ICourseCatalogEntry(subinst)
+        assert_that(sub_entry.seat_limit, none())
+        
+        # Set on parent course
         seat_limit_ext = {'MimeType': CourseSeatLimit.mime_type,
                           'max_seats': 1}
-        
         source_ext_obj = {}
         source_ext_obj['MimeType'] = cce_ext['MimeType']
         source_ext_obj['seat_limit'] = seat_limit_ext
@@ -152,6 +160,8 @@ class TestCatalog(CourseLayerTest):
         assert_that(seat_limit_ext, has_entries('hard_limit', True,
                                                 'max_seats', 1,
                                                 'used_seats', 0))
+        sub_entry.seat_limit
+        assert_that(sub_entry.seat_limit, is_(cce.seat_limit))
         
         # Remove limit
         ext_obj = dict(source_ext_obj)
@@ -163,6 +173,22 @@ class TestCatalog(CourseLayerTest):
         assert_that(seat_limit_ext, has_entries('hard_limit', True,
                                                 'max_seats', none(),
                                                 'used_seats', 0))
+        
+        assert_that(sub_entry.seat_limit, is_(cce.seat_limit))
+        cce_ext = to_external_object(sub_entry)
+        seat_limit_ext = cce_ext.get('seat_limit')
+        assert_that(seat_limit_ext, has_entries('hard_limit', True,
+                                                'max_seats', none(),
+                                                'used_seats', 0))
+
+        # Update sub entry diversges
+        seat_limit_ext2 = {'MimeType': CourseSeatLimit.mime_type,
+                           'max_seats': 10}
+        ext_obj = dict(source_ext_obj)
+        ext_obj['seat_limit'] = seat_limit_ext2
+        update_from_external_object(sub_entry, ext_obj, require_updater=True)
+        assert_that(sub_entry.seat_limit.max_seats, is_(10))
+        assert_that(cce.seat_limit.max_seats, none())
 
         # Remove seat limit obj
         ext_obj = dict(source_ext_obj)
@@ -172,3 +198,11 @@ class TestCatalog(CourseLayerTest):
         cce_ext = to_external_object(cce)
         seat_limit_ext = cce_ext.get('seat_limit')
         assert_that(seat_limit_ext, none())
+        
+        assert_that(sub_entry.seat_limit, not_none())
+        cce_ext = to_external_object(sub_entry)
+        seat_limit_ext = cce_ext.get('seat_limit')
+        assert_that(seat_limit_ext, has_entries('hard_limit', True,
+                                                'max_seats', 10,
+                                                'used_seats', 0))
+        
