@@ -10,10 +10,8 @@ from __future__ import absolute_import
 
 from zope import interface
 
-from nti.contenttypes.courses.interfaces import ICourseAwardedCredit
 from nti.contenttypes.courses.interfaces import ICourseAwardableCredit
 
-from nti.contenttypes.credit.credit import AwardedCredit
 from nti.contenttypes.credit.credit import AwardableCredit
 
 from nti.externalization.representation import WithRepr
@@ -38,8 +36,10 @@ class CourseAwardableCredit(AwardableCredit):
         SchemaConfigured.__init__(self, *args, **kwargs)
 
 
-@WithRepr
-@interface.implementer(ICourseAwardedCredit)
-class CourseAwardedCredit(AwardedCredit):
+import zope.deferredimport
+zope.deferredimport.initialize()
 
-    mimeType = mime_type = "application/vnd.nextthought.credit.courseawardedcredit"
+zope.deferredimport.deprecatedFrom(
+    "moved to nti.app.products.courseware.credit",
+    "nti.app.products.courseware.credit",
+    "CourseAwardedCredit")
