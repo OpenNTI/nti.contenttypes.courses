@@ -82,6 +82,10 @@ class CourseSeatLimit(AbstractSeatLimit,
     def can_user_enroll(self):
         return not self.max_seats \
             or self.used_seats < self.max_seats
+            
+    def is_enrollment_valid(self):
+        return not self.max_seats \
+            or self.used_seats <= self.max_seats
 
 
 @interface.implementer(ICourseSubInstances)
