@@ -25,7 +25,6 @@ from nti.contenttypes.courses import MessageFactory as _
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 
 from nti.contenttypes.courses.interfaces import ICourseSeatLimit
-from nti.contenttypes.courses.interfaces import ICourseEnrollments
 
 from nti.contenttypes.courses.interfaces import ICourseInstance
 from nti.contenttypes.courses.interfaces import ICourseSubInstances
@@ -51,8 +50,6 @@ from nti.ntiids.oids import to_external_ntiid_oid
 
 from nti.schema.fieldproperty import createDirectFieldProperties
 
-from nti.traversal.traversal import find_interface
-
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -70,23 +67,8 @@ class CourseSeatLimit(AbstractSeatLimit,
     mime_type = mimeType = 'application/vnd.nextthought.courses.seatlimit'
     
     hard_limit = True
+    used_seats = 0
     
-    @property
-    def used_seats(self):
-        course = find_interface(self, ICourseInstance, strict=False)
-        enrollments = ICourseEnrollments(course, None)
-        if enrollments is not None:
-            return enrollments.count_enrollments()
-        return 0
-
-    def can_user_enroll(self):
-        return not self.max_seats \
-            or self.used_seats < self.max_seats
-            
-    def is_enrollment_valid(self):
-        return not self.max_seats \
-            or self.used_seats <= self.max_seats
-
 
 @interface.implementer(ICourseSubInstances)
 class CourseSubInstances(CaseInsensitiveCheckingLastModifiedBTreeContainer):

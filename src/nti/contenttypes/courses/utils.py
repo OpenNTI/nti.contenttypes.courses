@@ -1703,6 +1703,29 @@ def is_catalog_anonymously_accessible():
     return False
 
 
+def _used_seats(course):
+    enrollments = ICourseEnrollments(course, None)
+    if enrollments is not None:
+        return enrollments.count_enrollments()
+    return 0
+
+
+def can_user_enroll(seat_limit, course):
+    if seat_limit is None:
+        return True
+    course = ICourseInstance(course, course)
+    return not seat_limit.max_seats \
+        or _used_seats(course) < seat_limit.max_seats
+        
+        
+def is_enrollment_valid(seat_limit, course):
+    if seat_limit is None:
+        return True
+    course = ICourseInstance(course, course)
+    return not seat_limit.max_seats \
+        or _used_seats(course) <= seat_limit.max_seats
+
+
 import zope.deferredimport
 zope.deferredimport.initialize()
 zope.deferredimport.deprecatedFrom(

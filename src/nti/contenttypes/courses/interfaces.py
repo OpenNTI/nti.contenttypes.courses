@@ -931,19 +931,8 @@ class MultiWordTag(PlainTextLine):
 
 
 class ICourseSeatLimit(ISeatLimit):
+    pass
     
-    def can_user_enroll():
-        """
-        Returns a bool on whether a user can enroll in this course
-        due to seat limit constraints.
-        """
-        
-    def is_enrollment_valid():
-        """
-        Returns a bool on whether a user *already enrolled* is valid
-        based on seat limit constraints.
-        """
-
 
 class ICourseCatalogEntry(ICatalogFamily,
                           ILastModified,
