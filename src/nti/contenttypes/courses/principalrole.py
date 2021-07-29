@@ -26,6 +26,7 @@ from nti.dataserver.authorization import ACT_PIN
 from nti.dataserver.authorization import ACT_READ
 from nti.dataserver.authorization import ACT_UPDATE
 from nti.dataserver.authorization import ACT_CONTENT_EDIT
+from nti.dataserver.authorization import ROLE_ADMIN
 from nti.dataserver.authorization import ROLE_CONTENT_ADMIN
 
 from nti.contenttypes.courses.interfaces import RID_TA
@@ -96,11 +97,21 @@ class CourseInstancePrincipalRoleMap(object):
 @interface.implementer(ICourseRolePermissionManager)
 class CourseRolePermissionManager(AnnotationRolePermissionManager):
 
+    def __init__(self, context):
+        super(CourseRolePermissionManager, self).__init__(context)
+        # We must call this here so that permissions are updated if the state changes
+        self.initialize()
+
     def initialize(self):
         if not self.map or not self.map._byrow:  # pylint: disable=protected-access
             # Initialize with perms for our global content admin.
             for perm in (ACT_READ, ACT_CONTENT_EDIT, ACT_UPDATE):
                 self.grantPermissionToRole(perm.id, ROLE_CONTENT_ADMIN.id)
+
+            # Initialize with perms for NT admins, site admins will pick up
+            # access via the site.
+            for permission in (ACT_READ,):
+                self.grantPermissionToRole(permission.id, ROLE_ADMIN.id)
 
     def getRolesForPermission(self, perm):
         #: Ensure our instructors/TAs have PIN access under this context
