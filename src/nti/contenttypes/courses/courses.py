@@ -66,6 +66,7 @@ class CourseSeatLimit(AbstractSeatLimit,
     
     mime_type = mimeType = 'application/vnd.nextthought.courses.seatlimit'
     
+    __parent__ = None
     hard_limit = True
     used_seats = 0
     
