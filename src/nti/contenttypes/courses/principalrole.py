@@ -97,11 +97,6 @@ class CourseInstancePrincipalRoleMap(object):
 @interface.implementer(ICourseRolePermissionManager)
 class CourseRolePermissionManager(AnnotationRolePermissionManager):
 
-    def __init__(self, context):
-        super(CourseRolePermissionManager, self).__init__(context)
-        # We must call this here so that permissions are updated if the state changes
-        self.initialize()
-
     def initialize(self):
         if not self.map or not self.map._byrow:  # pylint: disable=protected-access
             # Initialize with perms for our global content admin.

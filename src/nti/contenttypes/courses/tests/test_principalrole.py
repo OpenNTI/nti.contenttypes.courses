@@ -129,6 +129,7 @@ class TestCourseRolePermissionManager(CourseLayerTest):
         super(TestCourseRolePermissionManager, self).setUp()
         self.course = _PhonyCourse()
         self.rolemap = CourseRolePermissionManager(self.course)
+        self.rolemap.initialize()
 
     @WithMockDSTrans
     def test_permissions(self):

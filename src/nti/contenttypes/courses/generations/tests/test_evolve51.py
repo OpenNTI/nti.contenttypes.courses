@@ -37,6 +37,7 @@ class TestEvolve(DataserverLayerTest):
 
         # Place in state of course prior to changing CourseRolePermissionManager
         course_role_manager = ICourseRolePermissionManager(course)
+        course_role_manager.initialize()
         course_role_manager.unsetPermissionFromRole(ACT_READ.id, ROLE_ADMIN.id)
 
         # Ensure any other persisted permissions are preserved
@@ -62,6 +63,7 @@ class TestEvolve(DataserverLayerTest):
 
         # Place in state of course prior to changing CourseRolePermissionManager
         course_role_manager = ICourseRolePermissionManager(course)
+        course_role_manager.initialize()
 
         roles_and_perms = course_role_manager.getRolesAndPermissions()
 
