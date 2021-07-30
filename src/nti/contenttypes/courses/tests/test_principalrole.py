@@ -7,7 +7,7 @@ from __future__ import absolute_import
 
 # disable: accessing protected members, too many methods
 # pylint: disable=W0212,R0904
-
+from hamcrest import has_item
 from hamcrest import is_
 from hamcrest import empty
 from hamcrest import is_in
@@ -18,6 +18,8 @@ from nti.testing.matchers import validly_provides
 
 import unittest
 
+from zope import interface
+from zope.annotation import IAttributeAnnotatable
 from zope.securitypolicy.interfaces import Allow
 from zope.securitypolicy.interfaces import Unset
 from zope.securitypolicy.interfaces import IPrincipalRoleMap
@@ -26,8 +28,16 @@ from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 
 from nti.contenttypes.courses.principalrole import CourseInstancePrincipalRoleMap
+from nti.contenttypes.courses.principalrole import CourseRolePermissionManager
 
 from nti.contenttypes.courses.utils import get_instructors_in_roles
+
+from nti.contenttypes.courses.tests import CourseLayerTest
+
+from nti.dataserver.authorization import ACT_READ
+from nti.dataserver.authorization import ROLE_ADMIN
+
+from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
 
 
 class _PhonyPrincipal(object):
@@ -38,6 +48,7 @@ class _PhonyPrincipal(object):
         self.id = pid
 
 
+@interface.implementer(IAttributeAnnotatable)
 class _PhonyCourse(object):
 
     instructors = []
@@ -107,3 +118,29 @@ class TestCourseInstancePrincipalRoleMap(unittest.TestCase):
 
         assert_that(self.rolemap.getPrincipalsAndRoles(),
                     contains((RID_INSTRUCTOR, 'foo', Allow)))
+
+
+class TestCourseRolePermissionManager(CourseLayerTest):
+
+    course = None
+    rolemap = None
+
+    def setUp(self):
+        super(TestCourseRolePermissionManager, self).setUp()
+        self.course = _PhonyCourse()
+        self.rolemap = CourseRolePermissionManager(self.course)
+        self.rolemap.initialize()
+
+    @WithMockDSTrans
+    def test_permissions(self):
+        assert_that(self.rolemap.getRolesAndPermissions(),
+                    has_item((ACT_READ.id, ROLE_ADMIN.id, Allow)))
+
+        assert_that(self.rolemap.getPermissionsForRole(ROLE_ADMIN.id),
+                    has_item((ACT_READ.id, Allow)))
+
+        assert_that(self.rolemap.getRolesForPermission(ACT_READ.id),
+                    has_item((ROLE_ADMIN.id, Allow)))
+
+        assert_that(self.rolemap.getSetting(ACT_READ.id, ROLE_ADMIN.id),
+                    Allow)

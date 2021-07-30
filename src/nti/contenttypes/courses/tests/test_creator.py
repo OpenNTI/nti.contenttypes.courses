@@ -27,6 +27,7 @@ from nti.contenttypes.courses.creator import create_course
 from nti.contenttypes.courses.creator import make_directories
 from nti.contenttypes.courses.creator import install_admin_level
 from nti.contenttypes.courses.creator import create_course_subinstance
+from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 
 from nti.contenttypes.courses.tests import mock
 from nti.contenttypes.courses.tests import CourseLayerTest
@@ -96,6 +97,9 @@ class TestCreator(CourseLayerTest):
             assert_that(course,
                         has_property('root', has_property('absolute_path', is_(output))))
             assert_that(os.path.exists(output), is_(True))
+
+            entry = ICourseCatalogEntry(course)
+            assert_that(entry.createdTime, is_not(0))
 
             # not writeout
             output = os.path.join(courses_path, 'Bleach/Bankai')

@@ -171,6 +171,7 @@ def _create_bundle_ntiid(bundle, ntiid_type):
 
 def _prepare_entry(course):
     entry = ICourseCatalogEntry(course)
+    entry.createdTime = time.time()
     intids = component.queryUtility(IIntIds)
     if intids is not None and intids.queryId(entry) is None:
         addIntId(entry)
