@@ -329,11 +329,7 @@ class CourseCatalogLegacyEntryUpdater(_CourseCatalogEntryUpdater):
         self.parsePreview(parsed)
         if parsed.get('ProviderUniqueID', None):
             parsed['ProviderUniqueID'] = parsed['ProviderUniqueID'].strip()
-        result = super(CourseCatalogLegacyEntryUpdater, self).updateFromExternalObject(parsed, *args, **kwargs)
-        if parsed.get('seat_limit'):
-            context = self._ext_replacement()
-            context.seat_limit.__parent__ = context
-        return result
+        return super(CourseCatalogLegacyEntryUpdater, self).updateFromExternalObject(parsed, *args, **kwargs)
 
 
 @component.adapter(ICourseAwardableCredit)

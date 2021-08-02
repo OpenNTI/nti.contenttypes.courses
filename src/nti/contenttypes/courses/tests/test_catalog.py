@@ -174,7 +174,6 @@ class TestCatalog(CourseLayerTest):
         assert_that(seat_limit_ext, has_entries('hard_limit', True,
                                                 'max_seats', 1,
                                                 'used_seats', 0))
-        sub_entry.seat_limit
         assert_that(sub_entry.seat_limit, is_(cce.seat_limit))
         
         # Enroll
