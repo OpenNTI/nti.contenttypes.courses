@@ -10,6 +10,8 @@ from __future__ import absolute_import
 
 from ExtensionClass import Base
 
+from Acquisition import Explicit
+
 from zope import interface
 
 from zope import lifecycleevent
@@ -61,7 +63,8 @@ class CourseAdministrativeLevel(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 
 @WithRepr
 @interface.implementer(ICourseSeatLimit)
-class CourseSeatLimit(AbstractSeatLimit, 
+class CourseSeatLimit(Explicit,
+                      AbstractSeatLimit, 
                       PersistentCreatedAndModifiedTimeObject):
     
     mime_type = mimeType = 'application/vnd.nextthought.courses.seatlimit'

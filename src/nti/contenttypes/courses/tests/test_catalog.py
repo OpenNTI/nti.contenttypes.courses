@@ -40,7 +40,12 @@ from nti.contenttypes.courses.legacy_catalog import _CourseSubInstanceCatalogLeg
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseCatalogEntry
 from nti.contenttypes.courses.interfaces import IGlobalCourseCatalog
+from nti.contenttypes.courses.interfaces import ICourseEnrollmentManager
 
+from nti.contenttypes.courses.utils import _used_seats
+from nti.contenttypes.courses.utils import can_user_enroll
+
+from nti.contenttypes.courses.tests import MockPrincipal
 from nti.contenttypes.courses.tests import CourseLayerTest
 
 from nti.dataserver.tests.mock_dataserver import WithMockDSTrans
@@ -131,8 +136,16 @@ class TestCatalog(CourseLayerTest):
         assert_that(ext_obj,
                     does_not(has_items('level1', 'level2')))
         
+    @WithMockDSTrans
     def test_entry_ext(self):
+        prin1 = MockPrincipal()
+        self.ds.root[prin1.id] = prin1
+        admin = CourseAdministrativeLevel()
+        self.ds.root[u'admin'] = admin
+        
         course = ContentCourseInstance()
+        admin['course'] = course
+        course_enrollment_manager = ICourseEnrollmentManager(course)
         cce = ICourseCatalogEntry(course)
         cce.ProviderUniqueID = u'1234'
         cce.title = u'course title'
@@ -141,6 +154,7 @@ class TestCatalog(CourseLayerTest):
         
         # Subinstance inherits from parent
         subinst = ContentCourseSubInstance()
+        subinst_enrollment_manager = ICourseEnrollmentManager(subinst)
         course.SubInstances[u'child'] = subinst
         sub_entry = ICourseCatalogEntry(subinst)
         assert_that(sub_entry.seat_limit, none())
@@ -162,7 +176,29 @@ class TestCatalog(CourseLayerTest):
                                                 'used_seats', 0))
         sub_entry.seat_limit
         assert_that(sub_entry.seat_limit, is_(cce.seat_limit))
+        # FIXME why we need this
+        cce.seat_limit.__parent__ = cce
         
+        # Enroll
+        course_enrollment_manager.enroll(prin1)
+        assert_that(_used_seats(cce.seat_limit), is_(1))
+        assert_that(_used_seats(sub_entry.seat_limit), is_(0))
+        assert_that(can_user_enroll(cce.seat_limit), is_(False))
+        assert_that(can_user_enroll(sub_entry.seat_limit), is_(True))
+        
+        course_enrollment_manager.drop(prin1)
+        subinst_enrollment_manager.enroll(prin1)
+        assert_that(_used_seats(cce.seat_limit), is_(0))
+        assert_that(_used_seats(sub_entry.seat_limit), is_(1))
+        assert_that(can_user_enroll(cce.seat_limit), is_(True))
+        assert_that(can_user_enroll(sub_entry.seat_limit), is_(False))
+        
+        course_enrollment_manager.enroll(prin1)
+        assert_that(_used_seats(cce.seat_limit), is_(1))
+        assert_that(_used_seats(sub_entry.seat_limit), is_(1))
+        assert_that(can_user_enroll(cce.seat_limit), is_(False))
+        assert_that(can_user_enroll(sub_entry.seat_limit), is_(False))
+
         # Remove limit
         ext_obj = dict(source_ext_obj)
         ext_obj['seat_limit']['max_seats'] = None
@@ -181,7 +217,7 @@ class TestCatalog(CourseLayerTest):
                                                 'max_seats', none(),
                                                 'used_seats', 0))
 
-        # Update sub entry diversges
+        # Update sub entry diverges
         seat_limit_ext2 = {'MimeType': CourseSeatLimit.mime_type,
                            'max_seats': 10}
         ext_obj = dict(source_ext_obj)

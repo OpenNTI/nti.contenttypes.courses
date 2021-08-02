@@ -1703,27 +1703,28 @@ def is_catalog_anonymously_accessible():
     return False
 
 
-def _used_seats(course):
+def _used_seats(seat_limit):
+    # Used seats is obtained via the course in the lineage. With secion
+    # courses, this works via acquisition.
+    course = find_interface(seat_limit, ICourseInstance, strict=False)
     enrollments = ICourseEnrollments(course, None)
     if enrollments is not None:
         return enrollments.count_enrollments()
     return 0
 
 
-def can_user_enroll(seat_limit, course):
+def can_user_enroll(seat_limit):
     if seat_limit is None:
         return True
-    course = ICourseInstance(course, course)
     return not seat_limit.max_seats \
-        or _used_seats(course) < seat_limit.max_seats
+        or _used_seats(seat_limit) < seat_limit.max_seats
         
         
-def is_enrollment_valid(seat_limit, course):
+def is_enrollment_valid(seat_limit):
     if seat_limit is None:
         return True
-    course = ICourseInstance(course, course)
     return not seat_limit.max_seats \
-        or _used_seats(course) <= seat_limit.max_seats
+        or _used_seats(seat_limit) <= seat_limit.max_seats
 
 
 import zope.deferredimport
