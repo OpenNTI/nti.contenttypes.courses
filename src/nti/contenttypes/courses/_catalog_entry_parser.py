@@ -75,10 +75,6 @@ def fill_entry_from_legacy_json(catalog_entry, info_json_dict, base_href='/',
 
             instructors.append(instructor)
         catalog_entry.Instructors = tuple(instructors)
-        
-    if      catalog_entry.seat_limit \
-        and catalog_entry.seat_limit.__parent__ is None:
-        catalog_entry.seat_limit.__parent__ = catalog_entry
 
     return catalog_entry
 

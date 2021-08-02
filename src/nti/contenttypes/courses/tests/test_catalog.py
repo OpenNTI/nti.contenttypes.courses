@@ -176,8 +176,6 @@ class TestCatalog(CourseLayerTest):
                                                 'used_seats', 0))
         sub_entry.seat_limit
         assert_that(sub_entry.seat_limit, is_(cce.seat_limit))
-        # FIXME why we need this
-        cce.seat_limit.__parent__ = cce
         
         # Enroll
         course_enrollment_manager.enroll(prin1)
