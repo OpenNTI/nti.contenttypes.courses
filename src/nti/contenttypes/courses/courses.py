@@ -8,9 +8,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import absolute_import
 
-from ExtensionClass import Base
-
 from Acquisition import Explicit
+
+from Persistence import Persistent
 
 from zope import interface
 
@@ -63,9 +63,10 @@ class CourseAdministrativeLevel(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 
 @WithRepr
 @interface.implementer(ICourseSeatLimit)
-class CourseSeatLimit(Explicit,
-                      AbstractSeatLimit, 
-                      PersistentCreatedAndModifiedTimeObject):
+class CourseSeatLimit(AbstractSeatLimit, 
+                      PersistentCreatedAndModifiedTimeObject,
+                      Persistent,
+                      Explicit):
     
     mime_type = mimeType = 'application/vnd.nextthought.courses.seatlimit'
     
@@ -80,7 +81,7 @@ class CourseSubInstances(CaseInsensitiveCheckingLastModifiedBTreeContainer):
 
 
 @interface.implementer(ICourseInstance)
-class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder, Base):
+class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder, Persistent):
     __external_can_create__ = False
     createDirectFieldProperties(ICourseInstance)
 

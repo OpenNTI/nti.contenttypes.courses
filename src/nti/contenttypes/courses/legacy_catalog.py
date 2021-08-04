@@ -14,9 +14,9 @@ from __future__ import absolute_import
 
 from Acquisition import aq_acquire
 
-from datetime import datetime
+from Persistence import Persistent
 
-from ExtensionClass import Base
+from datetime import datetime
 
 from zope import component
 from zope import interface
@@ -280,7 +280,7 @@ from nti.links.links import Link
 class _CourseSubInstanceCatalogLegacyEntry(Contained,
                                            DisplayableContentMixin,
                                            PersistentCreatedAndModifiedTimeObject,
-                                           Base):
+                                           Persistent):
     """
     The entry for a sub-instance is writable, but any value it does not have
     it inherits from the closest parent.

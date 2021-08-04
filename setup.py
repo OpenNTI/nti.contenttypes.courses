@@ -76,6 +76,7 @@ setup(
         'nti.traversal',
         'nti.wref',
         'nti.zope_catalog',
+        'Persistence',
         'persistent',
         'requests',
         'simplejson',
