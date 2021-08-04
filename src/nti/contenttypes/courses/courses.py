@@ -63,10 +63,10 @@ class CourseAdministrativeLevel(CaseInsensitiveCheckingLastModifiedBTreeFolder):
 
 @WithRepr
 @interface.implementer(ICourseSeatLimit)
-class CourseSeatLimit(AbstractSeatLimit, 
-                      PersistentCreatedAndModifiedTimeObject,
-                      Persistent,
-                      Explicit):
+class CourseSeatLimit(Persistent,
+                      Explicit,
+                      AbstractSeatLimit, 
+                      PersistentCreatedAndModifiedTimeObject):
     
     mime_type = mimeType = 'application/vnd.nextthought.courses.seatlimit'
     
@@ -81,7 +81,7 @@ class CourseSubInstances(CaseInsensitiveCheckingLastModifiedBTreeContainer):
 
 
 @interface.implementer(ICourseInstance)
-class CourseInstance(CaseInsensitiveCheckingLastModifiedBTreeFolder, Persistent):
+class CourseInstance(Persistent, CaseInsensitiveCheckingLastModifiedBTreeFolder):
     __external_can_create__ = False
     createDirectFieldProperties(ICourseInstance)
 

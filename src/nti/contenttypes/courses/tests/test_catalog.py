@@ -11,6 +11,7 @@ from __future__ import absolute_import
 from hamcrest import is_
 from hamcrest import none
 from hamcrest import is_not
+from hamcrest import equal_to
 from hamcrest import not_none
 from hamcrest import has_items
 from hamcrest import has_entries
@@ -22,6 +23,8 @@ from nti.testing.matchers import validly_provides
 from nti.testing.matchers import verifiably_provides
 
 import isodate
+
+from Persistence import Persistent
 
 from zope.location.interfaces import ILocation
 
@@ -239,3 +242,22 @@ class TestCatalog(CourseLayerTest):
                                                 'max_seats', 10,
                                                 'used_seats', 0))
         
+    def test_entry_acquisition(self):
+        """
+        Validate our class hierarchy properly gets Persistence.Persistence
+        functions, which correctly handle Persistent objects and Base classes.
+        """
+        course = ContentCourseInstance()
+        cce = ICourseCatalogEntry(course)
+        cce.ProviderUniqueID = u'1234'
+        cce.title = u'course title'
+        cce.__parent__ = course
+        seat_limit = CourseSeatLimit()
+        
+        # Subinstance inherits from parent
+        subinst = ContentCourseSubInstance()
+        course.SubInstances[u'child'] = subinst
+        sub_entry = ICourseCatalogEntry(subinst)
+        
+        for obj in (course, subinst, sub_entry, seat_limit):
+            assert_that(obj.__getattribute__.__objclass__, equal_to(Persistent), obj)

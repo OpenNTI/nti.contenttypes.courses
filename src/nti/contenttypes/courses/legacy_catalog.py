@@ -277,10 +277,10 @@ from nti.links.links import Link
 @EqHash('ntiid')
 @component.adapter(ICourseSubInstance)
 @interface.implementer(ICourseCatalogLegacyEntry)
-class _CourseSubInstanceCatalogLegacyEntry(Contained,
+class _CourseSubInstanceCatalogLegacyEntry(Persistent,
+                                           Contained,
                                            DisplayableContentMixin,
-                                           PersistentCreatedAndModifiedTimeObject,
-                                           Persistent):
+                                           PersistentCreatedAndModifiedTimeObject):
     """
     The entry for a sub-instance is writable, but any value it does not have
     it inherits from the closest parent.
