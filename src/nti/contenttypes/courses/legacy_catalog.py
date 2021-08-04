@@ -350,27 +350,21 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
         # we're active
         return True
     
-    def _safe_activate(self):
-        try:
-            self._p_activate()
-        except AttributeError:
-            pass
-    
     def _get_seat_limit(self):
-        self._safe_activate()
+        self._p_activate()
         if 'seat_limit' in self.__dict__:
             return self.__dict__['seat_limit']
         return aq_acquire(self._next_entry, 'seat_limit').__of__(self)
 
     def _set_seat_limit(self, seat_limit):
-        self._safe_activate()
+        self._p_activate()
         self._p_changed = True
         if seat_limit is not None:
             seat_limit.__parent__ = self
         self.__dict__['seat_limit'] = seat_limit
 
     def _del_seat_limit(self):
-        self._safe_activate()
+        self._p_activate()
         if 'seat_limit' in self.__dict__:
             self._p_changed = True
             del self.__dict__['seat_limit']
