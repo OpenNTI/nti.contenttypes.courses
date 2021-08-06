@@ -12,6 +12,10 @@ from __future__ import absolute_import
 
 # pylint: disable=inherit-non-class
 
+from Acquisition import aq_acquire
+
+from Persistence import Persistent
+
 from datetime import datetime
 
 from zope import component
@@ -273,7 +277,8 @@ from nti.links.links import Link
 @EqHash('ntiid')
 @component.adapter(ICourseSubInstance)
 @interface.implementer(ICourseCatalogLegacyEntry)
-class _CourseSubInstanceCatalogLegacyEntry(Contained,
+class _CourseSubInstanceCatalogLegacyEntry(Persistent,
+                                           Contained,
                                            DisplayableContentMixin,
                                            PersistentCreatedAndModifiedTimeObject):
     """
@@ -344,6 +349,27 @@ class _CourseSubInstanceCatalogLegacyEntry(Contained,
         # otherwise, with no information given, assume
         # we're active
         return True
+    
+    def _get_seat_limit(self):
+        self._p_activate()
+        if 'seat_limit' in self.__dict__:
+            return self.__dict__['seat_limit']
+        return aq_acquire(self._next_entry, 'seat_limit').__of__(self)
+
+    def _set_seat_limit(self, seat_limit):
+        self._p_activate()
+        self._p_changed = True
+        if seat_limit is not None:
+            seat_limit.__parent__ = self
+        self.__dict__['seat_limit'] = seat_limit
+
+    def _del_seat_limit(self):
+        self._p_activate()
+        if 'seat_limit' in self.__dict__:
+            self._p_changed = True
+            del self.__dict__['seat_limit']
+
+    seat_limit = property(_get_seat_limit, _set_seat_limit, _del_seat_limit)
 
     @readproperty
     def _next_instance(self):

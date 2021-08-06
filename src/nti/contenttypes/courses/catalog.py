@@ -406,7 +406,22 @@ class CourseCatalogEntry(CatalogFamily,
     @CachedProperty('__parent__')
     def relative_path(self):
         return path_for_entry(self)
+    
+    def _get_seat_limit(self):
+        if 'seat_limit' in self.__dict__:
+            return self.__dict__['seat_limit']
 
+    def _set_seat_limit(self, seat_limit):
+        if seat_limit is not None:
+            seat_limit.__parent__ = self
+        self.__dict__['seat_limit'] = seat_limit
+
+    def _del_seat_limit(self):
+        if 'seat_limit' in self.__dict__:
+            del self.__dict__['seat_limit']
+
+    seat_limit = property(_get_seat_limit, _set_seat_limit, _del_seat_limit)
+    
 
 @interface.implementer(IPersistentCourseCatalog)
 class CourseCatalogFolder(_AbstractCourseCatalogMixin,
