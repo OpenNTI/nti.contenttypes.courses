@@ -54,6 +54,8 @@ from nti.contenttypes.courses.interfaces import CourseAlreadyExistsException
 
 from nti.intid.common import addIntId
 
+from nti.namedfile.file import safe_filename
+
 from nti.ntiids.ntiids import make_ntiid
 from nti.ntiids.ntiids import get_specific
 from nti.ntiids.ntiids import make_specific_safe
@@ -61,6 +63,7 @@ from nti.ntiids.ntiids import make_specific_safe
 from nti.traversal.traversal import find_interface
 
 from nti.zodb.containers import time_to_64bit_int
+
 
 logger = __import__('logging').getLogger(__name__)
 
@@ -179,6 +182,43 @@ def _prepare_entry(course):
     getattr(entry, 'ntiid')
 
 
+def _get_course_root(admin_level, key, writeout=False):
+    """
+    Get a unique course root for this key and admin level.
+    """
+    root = admin_level.root
+    if root is None:
+        raise IOError("Administrative level does not have a root bucket")
+
+    writeout = writeout and IFilesystemBucket.providedBy(root)
+    if getattr(root, 'absolute_path', None):
+        # Find a safe, unique path
+        base_key = key = safe_filename(key)
+        course_path = os.path.join(root.absolute_path, key)
+        i = 0
+        while os.path.exists(course_path):
+            i += 1
+            key = '%s.%s' % (base_key, i)
+            course_path = os.path.join(root.absolute_path, key)
+    else:
+        course_path = None
+        writeout = False  # there is not absolute_path
+
+    if writeout and IFilesystemBucket.providedBy(root):
+        create_directory(course_path)
+
+    course_root = root.getChildNamed(key)
+    if course_root is None:
+        # If weiteout is False, we should be here.
+        if not writeout and IFilesystemBucket.providedBy(root):
+            course_root = FilesystemBucket()
+            course_root.key = key
+            course_root.bucket = root
+        else:
+            raise IOError("Could not access course bucket %s" % course_path)
+    return course_root
+        
+
 def create_course(admin, key, catalog=None, writeout=False,
                   strict=False, creator=None, factory=ContentCourseInstance):
     """
@@ -209,30 +249,6 @@ def create_course(admin, key, catalog=None, writeout=False,
         # pylint: disable=too-many-function-args
         key = name_chooser.chooseName(key, course)
 
-    root = administrative_level.root
-    if root is None:
-        raise IOError("Administrative level does not have a root bucket")
-
-    writeout = writeout and IFilesystemBucket.providedBy(root)
-    if getattr(root, 'absolute_path', None):
-        course_path = os.path.join(root.absolute_path, key)
-    else:
-        course_path = None
-        writeout = False  # there is not absolute_path
-
-    if writeout and IFilesystemBucket.providedBy(root):
-        create_directory(course_path)
-
-    course_root = root.getChildNamed(key)
-    if course_root is None:
-        if not writeout and IFilesystemBucket.providedBy(root):
-            course_root = FilesystemBucket()
-            course_root.key = key
-            course_root.bucket = root
-            course_root.absolute_path = course_path
-        else:
-            raise IOError("Could not access course bucket %s" % course_path)
-
     if key in administrative_level:
         if strict:
             msg = "Course with key %s already exists" % key
@@ -241,6 +257,8 @@ def create_course(admin, key, catalog=None, writeout=False,
         logger.debug("Course '%s' already created", key)
     else:
         course = factory()
+        course_root = _get_course_root(administrative_level, key, 
+                                       writeout=writeout)
         course.root = course_root
         administrative_level[key] = course  # gain intid
         # initialize catalog entry
