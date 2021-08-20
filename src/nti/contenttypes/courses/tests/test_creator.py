@@ -11,9 +11,11 @@ from __future__ import absolute_import
 from hamcrest import is_
 from hamcrest import none
 from hamcrest import is_not
+from hamcrest import has_item
 from hamcrest import assert_that
 from hamcrest import has_property
 from hamcrest import same_instance
+does_not = is_not
 
 import os
 import shutil
@@ -109,7 +111,33 @@ class TestCreator(CourseLayerTest):
             assert_that(course.ContentPackageBundle, is_not(none()))
             assert_that(course.ContentPackageBundle.ntiid, is_not(none()))
             assert_that(course,
-                        has_property('root', has_property('absolute_path', is_(output))))
+                        has_property('root', has_property('absolute_path', is_('%s.1' % output))))
+            
+            # Absolute path should be relative and not fixed
+            assert_that(course.root.__dict__, does_not(has_item('absolute_path')))
+            
+            # Unicode
+            course = create_course(u"Bleach", u"Ω New Designer Review Ω", catalog, writeout=True)
+            assert_that(course, is_not(none()))
+            course_path = os.path.join(courses_path, 'Bleach/O_New_Designer_Review_O')
+            assert_that(course,
+                        has_property('root', has_property('absolute_path', 
+                                                          is_(course_path))))
+            
+            # Distinct course key but will be similar filesystem key
+            course = create_course(u"Bleach", u"Ω_New_Designer Review Ω", catalog, writeout=True)
+            assert_that(course, is_not(none()))
+            course_path = os.path.join(courses_path, 'Bleach/O_New_Designer_Review_O.1')
+            assert_that(course,
+                        has_property('root', has_property('absolute_path', 
+                                                          is_(course_path))))
+            
+            course = create_course(u"Bleach", u"O_New_Designer Review O", catalog, writeout=True)
+            assert_that(course, is_not(none()))
+            course_path = os.path.join(courses_path, 'Bleach/O_New_Designer_Review_O.2')
+            assert_that(course,
+                        has_property('root', has_property('absolute_path', 
+                                                          is_(course_path))))
         finally:
             shutil.rmtree(tmp_dir)
 
