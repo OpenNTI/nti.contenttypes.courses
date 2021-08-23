@@ -130,7 +130,6 @@ def install_admin_level(admin_name, catalog=None, site=None, writeout=True, pare
             admin_root = FilesystemBucket()
             admin_root.key = admin_name
             admin_root.bucket = courses_bucket
-            admin_root.absolute_path = path
     # Create admin level; do not want to overwrite parent catalog levels.
     # We *do* want to create the admin level for our current site.
     # Sub-sites may not have appropriate permissions to create courses
@@ -310,7 +309,6 @@ def create_course_subinstance(course, name, writeout=False, creator=None,
             sections_root = FilesystemBucket()
             sections_root.key = SECTIONS
             sections_root.bucket = course_root
-            sections_root.absolute_path = sections_path
         # create subinstance path
         subinstance_section_path = os.path.join(sections_path, name)
         if writeout:
@@ -321,7 +319,6 @@ def create_course_subinstance(course, name, writeout=False, creator=None,
             sub_section_root = FilesystemBucket()
             sub_section_root.key = name
             sub_section_root.bucket = sections_root
-            sub_section_root.absolute_path = subinstance_section_path
     # create object
     if name not in course.SubInstances:
         subinstance = factory()
