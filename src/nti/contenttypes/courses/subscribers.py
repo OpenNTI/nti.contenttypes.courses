@@ -616,7 +616,7 @@ def _update_sections_on_tag_update(entry, event):
     When parent course tags are updated, notify for child course entry iff shared.
     This is to update the tag index for these section courses.
     """
-    if 'tags' in event:
+    if event.external_value and 'tags' in event.external_value:
         parent_tags = entry.tags
         parent_course = ICourseInstance(entry)
         for section_course in get_course_subinstances(parent_course):
