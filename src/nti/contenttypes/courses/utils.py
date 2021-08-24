@@ -1413,20 +1413,7 @@ def get_courses_for_tag(tag, sites=(), intids=None):
         course = ICourseInstance(obj, None)
         if course is not None:
             courses.add(course)
-    result = set()
-    # FIXME: remove this
-    # CourseSubinstances will inherit the parent's tags unless they are
-    # explicitly set; therefore, we mimic that behavior here.
-    for course in courses:
-        if not ICourseSubInstance.providedBy(course):
-            children = get_course_subinstances(course)
-            for child in children or ():
-                child_entry = ICourseCatalogEntry(child, None)
-                # pylint: disable=unsupported-membership-test
-                if tag in getattr(child_entry, 'tags', ()):
-                    result.add(child)
-        result.add(course)
-    return tuple(result)
+    return tuple(courses)
 
 
 def is_hidden_tag(tag):
