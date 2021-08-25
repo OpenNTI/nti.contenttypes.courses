@@ -95,7 +95,7 @@ from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
 
 from nti.contenttypes.courses.interfaces import iface_of_node
 
-from nti.contenttypes.courses.utils import unenroll
+from nti.contenttypes.courses.utils import unenroll 
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import index_course_roles
 from nti.contenttypes.courses.utils import index_course_editor
@@ -106,6 +106,7 @@ from nti.contenttypes.courses.utils import get_course_hierarchy
 from nti.contenttypes.courses.utils import index_course_instance
 from nti.contenttypes.courses.utils import index_course_instructor
 from nti.contenttypes.courses.utils import get_content_unit_courses
+from nti.contenttypes.courses.utils import get_course_subinstances
 from nti.contenttypes.courses.utils import remove_principal_from_course_content_roles
 
 from nti.dataserver.interfaces import IUser
@@ -608,6 +609,23 @@ def _update_scopes_on_course_title_change(entry, unused_event):
             friendly_named.realname = '%s-course' % course_title
         notify(ObjectModifiedEvent(scope))
 
+
+@component.adapter(ICourseCatalogEntry, IObjectModifiedFromExternalEvent)
+def _update_sections_on_tag_update(entry, event):
+    """
+    When parent course tags are updated, notify for child course entry iff shared.
+    This is to update the tag index for these section courses.
+    """
+    if event.external_value and 'tags' in event.external_value:
+        parent_tags = entry.tags
+        parent_course = ICourseInstance(entry)
+        for section_course in get_course_subinstances(parent_course):
+            section_entry = ICourseCatalogEntry(section_course)
+            # Section entry tags are acquired from the parent if not
+            # distinct.
+            if section_entry.tags is parent_tags:
+                notify(ObjectModifiedEvent(section_entry))
+            
 
 def _update_enrollment_meta(record):
     """
