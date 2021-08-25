@@ -35,10 +35,12 @@ from nti.testing.matchers import verifiably_provides
 
 from nti.contentfragments.interfaces import IPlainTextContentFragment
 
-from nti.contenttypes.courses.courses import ContentCourseInstance,\
-    ContentCourseSubInstance
+from nti.contenttypes.courses.courses import ContentCourseInstance
+from nti.contenttypes.courses.courses import ContentCourseSubInstance
 
-from nti.contenttypes.courses.index import get_courses_catalog, IX_TAGS
+from nti.contenttypes.courses.index import IX_TAGS
+
+from nti.contenttypes.courses.index import get_courses_catalog
 from nti.contenttypes.courses.index import get_enrollment_catalog
 from nti.contenttypes.courses.index import install_courses_catalog
 from nti.contenttypes.courses.index import install_enrollment_catalog
@@ -80,9 +82,10 @@ from nti.contenttypes.courses.tests import CourseLayerTest
 
 from nti.externalization.externalization import to_external_object
 
+from nti.externalization.interfaces import ObjectModifiedFromExternalEvent
+
 from nti.intid.common import addIntId
-from nti.externalization.interfaces import ObjectModifiedFromExternalEvent,\
-    IObjectModifiedFromExternalEvent
+
 
 
 class TestCourse(DataserverLayerTest):
