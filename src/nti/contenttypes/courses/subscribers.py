@@ -621,6 +621,8 @@ def _update_sections_on_tag_update(entry, event):
         parent_course = ICourseInstance(entry)
         for section_course in get_course_subinstances(parent_course):
             section_entry = ICourseCatalogEntry(section_course)
+            # Section entry tags are acquired from the parent if not
+            # distinct.
             if section_entry.tags is parent_tags:
                 notify(ObjectModifiedEvent(section_entry))
             

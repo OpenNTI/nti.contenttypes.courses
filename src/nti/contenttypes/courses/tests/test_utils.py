@@ -21,7 +21,11 @@ import fudge
 from zope import component
 from zope import interface
 
+from zope.event import notify
+
 from zope.intid.interfaces import IIntIds
+
+from zope.lifecycleevent.interfaces import IObjectModifiedEvent
 
 from zope.security.interfaces import IPrincipal
 
@@ -31,9 +35,10 @@ from nti.testing.matchers import verifiably_provides
 
 from nti.contentfragments.interfaces import IPlainTextContentFragment
 
-from nti.contenttypes.courses.courses import ContentCourseInstance
+from nti.contenttypes.courses.courses import ContentCourseInstance,\
+    ContentCourseSubInstance
 
-from nti.contenttypes.courses.index import get_courses_catalog
+from nti.contenttypes.courses.index import get_courses_catalog, IX_TAGS
 from nti.contenttypes.courses.index import get_enrollment_catalog
 from nti.contenttypes.courses.index import install_courses_catalog
 from nti.contenttypes.courses.index import install_enrollment_catalog
@@ -76,6 +81,8 @@ from nti.contenttypes.courses.tests import CourseLayerTest
 from nti.externalization.externalization import to_external_object
 
 from nti.intid.common import addIntId
+from nti.externalization.interfaces import ObjectModifiedFromExternalEvent,\
+    IObjectModifiedFromExternalEvent
 
 
 class TestCourse(DataserverLayerTest):
@@ -85,10 +92,20 @@ class TestCourse(DataserverLayerTest):
         assert_that(p, verifiably_provides(ICourseInstanceEnrollmentRecord))
 
 
+@component.adapter(ICourseCatalogEntry, IObjectModifiedEvent)
+def _test_tag_index_handler(entry, unused_event):
+    catalog = get_courses_catalog()
+    tag_idx = catalog[IX_TAGS]
+    intids = component.getUtility(IIntIds)
+    doc_id = intids.getId(entry)
+    tag_idx.index_doc(doc_id, entry)
+
+
 class TestEntryFilters(CourseLayerTest):
 
     @WithMockDSTrans
     def test_tags(self):
+        component.provideHandler(_test_tag_index_handler)
         ds_folder = self.ds.dataserver_folder
         install_courses_catalog(ds_folder)
         intids = component.queryUtility(IIntIds)
@@ -102,7 +119,7 @@ class TestEntryFilters(CourseLayerTest):
         courses = get_courses_for_tag('entry3 tag')
         assert_that(courses, has_length(0))
 
-        # Create three courses, some with tags
+        # Create three courses (plus one section course), some with tags
         inst1 = ContentCourseInstance()
         entry1 = ICourseCatalogEntry(inst1)
         entry1.title = u'course1'
@@ -135,12 +152,21 @@ class TestEntryFilters(CourseLayerTest):
         addIntId(entry3)
         catalog.index_doc(intids.getId(inst3), inst3)
         catalog.index_doc(intids.getId(entry3), entry3)
+        
+        # Child with tag
+        section_inst = ContentCourseSubInstance()
+        section_entry = ICourseCatalogEntry(section_inst)
+        section_entry.title = u'section_ofcourse3'
+        inst3.SubInstances[u'child'] = section_inst
+        addIntId(section_inst)
+        addIntId(section_entry)
+        catalog.index_doc(intids.getId(section_entry), section_entry)
 
         # Fetch tags
         all_tags = get_course_tags()
         assert_that(all_tags, has_length(2))
-        assert_that(all_tags, has_entries(u'entry3 tag', 1,
-                                          u'duplicate_tag', 2))
+        assert_that(all_tags, has_entries(u'entry3 tag', 2,
+                                          u'duplicate_tag', 3))
 
         all_tags = get_course_tags(filter_str=u'entry3')
         assert_that(all_tags, has_length(1))
@@ -152,26 +178,30 @@ class TestEntryFilters(CourseLayerTest):
 
         all_tags = get_course_tags(filter_str=u'taG')
         assert_that(all_tags, has_length(2))
-        assert_that(all_tags, has_entries(u'entry3 tag', 1,
-                                          u'duplicate_tag', 2))
-
+        assert_that(all_tags, has_entries(u'entry3 tag', 2,
+                                          u'duplicate_tag', 3))
+        
         # Deleted course
         interface.alsoProvides(inst3, IDeletedCourse)
+        interface.alsoProvides(section_inst, IDeletedCourse)
         catalog.index_doc(intids.getId(inst3), inst3)
         catalog.index_doc(intids.getId(entry3), entry3)
+        catalog.index_doc(intids.getId(section_entry), section_entry)
         all_tags = get_course_tags()
         assert_that(all_tags, has_length(1))
         assert_that(all_tags, has_entries(u'duplicate_tag', 1))
 
         interface.noLongerProvides(inst3, IDeletedCourse)
+        interface.noLongerProvides(section_inst, IDeletedCourse)
         catalog.index_doc(intids.getId(inst3), inst3)
         catalog.index_doc(intids.getId(entry3), entry3)
+        catalog.index_doc(intids.getId(section_entry), section_entry)
         interface.alsoProvides(entry2, INonPublicCourseInstance)
         catalog.index_doc(intids.getId(entry2), entry2)
         all_tags = get_course_tags()
         assert_that(all_tags, has_length(2))
-        assert_that(all_tags, has_entries(u'entry3 tag', 1,
-                                          u'duplicate_tag', 1))
+        assert_that(all_tags, has_entries(u'entry3 tag', 2,
+                                          u'duplicate_tag', 2))
         interface.noLongerProvides(entry2, INonPublicCourseInstance)
         catalog.index_doc(intids.getId(entry2), entry2)
 
@@ -183,18 +213,61 @@ class TestEntryFilters(CourseLayerTest):
             return [ICourseCatalogEntry(x).title for x in courses]
 
         courses = get_courses_for_tag(u'entry3 tag')
+        assert_that(courses, has_length(2))
+        assert_that(_get_titles(courses), contains('course3', 'section_ofcourse3'))
+
+        courses = get_courses_for_tag(u'duplicate_tag')
+        assert_that(courses, has_length(3))
+        assert_that(_get_titles(courses), contains_inanyorder('course2',
+                                                              'course3',
+                                                              'section_ofcourse3'))
+
+        courses = get_courses_for_tag(u'DUPLICATE_TAG')
+        assert_that(courses, has_length(3))
+        assert_that(_get_titles(courses), contains_inanyorder('course2',
+                                                              'course3',
+                                                              'section_ofcourse3'))
+        
+        # Update course3 tags
+        # This should index the course and its children
+        entry3.tags = (IPlainTextContentFragment(u'entry3 tag'),)
+        event = ObjectModifiedFromExternalEvent(entry3)
+        event.external_value = {'tags': (u'entry3 tag',)}
+        notify(event)
+        courses = get_courses_for_tag(u'entry3 tag')
+        assert_that(courses, has_length(2))
+        assert_that(_get_titles(courses), contains('course3', 'section_ofcourse3'))
+
+        courses = get_courses_for_tag(u'duplicate_tag')
+        assert_that(courses, has_length(1))
+        assert_that(_get_titles(courses), contains_inanyorder('course2'))
+        
+        # Distinct section tags
+        section_entry.tags = (IPlainTextContentFragment(u'section tag'),)
+        event = ObjectModifiedFromExternalEvent(section_entry)
+        event.external_value = {'tags': (u'section tag',)}
+        notify(event)
+        entry3.tags = (IPlainTextContentFragment(u'entry3 tag'),
+                       IPlainTextContentFragment(u'new tag'))
+        event = ObjectModifiedFromExternalEvent(entry3)
+        event.external_value = {'tags': (u'entry3 tag', u'new tag',)}
+        notify(event)
+        
+        courses = get_courses_for_tag(u'entry3 tag')
         assert_that(courses, has_length(1))
         assert_that(_get_titles(courses), contains('course3'))
 
         courses = get_courses_for_tag(u'duplicate_tag')
-        assert_that(courses, has_length(2))
-        assert_that(_get_titles(courses), contains_inanyorder('course2',
-                                                              'course3'))
-
-        courses = get_courses_for_tag(u'DUPLICATE_TAG')
-        assert_that(courses, has_length(2))
-        assert_that(_get_titles(courses), contains_inanyorder('course2',
-                                                              'course3'))
+        assert_that(courses, has_length(1))
+        assert_that(_get_titles(courses), contains_inanyorder('course2'))
+        
+        courses = get_courses_for_tag(u'section tag')
+        assert_that(courses, has_length(1))
+        assert_that(_get_titles(courses), contains('section_ofcourse3'))
+        
+        courses = get_courses_for_tag(u'new tag')
+        assert_that(courses, has_length(1))
+        assert_that(_get_titles(courses), contains('course3'))
 
         # Remove tag from course and it does not come back
         # Indexing the course does not affect anything
@@ -207,6 +280,7 @@ class TestEntryFilters(CourseLayerTest):
 
         # Unindex third course
         catalog.unindex_doc(intids.getId(entry3))
+        catalog.unindex_doc(intids.getId(section_entry))
 
         all_tags = get_course_tags()
         assert_that(all_tags, has_length(1))
