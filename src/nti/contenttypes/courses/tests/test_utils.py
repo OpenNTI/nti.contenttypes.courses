@@ -106,9 +106,16 @@ def _test_tag_index_handler(entry, unused_event):
 
 class TestEntryFilters(CourseLayerTest):
 
+    def setUp(self):
+        component.getGlobalSiteManager().registerHandler(_test_tag_index_handler)
+        
+    def tearDown(self):
+        component.getGlobalSiteManager().unregisterHandler(_test_tag_index_handler,
+                                    required=(ICourseCatalogEntry, IObjectModifiedEvent))
+        super(TestEntryFilters, self).tearDown()
+
     @WithMockDSTrans
     def test_tags(self):
-        component.provideHandler(_test_tag_index_handler)
         ds_folder = self.ds.dataserver_folder
         install_courses_catalog(ds_folder)
         intids = component.queryUtility(IIntIds)
