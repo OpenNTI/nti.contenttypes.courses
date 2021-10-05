@@ -520,6 +520,9 @@ def _on_course_bundle_updated(course, unused_event=None):
 def _on_course_imported(course, unused_event=True):
     _update_course_packages(course)
     _on_course_bundle_updated(course)
+    notify(ObjectModifiedEvent(course))
+    entry = ICourseCatalogEntry(course)
+    notify(ObjectModifiedEvent(entry))
 on_course_imported = _on_course_imported
 
 
