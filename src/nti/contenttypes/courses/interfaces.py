@@ -59,8 +59,8 @@ from zope.site.interfaces import IFolder
 
 from nti.cabinet.interfaces import ISourceFiler
 
-from nti.contentfragments.schema import PlainTextLine
 from nti.contentfragments.schema import HTMLContentFragment
+from nti.contentfragments.schema import VerbatimPlainTextLine
 
 from nti.contentlibrary.interfaces import IDisplayableContent
 from nti.contentlibrary.interfaces import IContentPackageBundle
@@ -292,10 +292,10 @@ class ICourseOutlineNode(IRecordableContainer,
     src = ValidTextLine(title=u"json file to populate the node overview",
                         required=False)
 
-    title = PlainTextLine(max_length=300,
-                          required=False,
-                          title=u"The human-readable title of this object",
-                          __name__=u'title')
+    title = VerbatimPlainTextLine(max_length=300,
+                                  required=False,
+                                  title=u"The human-readable title of this object",
+                                  __name__=u'title')
 
     LessonOverviewNTIID = ValidNTIID(title=u"The NTIID of the lesson overview",
                                      required=False,
@@ -921,7 +921,7 @@ class ICatalogFamily(IDisplayableContent):
     contributors.setTaggedValue('_ext_excluded_out', True)
 
 
-class MultiWordTag(PlainTextLine):
+class MultiWordTag(VerbatimPlainTextLine):
     """
     Tags that may span multiple, lowercase words.
     """
