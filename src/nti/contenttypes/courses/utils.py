@@ -257,7 +257,13 @@ def get_enrollments_query(catalog=None, usernames=None, entry_ntiids=None, site_
 def get_enrollment_scopes(catalog=None):
     catalog = get_enrollment_catalog() if catalog is None else catalog
 
-    # All scopes save those reserved for roles (allow for course-specific scopes)
+    # The statement below allows us to fetch all the course enrollments
+    # without the course instance/role documents, providing for course-specific
+    # scopes (not in the static ENROLLMENT_SCOPE_NAMES). We could add a new
+    # index w/ that info, but it causes issues during deployment for boxes that
+    # don't yet have the new index class. In the future I think we probably
+    # want to create a new index for just the enrollments and maybe move to
+    # an extent catalog at the same time.
     key_set = catalog.family.OO.Set(catalog[IX_SCOPE].values_to_documents.keys())
 
     return tuple(key for key in key_set if key not in COURSE_ROLES)
