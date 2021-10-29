@@ -54,7 +54,6 @@ from nti.contenttypes.courses.common import get_course_site_registry
 from nti.contenttypes.courses.catalog import CourseCatalogFolder
 
 from nti.contenttypes.courses.index import IX_SITE
-from nti.contenttypes.courses.index import IX_SCOPE
 from nti.contenttypes.courses.index import IX_COURSE
 from nti.contenttypes.courses.index import IX_USERNAME
 from nti.contenttypes.courses.index import IX_PACKAGES
@@ -63,9 +62,7 @@ from nti.contenttypes.courses.index import IndexRecord
 
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import COURSE_CATALOG_NAME
-from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_NAMES
 from nti.contenttypes.courses.interfaces import TRX_OUTLINE_NODE_MOVE_TYPE
-
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseOutline
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -92,10 +89,10 @@ from nti.contenttypes.courses.interfaces import ICourseRolePermissionManager
 from nti.contenttypes.courses.interfaces import ICourseInstanceAvailableEvent
 from nti.contenttypes.courses.interfaces import ICourseVendorInfoSynchronized
 from nti.contenttypes.courses.interfaces import ICourseInstanceEnrollmentRecord
-
 from nti.contenttypes.courses.interfaces import iface_of_node
 
 from nti.contenttypes.courses.utils import unenroll 
+from nti.contenttypes.courses.utils import get_enrollments_query
 from nti.contenttypes.courses.utils import get_parent_course
 from nti.contenttypes.courses.utils import index_course_roles
 from nti.contenttypes.courses.utils import index_course_editor
@@ -303,10 +300,8 @@ def on_user_removed(user, unused_event=None):
     if catalog is not None:
         intids = component.getUtility(IIntIds)
         # remove enrollment records
-        query = {
-            IX_USERNAME: {'any_of': (user.username,)},
-            IX_SCOPE: {'any_of': ENROLLMENT_SCOPE_NAMES}
-        }
+        query = get_enrollments_query(catalog=catalog,
+                                      usernames=(user.username,))
         for uid in catalog.apply(query) or ():
             record = intids.queryObject(uid)
             if ICourseInstanceEnrollmentRecord.providedBy(record):

@@ -182,6 +182,9 @@ INSTRUCTOR = u"Instructor"
 #: Editor role
 EDITOR = u"Editor"
 
+#: All possible roles
+COURSE_ROLES = frozenset((INSTRUCTOR, EDITOR, RID_TA))
+
 #: Outline node move type
 TRX_OUTLINE_NODE_MOVE_TYPE = u'outlinenodemove'
 

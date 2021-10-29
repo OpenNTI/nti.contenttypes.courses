@@ -81,6 +81,7 @@ from nti.contenttypes.courses.index import get_courses_catalog
 from nti.contenttypes.courses.index import get_enrollment_catalog
 from nti.contenttypes.courses.index import get_course_outline_catalog
 
+from nti.contenttypes.courses.interfaces import COURSE_ROLES
 from nti.contenttypes.courses.interfaces import ES_ALL
 from nti.contenttypes.courses.interfaces import RID_TA
 from nti.contenttypes.courses.interfaces import EDITOR
@@ -88,7 +89,6 @@ from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_INSTRUCTOR
 from nti.contenttypes.courses.interfaces import RID_CONTENT_EDITOR
-from nti.contenttypes.courses.interfaces import ENROLLMENT_SCOPE_NAMES
 
 from nti.contenttypes.courses.interfaces import iface_of_node
 from nti.contenttypes.courses.interfaces import ICourseCatalog
@@ -233,10 +233,40 @@ def unindex_course_roles(context, catalog=None):
         query = {
             IX_SITE: {'any_of': (site,)},
             IX_COURSE: {'any_of': (entry.ntiid,)},
-            IX_SCOPE: {'any_of': (INSTRUCTOR, EDITOR, RID_TA)}
+            IX_SCOPE: {'any_of': COURSE_ROLES}
         }
         for uid in catalog.apply(query) or ():
             catalog.unindex_doc(uid)
+
+
+def get_enrollments_query(catalog=None, usernames=None, entry_ntiids=None, site_names=None):
+    query = {
+        IX_SCOPE: {'any_of': get_enrollment_scopes(catalog=catalog)}
+    }
+
+    if usernames:
+        query[IX_USERNAME] = {'any_of': usernames}
+    if entry_ntiids:
+        query[IX_ENTRY] = {'any_of': entry_ntiids}
+    if site_names:
+        query[IX_SITE] = {'any_of': site_names}
+
+    return query
+
+
+def get_enrollment_scopes(catalog=None):
+    catalog = get_enrollment_catalog() if catalog is None else catalog
+
+    # The statement below allows us to fetch all the course enrollments
+    # without the course instance/role documents, providing for course-specific
+    # scopes (not in the static ENROLLMENT_SCOPE_NAMES). We could add a new
+    # index w/ that info, but it causes issues during deployment for boxes that
+    # don't yet have the new index class. In the future I think we probably
+    # want to create a new index for just the enrollments and maybe move to
+    # an extent catalog at the same time.
+    key_set = catalog.family.OO.Set(catalog[IX_SCOPE].values_to_documents.keys())
+
+    return tuple(key for key in key_set if key not in COURSE_ROLES)
 
 
 def unindex_user_course_role(user, course, role):
@@ -480,11 +510,9 @@ def get_course_enrollments(context, sites=None, intids=None):
     sites = get_sites_4_index(sites)
     catalog = get_enrollment_catalog()
     intids = component.getUtility(IIntIds) if intids is None else intids
-    query = {
-        IX_SITE: {'any_of': sites},
-        IX_COURSE: {'any_of': courses},
-        IX_SCOPE: {'any_of': ENROLLMENT_SCOPE_NAMES}
-    }
+    query = get_enrollments_query(catalog=catalog,
+                                  site_names=sites,
+                                  entry_ntiids=courses)
     for doc_id in catalog.apply(query) or ():
         obj = intids.queryObject(doc_id)
         if     ICourseInstanceEnrollmentRecord.providedBy(obj) \
@@ -525,7 +553,7 @@ def get_enrollments(user, **kwargs):
     in which this user is enrolled
     """
     return get_courses_for_scope(user,
-                                 scopes=ENROLLMENT_SCOPE_NAMES,
+                                 scopes=get_enrollment_scopes(),
                                  **kwargs)
 
 
@@ -928,15 +956,10 @@ def get_enrollment_records(usernames=None, entry_ntiids=None, sites=None, intids
     intids = component.getUtility(IIntIds) if intids is None else intids
     catalog = get_enrollment_catalog()
     sites = (getSite().__name__,) if sites is None and getSite() is not None else sites
-    query = {
-        IX_SCOPE: {'any_of': ENROLLMENT_SCOPE_NAMES},
-    }
-    if usernames:
-        query[IX_USERNAME] = {'any_of': usernames}
-    if entry_ntiids:
-        query[IX_ENTRY] = {'any_of': entry_ntiids}
-    if sites:
-        query[IX_SITE] = {'any_of': sites}
+    query = get_enrollments_query(catalog=catalog,
+                                  usernames=usernames,
+                                  entry_ntiids=entry_ntiids,
+                                  site_names=sites)
     for doc_id in catalog.apply(query) or ():
         obj = intids.queryObject(doc_id)
         if ICourseInstanceEnrollmentRecord.providedBy(obj):
