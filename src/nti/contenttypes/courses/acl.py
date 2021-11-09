@@ -24,6 +24,8 @@ from zope.securitypolicy.rolepermission import RolePermissionManager
 
 from nti.contentlibrary.interfaces import IRenderableContentPackage
 
+from nti.contenttypes.completion.authorization import ACT_AWARD_PROGRESS
+
 from nti.contenttypes.courses.interfaces import ES_PUBLIC
 from nti.contenttypes.courses.interfaces import ICourseCatalog
 from nti.contenttypes.courses.interfaces import ICourseInstance
@@ -91,6 +93,11 @@ def editor_aces_for_course(course, provider):
         aces.append(ace_allowing(editor, ACT_READ, type(provider)))
         aces.append(ace_allowing(editor, ACT_UPDATE, type(provider)))
         aces.append(ace_allowing(editor, ACT_CONTENT_EDIT, type(provider)))
+        
+    # Now instructors (includes TAs)
+    for instructor in get_course_instructors(course):
+        aces.append(ace_allowing(instructor, ACT_AWARD_PROGRESS, type(provider)))
+        
     return aces
 
 
